@@ -1,0 +1,208 @@
+Revisão Bibliográfica Estruturada
+Dissertação: Explicando Decisões de LLMs via Otimização Inversa
+10 Referências Validadas e Organizadas
+
+Tabela Resumo: Cobertura das Referências
+#	Artigo	Conceito-Chave	Fase(s)
+1	Chan et al. (2025)	Otimização Inversa	A–C (framework central)
+2	Weinberger & Saul (2009)	Mahalanobis / Metric Learning	A (aprendizado de W)
+3	Collins (2002)	Perceptron Estruturado	A (algoritmo de aprendizado)
+4	Garg et al. (2022)	Transformers como aprendizes	A & D (LLM como aprendiz)
+5	Akyürek et al. (2023)	ICL implementa otimização	A–D (justif. teórica)
+6	Su et al. (2023)	Seleção de exemplos ICL	D (estratégias de seleção)
+7	Zhao, Wallace et al. (2021)	Viés semântico em LLMs	A–C (nomes de classe)
+8	Min et al. (2022)	O que direciona ICL	D (interpretação)
+9	Zhao, Nguyen & Grover (2024)	Fronteiras de decisão ICL	A–D (design experimental)
+10	Artstein & Poesio (2008)	Cohen's Kappa	B/C (métrica de concordância)
+ 
+
+Análise Detalhada das Referências
+ARTIGO 1
+Título: Inverse Optimization: Theory and Applications
+Autores: Timothy C.Y. Chan, Rafid Mahmood, Ian Yihang Zhu
+Ano: 2025
+Conferência/Journal: Operations Research, Vol. 73, No. 2, pp. 1046–1074 (INFORMS)
+Status: ✅ Verificado — metadados corretos. Publicado online em Dez/2023, volume impresso 2025.
+Contexto e Motivação
+O campo de otimização inversa busca resolver o problema reverso da otimização tradicional: dadas decisões observadas de um agente, inferir os parâmetros da função objetivo ou restrições que tornariam essas decisões (aproximadamente) ótimas. Este artigo é o survey definitivo da área, cobrindo desde formulações clássicas baseadas em KKT até modelos data-driven modernos com observações ruidosas.
+O que o artigo fala?
+Apresenta uma revisão unificada e abrangente da literatura de otimização inversa, consolidando propriedades de modelos, técnicas de reformulação (dualidade forte, complementaridade), e métodos computacionais para diferentes classes de problemas inversos. Cobre tanto fundamentos teóricos quanto aplicações em saúde, transporte, energia e economia.
+Como ele fez o experimento?
+O artigo é um survey teórico-metodológico. Não realiza experimentos próprios, mas sistematiza e unifica resultados de dezenas de trabalhos, apresentando formulações matemáticas rigorosas, provas de propriedades de consistência, e taxonomia de abordagens (single-observation, data-driven, robusta).
+O que ele prova?
+Demonstra que a otimização inversa é um framework maduro e bem fundamentado para inferir critérios decisórios a partir de decisões observadas. Estabelece condições de consistência e goodness-of-fit que permitem avaliar a qualidade da solução inversa.
+O que ele ajuda a justificar no meu trabalho?
+Fornece a fundamentação teórica central da dissertação. O problema de inferir a métrica W a partir das classificações do LLM é uma instância de otimização inversa: dadas as decisões do LLM (observações), busca-se o critério (métrica de Mahalanobis) que torna essas decisões ótimas sob classificação por vizinho mais próximo.
+Onde citar no meu trabalho?
+Introdução (enquadramento da questão de pesquisa), Fundamentação Teórica (framework de otimização inversa), Metodologia §Fase A (justificativa teórica do aprendizado de W), Trabalhos Relacionados (literatura de otimização inversa).
+
+ARTIGO 2
+Título: Distance Metric Learning for Large Margin Nearest Neighbor Classification
+Autores: Kilian Q. Weinberger, Lawrence K. Saul
+Ano: 2009
+Conferência/Journal: Journal of Machine Learning Research (JMLR), Vol. 10, pp. 207–244
+Status: ✅ Verificado — metadados corretos. Artigo seminal com mais de 5.000 citações.
+Contexto e Motivação
+Na área de metric learning, o problema central é aprender uma transformação do espaço de features que otimize a classificação por vizinho mais próximo. A distância de Mahalanobis generaliza a distância Euclidiana através de uma matriz semidefinida positiva M, mas aprender M de forma discriminativa requer formulações de otimização cuidadosas.
+O que o artigo fala?
+Introduz o algoritmo LMNN (Large Margin Nearest Neighbor), que aprende uma matriz de Mahalanobis M via otimização convexa com restrição de margem grande. A ideia é puxar vizinhos da mesma classe para mais perto e empurrar pontos de classes diferentes para além de uma margem, de forma análoga a SVMs.
+Como ele fez o experimento?
+Formulação como programa semidefinido (SDP) relaxado, resolvido com gradient descent projetado. Avaliação em múltiplos datasets de classificação (MNIST, Isolet, 20-Newsgroups, etc.) comparando com distância Euclidiana, Mahalanobis com covariância e outros métodos de metric learning. Métrica: acurácia de k-NN.
+O que ele prova?
+Demonstra que aprender a métrica de Mahalanobis com margem grande melhora significativamente a classificação por vizinho mais próximo em comparação com a distância Euclidiana. A restrição de semidefinida positiva garante que a métrica aprendida é uma distância válida.
+O que ele ajuda a justificar no meu trabalho?
+Conecta diretamente com o aprendizado de W na Fase A da dissertação. O Perceptron Estruturado com Relaxação de Margem utilizado no trabalho é conceitualmente análogo ao LMNN: ambos aprendem uma métrica de Mahalanobis que maximiza a margem entre classes. A restrição diagonal de W é uma simplificação deliberada da matriz completa M.
+Onde citar no meu trabalho?
+Fundamentação Teórica (definição da distância de Mahalanobis), Metodologia §Fase A (conexão com a literatura de metric learning), Trabalhos Relacionados (metric learning), Discussão (limitações da restrição diagonal vs. Mahalanobis completo).
+
+ARTIGO 3
+Título: Discriminative Training Methods for Hidden Markov Models: Theory and Experiments with Perceptron Algorithms
+Autores: Michael Collins
+Ano: 2002
+Conferência/Journal: EMNLP 2002, pp. 1–8 (ACL). Best Paper Award; NAACL 2018 Test-of-Time Award.
+Status: ✅ Verificado — metadados corretos. DOI: 10.3115/1118693.1118694.
+Contexto e Motivação
+Em predição estruturada, o objetivo é mapear entradas para saídas complexas (sequências, árvores, grafos). Modelos generativos (como HMMs) eram dominantes, mas não otimizavam diretamente o critério de classificação. Era necessário um algoritmo discriminativo eficiente para espaços de saída estruturados.
+O que o artigo fala?
+Introduz o Perceptron Estruturado: uma extensão do perceptron clássico para espaços de saída estruturados via mapa de features conjunto Φ(x, y). O algoritmo usa decodificação de Viterbi para inferência e possui garantias de convergência finita sob separabilidade. Demonstra resultados competitivos com modelos de máxima entropia em POS tagging e chunking.
+Como ele fez o experimento?
+Experimentos em duas tarefas de NLP: POS tagging (Wall Street Journal Treebank) e base NP chunking (CoNLL-2000). Comparação com modelos generativos (HMMs) e discriminativos (MaxEnt). Métricas: acurácia de tagging e F1-score de chunking.
+O que ele prova?
+Demonstra que o perceptron estruturado é um algoritmo discriminativo eficiente e eficaz para predição estruturada, com garantias teóricas de convergência. A simplicidade do algoritmo não sacrifica desempenho: iguala ou supera modelos mais complexos.
+O que ele ajuda a justificar no meu trabalho?
+É o ancestral algorítmico direto do Perceptron Estruturado com Relaxação de Margem utilizado para aprender W a partir das decisões do LLM. A atualização de pesos w ← w − η·g no código da dissertação é uma instância da regra de atualização de Collins adaptada para metric learning.
+Onde citar no meu trabalho?
+Fundamentação Teórica (descrição do algoritmo), Metodologia §Fase A (derivação da variante com relaxação de margem a partir do framework de Collins), Trabalhos Relacionados (predição estruturada).
+
+ARTIGO 4
+Título: What Can Transformers Learn In-Context? A Case Study of Simple Function Classes
+Autores: Shivam Garg, Dimitris Tsipras, Percy Liang, Gregory Valiant
+Ano: 2022
+Conferência/Journal: NeurIPS 2022 (Advances in Neural Information Processing Systems 35)
+Status: ✅ Verificado — metadados corretos. arXiv: 2208.01066.
+Contexto e Motivação
+In-context learning (ICL) é a capacidade de LLMs de aprender novas tarefas apenas a partir de exemplos no prompt, sem atualização de parâmetros. A relação entre as tarefas nas quais ICL funciona e o que está presente nos dados de pré-treinamento era mal compreendida.
+O que o artigo fala?
+Demonstra empiricamente que Transformers treinados do zero conseguem realizar ICL de classes de funções diversas (funções lineares, lineares esparsas, redes neurais de 2 camadas, árvores de decisão), alcançando desempenho comparável ao de estimadores ótimos task-specific (mínimos quadrados). Também mostra robustez a distribution shift.
+Como ele fez o experimento?
+Treina modelos Transformer from scratch em distribuições de tarefas sintéticas. Para cada classe de função F, gera prompts (x₁, f(x₁), ..., xₖ, f(xₖ), x_query) e treina o modelo a prever f(x_query). Compara previsões do Transformer com estimadores ótimos (OLS, ridge regression). Avalia com erro quadrático médio em out-of-distribution.
+O que ele prova?
+Transformers podem atuar como aprendizes implícitos de funções, igualando ou superando estimadores ótimos task-specific. Isso implica que ICL não é mera recuperação de padrões, mas implementação de algoritmos de aprendizado.
+O que ele ajuda a justificar no meu trabalho?
+Suporta diretamente a premissa central da dissertação de que o LLM pode atuar como aprendiz implícito de funções. Justifica tanto a Fase A (o LLM tem um critério decisório capturável) quanto a Fase D (o LLM pode aprender o critério de um perito a partir de exemplos). A robustez a distribution shift informa as Fases B/C.
+Onde citar no meu trabalho?
+Introdução (motivação da hipótese LLM-como-aprendiz), Trabalhos Relacionados (capacidades de ICL), Discussão §Fase D (interpretação da capacidade do LLM de aprender a métrica do perito).
+
+ARTIGO 5
+Título: What Learning Algorithm Is In-Context Learning? Investigations with Linear Models
+Autores: Ekin Akyürek, Dale Schuurmans, Jacob Andreas, Tengyu Ma, Denny Zhou
+Ano: 2023
+Conferência/Journal: ICLR 2023 (Oral)
+Status: ✅ Verificado — metadados corretos. arXiv: 2211.15661.
+Contexto e Motivação
+Embora Transformers demonstrem capacidade de ICL, o mecanismo interno era opaco. A questão era: ICL implementa algum algoritmo de aprendizado conhecido, ou é um processo fundamentalmente diferente?
+O que o artigo fala?
+Prova por construção que Transformers podem implementar gradient descent e ridge regression para modelos lineares, e mostra empiricamente que ICL treinado reproduz fielmente as previsões desses algoritmos. Modelos implícitos podem ser decodificados das ativações intermediárias via probing. O comportamento transiciona entre diferentes preditores conforme profundidade e ruído.
+Como ele fez o experimento?
+Provas construtivas mostrando que configurações de pesos do Transformer implementam GD e ridge regression. Experimentos com Transformers treinados em regressão linear: comparam previsões do modelo com GD, ridge e OLS. Probing linear das ativações internas para detectar representações do vetor de pesos w e do momento X⊤Y.
+O que ele prova?
+ICL implementa internamente algoritmos de otimização conhecidos (GD, ridge regression). Os modelos implícitos são codificados nas ativações e atualizados conforme novos exemplos aparecem no contexto.
+O que ele ajuda a justificar no meu trabalho?
+Fundamentação teórica crucial: se ICL implementa internamente um algoritmo de otimização, então a métrica W recuperada pelo Perceptron Estruturado é um proxy legítimo do critério decisório implícito do LLM. Justifica por que a otimização inversa pode recuperar métricas significativas das saídas do LLM.
+Onde citar no meu trabalho?
+Trabalhos Relacionados (compreensão teórica de ICL), Discussão (interpretação de por que otimização inversa recupera métricas significativas), Introdução (LLMs implementam algoritmos aprendíveis).
+
+ARTIGO 6
+Título: Selective Annotation Makes Language Models Better Few-Shot Learners
+Autores: Hongjin Su, Jungo Kasai, Chen Henry Wu, Weijia Shi, Tianlu Wang, Jiayi Xin, Rui Zhang, Mari Ostendorf, Luke Zettlemoyer, Noah A. Smith, Tao Yu
+Ano: 2023
+Conferência/Journal: ICLR 2023
+Status: ✅ Verificado — metadados corretos. arXiv: 2209.01975.
+Contexto e Motivação
+A seleção de exemplos para few-shot ICL é reconhecida como fator crítico de desempenho, mas métodos de seleção existentes eram ad hoc ou exigiam acesso ao modelo. Era necessário um framework principled para selecionar exemplos que maximizem o desempenho de ICL.
+O que o artigo fala?
+Propõe o método vote-k, uma abordagem baseada em grafos que equilibra diversidade e representatividade na seleção de exemplos para ICL. Demonstra ganho relativo médio de 12.9% sobre seleção aleatória em 10 datasets, sem necessidade de acesso aos parâmetros do modelo.
+Como ele fez o experimento?
+Constrói um grafo de similaridade entre exemplos candidatos, seleciona um subconjunto diverso e representativo via votação e filtragem. Avalia em 10 datasets de NLP (classificação de sentimento, NLI, QA) com GPT-3 e Codex. Compara com seleção aleatória, seleção por similaridade, e métodos de active learning.
+O que ele prova?
+A seleção estratégica de exemplos é significativamente superior à seleção aleatória para ICL. Diversidade e representatividade são ambas importantes: exemplos apenas similares ao query ou apenas diversos individualmente são subótimos.
+O que ele ajuda a justificar no meu trabalho?
+Referência primária para a comparação de estratégias de seleção de exemplos da Fase D (easy/hard/mixed/random). Estabelece que a seleção estratégica afeta dramaticamente o desempenho de ICL, fornecendo framework metodológico para avaliar políticas de seleção.
+Onde citar no meu trabalho?
+Trabalhos Relacionados (seleção de exemplos para ICL), Metodologia §Fase D (motivação e contextualização das estratégias easy/hard/mixed/random), Resultados §Fase D (comparação com achados deste artigo).
+
+ARTIGO 7
+Título: Calibrate Before Use: Improving Few-Shot Performance of Language Models
+Autores: Tony Z. Zhao, Eric Wallace, Shi Feng, Dan Klein, Sameer Singh
+Ano: 2021
+Conferência/Journal: ICML 2021 (PMLR 139, pp. 12697–12706)
+Status: ✅ Verificado — metadados corretos. arXiv: 2102.09690.
+Contexto e Motivação
+LLMs exibem vieses sistemáticos em classificação few-shot que distorcem as predições. Esses vieses dependem dos nomes dos rótulos, do formato do prompt e da ordem dos exemplos, mas não eram bem quantificados nem tratados.
+O que o artigo fala?
+Identifica três fontes de viés em classificação few-shot de LLMs: (1) majority label bias (tendência a prever o rótulo mais frequente nos exemplos), (2) recency bias (favorecimento do último rótulo visto), e (3) common token bias (preferência por tokens mais frequentes no pré-treinamento). Propõe calibração contextual para corrigir esses vieses.
+Como ele fez o experimento?
+Experimentos com GPT-2 e GPT-3 em tarefas de classificação de texto (SST-2, AGNews, TREC, etc.). Mede a distribuição das predições sob diferentes ordens de exemplos, formatos de prompt e nomes de rótulos. Aplica calibração estimando o viés com um input "content-free" e ajustando as probabilidades via transformação afim.
+O que ele prova?
+LLMs possuem vieses sistemáticos e quantificáveis que dependem da semântica dos rótulos. A calibração contextual pode reduzir esses vieses significativamente, melhorando a acurácia de few-shot em até 30 pontos percentuais.
+O que ele ajuda a justificar no meu trabalho?
+Justifica diretamente o design experimental de testar múltiplos nomes de classe ("A/B", "0/1", "Positivo/Negativo", "Azul/Vermelho") para detectar viés semântico. Se os nomes dos rótulos influenciam sistematicamente as decisões do LLM, isso afeta a métrica W aprendida e a consistência medida.
+Onde citar no meu trabalho?
+Metodologia (justificativa do uso de múltiplos nomes de classe), Trabalhos Relacionados (viés em LLMs), Resultados (interpretação de efeitos observados dos nomes de classe sobre W aprendido), Design Experimental (controle de variáveis confundidoras).
+
+ARTIGO 8
+Título: Rethinking the Role of Demonstrations: What Makes In-Context Learning Work?
+Autores: Sewon Min, Xinxi Lyu, Ari Holtzman, Mikel Artetxe, Mike Lewis, Hannaneh Hajishirzi, Luke Zettlemoyer
+Ano: 2022
+Conferência/Journal: EMNLP 2022, pp. 11048–11064. DOI: 10.18653/v1/2022.emnlp-main.759
+Status: ✅ Verificado — metadados corretos. arXiv: 2202.12837.
+Contexto e Motivação
+A suposição padrão era de que ICL funciona porque o LLM aprende o mapeamento input-label dos exemplos demonstrados. Mas nenhum estudo havia isolado sistematicamente quais componentes das demonstrações realmente importam.
+O que o artigo fala?
+Descoberta landmark: substituir aleatoriamente os rótulos das demonstrações por rótulos incorretos mal afeta o desempenho de classificação em 12 modelos, incluindo GPT-3. O que importa para ICL é: (1) o espaço de rótulos, (2) a distribuição dos inputs, e (3) o formato da sequência — não a correção dos mapeamentos input-label.
+Como ele fez o experimento?
+Experimentos controlados com 12 modelos (GPT-3, GPT-J, MetaICL, etc.) em 26 datasets de classificação e multiple-choice. Manipula sistematicamente: (a) rótulos aleatórios, (b) número de rótulos, (c) distribuição dos inputs, (d) formato do template. Mede acurácia em cada condição.
+O que ele prova?
+A correção dos mapeamentos input-label não é o driver primário de ICL em classificação. O LLM usa as demonstrações mais como dicas sobre o espaço do problema do que como exemplos de treinamento no sentido clássico.
+O que ele ajuda a justificar no meu trabalho?
+Implicação direta para a Fase D: se rótulos corretos não são o driver primário de ICL, então a capacidade do LLM de aprender a métrica do perito depende mais da estrutura geométrica dos exemplos (sua distribuição no espaço) do que da correção dos rótulos. Isso tem implicações profundas para interpretar por que certas estratégias de seleção (easy/hard/mixed) funcionam melhor que outras.
+Onde citar no meu trabalho?
+Trabalhos Relacionados (mecanismos de ICL), Discussão §Fase D (interpretação de por que certas estratégias de seleção funcionam melhor), Discussão geral (limitações da abordagem few-shot).
+
+ARTIGO 9
+Título: Probing the Decision Boundaries of In-context Learning in Large Language Models
+Autores: Siyan Zhao, Tung Nguyen, Aditya Grover
+Ano: 2024
+Conferência/Journal: NeurIPS 2024 (Advances in Neural Information Processing Systems 37)
+Status: ✅ Verificado — metadados corretos. arXiv: 2406.11233.
+Contexto e Motivação
+Embora ICL em classificação binária seja bem estudado empiricamente, faltava uma análise das fronteiras de decisão efetivamente aprendidas pelos LLMs — a geometria dessas fronteiras não era conhecida nem comparada com classificadores tradicionais.
+O que o artigo fala?
+Propõe um mecanismo para visualizar e analisar as fronteiras de decisão de LLMs em classificação binária in-context, usando pontos 2D (geometria idêntica à da dissertação). Descobre que as fronteiras são irregulares e não-suaves, mesmo em tarefas linearmente separáveis. Investiga fatores que influenciam essas fronteiras: escala do modelo, número de exemplos, ordem dos exemplos, semântica dos rótulos.
+Como ele fez o experimento?
+Classificação binária com LLMs (GPT-4o, GPT-3.5, Llama, Mistral) em dados sintéticos 2D. Visualiza fronteiras de decisão em grid denso. Compara com SVM, MLP, Decision Trees, KNN. Testa fine-tuning, active prompting, e variações de hiperparâmetros. Métricas: smoothness da fronteira, acurácia, estabilidade entre execuções.
+O que ele prova?
+As fronteiras de decisão de LLMs em classificação binária 2D são significativamente mais irregulares do que as de classificadores tradicionais, mesmo em problemas trivialmente separáveis. Pequenas mudanças no input podem alterar a classificação, indicando instabilidade do processo decisório.
+O que ele ajuda a justificar no meu trabalho?
+Artigo mais diretamente comparável à dissertação: usa exatamente o mesmo setup experimental (classificação binária 2D com LLMs). Seus achados sobre fronteiras irregulares informam diretamente a interpretação dos resultados da dissertação: se a fronteira do LLM não é suave, a métrica W (que impõe uma fronteira linear/quadrática) será uma aproximação necessariamente imperfeita. Também valida o design de testar sensibilidade a label semantics.
+Onde citar no meu trabalho?
+Trabalhos Relacionados (análise de fronteiras de decisão de LLMs), Discussão (interpretação da fidelidade da métrica — por que W não reproduz 100% das decisões do LLM), Metodologia (validação do design experimental 2D), Resultados (comparação qualitativa com achados sobre irregularidade das fronteiras).
+
+ARTIGO 10
+Título: Inter-Coder Agreement for Computational Linguistics
+Autores: Ron Artstein, Massimo Poesio
+Ano: 2008
+Conferência/Journal: Computational Linguistics, Vol. 34, No. 4, pp. 555–596 (MIT Press / ACL)
+Status: ✅ Verificado — metadados corretos. Mais de 1.600 citações. DOI: 10.1162/coli.07-034-R2.
+Contexto e Motivação
+Na linguística computacional e em ciências sociais, medir a concordância entre anotadores (ou entre sistemas e referências) requer métricas que corrijam para concordância ao acaso. Diversos coeficientes existiam (κ de Cohen, π de Scott, α de Krippendorff), mas suas diferenças, pressupostos e aplicabilidade não estavam claramente sistematizados.
+O que o artigo fala?
+Survey definitivo sobre coeficientes de concordância inter-anotador. Apresenta fundamentos matemáticos, pressupostos e diretrizes de interpretação para cada métrica. Unifica a terminologia e esclarece quando usar Cohen's κ (anotadores fixos, viés individual) vs. Scott's π (anotadores intercambiáveis) vs. Krippendorff's α (dados missing, múltiplos anotadores).
+Como ele fez o experimento?
+Revisão teórica com derivações matemáticas e exemplos ilustrativos. Compara os coeficientes em cenários controlados para evidenciar diferenças práticas. Discute paradoxos conhecidos (prevalence problem, bias problem) e oferece recomendações para cada caso de uso.
+O que ele prova?
+Cohen's κ é a métrica apropriada quando se comparam dois "anotadores" fixos com possíveis vieses individuais. A interpretação de κ deve considerar a prevalência das classes: κ pode ser baixo mesmo com alta concordância percentual quando uma classe é muito mais frequente.
+O que ele ajuda a justificar no meu trabalho?
+Referência padrão para justificar o uso de Cohen's Kappa como métrica principal de consistência decisional (H1) nas Fases B/C. A dissertação trata o LLM e a métrica W como dois "anotadores" fixos, o que corresponde exatamente ao cenário de Cohen's κ. Fornece os limiares de interpretação (κ > 0.7 = substancial).
+Onde citar no meu trabalho?
+Metodologia (definição e justificativa de Cohen's Kappa como medida de consistência), Resultados §Fases B/C (interpretação dos valores de κ usando os limiares do artigo), Fundamentação Teórica (métricas de concordância).

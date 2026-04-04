@@ -1,0 +1,922 @@
+
+======================================================================
+ EXPERIMENTO: CONSISTÊNCIA DECISIONAL DE LLMs VIA OTIMIZAÇÃO INVERSA (v3.0)
+======================================================================
+
+  Inclui Fase D: LLM como Aprendiz com estratégias de dificuldade
+  Pasta de execução: execucao_2026-03-03_17-05-57/
+  Data/hora: 03/03/2026 17:05:57
+
+    ═══════════════════════════════════════════════════
+    MODELS TO TEST (1):
+    - openai/gpt-4o-mini (temp=0.0)
+    ═══════════════════════════════════════════════════
+
+    PHASES A-C (Original Experiment):
+      Few-shot sizes: [0, 5, 10]
+      Class name variations: 4
+      Repetitions: 2
+      Seeds: [42, 123]
+
+    PHASE D (NEW - LLM as Learner):
+      Few-shot sizes: [0, 3, 5, 10, 20]
+      Example strategies: ['easy', 'hard', 'mixed', 'random']
+      Expert W = [0.30, 1.50]
+      Problem D samples: 150
+
+    ═══════════════════════════════════════════════════
+    ESTIMATED API CALLS:
+      Phases A-C: ~5,640
+      Phase D:    ~12,000
+      Total:      ~17,640
+    ═══════════════════════════════════════════════════
+    
+
+══════════════════════════════════════════════════════════════════════
+ MODEL 1/1: openai/gpt-4o-mini (temp=0.0) | SEED 1/2: 42
+══════════════════════════════════════════════════════════════════════
+
+
+[PASSO 1] Gerando conjuntos de dados sintéticos com semente aleatória 42...
+  - Problema A: 150 amostras (base para aprendizado da métrica)
+  - Problema B: 100 amostras (teste de consistência 1 — centróides deslocados verticalmente)
+  - Problema C: 100 amostras (teste de consistência 2 — distorção geométrica mais severa)
+  - Problema D: 150 amostras (Fase D — LLM como aprendiz)
+  Dados gerados com sucesso!
+
+[PASSO 2] Gerando visualizações iniciais dos problemas sintéticos...
+  Salvando imagens em: execucao_2026-03-03_17-05-57/
+  Imagem salva: 01_all_three_problems.png
+  Imagem salva: 06_problem_d_expert.png
+  Imagem salva: 07_phase_d_example_strategies.png
+
+  Problema A — Total (treino): 150 amostras
+  Problema B — Total: 100 amostras
+  Problema C — Total: 100 amostras
+  Problema D — Total: 150 amostras
+
+[PASSO 3] Iniciando Fases A-C (experimento de consistência decisional)...
+  Modelo: openai/gpt-4o-mini (temperatura=0.0)
+  Tamanhos few-shot testados: [0, 5, 10]
+  Repetições por configuração: 2
+  Semente aleatória: 42
+
+>>> Fases A-C: Experimento Principal
+
+──────────────────────────────────────────────────────────────────────
+ EXPERIMENT: Phase B/C=zero-shot | Classes: A/B | Rep: 1 | Seed: 42
+──────────────────────────────────────────────────────────────────────
+
+
+  [Iniciando Fase A: Aprendizado da Métrica W a partir das decisões do LLM...]
+
+  ══════════════════════════════════════════════════════════════
+  FASE A: APRENDENDO A MÉTRICA W DO PROBLEMA A (ZERO-SHOT)
+  ══════════════════════════════════════════════════════════════
+  Objetivo: capturar o processo decisório INTRÍNSECO do LLM.
+  O LLM classifica pontos sem exemplos (zero-shot), e a métrica
+  W é aprendida a partir dessas decisões via Perceptron Estruturado.
+
+  Passo 1: Coletando decisões do LLM no Problema A (zero-shot)...
+    Classes usadas: 'A' e 'B'
+    Pontos de treino: 150
+  [Problema A] Coletando decisões do LLM (zero-shot) — 150 pontos...
+    [ 10/150] llm: "B" → B | 6.3s | ETA: 88s
+    [ 20/150] llm: "B" → B | 13.1s | ETA: 85s
+    [ 30/150] llm: "A" → A | 18.9s | ETA: 76s
+    [ 40/150] llm: "A" → A | 26.1s | ETA: 72s
+    [ 50/150] llm: "A" → A | 32.3s | ETA: 65s
+    [ 60/150] llm: "A" → A | 40.2s | ETA: 60s
+    [ 70/150] llm: "A" → A | 46.1s | ETA: 53s
+    [ 80/150] llm: "A" → A | 52.3s | ETA: 46s
+    [ 90/150] llm: "A" → A | 57.7s | ETA: 38s
+    [100/150] llm: "B" → B | 64.1s | ETA: 32s
+    [110/150] llm: "A" → A | 71.0s | ETA: 26s
+    [120/150] llm: "A" → A | 77.0s | ETA: 19s
+    [130/150] llm: "A" → A | 82.3s | ETA: 13s
+    [140/150] llm: "A" → A | 88.6s | ETA: 6s
+    [150/150] llm: "A" → A | 95.0s | ETA: <1s
+    ✓ Concluído em 95.0s — Classe A: 114 (76.0%) | Classe B: 36 (24.0%)
+
+  Passo 2: Calculando centróides a partir das decisões do LLM...
+    Centróide da Classe 0: (0.733, 0.269)
+    Centróide da Classe 1: (-2.493, -0.736)
+
+  Passo 3: Aprendendo a métrica W com o Perceptron Estruturado com Relaxação de Margem...
+    (Busca binária no gamma ótimo para maximizar a margem da fronteira de decisão)
+    Testando gamma = 0.100000
+    ❌ Perceptron: separação perfeita não encontrada. Retornando pesos iniciais (equivalente à distância Euclidiana). Verifique a separabilidade dos dados do LLM.
+    W aprendido (normalizado): [0.500, 0.500]
+    Gamma ótimo encontrado: 0.0000
+
+  Passo 4: Verificando fidelidade da métrica aprendida...
+    Fidelidade (métrica vs. LLM no Problema A): 76.7%
+    Acurácia do LLM vs. ground truth: 28.7%
+    ⚠ Fidelidade baixa — a métrica pode não representar bem o LLM.
+
+  ══════════════════════════════════════════════════════════════
+  FASE B (Problema B): TESTE DE CONSISTÊNCIA
+  ══════════════════════════════════════════════════════════════
+  Aplicando a métrica W aprendida no Problema A a este novo problema.
+  Objetivo: verificar se o LLM concorda com a métrica em dados não vistos.
+    Predições da métrica W_A: Classe 0=62, Classe 1=38
+
+  Coletando decisões do LLM para 100 pontos de teste...
+  [FASE B (Problema B)] Coletando decisões do LLM (zero-shot) — 100 pontos...
+    [ 10/100] llm: "A" → A | 8.0s | ETA: 72s
+    [ 20/100] llm: "A" → A | 13.3s | ETA: 53s
+    [ 30/100] llm: "B" → B | 21.6s | ETA: 50s
+    [ 40/100] llm: "B" → B | 29.3s | ETA: 44s
+    [ 50/100] llm: "A" → A | 35.4s | ETA: 35s
+    [ 60/100] llm: "A" → A | 42.3s | ETA: 28s
+    [ 70/100] llm: "A" → A | 48.0s | ETA: 21s
+    [ 80/100] llm: "A" → A | 56.2s | ETA: 14s
+    [ 90/100] llm: "A" → A | 62.6s | ETA: 7s
+    [100/100] llm: "B" → B | 69.4s | ETA: <1s
+    ✓ Concluído em 69.4s — Classe A: 79 (79.0%) | Classe B: 21 (21.0%)
+
+  RESULTADOS: FASE B (Problema B)
+    CONSISTÊNCIA (LLM vs. Métrica W_A): 69.0%
+    Kappa de Cohen: 0.280
+    F1-Score: 0.690
+    Concordâncias: 69 | Discordâncias: 31
+    Consistência da linha de base Euclidiana: 69.0%
+    Conjunto de teste: 100 pontos (excluídos 0 exemplos few-shot)
+    ⚠ O LLM NÃO mantém consistência com a métrica W_A neste problema.
+
+  ══════════════════════════════════════════════════════════════
+  FASE C (Problema C): TESTE DE CONSISTÊNCIA
+  ══════════════════════════════════════════════════════════════
+  Aplicando a métrica W aprendida no Problema A a este novo problema.
+  Objetivo: verificar se o LLM concorda com a métrica em dados não vistos.
+    Predições da métrica W_A: Classe 0=63, Classe 1=37
+
+  Coletando decisões do LLM para 100 pontos de teste...
+  [FASE C (Problema C)] Coletando decisões do LLM (zero-shot) — 100 pontos...
+    [ 10/100] llm: "A" → A | 6.5s | ETA: 59s
+    [ 20/100] llm: "A" → A | 12.3s | ETA: 49s
+    [ 30/100] llm: "B" → B | 18.8s | ETA: 44s
+    [ 40/100] llm: "A" → A | 25.0s | ETA: 37s
+    [ 50/100] llm: "A" → A | 31.8s | ETA: 32s
+    [ 60/100] llm: "A" → A | 37.7s | ETA: 25s
+    [ 70/100] llm: "A" → A | 43.6s | ETA: 19s
+    [ 80/100] llm: "A" → A | 50.3s | ETA: 13s
+    [ 90/100] llm: "A" → A | 56.4s | ETA: 6s
+    [100/100] llm: "A" → A | 62.0s | ETA: <1s
+    ✓ Concluído em 62.0s — Classe A: 71 (71.0%) | Classe B: 29 (29.0%)
+
+  RESULTADOS: FASE C (Problema C)
+    CONSISTÊNCIA (LLM vs. Métrica W_A): 64.0%
+    Kappa de Cohen: 0.192
+    F1-Score: 0.640
+    Concordâncias: 64 | Discordâncias: 36
+    Consistência da linha de base Euclidiana: 64.0%
+    Conjunto de teste: 100 pontos (excluídos 0 exemplos few-shot)
+    ⚠ O LLM NÃO mantém consistência com a métrica W_A neste problema.
+
+>>> Fases A-C: Variações de nomes de classe (10-shot)
+
+──────────────────────────────────────────────────────────────────────
+ EXPERIMENT: Phase B/C=10-shot | Classes: 0/1 | Rep: 1 | Seed: 42
+──────────────────────────────────────────────────────────────────────
+
+
+  [Iniciando Fase A: Aprendizado da Métrica W a partir das decisões do LLM...]
+
+  ══════════════════════════════════════════════════════════════
+  FASE A: APRENDENDO A MÉTRICA W DO PROBLEMA A (ZERO-SHOT)
+  ══════════════════════════════════════════════════════════════
+  Objetivo: capturar o processo decisório INTRÍNSECO do LLM.
+  O LLM classifica pontos sem exemplos (zero-shot), e a métrica
+  W é aprendida a partir dessas decisões via Perceptron Estruturado.
+
+  Passo 1: Coletando decisões do LLM no Problema A (zero-shot)...
+    Classes usadas: '0' e '1'
+    Pontos de treino: 150
+  [Problema A] Coletando decisões do LLM (zero-shot) — 150 pontos...
+    [ 10/150] llm: "1" → 1 | 9.2s | ETA: 128s
+    [ 20/150] llm: "0" → 0 | 16.4s | ETA: 107s
+    [ 30/150] llm: "1" → 1 | 23.5s | ETA: 94s
+    [ 40/150] llm: "1" → 1 | 29.9s | ETA: 82s
+    [ 50/150] llm: "1" → 1 | 36.0s | ETA: 72s
+    [ 60/150] llm: "1" → 1 | 43.7s | ETA: 65s
+    [ 70/150] llm: "1" → 1 | 50.7s | ETA: 58s
+    [ 80/150] llm: "1" → 1 | 56.9s | ETA: 50s
+    [ 90/150] llm: "1" → 1 | 64.9s | ETA: 43s
+    [100/150] llm: "1" → 1 | 71.5s | ETA: 36s
+    [110/150] llm: "1" → 1 | 77.3s | ETA: 28s
+    [120/150] llm: "1" → 1 | 84.5s | ETA: 21s
+    [130/150] llm: "1" → 1 | 92.4s | ETA: 14s
+    [140/150] llm: "1" → 1 | 99.0s | ETA: 7s
+    [150/150] llm: "1" → 1 | 104.4s | ETA: <1s
+    ✓ Concluído em 104.4s — Classe 0: 6 (4.0%) | Classe 1: 144 (96.0%)
+
+  Passo 2: Calculando centróides a partir das decisões do LLM...
+    Centróide da Classe 0: (-1.771, -0.339)
+    Centróide da Classe 1: (0.031, 0.043)
+
+  Passo 3: Aprendendo a métrica W com o Perceptron Estruturado com Relaxação de Margem...
+    (Busca binária no gamma ótimo para maximizar a margem da fronteira de decisão)
+    Testando gamma = 0.100000
+    ❌ Perceptron: separação perfeita não encontrada. Retornando pesos iniciais (equivalente à distância Euclidiana). Verifique a separabilidade dos dados do LLM.
+    W aprendido (normalizado): [0.500, 0.500]
+    Gamma ótimo encontrado: 0.0000
+
+  Passo 4: Verificando fidelidade da métrica aprendida...
+    Fidelidade (métrica vs. LLM no Problema A): 58.0%
+    Acurácia do LLM vs. ground truth: 52.7%
+    ⚠ Fidelidade baixa — a métrica pode não representar bem o LLM.
+
+  ══════════════════════════════════════════════════════════════
+  FASE B (Problema B): TESTE DE CONSISTÊNCIA
+  ══════════════════════════════════════════════════════════════
+  Aplicando a métrica W aprendida no Problema A a este novo problema.
+  Objetivo: verificar se o LLM concorda com a métrica em dados não vistos.
+    Predições da métrica W_A: Classe 0=39, Classe 1=61
+
+  Selecionando 10 exemplos few-shot (Aprendizado Ativo, rotulados pela métrica)...
+      Classe 0: 5 pontos selecionados, faixa de margem [8.742, 11.543]
+      Classe 1: 5 pontos selecionados, faixa de margem [17.626, 22.555]
+
+  Coletando decisões do LLM para 90 pontos de teste...
+  [FASE B (Problema B)] Coletando decisões do LLM (10-shot) — 90 pontos...
+    [10/90] llm: "0" → 0 | 5.2s | ETA: 42s
+    [20/90] llm: "0" → 0 | 11.3s | ETA: 39s
+    [30/90] llm: "0" → 0 | 17.7s | ETA: 35s
+    [40/90] llm: "0" → 0 | 23.7s | ETA: 30s
+    [50/90] llm: "0" → 0 | 29.9s | ETA: 24s
+    [60/90] llm: "0" → 0 | 35.7s | ETA: 18s
+    [70/90] llm: "0" → 0 | 42.0s | ETA: 12s
+    [80/90] llm: "0" → 0 | 48.0s | ETA: 6s
+    [90/90] llm: "0" → 0 | 54.1s | ETA: <1s
+    ✓ Concluído em 54.1s — Classe 0: 82 (91.1%) | Classe 1: 8 (8.9%)
+
+  RESULTADOS: FASE B (Problema B)
+    CONSISTÊNCIA (LLM vs. Métrica W_A): 46.7%
+    Kappa de Cohen: 0.112
+    F1-Score: 0.467
+    Concordâncias: 42 | Discordâncias: 48
+    Consistência da linha de base Euclidiana: 46.7%
+    Conjunto de teste: 90 pontos (excluídos 10 exemplos few-shot)
+    ⚠ O LLM NÃO mantém consistência com a métrica W_A neste problema.
+
+  ══════════════════════════════════════════════════════════════
+  FASE C (Problema C): TESTE DE CONSISTÊNCIA
+  ══════════════════════════════════════════════════════════════
+  Aplicando a métrica W aprendida no Problema A a este novo problema.
+  Objetivo: verificar se o LLM concorda com a métrica em dados não vistos.
+    Predições da métrica W_A: Classe 0=41, Classe 1=59
+
+  Selecionando 10 exemplos few-shot (Aprendizado Ativo, rotulados pela métrica)...
+      Classe 0: 5 pontos selecionados, faixa de margem [8.431, 12.382]
+      Classe 1: 5 pontos selecionados, faixa de margem [15.428, 19.188]
+
+  Coletando decisões do LLM para 90 pontos de teste...
+  [FASE C (Problema C)] Coletando decisões do LLM (10-shot) — 90 pontos...
+    [10/90] llm: "0" → 0 | 6.1s | ETA: 49s
+    [20/90] llm: "0" → 0 | 11.4s | ETA: 40s
+    [30/90] llm: "1" → 1 | 17.7s | ETA: 35s
+    [40/90] llm: "0" → 0 | 23.7s | ETA: 30s
+    [50/90] llm: "0" → 0 | 29.6s | ETA: 24s
+    [60/90] llm: "0" → 0 | 35.5s | ETA: 18s
+    [70/90] llm: "0" → 0 | 42.0s | ETA: 12s
+    [80/90] llm: "0" → 0 | 48.8s | ETA: 6s
+    [90/90] llm: "0" → 0 | 54.8s | ETA: <1s
+    ✓ Concluído em 54.9s — Classe 0: 83 (92.2%) | Classe 1: 7 (7.8%)
+
+  RESULTADOS: FASE C (Problema C)
+    CONSISTÊNCIA (LLM vs. Métrica W_A): 47.8%
+    Kappa de Cohen: 0.106
+    F1-Score: 0.478
+    Concordâncias: 43 | Discordâncias: 47
+    Consistência da linha de base Euclidiana: 47.8%
+    Conjunto de teste: 90 pontos (excluídos 10 exemplos few-shot)
+    ⚠ O LLM NÃO mantém consistência com a métrica W_A neste problema.
+
+──────────────────────────────────────────────────────────────────────
+ EXPERIMENT: Phase B/C=10-shot | Classes: Positivo/Negativo | Rep: 1 | Seed: 42
+──────────────────────────────────────────────────────────────────────
+
+
+  [Iniciando Fase A: Aprendizado da Métrica W a partir das decisões do LLM...]
+
+  ══════════════════════════════════════════════════════════════
+  FASE A: APRENDENDO A MÉTRICA W DO PROBLEMA A (ZERO-SHOT)
+  ══════════════════════════════════════════════════════════════
+  Objetivo: capturar o processo decisório INTRÍNSECO do LLM.
+  O LLM classifica pontos sem exemplos (zero-shot), e a métrica
+  W é aprendida a partir dessas decisões via Perceptron Estruturado.
+
+  Passo 1: Coletando decisões do LLM no Problema A (zero-shot)...
+    Classes usadas: 'Positivo' e 'Negativo'
+    Pontos de treino: 150
+  [Problema A] Coletando decisões do LLM (zero-shot) — 150 pontos...
+    [ 10/150] llm: "Negativo" → Negativo | 6.0s | ETA: 84s
+    [ 20/150] llm: "Negativo" → Negativo | 12.4s | ETA: 81s
+    [ 30/150] llm: "Negativo" → Negativo | 18.4s | ETA: 73s
+    [ 40/150] llm: "Negativo" → Negativo | 24.7s | ETA: 68s
+    [ 50/150] llm: "Positivo" → Positivo | 31.7s | ETA: 63s
+    [ 60/150] llm: "Positivo" → Positivo | 37.5s | ETA: 56s
+    [ 70/150] llm: "Positivo" → Positivo | 43.8s | ETA: 50s
+    [ 80/150] llm: "Positivo" → Positivo | 49.7s | ETA: 43s
+    [ 90/150] llm: "Positivo" → Positivo | 56.8s | ETA: 38s
+    [100/150] llm: "Negativo" → Negativo | 63.5s | ETA: 32s
+    [110/150] llm: "Positivo" → Positivo | 69.7s | ETA: 25s
+    [120/150] llm: "Negativo" → Negativo | 77.8s | ETA: 19s
+    [130/150] llm: "Positivo" → Positivo | 88.4s | ETA: 14s
+    [140/150] llm: "Positivo" → Positivo | 97.2s | ETA: 7s
+    [150/150] llm: "Positivo" → Positivo | 105.5s | ETA: <1s
+    ✓ Concluído em 105.5s — Classe Positivo: 77 (51.3%) | Classe Negativo: 73 (48.7%)
+
+  Passo 2: Calculando centróides a partir das decisões do LLM...
+    Centróide da Classe 0: (1.950, 0.305)
+    Centróide da Classe 1: (-2.141, -0.265)
+
+  Passo 3: Aprendendo a métrica W com o Perceptron Estruturado com Relaxação de Margem...
+    (Busca binária no gamma ótimo para maximizar a margem da fronteira de decisão)
+    Testando gamma = 0.100000
+    ❌ Perceptron: separação perfeita não encontrada. Retornando pesos iniciais (equivalente à distância Euclidiana). Verifique a separabilidade dos dados do LLM.
+    W aprendido (normalizado): [0.500, 0.500]
+    Gamma ótimo encontrado: 0.0000
+
+  Passo 4: Verificando fidelidade da métrica aprendida...
+    Fidelidade (métrica vs. LLM no Problema A): 93.3%
+    Acurácia do LLM vs. ground truth: 9.3%
+    A métrica reproduz bem as decisões do LLM.
+
+  ══════════════════════════════════════════════════════════════
+  FASE B (Problema B): TESTE DE CONSISTÊNCIA
+  ══════════════════════════════════════════════════════════════
+  Aplicando a métrica W aprendida no Problema A a este novo problema.
+  Objetivo: verificar se o LLM concorda com a métrica em dados não vistos.
+    Predições da métrica W_A: Classe 0=51, Classe 1=49
+
+  Selecionando 10 exemplos few-shot (Aprendizado Ativo, rotulados pela métrica)...
+      Classe 0: 5 pontos selecionados, faixa de margem [34.592, 43.983]
+      Classe 1: 5 pontos selecionados, faixa de margem [27.415, 33.173]
+
+  Coletando decisões do LLM para 90 pontos de teste...
+  [FASE B (Problema B)] Coletando decisões do LLM (10-shot) — 90 pontos...
+    [10/90] llm: "Positivo" → Positivo | 6.4s | ETA: 51s
+    [20/90] llm: "Positivo" → Positivo | 15.7s | ETA: 55s
+    [30/90] llm: "Negativo" → Negativo | 23.0s | ETA: 46s
+    [40/90] llm: "Negativo" → Negativo | 29.8s | ETA: 37s
+    [50/90] llm: "Positivo" → Positivo | 36.1s | ETA: 29s
+    [60/90] llm: "Positivo" → Positivo | 42.9s | ETA: 21s
+    [70/90] llm: "Positivo" → Positivo | 49.6s | ETA: 14s
+    [80/90] llm: "Positivo" → Positivo | 56.2s | ETA: 7s
+    [90/90] llm: "Negativo" → Negativo | 61.6s | ETA: <1s
+    ✓ Concluído em 61.6s — Classe Positivo: 40 (44.4%) | Classe Negativo: 50 (55.6%)
+
+  RESULTADOS: FASE B (Problema B)
+    CONSISTÊNCIA (LLM vs. Métrica W_A): 93.3%
+    Kappa de Cohen: 0.867
+    F1-Score: 0.933
+    Concordâncias: 84 | Discordâncias: 6
+    Consistência da linha de base Euclidiana: 93.3%
+    Conjunto de teste: 90 pontos (excluídos 10 exemplos few-shot)
+    O LLM MANTÉM consistência elevada com a métrica W_A neste problema.
+
+  ══════════════════════════════════════════════════════════════
+  FASE C (Problema C): TESTE DE CONSISTÊNCIA
+  ══════════════════════════════════════════════════════════════
+  Aplicando a métrica W aprendida no Problema A a este novo problema.
+  Objetivo: verificar se o LLM concorda com a métrica em dados não vistos.
+    Predições da métrica W_A: Classe 0=50, Classe 1=50
+
+  Selecionando 10 exemplos few-shot (Aprendizado Ativo, rotulados pela métrica)...
+      Classe 0: 5 pontos selecionados, faixa de margem [29.742, 37.560]
+      Classe 1: 5 pontos selecionados, faixa de margem [25.822, 35.764]
+
+  Coletando decisões do LLM para 90 pontos de teste...
+  [FASE C (Problema C)] Coletando decisões do LLM (10-shot) — 90 pontos...
+    [10/90] llm: "Positivo" → Positivo | 9.1s | ETA: 73s
+    [20/90] llm: "Negativo" → Negativo | 16.6s | ETA: 58s
+    [30/90] llm: "Positivo" → Positivo | 24.0s | ETA: 48s
+    [40/90] llm: "Negativo" → Negativo | 32.1s | ETA: 40s
+    [50/90] llm: "Positivo" → Positivo | 40.0s | ETA: 32s
+    [60/90] llm: "Negativo" → Negativo | 51.0s | ETA: 25s
+    [70/90] llm: "Negativo" → Negativo | 58.7s | ETA: 17s
+    [80/90] llm: "Negativo" → Negativo | 66.3s | ETA: 8s
+    [90/90] llm: "Negativo" → Negativo | 75.2s | ETA: <1s
+    ✓ Concluído em 75.2s — Classe Positivo: 40 (44.4%) | Classe Negativo: 50 (55.6%)
+
+  RESULTADOS: FASE C (Problema C)
+    CONSISTÊNCIA (LLM vs. Métrica W_A): 94.4%
+    Kappa de Cohen: 0.889
+    F1-Score: 0.944
+    Concordâncias: 85 | Discordâncias: 5
+    Consistência da linha de base Euclidiana: 94.4%
+    Conjunto de teste: 90 pontos (excluídos 10 exemplos few-shot)
+    O LLM MANTÉM consistência elevada com a métrica W_A neste problema.
+
+──────────────────────────────────────────────────────────────────────
+ EXPERIMENT: Phase B/C=10-shot | Classes: Azul/Vermelho | Rep: 1 | Seed: 42
+──────────────────────────────────────────────────────────────────────
+
+
+  [Iniciando Fase A: Aprendizado da Métrica W a partir das decisões do LLM...]
+
+  ══════════════════════════════════════════════════════════════
+  FASE A: APRENDENDO A MÉTRICA W DO PROBLEMA A (ZERO-SHOT)
+  ══════════════════════════════════════════════════════════════
+  Objetivo: capturar o processo decisório INTRÍNSECO do LLM.
+  O LLM classifica pontos sem exemplos (zero-shot), e a métrica
+  W é aprendida a partir dessas decisões via Perceptron Estruturado.
+
+  Passo 1: Coletando decisões do LLM no Problema A (zero-shot)...
+    Classes usadas: 'Azul' e 'Vermelho'
+    Pontos de treino: 150
+  [Problema A] Coletando decisões do LLM (zero-shot) — 150 pontos...
+    [ 10/150] llm: "Vermelho" → Vermelho | 6.4s | ETA: 90s
+    [ 20/150] llm: "Azul" → Azul | 14.1s | ETA: 92s
+    [ 30/150] llm: "Vermelho" → Vermelho | 22.7s | ETA: 91s
+    [ 40/150] llm: "Azul" → Azul | 29.3s | ETA: 81s
+    [ 50/150] llm: "Azul" → Azul | 36.0s | ETA: 72s
+    [ 60/150] llm: "Azul" → Azul | 42.7s | ETA: 64s
+    [ 70/150] llm: "Azul" → Azul | 49.5s | ETA: 57s
+    [ 80/150] llm: "Azul" → Azul | 55.5s | ETA: 49s
+    [ 90/150] llm: "Azul" → Azul | 66.0s | ETA: 44s
+    [100/150] llm: "Vermelho" → Vermelho | 72.5s | ETA: 36s
+    [110/150] llm: "Azul" → Azul | 78.7s | ETA: 29s
+    [120/150] llm: "Azul" → Azul | 85.1s | ETA: 21s
+    [130/150] llm: "Azul" → Azul | 91.7s | ETA: 14s
+    [140/150] llm: "Azul" → Azul | 100.0s | ETA: 7s
+    [150/150] llm: "Azul" → Azul | 106.7s | ETA: <1s
+    ✓ Concluído em 106.7s — Classe Azul: 99 (66.0%) | Classe Vermelho: 51 (34.0%)
+
+  Passo 2: Calculando centróides a partir das decisões do LLM...
+    Centróide da Classe 0: (1.154, 0.232)
+    Centróide da Classe 1: (-2.360, -0.369)
+
+  Passo 3: Aprendendo a métrica W com o Perceptron Estruturado com Relaxação de Margem...
+    (Busca binária no gamma ótimo para maximizar a margem da fronteira de decisão)
+    Testando gamma = 0.100000
+    ❌ Perceptron: separação perfeita não encontrada. Retornando pesos iniciais (equivalente à distância Euclidiana). Verifique a separabilidade dos dados do LLM.
+    W aprendido (normalizado): [0.500, 0.500]
+    Gamma ótimo encontrado: 0.0000
+
+  Passo 4: Verificando fidelidade da métrica aprendida...
+    Fidelidade (métrica vs. LLM no Problema A): 84.0%
+    Acurácia do LLM vs. ground truth: 20.0%
+    ⚠ Fidelidade baixa — a métrica pode não representar bem o LLM.
+
+  ══════════════════════════════════════════════════════════════
+  FASE B (Problema B): TESTE DE CONSISTÊNCIA
+  ══════════════════════════════════════════════════════════════
+  Aplicando a métrica W aprendida no Problema A a este novo problema.
+  Objetivo: verificar se o LLM concorda com a métrica em dados não vistos.
+    Predições da métrica W_A: Classe 0=57, Classe 1=43
+
+  Selecionando 10 exemplos few-shot (Aprendizado Ativo, rotulados pela métrica)...
+      Classe 0: 5 pontos selecionados, faixa de margem [32.929, 41.667]
+      Classe 1: 5 pontos selecionados, faixa de margem [19.484, 24.688]
+
+  Coletando decisões do LLM para 90 pontos de teste...
+  [FASE B (Problema B)] Coletando decisões do LLM (10-shot) — 90 pontos...
+    [10/90] llm: "Azul" → Azul | 7.4s | ETA: 59s
+    [20/90] llm: "Azul" → Azul | 14.4s | ETA: 50s
+    [30/90] llm: "Vermelho" → Vermelho | 21.9s | ETA: 44s
+    [40/90] llm: "Azul" → Azul | 28.9s | ETA: 36s
+    [50/90] llm: "Azul" → Azul | 37.1s | ETA: 30s
+    [60/90] llm: "Azul" → Azul | 44.6s | ETA: 22s
+    [70/90] llm: "Azul" → Azul | 54.0s | ETA: 15s
+    [80/90] llm: "Azul" → Azul | 64.9s | ETA: 8s
+    [90/90] llm: "Vermelho" → Vermelho | 74.5s | ETA: <1s
+    ✓ Concluído em 74.5s — Classe Azul: 45 (50.0%) | Classe Vermelho: 45 (50.0%)
+
+  RESULTADOS: FASE B (Problema B)
+    CONSISTÊNCIA (LLM vs. Métrica W_A): 92.2%
+    Kappa de Cohen: 0.844
+    F1-Score: 0.922
+    Concordâncias: 83 | Discordâncias: 7
+    Consistência da linha de base Euclidiana: 92.2%
+    Conjunto de teste: 90 pontos (excluídos 10 exemplos few-shot)
+    O LLM MANTÉM consistência elevada com a métrica W_A neste problema.
+
+  ══════════════════════════════════════════════════════════════
+  FASE C (Problema C): TESTE DE CONSISTÊNCIA
+  ══════════════════════════════════════════════════════════════
+  Aplicando a métrica W aprendida no Problema A a este novo problema.
+  Objetivo: verificar se o LLM concorda com a métrica em dados não vistos.
+    Predições da métrica W_A: Classe 0=57, Classe 1=43
+
+  Selecionando 10 exemplos few-shot (Aprendizado Ativo, rotulados pela métrica)...
+      Classe 0: 5 pontos selecionados, faixa de margem [28.712, 35.695]
+      Classe 1: 5 pontos selecionados, faixa de margem [18.562, 26.656]
+
+  Coletando decisões do LLM para 90 pontos de teste...
+  [FASE C (Problema C)] Coletando decisões do LLM (10-shot) — 90 pontos...
+    [10/90] llm: "Azul" → Azul | 5.3s | ETA: 42s
+    [20/90] llm: "Vermelho" → Vermelho | 10.3s | ETA: 36s
+    [30/90] llm: "Azul" → Azul | 15.3s | ETA: 31s
+    [40/90] llm: "Vermelho" → Vermelho | 22.4s | ETA: 28s
+    [50/90] llm: "Azul" → Azul | 29.7s | ETA: 24s
+    [60/90] llm: "Vermelho" → Vermelho | 35.1s | ETA: 18s
+    [70/90] llm: "Vermelho" → Vermelho | 44.6s | ETA: 13s
+    [80/90] llm: "Vermelho" → Vermelho | 51.2s | ETA: 6s
+    [90/90] llm: "Vermelho" → Vermelho | 56.9s | ETA: <1s
+    ✓ Concluído em 56.9s — Classe Azul: 44 (48.9%) | Classe Vermelho: 46 (51.1%)
+
+  RESULTADOS: FASE C (Problema C)
+    CONSISTÊNCIA (LLM vs. Métrica W_A): 91.1%
+    Kappa de Cohen: 0.823
+    F1-Score: 0.911
+    Concordâncias: 82 | Discordâncias: 8
+    Consistência da linha de base Euclidiana: 91.1%
+    Conjunto de teste: 90 pontos (excluídos 10 exemplos few-shot)
+    O LLM MANTÉM consistência elevada com a métrica W_A neste problema.
+
+[PASSO 4] Iniciando Fase D (LLM como Aprendiz — nova v3.0)...
+  Nesta fase, o LLM aprende o padrão de um PERITO EXTERNO via exemplos few-shot.
+  Métrica do perito: W = [0.30, 1.50] (pondera x2 5x mais que x1)
+  Estratégias de seleção de exemplos: ['easy', 'hard', 'mixed', 'random']
+  Tamanhos few-shot testados: [0, 3, 5, 10, 20]
+
+══════════════════════════════════════════════════════════════════════
+ FASE D: LLM COMO APRENDIZ
+══════════════════════════════════════════════════════════════════════
+
+  Métrica do perito: W = [0.30, 1.50]
+  Estratégias: ['easy', 'hard', 'mixed', 'random']
+  Tamanhos few-shot: [0, 3, 5, 10, 20]
+
+  ══════════════════════════════════════════════════════════════
+  FASE D: LLM COMO APRENDIZ (zero-shot, estratégia=easy)
+  Métrica do Perito W = [0.30, 1.50]
+  ══════════════════════════════════════════════════════════════
+  O perito rotula os dados com sua métrica conhecida.
+  O LLM recebe exemplos do perito e deve APRENDER o padrão de classificação.
+
+  Passo 1: Classificação pelo Perito (métrica W_expert conhecida)
+    Rótulos do perito: Classe 0=73, Classe 1=77
+    Acurácia do perito vs. ground truth: 85.3%
+
+  Passo 3: LLM classificando 150 pontos de teste (zero-shot)...
+  [Fase D] Coletando decisões do LLM (zero-shot) — 150 pontos...
+    [ 10/150] llm: "A" → A | 6.3s | ETA: 89s
+    [ 20/150] llm: "B" → B | 12.4s | ETA: 81s
+    [ 30/150] llm: "A" → A | 18.7s | ETA: 75s
+    [ 40/150] llm: "A" → A | 25.1s | ETA: 69s
+    [ 50/150] llm: "A" → A | 31.0s | ETA: 62s
+    [ 60/150] llm: "A" → A | 37.4s | ETA: 56s
+    [ 70/150] llm: "A" → A | 43.0s | ETA: 49s
+    [ 80/150] llm: "A" → A | 48.5s | ETA: 42s
+    [ 90/150] llm: "A" → A | 56.7s | ETA: 38s
+    [100/150] llm: "A" → A | 63.7s | ETA: 32s
+    [110/150] llm: "B" → B | 69.8s | ETA: 25s
+    [120/150] llm: "A" → A | 75.5s | ETA: 19s
+    [130/150] llm: "B" → B | 83.3s | ETA: 13s
+    [140/150] llm: "A" → A | 89.1s | ETA: 6s
+    [150/150] llm: "A" → A | 94.8s | ETA: <1s
+    ✓ Concluído em 94.8s — Classe A: 114 (76.0%) | Classe B: 36 (24.0%)
+
+  ═══════════════════════════════════════════════════════════
+  RESULTADOS: FASE D (zero-shot, estratégia=easy)
+  ═══════════════════════════════════════════════════════════
+    Concordância LLM vs. Perito:  59.3%
+    Kappa de Cohen:               0.198
+    F1-Score:                     0.593
+    
+    Acurácia do LLM vs. GT:       51.3%
+    Acurácia do Perito vs. GT:    85.3%
+    Concordâncias: 89 | Discordâncias: 61
+    → O LLM NÃO conseguiu aprender o padrão do perito com 0 exemplos.
+
+  ══════════════════════════════════════════════════════════════
+  FASE D: LLM COMO APRENDIZ (20-shot, estratégia=easy)
+  Métrica do Perito W = [0.30, 1.50]
+  ══════════════════════════════════════════════════════════════
+  O perito rotula os dados com sua métrica conhecida.
+  O LLM recebe exemplos do perito e deve APRENDER o padrão de classificação.
+
+  Passo 1: Classificação pelo Perito (métrica W_expert conhecida)
+    Rótulos do perito: Classe 0=73, Classe 1=77
+    Acurácia do perito vs. ground truth: 85.3%
+
+  Passo 2: Selecionando 20 exemplos (estratégia=easy)...
+    Estratégia: EASY — pontos LONGE da fronteira (mais fáceis)
+      Estratégia: EASY
+      Classe 0: 10 exemplos, faixa de margem [18.485, 30.416], média=23.220
+      Classe 1: 10 exemplos, faixa de margem [16.133, 27.996], média=20.438
+
+  Passo 3: LLM classificando 130 pontos de teste (20-shot)...
+    O LLM receberá 20 exemplos rotulados pelo perito como contexto.
+  [Fase D] Coletando decisões do LLM (20-shot) — 130 pontos...
+    [ 10/130] llm: "A" → A | 5.4s | ETA: 65s
+    [ 20/130] llm: "B" → B | 10.4s | ETA: 57s
+    [ 30/130] llm: "B" → B | 15.4s | ETA: 51s
+    [ 40/130] llm: "B" → B | 21.5s | ETA: 48s
+    [ 50/130] llm: "A" → A | 26.8s | ETA: 43s
+    [ 60/130] llm: "A" → A | 33.5s | ETA: 39s
+    [ 70/130] llm: "B" → B | 38.7s | ETA: 33s
+    [ 80/130] llm: "A" → A | 45.0s | ETA: 28s
+    [ 90/130] llm: "B" → B | 54.3s | ETA: 24s
+    [100/130] llm: "B" → B | 61.7s | ETA: 19s
+    [110/130] llm: "A" → A | 72.1s | ETA: 13s
+    [120/130] llm: "A" → A | 78.7s | ETA: 7s
+    [130/130] llm: "B" → B | 84.3s | ETA: <1s
+    ✓ Concluído em 84.3s — Classe A: 62 (47.7%) | Classe B: 68 (52.3%)
+
+  ═══════════════════════════════════════════════════════════
+  RESULTADOS: FASE D (20-shot, estratégia=easy)
+  ═══════════════════════════════════════════════════════════
+    Concordância LLM vs. Perito:  91.5%
+    Kappa de Cohen:               0.831
+    F1-Score:                     0.915
+    
+    Acurácia do LLM vs. GT:       80.8%
+    Acurácia do Perito vs. GT:    85.3%
+    Concordâncias: 119 | Discordâncias: 11
+    → O LLM APRENDEU com sucesso o padrão de classificação do perito!
+
+  ══════════════════════════════════════════════════════════════
+  FASE D: LLM COMO APRENDIZ (20-shot, estratégia=hard)
+  Métrica do Perito W = [0.30, 1.50]
+  ══════════════════════════════════════════════════════════════
+  O perito rotula os dados com sua métrica conhecida.
+  O LLM recebe exemplos do perito e deve APRENDER o padrão de classificação.
+
+  Passo 1: Classificação pelo Perito (métrica W_expert conhecida)
+    Rótulos do perito: Classe 0=73, Classe 1=77
+    Acurácia do perito vs. ground truth: 85.3%
+
+  Passo 2: Selecionando 20 exemplos (estratégia=hard)...
+    Estratégia: HARD — pontos PRÓXIMOS à fronteira (mais difíceis)
+      Estratégia: HARD
+      Classe 0: 10 exemplos, faixa de margem [0.341, 1.578], média=0.836
+      Classe 1: 10 exemplos, faixa de margem [0.041, 2.103], média=0.994
+
+  Passo 3: LLM classificando 130 pontos de teste (20-shot)...
+    O LLM receberá 20 exemplos rotulados pelo perito como contexto.
+  [Fase D] Coletando decisões do LLM (20-shot) — 130 pontos...
+    [ 10/130] llm: "B" → B | 4.6s | ETA: 55s
+    [ 20/130] llm: "A" → A | 8.9s | ETA: 49s
+    [ 30/130] llm: "A" → A | 13.6s | ETA: 45s
+    [ 40/130] llm: "B" → B | 19.9s | ETA: 45s
+    [ 50/130] llm: "A" → A | 24.2s | ETA: 39s
+    [ 60/130] llm: "A" → A | 29.9s | ETA: 35s
+    [ 70/130] llm: "B" → B | 39.1s | ETA: 34s
+    [ 80/130] llm: "B" → B | 43.6s | ETA: 27s
+    [ 90/130] llm: "B" → B | 48.9s | ETA: 22s
+    [100/130] llm: "B" → B | 53.9s | ETA: 16s
+    [110/130] llm: "B" → B | 58.8s | ETA: 11s
+    [120/130] llm: "B" → B | 64.1s | ETA: 5s
+    [130/130] llm: "B" → B | 68.3s | ETA: <1s
+    ✓ Concluído em 68.3s — Classe A: 35 (26.9%) | Classe B: 95 (73.1%)
+
+  ═══════════════════════════════════════════════════════════
+  RESULTADOS: FASE D (20-shot, estratégia=hard)
+  ═══════════════════════════════════════════════════════════
+    Concordância LLM vs. Perito:  73.8%
+    Kappa de Cohen:               0.469
+    F1-Score:                     0.738
+    
+    Acurácia do LLM vs. GT:       71.5%
+    Acurácia do Perito vs. GT:    85.3%
+    Concordâncias: 96 | Discordâncias: 34
+    → O LLM tem ALINHAMENTO PARCIAL com o perito.
+
+  ══════════════════════════════════════════════════════════════
+  FASE D: LLM COMO APRENDIZ (20-shot, estratégia=mixed)
+  Métrica do Perito W = [0.30, 1.50]
+  ══════════════════════════════════════════════════════════════
+  O perito rotula os dados com sua métrica conhecida.
+  O LLM recebe exemplos do perito e deve APRENDER o padrão de classificação.
+
+  Passo 1: Classificação pelo Perito (métrica W_expert conhecida)
+    Rótulos do perito: Classe 0=73, Classe 1=77
+    Acurácia do perito vs. ground truth: 85.3%
+
+  Passo 2: Selecionando 20 exemplos (estratégia=mixed)...
+    Estratégia: MIXED — metade fáceis + metade difíceis (balanceado)
+      Estratégia: MIXED
+      Classe 0: 10 exemplos, faixa de margem [0.341, 30.416], média=13.348
+      Classe 1: 10 exemplos, faixa de margem [0.041, 27.996], média=11.952
+
+  Passo 3: LLM classificando 130 pontos de teste (20-shot)...
+    O LLM receberá 20 exemplos rotulados pelo perito como contexto.
+  [Fase D] Coletando decisões do LLM (20-shot) — 130 pontos...
+    [ 10/130] llm: "A" → A | 6.5s | ETA: 78s
+    [ 20/130] llm: "A" → A | 11.7s | ETA: 64s
+    [ 30/130] llm: "B" → B | 16.9s | ETA: 56s
+    [ 40/130] llm: "A" → A | 21.2s | ETA: 48s
+    [ 50/130] llm: "A" → A | 26.0s | ETA: 42s
+    [ 60/130] llm: "A" → A | 30.8s | ETA: 36s
+    [ 70/130] llm: "A" → A | 36.0s | ETA: 31s
+    [ 80/130] llm: "A" → A | 41.1s | ETA: 26s
+    [ 90/130] llm: "B" → B | 46.3s | ETA: 21s
+    [100/130] llm: "B" → B | 53.0s | ETA: 16s
+    [110/130] llm: "A" → A | 58.7s | ETA: 11s
+    [120/130] llm: "B" → B | 63.8s | ETA: 5s
+    [130/130] llm: "B" → B | 68.6s | ETA: <1s
+    ✓ Concluído em 68.6s — Classe A: 57 (43.8%) | Classe B: 73 (56.2%)
+
+  ═══════════════════════════════════════════════════════════
+  RESULTADOS: FASE D (20-shot, estratégia=mixed)
+  ═══════════════════════════════════════════════════════════
+    Concordância LLM vs. Perito:  89.2%
+    Kappa de Cohen:               0.784
+    F1-Score:                     0.892
+    
+    Acurácia do LLM vs. GT:       77.7%
+    Acurácia do Perito vs. GT:    85.3%
+    Concordâncias: 116 | Discordâncias: 14
+    → O LLM APRENDEU com sucesso o padrão de classificação do perito!
+
+  ══════════════════════════════════════════════════════════════
+  FASE D: LLM COMO APRENDIZ (20-shot, estratégia=random)
+  Métrica do Perito W = [0.30, 1.50]
+  ══════════════════════════════════════════════════════════════
+  O perito rotula os dados com sua métrica conhecida.
+  O LLM recebe exemplos do perito e deve APRENDER o padrão de classificação.
+
+  Passo 1: Classificação pelo Perito (métrica W_expert conhecida)
+    Rótulos do perito: Classe 0=73, Classe 1=77
+    Acurácia do perito vs. ground truth: 85.3%
+
+  Passo 2: Selecionando 20 exemplos (estratégia=random)...
+    Estratégia: RANDOM — seleção aleatória (linha de base)
+      Estratégia: RANDOM
+      Classe 0: 10 exemplos, faixa de margem [0.515, 28.991], média=8.613
+      Classe 1: 10 exemplos, faixa de margem [2.910, 27.767], média=10.688
+
+  Passo 3: LLM classificando 130 pontos de teste (20-shot)...
+    O LLM receberá 20 exemplos rotulados pelo perito como contexto.
+  [Fase D] Coletando decisões do LLM (20-shot) — 130 pontos...
+    [ 10/130] llm: "A" → A | 5.5s | ETA: 66s
+    [ 20/130] llm: "B" → B | 11.6s | ETA: 64s
+    [ 30/130] llm: "B" → B | 16.7s | ETA: 56s
+    [ 40/130] llm: "A" → A | 22.5s | ETA: 51s
+    [ 50/130] llm: "A" → A | 27.6s | ETA: 44s
+    [ 60/130] llm: "A" → A | 35.6s | ETA: 42s
+    [ 70/130] llm: "B" → B | 41.4s | ETA: 35s
+    [ 80/130] llm: "B" → B | 47.6s | ETA: 30s
+    [ 90/130] llm: "B" → B | 53.7s | ETA: 24s
+    [100/130] llm: "A" → A | 60.7s | ETA: 18s
+    [110/130] llm: "A" → A | 66.3s | ETA: 12s
+    [120/130] llm: "B" → B | 73.0s | ETA: 6s
+    [130/130] llm: "B" → B | 78.9s | ETA: <1s
+    ✓ Concluído em 78.9s — Classe A: 68 (52.3%) | Classe B: 62 (47.7%)
+
+  ═══════════════════════════════════════════════════════════
+  RESULTADOS: FASE D (20-shot, estratégia=random)
+  ═══════════════════════════════════════════════════════════
+    Concordância LLM vs. Perito:  91.5%
+    Kappa de Cohen:               0.831
+    F1-Score:                     0.915
+    
+    Acurácia do LLM vs. GT:       86.9%
+    Acurácia do Perito vs. GT:    85.3%
+    Concordâncias: 119 | Discordâncias: 11
+    → O LLM APRENDEU com sucesso o padrão de classificação do perito!
+
+══════════════════════════════════════════════════════════════════════
+ MODEL 1/1: openai/gpt-4o-mini (temp=0.0) | SEED 2/2: 123
+══════════════════════════════════════════════════════════════════════
+
+
+[PASSO 1] Gerando conjuntos de dados sintéticos com semente aleatória 123...
+  - Problema A: 150 amostras (base para aprendizado da métrica)
+  - Problema B: 100 amostras (teste de consistência 1 — centróides deslocados verticalmente)
+  - Problema C: 100 amostras (teste de consistência 2 — distorção geométrica mais severa)
+  - Problema D: 150 amostras (Fase D — LLM como aprendiz)
+  Dados gerados com sucesso!
+
+  Problema A — Total (treino): 150 amostras
+  Problema B — Total: 100 amostras
+  Problema C — Total: 100 amostras
+  Problema D — Total: 150 amostras
+
+[PASSO 3] Iniciando Fases A-C (experimento de consistência decisional)...
+  Modelo: openai/gpt-4o-mini (temperatura=0.0)
+  Tamanhos few-shot testados: [0, 5, 10]
+  Repetições por configuração: 2
+  Semente aleatória: 123
+
+>>> Fases A-C: Experimento Principal
+
+>>> Fases A-C: Variações de nomes de classe (10-shot)
+
+[PASSO 4] Iniciando Fase D (LLM como Aprendiz — nova v3.0)...
+  Nesta fase, o LLM aprende o padrão de um PERITO EXTERNO via exemplos few-shot.
+  Métrica do perito: W = [0.30, 1.50] (pondera x2 5x mais que x1)
+  Estratégias de seleção de exemplos: ['easy', 'hard', 'mixed', 'random']
+  Tamanhos few-shot testados: [0, 3, 5, 10, 20]
+
+══════════════════════════════════════════════════════════════════════
+ FASE D: LLM COMO APRENDIZ
+══════════════════════════════════════════════════════════════════════
+
+  Métrica do perito: W = [0.30, 1.50]
+  Estratégias: ['easy', 'hard', 'mixed', 'random']
+  Tamanhos few-shot: [0, 3, 5, 10, 20]
+
+[PASSO 5] Gerando visualizações finais dos resultados...
+  Salvando gráficos em: execucao_2026-03-03_17-05-57/
+
+══════════════════════════════════════════════════════════════════════
+ VISUALIZAÇÕES: FASES A-C
+══════════════════════════════════════════════════════════════════════
+
+  Gráfico salvo: 02_consistency_extended.png
+  Gráfico salvo: 03_class_names_effect.png
+  Gráfico salvo: 05_seed_comparison.png
+
+══════════════════════════════════════════════════════════════════════
+ VISUALIZAÇÕES: FASE D (LLM COMO APRENDIZ)
+══════════════════════════════════════════════════════════════════════
+
+  Gráfico salvo: 08_phase_d_learning_curve.png
+  Gráfico salvo: 09_phase_d_strategy_comparison.png
+
+══════════════════════════════════════════════════════════════════════
+ ANÁLISE FINAL: FASES A-C
+══════════════════════════════════════════════════════════════════════
+
+
+══════════════════════════════════════════════════════════════════════
+ MODELO: openai/gpt-4o-mini (temp=0.0)
+══════════════════════════════════════════════════════════════════════
+
+  1. CONSISTÊNCIA POR NÚMERO DE EXEMPLOS:
+     n_shot |  Consist B |  Consist C |  Kappa B |  Kappa C
+     -------------------------------------------------------
+          0 | 70.2%±2.2% | 62.8%±2.2% |    0.285 |    0.162
+          5 | 88.5%±3.1% | 76.8%±0.5% |    0.762 |    0.532
+         10 | 80.8%±19.1% | 73.8%±16.0% |    0.658 |    0.503
+
+  2. CONSISTÊNCIA POR NOMES DE CLASSE:
+     A/B                 : B=81.7%, C=72.6%
+     0/1                 : B=49.4%, C=50.3%
+     Positivo/Negativo   : B=94.2%, C=80.8%
+     Azul/Vermelho       : B=93.3%, C=85.6%
+┌──────────────────────────────────────────────┐
+│ RESUMO DAS FASES A-C                         │
+│                                              │
+│ Consistência Média Problema B: 80.4% ± 16.4% │
+│ Consistência Média Problema C: 72.4% ± 13.7% │
+│                                              │
+│ ~ Consistência MODERADA entre os problemas.  │
+└──────────────────────────────────────────────┘
+
+══════════════════════════════════════════════════════════════════════
+ ANÁLISE DA FASE D: LLM COMO APRENDIZ
+══════════════════════════════════════════════════════════════════════
+
+
+══════════════════════════════════════════════════════════════════════
+ MODELO: openai/gpt-4o-mini (temp=0.0)
+══════════════════════════════════════════════════════════════════════
+
+  Métrica do Perito W = [0.30, 1.50]
+  Acurácia do Perito vs. GT: 86.0%
+
+  1. CURVA DE APRENDIZADO (Concordância LLM vs. Perito):
+  -----------------------------------------------------------------
+  n_shot |         easy |         hard |        mixed |       random
+  -----------------------------------------------------------------
+       0 | 59.2%±1.6% | 59.2%±1.6% | 59.2%±1.6% | 59.2%±1.6%
+       3 | 91.9%±0.8% | 53.2%±10.0% | 53.7%±9.4% | 74.3%±13.7%
+       5 | 86.5%±5.8% | 56.5%±0.9% | 82.7%±3.8% | 87.8%±10.3%
+      10 | 84.8%±4.8% | 64.5%±4.6% | 83.6%±7.0% | 89.1%±3.9%
+      20 | 89.2%±3.7% | 86.9%±15.1% | 89.8%±0.7% | 92.7%±2.6%
+
+  2. MELHOR ESTRATÉGIA POR N_SHOT:
+  --------------------------------------------------
+       3-shot:     EASY (91.9%)
+       5-shot:   RANDOM (87.8%)
+      10-shot:   RANDOM (89.1%)
+      20-shot:   RANDOM (92.7%)
+
+  3. MELHORIA DO ZERO-SHOT PARA O MELHOR FEW-SHOT:
+  --------------------------------------------------
+     Linha de base zero-shot: 59.2%
+         EASY: melhor=91.9% em 3-shot (Δ=+32.7%)
+         HARD: melhor=86.9% em 20-shot (Δ=+27.8%)
+        MIXED: melhor=89.8% em 20-shot (Δ=+30.6%)
+       RANDOM: melhor=92.7% em 20-shot (Δ=+33.5%)
+┌────────────────────────────────────────────────────────────────────────────────────────────┐
+│ CONCLUSÃO DA FASE D: LLM COMO APRENDIZ                                                     │
+│                                                                                            │
+│ Métrica do perito: W = [0.30, 1.50]                                                        │
+│ (Pondera a dimensão x2 5.0x mais do que x1)                                                │
+│                                                                                            │
+│ Linha de base zero-shot: 59.2%                                                             │
+│ Melhor resultado few-shot: 92.7% (estratégia random, 20-shot)                              │
+│ Melhoria geral: +33.5%                                                                     │
+│                                                                                            │
+│ ✓ O LLM CONSEGUE aprender com exemplos do perito — o desempenho melhora com mais exemplos. │
+│                                                                                            │
+│ A dificuldade dos exemplos importa:                                                        │
+│ - Exemplos fáceis (longe da fronteira): padrões claros, mas podem não generalizar          │
+│ - Exemplos difíceis (próximos à fronteira): mais difíceis de aprender, mas melhor conhe... │
+│ - Exemplos mistos: representação balanceada                                                │
+│ - Exemplos aleatórios: comparação com linha de base                                        │
+└────────────────────────────────────────────────────────────────────────────────────────────┘
+
+[PASSO 6] Salvando resultados em CSV na pasta: execucao_2026-03-03_17-05-57/
+  Resultados das Fases A-C salvos em: execucao_2026-03-03_17-05-57/results_phases_abc_v3_20260303_195016.csv
+  Resultados da Fase D salvos em: execucao_2026-03-03_17-05-57/results_phase_d_v3_20260303_195016.csv
+
+[PASSO 7] Salvando log completo da execução...

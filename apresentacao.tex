@@ -1,0 +1,1490 @@
+\documentclass[aspectratio=169, 8pt]{beamer}
+
+% ─── TEMA ────────────────────────────────────────────────────────────────────
+\usetheme{Madrid}
+\usecolortheme{beaver}
+\usefonttheme{professionalfonts}
+
+% ─── PACOTES ─────────────────────────────────────────────────────────────────
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[brazil]{babel}
+\usepackage{amsmath, amssymb, amsfonts}
+\usepackage{mathtools}
+\usepackage{algpseudocode}   % algorithmic environment (sem o float wrapper)
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta, positioning, shapes.geometric, fit, calc}
+\usepackage{listings}
+\usepackage{graphicx}
+\usepackage{array}
+\usepackage{colortbl}
+% NOTA: NAO carregar hyperref (beamer ja carrega) nem natbib
+
+% ─── CORES PERSONALIZADAS ─────────────────────────────────────────────────────
+\definecolor{myblue}{RGB}{31,73,125}
+\definecolor{myred}{RGB}{192,0,0}
+\definecolor{mygreen}{RGB}{0,128,0}
+\definecolor{mygray}{RGB}{128,128,128}
+\definecolor{myorange}{RGB}{255,140,0}
+\definecolor{codebg}{RGB}{245,245,245}
+
+% ─── CONFIGURAÇÃO DOS BLOCOS ─────────────────────────────────────────────────
+\setbeamercolor{block title}{bg=myblue!80, fg=white}
+\setbeamercolor{block body}{bg=myblue!10, fg=black}
+\setbeamercolor{block title alerted}{bg=myred!80, fg=white}
+\setbeamercolor{block body alerted}{bg=myred!10, fg=black}
+\setbeamercolor{block title example}{bg=mygreen!70, fg=white}
+\setbeamercolor{block body example}{bg=mygreen!10, fg=black}
+
+% ─── CONFIGURAÇÃO DE LISTINGS (apenas no preambulo) ───────────────────────────
+\lstset{
+  basicstyle=\ttfamily\scriptsize,
+  backgroundcolor=\color{codebg},
+  frame=single,
+  breaklines=true,
+  showstringspaces=false,
+  keywordstyle=\color{myblue}\bfseries,
+  commentstyle=\color{mygray}\itshape,
+}
+
+% ─── MACRO PARA NORMA ─────────────────────────────────────────────────────────
+\newcommand{\norm}[1]{\left\lVert#1\right\rVert}
+
+% ─── INFORMAÇÕES DA APRESENTAÇÃO ─────────────────────────────────────────────
+\title[Decisões de LLMs via Otimização Inversa]{%
+  Explicando Decisões de LLMs via Otimização Inversa:\\
+  Consistência Decisional Mensurável em Modelos de Linguagem}
+
+\author[G.\ Silva]{George Silva}
+
+\institute[Mestrado]{%
+  Programa de Pós-Graduação em Ciência da Computação\\
+  \vspace{0.3em}}
+
+\date{Março de 2026}
+
+% ─── INÍCIO DO DOCUMENTO ─────────────────────────────────────────────────────
+\begin{document}
+
+\begin{frame}
+  \titlepage
+\end{frame}
+
+\begin{frame}{Sumário}
+  \tableofcontents
+\end{frame}
+
+% ═════════════════════════════════════════════════════════════════════════════
+\section{Motivação e Problema de Pesquisa}
+% ═════════════════════════════════════════════════════════════════════════════
+
+\begin{frame}{Contexto: LLMs como Tomadores de Decisão}
+  \begin{columns}[T]
+    \begin{column}{0.55\textwidth}
+      \begin{block}{O que sabemos sobre LLMs}
+        \footnotesize
+        \begin{itemize}
+          \item LLMs classificam, recomendam e decidem em diversas tarefas
+          \item Produzem resultados consistentes em muitos domínios
+          \item Mas: \textbf{seus critérios de decisão são opacos}
+        \end{itemize}
+      \end{block}
+
+      \vspace{0.1em}
+
+      \begin{alertblock}{Lacuna de Pesquisa}
+        \footnotesize
+        Não sabemos se um LLM aplica o \emph{mesmo critério implícito}
+        quando confrontado com \textbf{problemas distintos}.
+        \begin{itemize}
+          \item O critério é \textbf{estável} entre contextos?
+          \item Ele pode ser \textbf{capturado matematicamente}?
+          \item É \textbf{transferível} para novos domínios?
+        \end{itemize}
+      \end{alertblock}
+    \end{column}
+
+    \begin{column}{0.42\textwidth}
+      \begin{exampleblock}{Intuição Central}
+        \footnotesize\centering
+        \vspace{0.05em}
+        Se um decisor humano usa o mesmo raciocínio em problemas similares,
+        podemos \textbf{aprender} esse raciocínio e \textbf{prever} suas
+        futuras decisões.
+
+        \vspace{0.1em}
+        \textbf{A mesma lógica se aplica a LLMs?}
+        \vspace{0.05em}
+      \end{exampleblock}
+
+      \vspace{0.1em}
+      \begin{block}{Implicações Práticas}
+        \begin{itemize}
+          \item \textbf{Interpretabilidade} de IA
+          \item \textbf{Auditoria} de sistemas de decisão
+          \item \textbf{Alinhamento} entre humanos e LLMs
+        \end{itemize}
+      \end{block}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Problema de Pesquisa}
+  \begin{block}{Questão Central}
+    \centering
+    \Large
+    \textbf{Um LLM possui um processo de tomada de decisão}\\
+    \textbf{estável e aprendível?}
+  \end{block}
+
+  \vspace{0.2em}
+
+  \begin{columns}[T]
+    \begin{column}{0.48\textwidth}
+      \begin{block}{Problema Direto (trivial para LLMs)}
+        \begin{itemize}
+          \item Dado um critério \textbf{conhecido}, classificar novos pontos
+          \item O LLM faz isso naturalmente (zero-shot ou few-shot)
+          \item O critério explícito \emph{guia} a resposta
+        \end{itemize}
+      \end{block}
+    \end{column}
+
+    \begin{column}{0.48\textwidth}
+      \begin{alertblock}{Problema Inverso (foco desta pesquisa)}
+        \begin{itemize}
+          \item Dadas as \textbf{classificações} do LLM, \textbf{inferir} o critério
+          \item Aprender a \textbf{métrica W} a partir das decisões observadas
+          \item Verificar se W \textbf{generaliza} para novos problemas
+        \end{itemize}
+      \end{alertblock}
+    \end{column}
+  \end{columns}
+
+  \vspace{0.2em}
+
+  \begin{exampleblock}{Formalização}
+    \centering
+    Seja $\mathcal{D} = \{(\mathbf{x}_i, \hat{y}_i)\}$ o conjunto de decisões do LLM.
+    Buscamos a métrica $W$ tal que:
+    \[
+      \hat{y}_i = \arg\min_{c \in \{0,1\}} d_W(\mathbf{x}_i, \boldsymbol{\mu}_c)
+      \quad \text{reproduza fielmente } \hat{y}_i^{\text{LLM}}
+    \]
+  \end{exampleblock}
+\end{frame}
+
+% ═════════════════════════════════════════════════════════════════════════════
+\section{Hipóteses Científicas}
+% ═════════════════════════════════════════════════════════════════════════════
+
+\begin{frame}{Hipóteses do Experimento}
+  \begin{block}{H1 --- Consistência Decisional}
+    \footnotesize
+    O LLM mantém o mesmo critério decisório implícito em problemas com distribuições
+    diferentes. A métrica $W$ aprendida no Problema~A prevê as classificações do LLM
+    nos Problemas~B e~C com \textbf{alta concordância} ($\kappa > 0.7$).
+  \end{block}
+
+  \vspace{0.1em}
+
+  \begin{block}{H2 --- Few-shot amplifica consistência}
+    \footnotesize
+    Fornecer exemplos rotulados pela própria métrica $W$ aumenta a concordância
+    LLM--métrica, pois ancora o LLM ao critério aprendido.
+  \end{block}
+
+  \vspace{0.1em}
+
+  \begin{block}{H3 --- LLM como Aprendiz (Fase D)}
+    \footnotesize
+    O LLM consegue \textbf{aprender o critério de um perito externo} via few-shot.
+    Zero-shot: concordância próxima ao acaso. Cresce sistematicamente com mais exemplos.
+  \end{block}
+
+  \vspace{0.1em}
+
+  \begin{columns}[T]
+    \begin{column}{0.48\textwidth}
+      \begin{block}{H4 --- Dificuldade dos exemplos importa}
+        \footnotesize
+        Exemplos \emph{hard} (próximos à fronteira) transmitem mais
+        informação sobre o critério do que exemplos \emph{easy}.
+      \end{block}
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      \begin{block}{H5 --- Estabilidade entre execuções}
+        \footnotesize
+        O comportamento do LLM é reproduzível entre execuções independentes
+        (temperatura $= 0.0$, múltiplas sementes).
+      \end{block}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+% ═════════════════════════════════════════════════════════════════════════════
+\section{Fundamentos Teóricos}
+% ═════════════════════════════════════════════════════════════════════════════
+
+\begin{frame}{Distância de Mahalanobis Diagonal}
+  \begin{columns}[T]
+    \begin{column}{0.55\textwidth}
+      \begin{block}{Definição}
+        A distância de Mahalanobis com matriz diagonal $W = \mathrm{diag}(w_1, w_2)$:
+        \[
+          d_W(\mathbf{x}, \mathbf{c}) = \sum_{j=1}^{d} w_j \, (x_j - c_j)^2
+        \]
+        com restrição $\mathbf{w} \geq \mathbf{0}$ (semidefinida positiva).
+      \end{block}
+
+      \vspace{0.4em}
+
+      \begin{block}{Classificação por Vizinho Mais Próximo}
+        \[
+          \hat{y}(\mathbf{x}) = \arg\min_{c \in \{0,1\}} d_W(\mathbf{x}, \boldsymbol{\mu}_c)
+        \]
+        A fronteira de decisão é o conjunto de pontos equidistantes
+        aos centróides $\boldsymbol{\mu}_0$ e $\boldsymbol{\mu}_1$ sob $d_W$.
+      \end{block}
+
+     
+    \end{column}
+
+    \begin{column}{0.42\textwidth}
+      \begin{alertblock}{Margem de Decisão}
+        \[
+          \mathrm{margem}(\mathbf{x}) = d_W(\mathbf{x}, \boldsymbol{\mu}_k) - d_W(\mathbf{x}, \boldsymbol{\mu}_l)
+        \]
+        onde $l = \hat{y}(\mathbf{x})$, $k \neq l$.\\
+        $\mathrm{margem} \geq 0$ por construção.
+      \end{alertblock}
+
+       \vspace{0.4em}
+
+      \begin{exampleblock}{Por que Diagonal?}
+        \begin{itemize}
+          \item $O(d)$ parâmetros vs.\ $O(d^2)$ (Mahalanobis completo)
+          \item Tratável para o experimento inicial em 2D
+          \item Próximo passo: SDP completo (recomendação do orientador)
+        \end{itemize}
+      \end{exampleblock}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Otimização Inversa e Perceptron Estruturado}
+  \begin{columns}[T]
+    \begin{column}{0.52\textwidth}
+      \begin{block}{Otimização Inversa}
+        \textbf{Problema direto:} dado o critério, prever a decisão.\\
+        \textbf{Problema inverso:} dada a decisão, inferir o critério.
+
+        \vspace{0.3em}
+        Dado $\{\hat{y}_i^{\text{LLM}}\}$ (decisões observadas), encontrar
+        $\mathbf{w}$ tal que:
+        \[
+          \hat{y}_i^W = \hat{y}_i^{\text{LLM}} \quad \forall i
+        \]
+      \end{block}
+
+      \vspace{0.4em}
+
+      \begin{exampleblock}{Aplicação a LLMs}
+        \begin{itemize}
+          \item As decisões $\hat{y}_i^{\text{LLM}}$ são as \emph{soluções ótimas observadas}
+          \item O critério implícito é a \emph{função objetivo desconhecida}
+          \item $\mathbf{w}$ parametriza esse critério via $d_W$
+        \end{itemize}
+      \end{exampleblock}
+    \end{column}
+
+    \begin{column}{0.45\textwidth}
+      \begin{block}{Perceptron Estruturado com Margem}
+        Regra de atualização quando há violação de margem:
+        \begin{align*}
+          \mathbf{g} &= (\mathbf{x}_i - \boldsymbol{\mu}_l)^2 - (\mathbf{x}_i - \boldsymbol{\mu}_k)^2 \\
+          f &= \mathrm{clip}\!\left(1 - \tfrac{\eta\gamma}{\norm{\mathbf{w}}},\, 0,\, 2\right) \\
+          \mathbf{w} &\leftarrow f \cdot \mathbf{w} - \eta\,\mathbf{g}\\
+          \mathbf{w} &\leftarrow \max(\mathbf{0}, \mathbf{w})
+        \end{align*}
+        com $\eta = 0.05$, $C = 10.0$.
+      \end{block}
+
+      \vspace{0.1em}
+      \begin{alertblock}{Busca Binária em $\gamma$}
+        Maximiza a margem mínima $\gamma^*$:
+        \begin{itemize}
+          \scriptsize
+          \item 0 violações $\Rightarrow$ $\gamma_{\text{lo}} \uparrow$, tentar $\gamma + \Delta\gamma$
+          \item $>$0 violações $\Rightarrow$ $\gamma_{\text{hi}} \downarrow$, tentar média
+          \item Critério: $|\gamma_{\text{hi}} - \gamma_{\text{lo}}| \leq 10^{-4}$
+          \item Máx.\ 50 iterações
+        \end{itemize}
+      \end{alertblock}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+% ═════════════════════════════════════════════════════════════════════════════
+\section{Metodologia Experimental}
+% ═════════════════════════════════════════════════════════════════════════════
+
+\begin{frame}{Pipeline Experimental Completo}
+  \begin{center}
+  \begin{tikzpicture}[
+    node distance=0.35cm and 0.4cm,
+    box/.style={rectangle, rounded corners, draw=myblue, fill=myblue!12,
+                text width=2.5cm, align=center, minimum height=0.85cm,
+                font=\scriptsize},
+    arr/.style={->, thick, color=myblue},
+    redarr/.style={->, thick, color=myred},
+    lbl/.style={rectangle, rounded corners, draw, fill=white,
+                font=\scriptsize\bfseries, inner sep=3pt},
+  ]
+    % Fase A
+    \node[box] (da) {Gerar\\Problema A\\(150 amostras)};
+    \node[box, right=0.4cm of da] (la) {LLM classifica\\zero-shot};
+    \node[box, right=0.4cm of la] (ca) {Calcular\\centróides\\$\boldsymbol{\mu}_0, \boldsymbol{\mu}_1$};
+    \node[box, right=0.4cm of ca] (pa) {Perceptron\\aprende $W^*$};
+
+    % Fase B
+    \node[box, below=0.55cm of da] (db) {Gerar\\Problema B\\(100 amostras)};
+    \node[box, right=0.4cm of db] (lb) {LLM classifica\\0/5/10-shot};
+    \node[box, right=0.4cm of lb] (mb) {$W^*$ prediz\\classes};
+    \node[box, right=0.4cm of mb] (cb) {Medir\\consistência\\LLM vs.\ $W^*$};
+
+    % Fase C
+    \node[box, below=0.3cm of db] (dc) {Gerar\\Problema C\\(100 amostras)};
+    \node[box, right=0.4cm of dc] (lc) {LLM classifica\\0/5/10-shot};
+    \node[box, right=0.4cm of lc] (mc) {$W^*$ prediz\\classes};
+    \node[box, right=0.4cm of mc] (cc) {Medir\\consistência\\LLM vs.\ $W^*$};
+
+    % Fase D
+    \node[box, below=0.3cm of dc] (dd) {Gerar\\Problema D\\(150 amostras)};
+    \node[box, right=0.4cm of dd] (ed) {Perito rotula\\com $W_{\text{exp}}$};
+    \node[box, right=0.4cm of ed] (sd) {Selecionar\\exemplos\\(4 estratégias)};
+    \node[box, right=0.4cm of sd] (cd) {LLM aprende\\Concordância\\vs.\ perito};
+
+    % Setas Fase A
+    \draw[arr] (da) -- (la);
+    \draw[arr] (la) -- (ca);
+    \draw[arr] (ca) -- (pa);
+
+    % W transferida (Fase A -> B e C)
+    \draw[redarr] (pa.south) -- ++(0,-0.2) -| (mb.north);
+    \draw[redarr] (pa.south) -- ++(0,-0.2) -| (mc.north);
+
+    % Setas Fase B
+    \draw[arr] (db) -- (lb);
+    \draw[arr] (lb) -- (mb);
+    \draw[arr] (mb) -- (cb);
+
+    % Setas Fase C
+    \draw[arr] (dc) -- (lc);
+    \draw[arr] (lc) -- (mc);
+    \draw[arr] (mc) -- (cc);
+
+    % Setas Fase D
+    \draw[arr] (dd) -- (ed);
+    \draw[arr] (ed) -- (sd);
+    \draw[arr] (sd) -- (cd);
+
+    % Rótulos de fase
+    \node[lbl, color=myblue,  left=0.15cm of da] {A};
+    \node[lbl, color=mygreen, left=0.15cm of db] {B};
+    \node[lbl, color=myorange,left=0.15cm of dc] {C};
+    \node[lbl, color=myred,   left=0.15cm of dd] {D};
+  \end{tikzpicture}
+  \end{center}
+
+  \vspace{0.3em}
+  \begin{center}
+  \footnotesize
+  \textcolor{myred}{\textbf{Chave:}} $W^*$ aprendida na Fase~A é
+  \emph{reutilizada} nas Fases~B e~C --- transferência cross-problema.
+  \end{center}
+\end{frame}
+
+\begin{frame}{Geração dos Datasets Sintéticos}
+  \begin{columns}[T]
+    \begin{column}{0.52\textwidth}
+      \begin{block}{Distribuição Geradora}
+        Cada dataset: duas gaussianas isotrópicas.
+        \[
+          \mathbf{x} \sim \mathcal{N}(\boldsymbol{\mu}_c,\, \sigma^2 \mathbf{I})
+          \quad c \in \{0, 1\},\quad \sigma = 1.2
+        \]
+      \end{block}
+
+      \vspace{0.1em}
+
+      \begin{block}{Parâmetros dos Problemas}
+        \footnotesize
+        \renewcommand{\arraystretch}{1.3}
+        \begin{tabular}{lcccc}
+          \toprule
+          \textbf{Prob.} & \textbf{$N$} & \textbf{$\boldsymbol{\mu}_0$} & \textbf{$\boldsymbol{\mu}_1$} & \textbf{Uso} \\
+          \midrule
+          A & 150 & $(-2,\ 0)$     & $(2,\ 0)$      & Treino \\
+          B & 100 & $(-2,\ 0.8)$   & $(2,\ {-}0.8)$ & Teste 1 \\
+          C & 100 & $(-2,\ 1.5)$   & $(2,\ {-}1.5)$ & Teste 2 \\
+          D & 150 & $(-1.5,\ 1.0)$ & $(1.5,\ {-}1.0)$ & Fase D \\
+          \bottomrule
+        \end{tabular}
+      \end{block}
+
+      \vspace{0.1em}
+      \begin{exampleblock}{Design Deliberado}
+        \begin{itemize}
+          \item Separação horizontal clara em A (intuitivo para o LLM)
+          \item Rotação progressiva dos centróides em B e C
+          \item Problema D: peso anisotrópico necessário ($w_2 \gg w_1$)
+        \end{itemize}
+      \end{exampleblock}
+    \end{column}
+
+    \begin{column}{0.45\textwidth}
+      \vspace{0.3em}
+      \begin{center}
+      \begin{tikzpicture}[scale=0.68]
+        % Problema A
+        \begin{scope}[shift={(0,3)}]
+          \node[font=\scriptsize\bfseries] at (0,1.4) {Problema A};
+          \draw[->] (-2.6,0) -- (2.6,0) node[right, font=\tiny]{$x_1$};
+          \draw[->] (0,-1.1) -- (0,1.1) node[above, font=\tiny]{$x_2$};
+          \fill[color=myblue, opacity=0.35] (-1.5,0) circle (0.85);
+          \fill[color=myred,  opacity=0.35] ( 1.5,0) circle (0.85);
+          \fill[color=myblue] (-2,0) circle (3pt);
+          \fill[color=myred]  ( 2,0) circle (3pt);
+          \draw[dashed, thick] (0,-1) -- (0,1);
+          \node[font=\tiny, color=myblue] at (-1.5,1.0) {Cl.0};
+          \node[font=\tiny, color=myred]  at ( 1.5,1.0) {Cl.1};
+        \end{scope}
+        % Problema B
+        \begin{scope}[shift={(0,1.2)}]
+          \node[font=\scriptsize\bfseries] at (0,1.2) {Problema B};
+          \draw[->] (-2.6,0) -- (2.6,0) node[right, font=\tiny]{$x_1$};
+          \draw[->] (0,-1.0) -- (0,1.0);
+          \fill[color=myblue, opacity=0.35] (-1.5, 0.5) circle (0.75);
+          \fill[color=myred,  opacity=0.35] ( 1.5,-0.5) circle (0.75);
+          \fill[color=myblue] (-2, 0.8) circle (3pt);
+          \fill[color=myred]  ( 2,-0.8) circle (3pt);
+          \draw[dashed, thick, rotate=15] (0,-1) -- (0,1);
+        \end{scope}
+        % Problema C
+        \begin{scope}[shift={(0,-0.6)}]
+          \node[font=\scriptsize\bfseries] at (0,1.2) {Problema C};
+          \draw[->] (-2.6,0) -- (2.6,0) node[right, font=\tiny]{$x_1$};
+          \draw[->] (0,-1.0) -- (0,1.0);
+          \fill[color=myblue, opacity=0.35] (-1.5, 0.8) circle (0.65);
+          \fill[color=myred,  opacity=0.35] ( 1.5,-0.8) circle (0.65);
+          \fill[color=myblue] (-2, 1.5) circle (3pt);
+          \fill[color=myred]  ( 2,-1.5) circle (3pt);
+          \draw[dashed, thick, rotate=30] (0,-1) -- (0,1);
+        \end{scope}
+      \end{tikzpicture}
+      \end{center}
+      \footnotesize
+      Rotação progressiva: A (horizontal) $\to$ B $\to$ C (diagonal).
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}[fragile]{Interação com o LLM}
+  \begin{columns}[T]
+    \begin{column}{0.52\textwidth}
+      \begin{block}{Modelo e Configuração}
+        \begin{itemize}
+          \item \textbf{GPT-4o-mini} (OpenAI) --- modo produção
+          \item Temperatura $= 0.0$ (saída determinística)
+          \item Multi-provedor: Claude, Gemini (prontos no código)
+        \end{itemize}
+      \end{block}
+
+      \vspace{0.05em}
+
+      \begin{block}{Prompt Zero-Shot}
+        \begin{lstlisting}
+You are a binary classifier for
+2D points. Classify as Class A
+or Class B.
+Answer ONLY with "A" or "B".
+
+x1 = 1.2345
+x2 = -0.6789
+
+Your classification:
+        \end{lstlisting}
+      \end{block}
+
+      \vspace{0.05em}
+      \begin{exampleblock}{Few-Shot: adiciona exemplos ao prompt}
+        Exemplos rotulados pela métrica $W^*$,
+        \textbf{não} pelo ground truth gaussiano.
+      \end{exampleblock}
+    \end{column}
+
+    \begin{column}{0.45\textwidth}
+      \begin{alertblock}{Parser de 7 Camadas}
+        Estratégia robusta contra respostas malformadas:
+        \begin{enumerate}
+          \scriptsize
+          \item Match exato (case-insensitive)
+          \item Remove aspas/pontuação marginal
+          \item Classes numéricas (``0''/``1'')
+          \item Word-boundary regex
+          \item Contains exclusivo
+          \item Padrões comuns (``Class A'', ``Answer: B'', \ldots)
+          \item Starts-with
+        \end{enumerate}
+        Fallback: hash determinístico das coordenadas.
+      \end{alertblock}
+
+      \vspace{0.1em}
+      \begin{block}{Variações de Nomes de Classe}
+        \begin{itemize}
+          \scriptsize
+          \item \textbf{``A'' / ``B''} --- neutro
+          \item \textbf{``0'' / ``1''} --- numérico
+          \item \textbf{``Positivo'' / ``Negativo''} --- semântico
+          \item \textbf{``Azul'' / ``Vermelho''} --- cor
+        \end{itemize}
+        Objetivo: detectar viés semântico do LLM.
+      \end{block}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+% ═════════════════════════════════════════════════════════════════════════════
+\section{Algoritmos}
+% ═════════════════════════════════════════════════════════════════════════════
+
+\begin{frame}{Fase A: Algoritmo de Aprendizado da Métrica}
+  \begin{columns}[T]
+    \begin{column}{0.52\textwidth}
+      \begin{block}{Algoritmo --- Fase A}
+        \begin{algorithmic}[1]
+          \scriptsize
+          \Require $X_A \in \mathbb{R}^{150 \times 2}$, nomes de classe
+          \Ensure Métrica $W^* = (w_1, w_2)$, centróides $\boldsymbol{\mu}$
+
+          \State \textbf{[LLM zero-shot]} Para cada $\mathbf{x}_i \in X_A$:
+          \State \quad Prompt zero-shot $\rightarrow$ GPT-4o-mini
+          \State \quad Parser 7-camadas $\rightarrow \hat{y}_i^{\text{LLM}}$
+
+          \State \textbf{[Centróides]} $\boldsymbol{\mu}_c = \tfrac{1}{|S_c|}\sum_{i:\hat{y}_i=c}\mathbf{x}_i$
+
+          \State \textbf{[Perceptron]} $\mathbf{w} \leftarrow \mathbf{1}$,
+          $\gamma_{\text{lo}} \leftarrow 0$
+          \Repeat
+            \ForAll{$\mathbf{x}_i$ (ordem aleatória)}
+              \State $l \leftarrow \hat{y}_i$, $k \leftarrow 1-l$
+              \State $m \leftarrow d_W(\mathbf{x}_i,\boldsymbol{\mu}_k) - d_W(\mathbf{x}_i,\boldsymbol{\mu}_l)$
+              \If{$m < \gamma\norm{\mathbf{w}}$}
+                \State $\mathbf{g} \leftarrow (\mathbf{x}_i{-}\boldsymbol{\mu}_l)^2 - (\mathbf{x}_i{-}\boldsymbol{\mu}_k)^2$
+                \State $\mathbf{w} \leftarrow f\,\mathbf{w} - \eta\mathbf{g};\;
+                  \mathbf{w} \leftarrow \max(\mathbf{0},\mathbf{w})$
+              \EndIf
+            \EndFor
+          \Until{0 violações ou máx.\ épocas}
+          \State \textbf{[Busca binária]} Ajustar $\gamma$ e repetir
+          \State \Return $\mathbf{w}^*$, $\gamma^*$, $\boldsymbol{\mu}$
+        \end{algorithmic}
+      \end{block}
+    \end{column}
+
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Fases B e C: Teste de Consistência Cross-Problema}
+  \begin{columns}[T]
+    \begin{column}{0.52\textwidth}
+      \begin{block}{Protocolo de Teste}
+        \begin{enumerate}
+          \item Aplicar $W^*_A$ ao novo problema: predizer $\hat{y}^W_i$
+          \item Se $n>0$: selecionar $n$ exemplos few-shot
+          \begin{itemize}
+            \footnotesize
+            \item Rotulados por $W^*_A$ (não pelo ground truth)
+            \item Aprendizado ativo: maior margem por classe
+            \item $n/2$ pontos por classe
+          \end{itemize}
+          \item Excluir exemplos do conjunto de avaliação (sem data leakage)
+          \item LLM classifica pontos restantes com $n$-shot
+          \item Medir concordância LLM vs.\ $W^*_A$
+        \end{enumerate}
+      \end{block}
+
+    \end{column}
+
+    \begin{column}{0.45\textwidth}
+      \begin{block}{Seleção de Exemplos (Aprendizado Ativo)}
+        \[
+          \text{score}(i) = d_{W^*}(\mathbf{x}_i, \boldsymbol{\mu}_k) -
+          d_{W^*}(\mathbf{x}_i, \boldsymbol{\mu}_l)
+        \]
+        Selecionar $n/2$ pontos de \emph{maior score} por classe
+        (mais longe da fronteira $=$ mais representativos).
+      \end{block}
+
+      \vspace{0.1em}
+
+      \begin{exampleblock}{Configurações de $n$-shot}
+        \[
+          n \in \{0,\, 5,\, 10\}
+        \]
+        \begin{itemize}
+          \footnotesize
+          \item Zero-shot: critério intrínseco do LLM
+          \item 5-shot: ancoragem parcial
+          \item 10-shot: ancoragem completa
+        \end{itemize}
+      \end{exampleblock}
+
+      \vspace{0.1em}
+
+      \begin{block}{Linha de Base Euclidiana}
+        $\mathbf{w} = \mathbf{1}$ (distância uniforme).
+        Se $W^*$ não superar a euclidiana em $>1\%$:
+        flag de limitação diagonal.
+      \end{block}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Fase D: LLM como Aprendiz}
+  \begin{columns}[T]
+    \begin{column}{0.52\textwidth}
+      \begin{block}{Configuração do Perito Externo}
+        Perito com métrica \textbf{anisotrópica conhecida}:
+        \[
+          W_{\text{exp}} = [0.3,\ 1.5] \quad (w_2 / w_1 = 5)
+        \]
+        $x_2$ pesa 5$\times$ mais do que $x_1$.\\
+        O LLM não pode depender apenas de $x_1$.
+      \end{block}
+
+      \vspace{0.1em}
+
+      \begin{block}{Estratégias de Seleção de Exemplos}
+        \begin{description}
+          \scriptsize
+          \item[\textcolor{mygreen}{\textbf{Easy}}]
+            Pontos com \emph{maior} margem (longe da fronteira).\\
+            Exemplos claros e representativos.
+          \item[\textcolor{myred}{\textbf{Hard}}]
+            Pontos com \emph{menor} margem (próximos à fronteira).\\
+            Exemplos ambíguos; revelam a fronteira exata.
+          \item[\textcolor{myblue}{\textbf{Mixed}}]
+            50\% easy $+$ 50\% hard. Cobertura balanceada.
+          \item[\textcolor{mygray}{\textbf{Random}}]
+            Seleção aleatória. Linha de base sem critério.
+        \end{description}
+      \end{block}
+    \end{column}
+
+    \begin{column}{0.45\textwidth}
+      \begin{block}{Algoritmo --- Fase D}
+        \begin{algorithmic}[1]
+          \scriptsize
+          \Require $X_D$, $W_{\text{exp}}$, $n$, estratégia
+          \Ensure concordância LLM--perito
+
+          \State Perito classifica todos os pontos:
+          \[
+            y_i^{\text{exp}} = \arg\min_c d_{W_{\text{exp}}}(\mathbf{x}_i, \boldsymbol{\mu}_c^{\text{exp}})
+          \]
+          \If{$n > 0$}
+            \State Selecionar $n$ exemplos por estratégia
+            \State Excluir exemplos do conjunto de teste
+          \EndIf
+          \State LLM classifica pontos de teste com\\
+          \quad $n$ exemplos do perito como contexto
+          \State Medir: $\kappa$, F1, concordância
+        \end{algorithmic}
+      \end{block}
+
+      \vspace{0.1em}
+      \begin{block}{Tamanhos $n$-shot na Fase D}
+        \[
+          n \in \{0,\, 3,\, 5,\, 10,\, 20\}
+        \]
+        Granularidade maior para traçar a curva de aprendizado.
+      \end{block}
+
+    \end{column}
+  \end{columns}
+\end{frame}
+
+% ═════════════════════════════════════════════════════════════════════════════
+\section{Métricas de Avaliação}
+% ═════════════════════════════════════════════════════════════════════════════
+
+\begin{frame}{Métricas de Avaliação}
+  \begin{columns}[T]
+    \begin{column}{0.50\textwidth}
+      \begin{block}{Métrica Principal: Kappa de Cohen}
+        \[
+          \kappa = \frac{P_o - P_e}{1 - P_e}
+        \]
+        \begin{itemize}
+          \item $P_o$: proporção de concordâncias observadas
+          \item $P_e$: concordância esperada por acaso
+          \item $\kappa > 0.7$: concordância substancial (H1)
+          \item \textbf{Simétrico}: nenhuma parte é arbitrariamente ``referência''
+        \end{itemize}
+      \end{block}
+
+      \vspace{0.1em}
+
+      \begin{block}{Consistência (Acurácia de Concordância)}
+        \[
+          \text{Cons.} = \frac{|\{i: \hat{y}_i^{\text{LLM}} = \hat{y}_i^W\}|}{N}
+        \]
+      \end{block}
+
+      \vspace{0.1em}
+
+      \begin{block}{Fidelidade da Métrica (Fase A)}
+        \[
+          \text{Fid.} = \mathrm{Acc}(\hat{y}^W,\, \hat{y}^{\text{LLM}})
+        \]
+      \end{block}
+    \end{column}
+
+    \begin{column}{0.47\textwidth}
+      \begin{exampleblock}{F1-Score Simétrico}
+        Evita tratar uma parte como referência arbitrária:
+        \[
+          F1_{\text{sim}} = \tfrac{1}{2}\bigl[F1(\hat{y}^W, \hat{y}^{\text{LLM}})
+          + F1(\hat{y}^{\text{LLM}}, \hat{y}^W)\bigr]
+        \]
+        Idem para precisão e revocação.
+      \end{exampleblock}
+
+      \vspace{0.1em}
+
+      \begin{alertblock}{Limiar de Interpretação (H1)}
+        \renewcommand{\arraystretch}{1.2}
+        \begin{tabular}{ll}
+          \toprule
+          Consistência & Interpretação \\
+          \midrule
+          $\geq 85\%$ & Alta consistência \\
+          $70\%$--$85\%$ & Consistência parcial \\
+          $< 70\%$ & Sem consistência \\
+          \midrule
+          $\approx 50\%$ & Referência (acaso) \\
+          \bottomrule
+        \end{tabular}
+      \end{alertblock}
+
+    \end{column}
+  \end{columns}
+\end{frame}
+
+% ═════════════════════════════════════════════════════════════════════════════
+\section{Controle de Variabilidade}
+% ═════════════════════════════════════════════════════════════════════════════
+
+\begin{frame}{Design de Variabilidade e Robustez}
+  \begin{columns}[T]
+    \begin{column}{0.48\textwidth}
+      \begin{block}{Fontes de Variabilidade Controladas}
+        \begin{description}
+          \footnotesize
+          \item[\textbf{Repetições}] $N_{\text{rep}} = 2$ por configuração
+            na mesma base. Detecta variabilidade interna do LLM.
+          \item[\textbf{Sementes}] $\{42, 123\}$ para instâncias distintas.
+            Verifica se padrões se mantêm entre bases.
+          \item[\textbf{Nomes}] 4 variações de nomenclatura.
+            Detecta viés semântico do LLM.
+          \item[\textbf{Temperatura}] $T = 0.0$ (fixa).
+            Isola o critério de decisão,
+            minimiza estocasticidade.
+        \end{description}
+      \end{block}
+    \end{column}
+
+    \begin{column}{0.48\textwidth}
+      \begin{exampleblock}{Grid de Experimentos --- Fases A--C}
+        \[
+          \underbrace{3}_{n\text{-shot}} \times
+          \underbrace{2}_{N_{\text{rep}}} \times
+          \underbrace{2}_{\text{seeds}} \times
+          \underbrace{4}_{\text{nomes}}
+          = 48 \text{ runs}
+        \]
+      \end{exampleblock}
+
+      \vspace{0.1em}
+
+      \begin{exampleblock}{Grid de Experimentos --- Fase D}
+        \[
+          \underbrace{5}_{n\text{-shot}} \times
+          \underbrace{4}_{\text{estrat.}} \times
+          \underbrace{2}_{N_{\text{rep}}} \times
+          \underbrace{2}_{\text{seeds}}
+          = 80 \text{ runs}
+        \]
+      \end{exampleblock}
+
+      \vspace{0.1em}
+
+      \begin{alertblock}{Otimização de Chamadas à API}
+        A Fase A é executada \emph{uma única vez} por
+        (modelo, semente, nome de classe) e \textbf{cacheada}.
+        $W^*$ é reutilizada em todos os tamanhos de $n$-shot,
+        evitando chamadas redundantes.
+      \end{alertblock}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+% ═════════════════════════════════════════════════════════════════════════════
+\section{Resultados Experimentais}
+% ═════════════════════════════════════════════════════════════════════════════
+
+\begin{frame}{Resultados: Fases A--C --- Efeito do $n$-shot}
+  \begin{block}{GPT-4o-mini $\cdot$ Seeds $\{42,123\}$ $\cdot$ 2~rep.\ $\cdot$
+    classes A/B $\cdot$ \texttt{execucao\_2026-03-03}}
+  \end{block}
+
+  \vspace{0.4em}
+
+  \begin{center}
+  \renewcommand{\arraystretch}{1.35}
+  \begin{tabular}{ccccccc}
+    \toprule
+    \multirow{2}{*}{\textbf{$n$-shot}} &
+    \multicolumn{2}{c}{\textbf{Problema B}} &
+    \multicolumn{2}{c}{\textbf{Problema C}} &
+    \multirow{2}{*}{\textbf{Fidelidade (A)}} \\
+    \cmidrule(lr){2-3}\cmidrule(lr){4-5}
+    & Cons. & $\kappa$ & Cons. & $\kappa$ & \\
+    \midrule
+    0  & 70.3\% & 0.22 & 69.0\% & 0.35 & 75.7\% \\
+    5  & 75.0\% & 0.48 & 78.6\% & 0.58 & 75.7\% \\
+    10 & 70.3\% & 0.46 & \cellcolor{mygreen!25}\textbf{88.1\%}
+       & \cellcolor{mygreen!25}\textbf{0.76} & 75.7\% \\
+    \bottomrule
+  \end{tabular}
+  \end{center}
+
+  \vspace{0.2em}
+
+  \begin{columns}[T]
+    \begin{column}{0.48\textwidth}
+      \begin{exampleblock}{H1 e H2 --- Confirmação Parcial}
+        \footnotesize
+        $\kappa$ zero-shot baixo (0.22\,/\,0.35). Com 10-shot,
+        Prob.~C: $\kappa = 0.76$ (substancial).
+        Prob.~B: $\kappa \leq 0.48$ --- H1 parcial.
+        H2 confirmado para Prob.~C.
+      \end{exampleblock}
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      \begin{alertblock}{Fidelidade abaixo da meta}
+        \footnotesize
+        Fid.\ $W^*$ no Prob.~A $= 75.7\%$ (meta: $\geq 90\%$).
+        Métrica diagonal não captura completamente
+        o critério do LLM --- sinal de limitação.
+      \end{alertblock}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Resultados: Estabilidade entre Sementes}
+  \begin{columns}[T]
+    \begin{column}{0.50\textwidth}
+      \begin{block}{Pesos $W^*$ e Fidelidade por Semente (classes A/B, 0-shot)}
+        \renewcommand{\arraystretch}{1.35}
+        \begin{tabular}{cccc}
+          \toprule
+          \textbf{Semente} & \textbf{$w_1$} & \textbf{$w_2$} & \textbf{Fidelidade} \\
+          \midrule
+          42  & 0.000 & 0.362 & 66.0\% \\
+          123 & 0.401 & 1.193 & 85.3\% \\
+          \bottomrule
+        \end{tabular}
+      \end{block}
+
+      \vspace{0.4em}
+
+      \begin{alertblock}{Achado Inesperado --- Seed 42}
+        \footnotesize
+        $w_1 = 0$: métrica \textbf{ignora} $x_1$ completamente.
+        O LLM usou critério não-parametrizável pela diagonal ---
+        flag de limitação ativada para seed~123.
+      \end{alertblock}
+    \end{column}
+
+    \begin{column}{0.47\textwidth}
+      \begin{block}{Interpretação de H5 (Estabilidade)}
+        \footnotesize
+        \begin{itemize}
+          \item Dentro de cada semente: comportamento reproduzível
+            (2 repetições concordam)
+          \item \textbf{Entre sementes}: divergência significativa\\
+            Fidelidade: $66.0\%$ (seed~42) vs.\ $85.3\%$ (seed~123)
+          \item $W^*$ aprendida difere qualitativamente:\\
+            seed~42 usa só $x_2$; seed~123 usa ambas as coords.
+          \item \textbf{H5 parcialmente confirmada}: reproduzível
+            dentro da semente, mas instável entre sementes.
+        \end{itemize}
+      \end{block}
+
+      \vspace{0.3em}
+
+      \begin{exampleblock}{Implicação}
+        \footnotesize
+        A instabilidade entre sementes pode refletir a limitação
+        da métrica diagonal ou a ambiguidade intrínseca do
+        critério do LLM para diferentes instâncias do problema.
+      \end{exampleblock}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Resultados: Efeito dos Nomes de Classe (10-shot)}
+  \begin{block}{Consistência e $\kappa$ por variação de nome de classe --- seeds
+    $\{42,123\}$, 10-shot}
+  \end{block}
+
+  \vspace{0.3em}
+
+  \begin{center}
+  \renewcommand{\arraystretch}{1.35}
+  \begin{tabular}{lcccc}
+    \toprule
+    \textbf{Nomes das Classes} & \textbf{Cons.~B} & \textbf{$\kappa$(B)}
+      & \textbf{Cons.~C} & \textbf{$\kappa$(C)} \\
+    \midrule
+    A / B (referência)       & \textbf{70.3\%} & \textbf{0.46}
+                             & \textbf{88.1\%} & \textbf{0.76} \\
+    0 / 1 (numérico)         & 62.8\% & 0.34 & 83.3\% & 0.68 \\
+    Positivo / Negativo      & 74.2\% & 0.49
+                             & \cellcolor{myred!15}73.6\% & \cellcolor{myred!15}0.47 \\
+    Azul / Vermelho          & 70.6\% & 0.40
+                             & \cellcolor{myred!25}64.2\% & \cellcolor{myred!25}0.32 \\
+    \bottomrule
+  \end{tabular}
+  \end{center}
+
+  \vspace{0.4em}
+
+  \begin{columns}[T]
+    \begin{column}{0.48\textwidth}
+      \begin{alertblock}{Viés Semântico Confirmado}
+        \footnotesize
+        Nomes com conotação visual (\emph{Azul/Vermelho}) causam
+        queda expressiva em Prob.~C: $\kappa$ cai de $0.76$
+        (A/B) para $0.32$ (-57\%).\\
+        Positivo/Negativo mantém Prob.~B mas perde Prob.~C.
+      \end{alertblock}
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      \begin{exampleblock}{Interpretação}
+        \footnotesize
+        O LLM \textbf{não} aplica critério puramente geométrico.
+        Nomes ativam heurísticas linguísticas internas que
+        distorcem o critério geométrico aprendido.\\
+        Problema~C (maior distorção) é mais sensível ao viés.
+      \end{exampleblock}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Resultados: Fase D --- Concordância LLM vs.\ Perito (\%)}
+  \scriptsize
+  \begin{block}{\footnotesize $W_{\text{exp}}=[0.3,1.5]$ $\cdot$ seeds $\{42,123\}$ $\cdot$ 2~rep.}
+  \end{block}
+
+  \vspace{0.15em}
+
+  \begin{center}
+  \renewcommand{\arraystretch}{1.25}
+  \begin{tabular}{ccccc}
+    \toprule
+    \textbf{$n$-shot} & \textbf{Easy} & \textbf{Hard} & \textbf{Mixed} & \textbf{Random} \\
+    \midrule
+    0  & 57.3 & 57.3 & 57.3 & 57.3 \\
+    3  & \cellcolor{mygreen!30}\textbf{92.2} & \cellcolor{myred!20}53.0 & \cellcolor{myred!20}53.0 & 75.0 \\
+    5  & 86.3 & 57.0 & 82.0 & 87.9 \\
+    10 & 83.9 & 65.2 & 83.6 & \cellcolor{myblue!20}90.0 \\
+    20 & 90.6 & 88.1 & 89.6 & \cellcolor{myblue!20}\textbf{92.1} \\
+    \bottomrule
+  \end{tabular}
+  \hspace{1.5em}
+  \begin{tabular}{ccccc}
+    \toprule
+    \textbf{$n$-shot} & \textbf{Easy} & \textbf{Hard} & \textbf{Mixed} & \textbf{Random} \\
+    \midrule
+    0  & 0.16 & 0.16 & 0.16 & 0.16 \\
+    3  & \cellcolor{mygreen!30}\textbf{0.84} & \cellcolor{myred!20}0.05 & \cellcolor{myred!20}0.05 & 0.50 \\
+    5  & 0.73 & 0.14 & 0.64 & 0.76 \\
+    10 & 0.68 & 0.31 & 0.67 & \cellcolor{myblue!20}0.80 \\
+    20 & 0.81 & 0.76 & 0.79 & \cellcolor{myblue!20}\textbf{0.84} \\
+    \bottomrule
+  \end{tabular}
+
+  {\tiny Esquerda: Concordância (\%) \quad\quad Direita: Kappa de Cohen}
+  \end{center}
+
+  \vspace{0.15em}
+
+  \begin{columns}[T]
+    \begin{column}{0.48\textwidth}
+      \begin{exampleblock}{\footnotesize H3 Confirmada}
+        \footnotesize
+        Zero-shot $\approx 57\%$ (perto do acaso).
+        Com exemplos: até $92\%$.
+        Crescimento sistemático confirma H3.
+      \end{exampleblock}
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      \begin{alertblock}{\footnotesize H4 \textbf{Refutada}}
+        \footnotesize
+        $n=3$: Easy $\mathbf{92\%}$ vs Hard $53\%$.\\
+        Exemplos claros ensinam melhor.\\
+        Hard só equipara em $n=20$.
+      \end{alertblock}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+% ═════════════════════════════════════════════════════════════════════════════
+\section{Análise e Discussão}
+% ═════════════════════════════════════════════════════════════════════════════
+
+\begin{frame}{Análise dos Resultados por Hipótese}
+  \begin{center}
+  \scriptsize
+  \renewcommand{\arraystretch}{1.2}
+  \begin{tabular}{@{}cl@{\hspace{0.6em}}p{8.5cm}@{}}
+    \toprule
+    \textbf{Hip.} & \textbf{Veredicto} & \textbf{Evidência} \\
+    \midrule
+    H1 & \textcolor{myorange}{\textbf{Parcial}}
+       & Prob.~C: $\kappa = 0.76$ com 10-shot. Prob.~B: $\kappa \leq 0.48$.
+         Zero-shot $\kappa \approx 0.3$ (insuficiente). \\[1pt]
+    H2 & \textcolor{myorange}{\textbf{Parcial}}
+       & Confirmado para Prob.~C ($\kappa$: $0.35 \to 0.76$).
+         Prob.~B não cresce consistentemente. \\[1pt]
+    H3 & \textcolor{mygreen}{\textbf{Confirmada}}
+       & Zero-shot $57\%$ ($\approx$ acaso). Com 20-shot: até $92\%$.
+         Crescimento sistemático. \\[1pt]
+    H4 & \textcolor{myred}{\textbf{Refutada}}
+       & $n{=}3$: Easy $92\%$ vs Hard $53\%$. Easy $>$ Hard até $n{=}10$.
+         Hard equipara apenas em $n{=}20$. \\[1pt]
+    H5 & \textcolor{myorange}{\textbf{Parcial}}
+       & Reproduzível dentro da semente (2 reps concordam).
+         Entre sementes: fidelidade $66\%$ vs $85\%$; $W^*$ difere qualitativamente. \\
+    \bottomrule
+  \end{tabular}
+  \end{center}
+
+  \vspace{0.15em}
+
+  \begin{columns}[T]
+    \begin{column}{0.49\textwidth}
+      \begin{alertblock}{Achado Inesperado (H4 refutada)}
+        \scriptsize
+        \textbf{Easy $\gg$ Hard com poucos exemplos.}
+        Exemplos claros transmitem o critério melhor
+        quando o LLM tem pouco contexto.
+        Hard só equipara em $n=20$.
+      \end{alertblock}
+    \end{column}
+    \begin{column}{0.49\textwidth}
+      \begin{alertblock}{Limitação da Métrica Diagonal}
+        \scriptsize
+        Fidelidade $75.7\%$ (meta: $\geq 90\%$).
+        Seed~42: $w_1=0$ (ignora $x_1$).
+        Seed~123: flag de limitação ativada.
+        \textbf{Próximo passo:} SDP completo.
+      \end{alertblock}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+% ═════════════════════════════════════════════════════════════════════════════
+\section{Limitações e Trabalhos Futuros}
+% ═════════════════════════════════════════════════════════════════════════════
+
+\begin{frame}{Limitações do Estudo Atual}
+  \begin{columns}[T]
+    \begin{column}{0.48\textwidth}
+      \begin{alertblock}{L1 --- Dados Sintéticos em 2D}
+        \footnotesize
+        Gaussianas bidimensionais facilitam visualização mas
+        limitam a generalização. Resultados podem não se
+        transferir para domínios de alta dimensionalidade.
+      \end{alertblock}
+
+      \vspace{0.1em}
+
+      \begin{alertblock}{L2 --- Métrica Diagonal}
+        \footnotesize
+        $W = \mathrm{diag}(\mathbf{w})$ reduz o espaço de hipóteses.
+        O LLM pode usar critérios correlacionados entre dimensões
+        que uma métrica diagonal não captura.
+
+        \vspace{0.2em}
+        \textbf{Recomendação (orientador):} SDP completo.
+      \end{alertblock}
+
+      \vspace{0.1em}
+
+      \begin{alertblock}{L3 --- Centróides Cross-Problem}
+        \footnotesize
+        Usar centróides de A em B e C introduz um confound:
+        discordância pode refletir geometria, não o LLM.
+      \end{alertblock}
+    \end{column}
+
+    \begin{column}{0.48\textwidth}
+      \begin{alertblock}{L4 --- Único Modelo Testado}
+        \footnotesize
+        Apenas GPT-4o-mini em produção. Não sabemos se
+        consistência decisional é propriedade geral dos LLMs
+        ou específica a um modelo/treinamento.
+
+        \vspace{0.2em}
+        Claude e Gemini já suportados no código.
+      \end{alertblock}
+
+      \vspace{0.1em}
+
+      \begin{alertblock}{L5 --- Temperatura Fixa}
+        \footnotesize
+        $T = 0.0$ impede analisar o efeito da temperatura
+        na estabilidade decisional.
+      \end{alertblock}
+
+      \vspace{0.1em}
+
+      \begin{block}{Escala dos Experimentos}
+        \begin{itemize}
+          \footnotesize
+          \item $N_{\text{rep}} = 2$ por configuração
+          \item 2 sementes aleatórias
+          \item $\sim$5000+ chamadas à API estimadas
+        \end{itemize}
+      \end{block}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+% ═════════════════════════════════════════════════════════════════════════════
+\section{Trabalhos Relacionados}
+% ═════════════════════════════════════════════════════════════════════════════
+
+\begin{frame}{Trabalhos Relacionados}
+  \begin{columns}[T]
+    \begin{column}{0.48\textwidth}
+      \begin{block}{Aprendizado de Métricas}
+        \begin{itemize}
+          \footnotesize
+          \item Xing et al.\ (2002) --- distância para clustering
+          \item Weinberger \& Saul (2009) --- LMNN
+          \item Davis et al.\ (2007) --- divergências de Bregman
+          \item Bellet et al.\ (2013) --- survey abrangente
+        \end{itemize}
+      \end{block}
+
+      \vspace{0.4em}
+
+      \begin{block}{Perceptron Estruturado e SVM}
+        \begin{itemize}
+          \footnotesize
+          \item Collins (2002) --- Perceptron para NLP
+          \item Taskar et al.\ (2004) --- Max-margin Markov networks
+          \item Tsochantaridis et al.\ (2005) --- SVMs estruturadas
+        \end{itemize}
+      \end{block}
+    \end{column}
+
+    \begin{column}{0.48\textwidth}
+      \begin{block}{Otimização Inversa}
+        \begin{itemize}
+          \footnotesize
+          \item Ahuja \& Orlin (2001) --- IO combinatória
+          \item Iyengar \& Kang (2005) --- IO geral
+          \item Chan et al.\ (2025) --- IO: teoria e aplicações
+        \end{itemize}
+      \end{block}
+
+      \vspace{0.4em}
+
+      \begin{block}{Explicabilidade (XAI) e Comportamento de LLMs}
+        \begin{itemize}
+          \footnotesize
+          \item Ribeiro et al.\ (2016) --- LIME (XAI geral)
+          \item Lundberg \& Lee (2017) --- SHAP (XAI geral)
+          \item Wu et al.\ (2023) --- consistência em LLMs
+          \item Pezeshkpour \& Hruschka (2023) --- sensibilidade ao prompt
+        \end{itemize}
+      \end{block}
+
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Interpretabilidade de LLMs: Detalhamento dos Trabalhos}
+  \begin{columns}[T]
+    \begin{column}{0.48\textwidth}
+      \begin{block}{\footnotesize Ribeiro et al.\ (2016) --- LIME}
+        \scriptsize
+        Explica classificadores via modelo linear \emph{local} ajustado a
+        perturbações da entrada. Feature importances = coeficientes locais.
+        Model-agnostic.\\[2pt]
+        \textcolor{myblue}{\textbf{Correlação:}} Nossa $W^*$ cumpre papel
+        análogo --- é um \emph{proxy linear interpretável} do critério do
+        LLM, aprendido por otimização inversa em vez de perturbação.
+        Ambos criam explicações para decisões de caixas-pretas.
+      \end{block}
+      \vspace{0.2em}
+      \begin{block}{\footnotesize Lundberg \& Lee (2017) --- SHAP}
+        \scriptsize
+        Atribui contribuição marginal de cada feature via valores de
+        Shapley (teoria dos jogos). Garante eficiência, simetria, dummy.\\[2pt]
+        \textcolor{myblue}{\textbf{Correlação:}} Os pesos $w_1, w_2$ de
+        $W^*$ funcionam como \emph{importâncias de feature} do critério
+        implícito do LLM. Ex.: $w_1{=}0$ (seed~42) revela que o LLM
+        ignorou $x_1$ --- análogo a $\phi_1^{\text{SHAP}} \approx 0$.
+      \end{block}
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      \begin{block}{\footnotesize Wu et al.\ (2023) --- Consistência em LLMs}
+        \scriptsize
+        LLMs dão respostas distintas a formulações semanticamente
+        equivalentes, evidenciando \textbf{raciocínio instável}.\\[2pt]
+        \textcolor{myblue}{\textbf{Correlação:}} Motivação central desta
+        pesquisa. Enquanto Wu et al.\ medem inconsistência
+        qualitativamente, formalizamos via $\kappa$ e $W^*$: se o
+        critério fosse estável, $W^*_A$ preveria B e C com
+        $\kappa{>}0.7$ (H1 parcialmente confirmada).
+      \end{block}
+      \vspace{0.2em}
+      \begin{block}{\footnotesize Pezeshkpour \& Hruschka (2023) --- Viés Posicional}
+        \scriptsize
+        LLMs são sensíveis à \textbf{ordem das opções} em
+        múltipla escolha; a mesma resposta correta varia com a posição.\\[2pt]
+        \textcolor{myblue}{\textbf{Correlação:}} Motiva os experimentos com
+        nomes de classe (A/B, 0/1, Azul/Vermelho). Confirmamos viés
+        \emph{semântico} análogo: Azul/Vermelho reduz $\kappa_C$ de
+        $0.76$ para $0.32$ ($-57\%$), distorcendo $W^*$ aprendida.
+      \end{block}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+% ═════════════════════════════════════════════════════════════════════════════
+\section{Conclusão}
+% ═════════════════════════════════════════════════════════════════════════════
+
+\begin{frame}{Conclusões com Dados Reais}
+  \begin{columns}[T]
+    \begin{column}{0.50\textwidth}
+      \begin{block}{Contribuições Verificadas Empiricamente}
+        \scriptsize
+        \begin{enumerate}
+          \item \textbf{Framework funcional:} métrica diagonal captura
+            parcialmente o critério do LLM (fidelidade $76\%$)
+          \item \textbf{Consistência transferível:} $\kappa_C=0.76$ com 10-shot;
+            menos eficaz em B ($\kappa \leq 0.48$)
+          \item \textbf{LLM aprende de perito:} zero-shot $57\%$, 20-shot
+            até $92\%$ de concordância (H3 confirmada)
+          \item \textbf{Viés semântico:} Azul/Vermelho reduz $\kappa_C$
+            de $0.76$ para $0.32$ ($-57\%$)
+          \item \textbf{Achado inesperado (H4 refutada):} Easy $\gg$ Hard em
+            $n=3$ ($92\%$ vs $53\%$)
+        \end{enumerate}
+      \end{block}
+    \end{column}
+
+    \begin{column}{0.47\textwidth}
+      \begin{exampleblock}{Resposta à Questão Central}
+        \footnotesize
+        O LLM \textbf{possui} critério implícito parcialmente estável
+        e parcialmente capturável por $W^*$ diagonal.
+        A captura é imperfeita (fid.\ $76\%$) e instável
+        entre sementes --- mas o aprendizado via few-shot
+        é robusto e sistemático.
+      \end{exampleblock}
+
+      \vspace{0.3em}
+
+      \begin{alertblock}{Limitações e Próximos Passos}
+        \footnotesize
+        \begin{itemize}
+          \item Instabilidade entre sementes: requer mais repetições
+          \item Dados 2D sintéticos: validar em dados reais
+          \item Único modelo (GPT-4o-mini): comparar Claude/Gemini
+        \end{itemize}
+      \end{alertblock}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}[plain]
+  \begin{center}
+    \vspace{1.5cm}
+    {\Large \textbf{Obrigado!}}
+
+
+    \small
+    Código: \texttt{Mestrado Trabalho.py}\\
+    Última execução: \texttt{execucao\_2026-03-03\_20-25-01/}
+  \end{center}
+\end{frame}
+
+% ═════════════════════════════════════════════════════════════════════════════
+% REFERÊNCIAS
+% ═════════════════════════════════════════════════════════════════════════════
+
+\begin{frame}[allowframebreaks]{Referências}
+  \footnotesize
+  \begin{thebibliography}{99}
+
+    \bibitem{ahuja2001}
+    Ahuja, R.K., Orlin, J.B. (2001).
+    Inverse optimization.
+    \textit{Operations Research}, 49(5), 771--783.
+
+    \bibitem{iyengar2005}
+    Iyengar, G., Kang, W. (2005).
+    Inverse conic programming with applications.
+    \textit{Operations Research Letters}, 33(3), 319--330.
+
+    \bibitem{chan2025}
+    Chan, T.C.Y., Mahmood, R., Zhu, I.Y.\ (2025).
+    Inverse optimization: Theory and applications.
+    \textit{Operations Research}, 73(2), 1046--1074.
+    (Publicado online Dez/2023.)
+
+    \bibitem{collins2002}
+    Collins, M. (2002).
+    Discriminative training methods for hidden Markov models.
+    \textit{Proc.\ EMNLP}, 1--8.
+
+    \bibitem{taskar2004}
+    Taskar, B., Guestrin, C., Koller, D. (2004).
+    Max-margin Markov networks.
+    \textit{Advances in NeurIPS}.
+
+    \bibitem{tsochantaridis2005}
+    Tsochantaridis, I. et al.\ (2005).
+    Large margin methods for structured output variables.
+    \textit{JMLR}, 6, 1453--1484.
+
+    \bibitem{xing2002}
+    Xing, E.P. et al.\ (2002).
+    Distance metric learning with application to clustering.
+    \textit{Advances in NeurIPS}.
+
+    \bibitem{weinberger2009}
+    Weinberger, K.Q., Saul, L.K. (2009).
+    Distance metric learning for large margin nearest neighbor classification.
+    \textit{JMLR}, 10, 207--244.
+
+    \bibitem{davis2007}
+    Davis, J.V. et al.\ (2007).
+    Information-theoretic metric learning.
+    \textit{Proc.\ ICML}, 209--216.
+
+    \bibitem{bellet2013}
+    Bellet, A., Habrard, A., Sebban, M. (2013).
+    A survey on metric learning for feature vectors and structured data.
+    \textit{arXiv:1306.6709}.
+
+    \bibitem{ribeiro2016}
+    Ribeiro, M.T., Singh, S., Guestrin, C. (2016).
+    ``Why should I trust you?'': Explaining the predictions of any classifier.
+    \textit{Proc.\ KDD}, 1135--1144.
+
+    \bibitem{lundberg2017}
+    Lundberg, S.M., Lee, S.I. (2017).
+    A unified approach to interpreting model predictions.
+    \textit{Advances in NeurIPS}, 4765--4774.
+
+    \bibitem{wu2023}
+    Wu, Z. et al.\ (2023).
+    Analyzing consistency and challenges in large language models.
+    \textit{arXiv:2305.14251}.
+
+    \bibitem{pezeshkpour2023}
+    Pezeshkpour, P., Hruschka, E. (2023).
+    Large language models sensitivity to the order of options.
+    \textit{arXiv:2308.11483}.
+
+  \end{thebibliography}
+\end{frame}
+
+% ═════════════════════════════════════════════════════════════════════════════
+% APÊNDICE
+% ═════════════════════════════════════════════════════════════════════════════
+
+\appendix
+
+\begin{frame}{Apêndice: Pseudo-código Geral do Experimento}
+  \begin{block}{Experimento Completo (condensado)}
+    \begin{algorithmic}[1]
+      \scriptsize
+      \For{cada modelo $m$, semente $s$}
+        \State Gerar $X_A$, $X_B$, $X_C$, $X_D$ com semente $s$
+        \For{cada configuração de nomes de classe $\mathcal{N}$}
+          \State $\hat{Y}^{\text{LLM}}_A \leftarrow$ LLM classifica $X_A$ zero-shot
+          \State $\boldsymbol{\mu} \leftarrow$ centróides de $\hat{Y}^{\text{LLM}}_A$
+          \State $W^*$, $\gamma^* \leftarrow$ PerceptronEstruturado($X_A$,
+            $\hat{Y}^{\text{LLM}}_A$, $\boldsymbol{\mu}$) \Comment{cacheado}
+          \For{$n \in \{0,5,10\}$, rep $\in \{1,2\}$}
+            \State Selecionar $n$ exemplos via aprendizado ativo (rótulos de $W^*$)
+            \State $\hat{Y}^{\text{LLM}}_B \leftarrow$ LLM classifica $X_B$ com $n$-shot
+            \State $\hat{Y}^{W}_B \leftarrow$ prediz $X_B$ com $W^*$ (centróides de A)
+            \State Medir $\kappa$, F1, consistência($\hat{Y}^{\text{LLM}}_B$,
+              $\hat{Y}^W_B$) \Comment{idem para C}
+          \EndFor
+        \EndFor
+        \For{$n \in \{0,3,5,10,20\}$, estratégia $\in \{\text{easy, hard, mixed, random}\}$}
+          \State $\hat{Y}^{\text{exp}}_D \leftarrow$ perito classifica $X_D$ com $W_{\text{exp}}$
+          \State Selecionar $n$ exemplos por estratégia de dificuldade
+          \State $\hat{Y}^{\text{LLM}}_D \leftarrow$ LLM classifica com $n$-shot (exemplos do perito)
+          \State Medir concordância($\hat{Y}^{\text{LLM}}_D$, $\hat{Y}^{\text{exp}}_D$)
+        \EndFor
+      \EndFor
+    \end{algorithmic}
+  \end{block}
+\end{frame}
+
+\begin{frame}{Apêndice: Estrutura de Saída dos Experimentos}
+  \begin{columns}[T]
+
+
+    \begin{column}{0.48\textwidth}
+      \begin{block}{CSVs de Resultados}
+        \textbf{Fases A--C:} 30+ colunas\\
+        consistência, kappa, F1, acurácia vs.\ GT,\\
+        $w_0$, $w_1$, $\gamma^*$, flag diagonal
+
+        \vspace{0.4em}
+        \textbf{Fase D:} 17 colunas\\
+        concordância LLM--perito ($\kappa$, F1),\\
+        estratégia, $n$-shot, repetição
+      \end{block}
+
+      \vspace{0.3em}
+
+      \begin{block}{Log completo}
+        \texttt{log\_execucao.txt}: transcript completo\\
+        com detalhes algorítmicos e métricas por ponto
+      \end{block}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\end{document}

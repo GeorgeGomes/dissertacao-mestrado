@@ -1,0 +1,20 @@
+Raul - 
+
+Oi George e Yuri, 
+por enquanto, antes de rodarmos o problema com 3 dimensões, pensei em rodarmos uma forma de projeção explícita para R3 que simula um kernel quadrático. 
+Para tanto basta criarmos uma terceira feature dada pelo produto das duas primeiras, ou seja:
+x1.x2 
+Assim, haverão 3 features: x1, x2 e x1.x2 aumentando o poder de discriminação. 
+O vetor w terá 3 componentes. Se projetarmos de volta para R2  teremos a equação de uma hipérbole.
+Será que a LLM captura  a importância desta  terceira feature. 
+A esperança é melhorar a acurácia do aprendizado de métrica. 
+O prompt continua o mesmo, ou seja, apresenta três valores numéricos para cada amostra.  
+Abraços. 
+
+
+Raul - 
+
+Uma importante observação:
+Na fase de concordância da LLM com a métrica testar a LLM para os dados rotulados pela métrica  W =(w1,w2,w3)
+utilizando, também, somente as duas primeiras features. Será interessante comparar estes resultados com a LLM utilizando as 3 features. 
+Abraços. 

@@ -1,0 +1,280 @@
+\documentclass[aspectratio=169, 14pt]{beamer}
+
+\usetheme{default}
+\usecolortheme{default}
+\usefonttheme{professionalfonts}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[brazil]{babel}
+
+% Layout limpo — sem barra de navegação
+\setbeamertemplate{navigation symbols}{}
+\setbeamertemplate{footline}{
+  \hfill\footnotesize\color{gray}\insertframenumber\,/\,\inserttotalframenumber\hspace{1em}\vspace{0.4em}
+}
+\setbeamertemplate{frametitle}{
+  \vspace{0.3em}
+  {\small\color{gray}\bfseries[\insertframetitle]}
+  \vspace{0.2em}
+}
+
+% Cores: fundo levemente creme para conforto visual
+\setbeamercolor{background canvas}{bg=white}
+\setbeamercolor{normal text}{fg=black}
+\setbeamercolor{frametitle}{fg=gray}
+
+% Espaçamento entre parágrafos
+\setlength{\parskip}{0.6em}
+
+\begin{document}
+
+% ══════════════════════════════════════════════════════════════════════════════
+% SLIDE 1 — Título
+% ══════════════════════════════════════════════════════════════════════════════
+\begin{frame}{Slide 1 — Título}
+  Bom dia a todos. Minha apresentação aborda o problema de entender como modelos de linguagem grandes tomam decisões.
+
+  A ideia central é usar otimização inversa para aprender matematicamente o critério implícito de um LLM, e verificar se esse critério é estável e pode ser transferido para problemas diferentes.
+\end{frame}
+
+% ══════════════════════════════════════════════════════════════════════════════
+% SLIDE 2 — Sumário
+% ══════════════════════════════════════════════════════════════════════════════
+\begin{frame}{Slide 2 — Sumário}
+  Vou estruturar a apresentação assim: começo pela motivação e pelo problema de pesquisa, depois apresento as hipóteses que guiam o trabalho.
+
+  Em seguida, explico os fundamentos teóricos, a metodologia com as quatro fases experimentais, as métricas que usei, e os resultados. Por fim, análise, limitações e conclusões.
+\end{frame}
+
+% ══════════════════════════════════════════════════════════════════════════════
+% SLIDE 3 — Contexto: LLMs como Tomadores de Decisão
+% ══════════════════════════════════════════════════════════════════════════════
+\begin{frame}{Slide 3 — Contexto}
+  LLMs já são usados para classificar, recomendar e decidir em aplicações reais. Eles produzem resultados consistentes, mas o problema é que nós não sabemos como eles chegam a essas decisões — são caixas-pretas.
+
+  E isso levanta uma pergunta importante: será que um LLM aplica o mesmo critério quando enfrenta problemas diferentes? Será que esse critério pode ser capturado matematicamente e transferido para novos contextos? Essa é a lacuna que essa pesquisa explora.
+\end{frame}
+
+% ══════════════════════════════════════════════════════════════════════════════
+% SLIDE 4 — Problema de Pesquisa
+% ══════════════════════════════════════════════════════════════════════════════
+\begin{frame}{Slide 4 — Problema de Pesquisa}
+  A questão central é: um LLM tem um processo de tomada de decisão estável e aprendível?
+
+  Existe o problema direto: dado um critério explícito, o LLM classifica — isso é trivial. O que eu faço é o inverso: a partir das classificações do LLM, quero inferir qual critério ele está usando. Matematicamente, busco uma métrica W tal que ela reproduza as mesmas decisões que o LLM tomou.
+\end{frame}
+
+% ══════════════════════════════════════════════════════════════════════════════
+% SLIDE 5 — Hipóteses
+% ══════════════════════════════════════════════════════════════════════════════
+\begin{frame}{Slide 5 — Hipóteses}
+  Trabalho com cinco hipóteses. A H1 diz que o LLM mantém o mesmo critério em problemas com geometrias diferentes. A H2 diz que fornecer exemplos few-shot aumenta a consistência.
+
+  A H3 diz que o LLM consegue aprender o critério de um perito externo. A H4, que exemplos difíceis — próximos da fronteira de decisão — transmitem mais informação que exemplos fáceis. E a H5, que o comportamento é reproduzível entre execuções independentes.
+\end{frame}
+
+% ══════════════════════════════════════════════════════════════════════════════
+% SLIDE 6 — Distância de Mahalanobis Diagonal
+% ══════════════════════════════════════════════════════════════════════════════
+\begin{frame}{Slide 6 — Distância de Mahalanobis}
+  Para capturar o critério do LLM matematicamente, uso a distância de Mahalanobis diagonal. Ela é uma generalização da distância euclidiana onde cada dimensão tem um peso diferente, e o ponto é atribuído à classe cujo centróide está mais próximo sob essa métrica.
+
+  Uso a versão diagonal por simplicidade: são apenas d parâmetros em vez de d ao quadrado. Isso é uma escolha deliberada para o experimento inicial, e o próximo passo é partir para a matriz completa.
+\end{frame}
+
+% ══════════════════════════════════════════════════════════════════════════════
+% SLIDE 7 — Otimização Inversa e Perceptron Estruturado
+% ══════════════════════════════════════════════════════════════════════════════
+\begin{frame}{Slide 7 — Otimização Inversa e Perceptron}
+  A abordagem é de otimização inversa: parto das decisões observadas para inferir o critério. O algoritmo de aprendizado é o Perceptron Estruturado com margem — quando uma classificação viola a margem, atualizo os pesos.
+
+  Junto com o perceptron, uso uma busca binária para encontrar a margem máxima que ainda não gera violações. Isso garante que a métrica aprendida é o melhor separador possível para as decisões do LLM.
+\end{frame}
+
+% ══════════════════════════════════════════════════════════════════════════════
+% SLIDE 8 — Pipeline Experimental
+% ══════════════════════════════════════════════════════════════════════════════
+\begin{frame}{Slide 8 — Pipeline Experimental}
+  O experimento tem quatro fases. Na Fase A, o LLM classifica pontos 2D sem nenhum exemplo, e a partir dessas classificações aprendo a métrica W.
+
+  Nas Fases B e C, aplico essa métrica a problemas com geometria diferente — testando se o critério aprendido se transfere. Na Fase D, o papel se inverte: um perito externo rotula os dados, e verifico se o LLM consegue aprender o critério do perito através de exemplos.
+\end{frame}
+
+% ══════════════════════════════════════════════════════════════════════════════
+% SLIDE 9 — Geração dos Datasets
+% ══════════════════════════════════════════════════════════════════════════════
+\begin{frame}{Slide 9 — Datasets Sintéticos}
+  Gerei quatro datasets sintéticos com pares de gaussianas 2D. O Problema A tem separação horizontal clara, intuitiva para o LLM. Os Problemas B e C têm os centróides rotacionados progressivamente, tornando a geometria menos óbvia.
+
+  O Problema D tem uma geometria anisotrópica onde x2 é muito mais informativo que x1. Uso dados 2D exatamente para poder visualizar e validar o que está acontecendo.
+\end{frame}
+
+% ══════════════════════════════════════════════════════════════════════════════
+% SLIDE 10 — Interação com o LLM
+% ══════════════════════════════════════════════════════════════════════════════
+\begin{frame}{Slide 10 — Interação com o LLM}
+  Uso o GPT-4o-mini com temperatura zero para minimizar aleatoriedade e isolar o critério de decisão. O prompt é direto: apresento as coordenadas e peço a classificação.
+
+  Para tratar respostas malformadas, implementei um parser com sete camadas — do match exato até starts-with. Também testo quatro variações de nomes de classe: letras neutras, números, palavras com conotação semântica e cores, para detectar se o LLM sofre viés semântico.
+\end{frame}
+
+% ══════════════════════════════════════════════════════════════════════════════
+% SLIDE 11 — Fase A: Algoritmo
+% ══════════════════════════════════════════════════════════════════════════════
+\begin{frame}{Slide 11 — Fase A: Algoritmo}
+  O algoritmo da Fase A funciona assim: primeiro, o LLM classifica os cento e cinquenta pontos sem exemplos. A partir dessas classificações, calculo os centróides de cada classe.
+
+  Então o Perceptron Estruturado itera: para cada ponto cujo critério atual viola a margem, atualizo os pesos. Uma busca binária no parâmetro gamma encontra a margem máxima sem violações. O resultado é a métrica W-estrela que melhor representa o critério do LLM.
+\end{frame}
+
+% ══════════════════════════════════════════════════════════════════════════════
+% SLIDE 12 — Fases B e C: Consistência Cross-Problema
+% ══════════════════════════════════════════════════════════════════════════════
+\begin{frame}{Slide 12 — Fases B e C: Consistência}
+  Para testar consistência, aplico a métrica W aprendida na Fase A diretamente aos Problemas B e C — sem reaprender. O ponto crítico aqui, que o orientador reforçou, é que os exemplos few-shot são rotulados pela métrica W, não pelo ground truth das gaussianas.
+
+  Isso é fundamental: quero ancorar o LLM ao critério que aprendi, não ao padrão original dos dados. Assim consigo medir se o LLM segue a lógica da métrica.
+\end{frame}
+
+% ══════════════════════════════════════════════════════════════════════════════
+% SLIDE 13 — Fase D: LLM como Aprendiz
+% ══════════════════════════════════════════════════════════════════════════════
+\begin{frame}{Slide 13 — Fase D: LLM como Aprendiz}
+  Na Fase D, o experimento inverte o papel. Um perito externo com uma métrica conhecida e anisotrópica — onde x2 vale cinco vezes mais que x1 — rotula os dados. O LLM nunca vê essa métrica; ele só recebe os exemplos.
+
+  Comparo quatro estratégias de seleção de exemplos: fáceis, que são os pontos mais longe da fronteira; difíceis, próximos da fronteira; mistos, metade de cada; e aleatórios como linha de base.
+\end{frame}
+
+% ══════════════════════════════════════════════════════════════════════════════
+% SLIDE 14 — Métricas de Avaliação
+% ══════════════════════════════════════════════════════════════════════════════
+\begin{frame}{Slide 14 — Métricas de Avaliação}
+  A métrica principal é o Kappa de Cohen, que mede concordância descontando o que seria esperado por acaso. Valores acima de 0.7 indicam concordância substancial — esse é o limiar da hipótese H1.
+
+  Uso também a consistência simples — percentual de concordância — e um F1 simétrico que trata ambas as partes de forma igualitária, sem designar uma como a referência.
+\end{frame}
+
+% ══════════════════════════════════════════════════════════════════════════════
+% SLIDE 15 — Design de Variabilidade e Robustez
+% ══════════════════════════════════════════════════════════════════════════════
+\begin{frame}{Slide 15 — Controle de Variabilidade}
+  Para garantir robustez, controlo quatro fontes de variabilidade: duas repetições por configuração, duas sementes aleatórias distintas, quatro variações de nomes de classe, e temperatura fixa em zero.
+
+  Isso resulta em 48 configurações para as Fases A a C e 80 para a Fase D. A Fase A é executada uma vez e cacheada, então a métrica W é reutilizada para todos os tamanhos de few-shot — economizando chamadas à API.
+\end{frame}
+
+% ══════════════════════════════════════════════════════════════════════════════
+% SLIDE 16 — Resultados: Fases A–C, efeito do n-shot
+% ══════════════════════════════════════════════════════════════════════════════
+\begin{frame}{Slide 16 — Resultados: Fases A–C}
+  Nos resultados das Fases A, B e C: sem exemplos, o Kappa é baixo — 0.22 no Problema B e 0.35 no C. Com dez exemplos, o Problema C atinge Kappa de 0.76, que é concordância substancial. O Problema B não melhora tanto, chegando a no máximo 0.48.
+
+  A fidelidade da métrica na Fase A ficou em 75.7\%, abaixo da meta de 90\%. Isso indica que a métrica diagonal é uma aproximação do critério do LLM, mas não o captura completamente.
+\end{frame}
+
+% ══════════════════════════════════════════════════════════════════════════════
+% SLIDE 17 — Resultados: Estabilidade entre Sementes
+% ══════════════════════════════════════════════════════════════════════════════
+\begin{frame}{Slide 17 — Estabilidade entre Sementes}
+  Um resultado inesperado: as duas sementes geram métricas qualitativamente diferentes. A semente 42 resulta em w1 igual a zero — o modelo ignora completamente a coordenada x1, com fidelidade de apenas 66\%.
+
+  A semente 123 usa as duas coordenadas e tem fidelidade de 85\%. Isso sugere que o critério do LLM pode ser ambíguo para diferentes instâncias do problema, ou que a métrica diagonal simplesmente não tem expressividade suficiente para capturar o que o LLM está fazendo.
+\end{frame}
+
+% ══════════════════════════════════════════════════════════════════════════════
+% SLIDE 18 — Resultados: Efeito dos Nomes de Classe
+% ══════════════════════════════════════════════════════════════════════════════
+\begin{frame}{Slide 18 — Efeito dos Nomes de Classe}
+  O resultado mais expressivo de viés semântico: quando uso os nomes "Azul" e "Vermelho", o Kappa do Problema C cai de 0.76 para 0.32 — uma queda de 57\%.
+
+  Isso confirma que o LLM não aplica um critério puramente geométrico. Nomes com conotação visual ativam associações internas que distorcem a decisão geométrica. O Problema C é mais sensível porque tem maior distorção geométrica, deixando o LLM mais vulnerável ao viés semântico.
+\end{frame}
+
+% ══════════════════════════════════════════════════════════════════════════════
+% SLIDE 19 — Resultados: Fase D
+% ══════════════════════════════════════════════════════════════════════════════
+\begin{frame}{Slide 19 — Resultados: Fase D}
+  Na Fase D, o resultado mais marcante é o contraste entre estratégias com poucos exemplos. Com apenas três exemplos fáceis, o LLM acerta 92\% dos rótulos do perito. Com três exemplos difíceis, cai para 53\% — pior que aleatório.
+
+  Com vinte exemplos, qualquer estratégia converge para cerca de 90\%. E o Kappa com três exemplos fáceis é 0.84, enquanto com difíceis é apenas 0.05. A hipótese H3 foi claramente confirmada, mas a H4 foi refutada: exemplos fáceis são mais informativos que difíceis com poucos exemplos.
+\end{frame}
+
+% ══════════════════════════════════════════════════════════════════════════════
+% SLIDE 20 — Análise dos Resultados por Hipótese
+% ══════════════════════════════════════════════════════════════════════════════
+\begin{frame}{Slide 20 — Análise por Hipótese}
+  Em resumo: H1 foi parcialmente confirmada — o critério se transfere bem para o Problema C com few-shot, mas não para o B. H2 também parcial, válida apenas para C. H3 foi confirmada — o LLM claramente aprende do perito via exemplos.
+
+  H4 foi refutada — contra a intuição, exemplos fáceis ensinam melhor que difíceis quando o contexto é pequeno. E H5 foi parcial: reproduzível dentro de cada semente, mas instável entre sementes diferentes.
+\end{frame}
+
+% ══════════════════════════════════════════════════════════════════════════════
+% SLIDE 21 — Limitações
+% ══════════════════════════════════════════════════════════════════════════════
+\begin{frame}{Slide 21 — Limitações}
+  Há limitações importantes que preciso reconhecer. Primeiro, os dados são sintéticos em 2D — útil para visualizar, mas difícil de generalizar. Segundo, a métrica diagonal é uma simplificação: o LLM pode usar critérios com correlação entre dimensões que essa métrica não captura.
+
+  Terceiro, uso centróides da Fase A nos Problemas B e C, o que introduz um confound geométrico. Quarto, testei apenas um modelo. E quinto, temperatura zero impede analisar o efeito da variabilidade.
+\end{frame}
+
+% ══════════════════════════════════════════════════════════════════════════════
+% SLIDE 23 — Trabalhos Relacionados
+% ══════════════════════════════════════════════════════════════════════════════
+\begin{frame}{Slide 23 — Trabalhos Relacionados}
+  A pesquisa se apoia em quatro pilares da literatura. Aprendizado de métricas, com o LMNN de Weinberger e Saul como referência central. O Perceptron Estruturado de Collins, que é o ancestral direto do algoritmo que uso. Otimização inversa, com o survey de Chan e colaboradores. E interpretabilidade de LLMs, com LIME, SHAP, e trabalhos sobre consistência e viés posicional.
+\end{frame}
+
+% ══════════════════════════════════════════════════════════════════════════════
+% SLIDE 24 — Interpretabilidade de LLMs: Detalhamento
+% ══════════════════════════════════════════════════════════════════════════════
+\begin{frame}{Slide 24 — Interpretabilidade: Correlações}
+  Deixa eu conectar esses quatro trabalhos com o que faço aqui. LIME explica classificadores via modelo linear local — nossa métrica W faz o mesmo, mas por otimização inversa em vez de perturbação. O SHAP atribui importância às features — nossos pesos w1 e w2 cumprem esse papel: quando w1 é zero, o LLM ignorou x1 completamente, exatamente como SHAP com contribuição zero.
+
+  Wu et al. documentam inconsistências em LLMs — nossa pesquisa formaliza isso quantitativamente via Kappa. E Pezeshkpour mostra viés posicional — que reproduzimos como viés semântico com os nomes de classe.
+\end{frame}
+
+% ══════════════════════════════════════════════════════════════════════════════
+% SLIDE 25 — Conclusões
+% ══════════════════════════════════════════════════════════════════════════════
+\begin{frame}{Slide 25 — Conclusões}
+  Para concluir: demonstrei que é possível aprender parcialmente o critério implícito de um LLM via otimização inversa. A fidelidade de 76\% indica que a métrica diagonal é útil mas incompleta.
+
+  O resultado mais forte é a Fase D: o LLM aprende efetivamente o critério de um perito humano via exemplos, chegando a 92\% de concordância com 20 exemplos. E o achado mais surpreendente é que exemplos fáceis ensinam mais eficientemente que difíceis com contexto pequeno — o que vai contra a hipótese inicial.
+\end{frame}
+
+% ══════════════════════════════════════════════════════════════════════════════
+% SLIDE 26 — Obrigado
+% ══════════════════════════════════════════════════════════════════════════════
+\begin{frame}{Slide 26 — Encerramento}
+  É isso. Obrigado pela atenção e pelo tempo de vocês. Fico à disposição para qualquer pergunta sobre a metodologia, os resultados ou os próximos passos da pesquisa.
+\end{frame}
+
+% ══════════════════════════════════════════════════════════════════════════════
+% SLIDE 27 — Referências
+% ══════════════════════════════════════════════════════════════════════════════
+\begin{frame}{Slide 27 — Referências}
+  \textit{(Slide de referências — disponível caso alguém pergunte sobre algum trabalho específico. Não é necessário ler.)}
+
+  Se perguntarem sobre referências: Chan et al. 2021 para otimização inversa, Weinberger \& Saul 2009 para LMNN, Collins 2002 para o Perceptron Estruturado, Artstein \& Poesio 2008 para Kappa de Cohen.
+\end{frame}
+
+% ══════════════════════════════════════════════════════════════════════════════
+% SLIDE 28 — Apêndice: Pseudo-código
+% ══════════════════════════════════════════════════════════════════════════════
+\begin{frame}{Slide 28 — Apêndice: Pseudo-código}
+  \textit{(Apêndice — exibir apenas se houver pergunta sobre implementação.)}
+
+  O pseudo-código mostra o loop completo: para cada modelo e semente, geramos os datasets, rodamos a Fase A uma vez cacheando W-estrela, e depois iteramos sobre todos os tamanhos de few-shot e repetições. A Fase D itera sobre os cinco tamanhos e as quatro estratégias de seleção.
+\end{frame}
+
+% ══════════════════════════════════════════════════════════════════════════════
+% SLIDE 29 — Apêndice: Estrutura de Saída
+% ══════════════════════════════════════════════════════════════════════════════
+\begin{frame}{Slide 29 — Apêndice: Saída dos Experimentos}
+  \textit{(Apêndice — exibir apenas se houver pergunta sobre os dados gerados.)}
+
+  Cada execução gera um CSV para as Fases A a C com mais de trinta colunas — consistência, kappa, F1, pesos w, gamma, e flag de limitação diagonal. E um CSV para a Fase D com dezessete colunas. Tudo está também no log de execução com detalhes ponto a ponto.
+\end{frame}
+
+\end{document}
