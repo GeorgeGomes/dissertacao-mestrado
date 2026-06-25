@@ -1,0 +1,37 @@
+From: RAUL FONSECA NETO <raulfonseca.neto@ufjf.br>
+Date: Wednesday, 6 May 2026 at 10:15
+To: George Gomes da Silva <george.gomes@hotmail.com>
+Subject: Re: Falta de energia elétrica
+
+Oi George, se for preciso podemos nos reunir amanhã a tarde, por volta das 17 hrs.
+Abraços. 
+
+Em qui., 30 de abr. de 2026, 22:06, RAUL FONSECA NETO <raulfonseca.neto@ufjf.br> escreveu:
+Faltou uma coisa importante:
+Mostrar graficamente todas as rotulações feitas pela LLM. 
+
+
+Em qui., 30 de abr. de 2026 às 22:04, RAUL FONSECA NETO <raulfonseca.neto@ufjf.br> escreveu:
+Oi George, 
+para esclarecimento:
+A primeira parte do trabalho está ok. Somente modificar o problema C com centros rotacionados no sentido anti-horário.
+A segunda parte, diz respeito a não linearidade, portanto:
+1 - Utilizar o exemplo de peso e altura 
+2- Repetir nesta etapa apenas as fases A e D, ou seja, rotular os dados pela LLM variando a entrada do  prompt, como exemplo: (x1 e x2) ou( peso e altura). A pergunta é classificar como homem e mulher. 
+3 - Na fase A inserir mais uma feature (hipérbole) ou duas features (elipse) e analisar a consistência da métrica aprendida
+utilizando 2, 3 ou 4 features nos dados peso e altura rotulados pela LLM seguindo o mesmo raciocínio da primeira parte do trabalho.
+Verificar se houve ganho. 
+4 - Apresentar também a acurácia da métrica para a rotulação da base de dados original.
+5 - Finalmente, testar a consistência da LLM no aprendizado in-context (n-shot) com os dados rotulados pela melhor métrica (de 2, 3 ou 4 features), considerar os exemplos do prompt com 2, 3 ou 4 features. 
+Qualquer dúvida me comunica.
+Abraços.
+
+
+
+
+Em qui., 30 de abr. de 2026 às 19:15, RAUL FONSECA NETO <raulfonseca.neto@ufjf.br> escreveu:
+Segue a base de dados. Consegui somente com cem amostras,
+O classificador ótimo é uma função na forma x2^2 - x2 + x1^2 - x1 + cte que é uma curva elíptica. 
+Talvez fosse interessante tb tentar com 4 features: x1,x2,x1^2 e x2^2
+Bom feriado tb.
+Abraços..

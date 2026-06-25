@@ -1,0 +1,526 @@
+\documentclass[aspectratio=169,10pt]{beamer}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[brazil]{babel}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usepackage{siunitx}
+\usetheme{Madrid}
+\usecolortheme{default}
+\setbeamertemplate{navigation symbols}{}
+\setbeamertemplate{caption}[numbered]
+\setbeamerfont{caption}{size=\scriptsize}
+\setbeamerfont{frametitle}{size=\large}
+\graphicspath{{../}}
+
+\title[Guia de fala]{Guia de fala --- Disserta\c{c}\~ao de Mestrado}
+\subtitle{LLMs via Otimiza\c{c}\~ao Inversa}
+\author{George Gomes da Silva}
+\date{Maio de 2026}
+
+\begin{document}
+\shorthandoff{"}
+
+% 1
+\begin{frame}{Slide 1 --- Capa}
+\footnotesize
+Bom dia/boa tarde, professor. Vou apresentar a minha disserta\c{c}\~ao de mestrado, intitulada \emph{Explicando Decis\~oes de LLMs via Otimiza\c{c}\~ao Inversa}, sob orienta\c{c}\~ao do Prof.\ Raul Fonseca Neto. A apresenta\c{c}\~ao est\'a organizada em dois blocos: no primeiro, o LLM \'e a fonte de decis\~oes e n\'os tentamos recuperar a m\'etrica por tr\'as delas; no segundo, o LLM passa a ser o aprendiz, recebendo r\'otulos de um perito externo.
+\end{frame}
+
+% 2
+\begin{frame}{Slide 2 --- Motiva\c{c}\~ao}
+\footnotesize
+LLMs s\~ao caixas-pretas: t\^em bilh\~oes de par\^ametros e respondem em texto livre. Quando se pede explica\c{c}\~ao em linguagem natural, o que se recebe \'e uma racionaliza\c{c}\~ao, n\~ao a causa real da decis\~ao. Em aplica\c{c}\~oes cr\'iticas --- sa\'ude, cr\'edito, direito --- isso \'e insuficiente. A pergunta central deste trabalho \'e: o LLM tem um processo decis\'orio est\'avel e aprend\'ivel? A proposta \'e inverter a abordagem usual: em vez de pedir explica\c{c}\~ao, observamos as decis\~oes do LLM e \emph{recuperamos matematicamente} o crit\'erio por tr\'as delas via otimiza\c{c}\~ao inversa.
+\end{frame}
+
+% 3
+\begin{frame}{Slide 3 --- Hip\'oteses}
+\footnotesize
+Cinco hip\'oteses guiam o trabalho. \textbf{H1}: o LLM mant\'em um crit\'erio decis\'orio est\'avel; uma m\'etrica $W$ aprendida no Problema A deve prever as decis\~oes em B e C. \textbf{H2}: exemplos few-shot amplificam essa concord\^ancia. \textbf{H3}: o LLM consegue aprender o crit\'erio de um perito externo via in-context learning. \textbf{H4}, originalmente: exemplos dif\'iceis ensinam mais que f\'aceis --- foi \emph{refutada}. \textbf{H5}: os resultados s\~ao reproduz\'iveis entre sementes. Vou voltar a cada uma dessas hip\'oteses ao longo da apresenta\c{c}\~ao.
+\end{frame}
+
+% 4
+\begin{frame}{Slide 4 --- Abordagem (vis\~ao geral)}
+\footnotesize
+A abordagem em uma frase: trato cada classifica\c{c}\~ao do LLM como sa\'ida de um classificador nearest-centroid ponderado por uma m\'etrica de Mahalanobis \emph{diagonal}. Cada feature recebe um peso $w_j$, e a dist\^ancia ao centr\'oide \'e a soma ponderada dos quadrados. O problema inverso \'e: dados os pontos e as classifica\c{c}\~oes do LLM, encontrar $W$ que reproduza o m\'aximo dessas decis\~oes. Uso \emph{dois algoritmos independentes} --- Perceptron Estruturado e NNLS --- para garantir robustez. Se ambos chegam ao mesmo $W$, a evid\^encia n\~ao depende do m\'etodo de estima\c{c}\~ao.
+\end{frame}
+
+% 5
+\begin{frame}{Slide 5 --- Defini\c{c}\~ao matem\'atica rigorosa}
+\footnotesize
+Para a banca, formalizo: a dist\^ancia \'e $d_W(x,c) = \sum w_j (x_j - c_j)^2$. O classificador \'e o nearest-centroid: argmin sobre as classes. Conex\~ao com Mahalanobis cheia: $W$ diagonal corresponde a $\Sigma^{-1}$ quando as features s\~ao independentes --- \'e a suposi\c{c}\~ao naive Bayes embutida na m\'etrica. A margem geom\'etrica \'e a diferen\c{c}a de dist\^ancia ao centr\'oide errado menos o certo. A escolha da matriz diagonal \'e proposital: $O(d)$ par\^ametros em vez de $O(d^2)$, identific\'avel com poucos dados e diretamente interpret\'avel --- um peso por feature.
+\end{frame}
+
+% 6
+\begin{frame}{Slide 6 --- Os 6 problemas, vis\~ao geral}
+\footnotesize
+Antes de qualquer experimento, quero apresentar os seis problemas que aparecem no trabalho. Quatro deles s\~ao gaussianas anisotr\'opicas \emph{lineares}: A serve de treino da m\'etrica, B e C s\~ao testes de consist\^encia com rota\c{c}\~oes opostas, D \'e o perito externo da Fase D. Dois s\~ao genuinamente \emph{n\~ao-lineares}: a meia-lua sint\'etica e a base real peso $\times$ altura, do orientador. Nos pr\'oximos seis slides, detalho cada um: prop\'osito, como foi gerado passo a passo, par\^ametros num\'ericos, o c\'odigo e a justificativa de cada escolha.
+\end{frame}
+
+% 7
+\begin{frame}{Slide 7 --- Problema A}
+\footnotesize
+O Problema A \'e a bancada de treinamento --- onde o LLM classifica em zero-shot e onde aprendemos $\hat W$. Foi gerado com \texttt{sklearn.datasets.make\_blobs}: dois centr\'oides em $(-2, 0)$ e $(2, 0)$, distantes 4 unidades na horizontal, com desvio padr\~ao 1{,}2 isotr\'opico, totalizando 150 amostras balanceadas. Escolhi essa configura\c{c}\~ao porque o problema fica linearmente separ\'avel em $x_1$ com fronteira ideal em $x_1=0$; o desvio padr\~ao em torno da metade da dist\^ancia entre centr\'oides cria sobreposi\c{c}\~ao parcial --- n\~ao \'e trivial, mas \'e f\'acil para o LLM. O c\'odigo \'e tr\^es linhas: chamada para \texttt{make\_blobs} com esses par\^ametros.
+\end{frame}
+
+% 8
+\begin{frame}{Slide 8 --- Problema B}
+\footnotesize
+O Problema B testa se a m\'etrica aprendida em A funciona em uma geometria \emph{ligeiramente diferente}. Mesma fun\c{c}\~ao \texttt{make\_blobs}, mas os centr\'oides agora est\~ao deslocados verticalmente: $(-2; +0{,}8)$ e $(2; -0{,}8)$. Isso \'e o que chamo de rota\c{c}\~ao hor\'aria --- a classe da esquerda subiu, a da direita desceu. Mantenho o mesmo \texttt{cluster\_std}=1{,}2; coloco apenas 100 amostras, j\'a que B n\~ao serve para treinar $W$. A racional \'e: se o LLM tem crit\'erio est\'avel, sua m\'etrica deve acompanhar esse pequeno deslocamento sem grande perda. A discriminabilidade horizontal continua intacta; adicionamos s\'o um componente vertical para testar transfer\^encia.
+\end{frame}
+
+% 9
+\begin{frame}{Slide 9 --- Problema C}
+\footnotesize
+O Problema C foi alterado ap\'os a reuni\~ao de 30 de abril --- o professor pediu que C n\~ao fosse uma simples c\'opia de B com mais distor\c{c}\~ao, mas uma rota\c{c}\~ao no \emph{sentido inverso}. Ent\~ao os centr\'oides ficaram em $(-2; -1{,}5)$ e $(2; +1{,}5)$, anti-hor\'ario: agora a classe 0 desce e a classe 1 sobe. A magnitude da rota\c{c}\~ao \'e maior --- $|\pm 1{,}5|$ contra $|\pm 0{,}8|$ em B --- para testar generaliza\c{c}\~ao em uma transforma\c{c}\~ao mais severa. E a dire\c{c}\~ao oposta serve como controle: se houvesse vi\'es sistem\'atico do LLM ou da m\'etrica, ele apareceria em apenas um dos dois problemas, n\~ao em ambos.
+\end{frame}
+
+% 10
+\begin{frame}{Slide 10 --- Problema D}
+\footnotesize
+No Problema D os pap\'eis se invertem. Aqui n\~ao \'e o LLM que rotula --- \'e um perito externo, com m\'etrica conhecida $W_{\text{expert}} = [0{,}3;\ 1{,}5]$, que rotula os 150 pontos. O LLM recebe alguns desses r\'otulos como exemplos few-shot e tenta reproduzir o crit\'erio do perito. Os centr\'oides est\~ao em $(-1{,}5; +1)$ e $(1{,}5; -1)$, com desvio 1{,}3 --- pontos um pouco mais espalhados que em A. A escolha do $W_{\text{expert}}$ \'e proposital: como $w_2$ \'e cinco vezes maior que $w_1$, a fronteira fica quase horizontal --- pouco intuitiva geometricamente. O LLM precisa capturar o padr\~ao a partir dos exemplos; n\~ao basta usar Euclidiana.
+\end{frame}
+
+% 11
+\begin{frame}{Slide 11 --- Problema E, meia-lua}
+\footnotesize
+A meia-lua foi adicionada depois da reuni\~ao de 30 de abril --- o professor disse, e cito: \emph{a base da meia-lua voc\^e acha em qualquer lugar a\'i}. \'E o caso can\^onico de fronteira n\~ao-linear da literatura de Machine Learning. Aqui n\~ao uso \texttt{make\_blobs}; uso \texttt{make\_moons} com 150 amostras e \texttt{noise}=0{,}15, que \'e o valor cl\'assico --- gera duas semi-luas reconhec\'iveis com sobreposi\c{c}\~ao parcial nas extremidades. \'E um problema-controle positivo: esperamos que adicionar features quadr\'aticas (R3 ou R4) melhore a acur\'acia, e a literatura confirma isso. Se nossa metodologia n\~ao detectar ganho aqui, algo est\'a errado.
+\end{frame}
+
+% 12
+\begin{frame}{Slide 12 --- Peso $\times$ altura, base real}
+\footnotesize
+Este \'e o \'unico problema com dados reais no trabalho. A base foi enviada pelo orientador no e-mail das 19:15 do dia 30/04, junto com a forma do classificador \'otimo. S\~ao 100 amostras, 50 homens e 50 mulheres, com features j\'a normalizadas no intervalo $[-1, 1]$ pelo formato do NeuroSolutions. O classificador \'otimo bayesiano fornecido pelo orientador tem forma el\'iptica: $f(x) = x_2^2 - x_2 + x_1^2 - x_1 + \text{cte}$. Por isso a augmenta\c{c}\~ao R4 com $x_1^2$ e $x_2^2$ \'e perfeita aqui. S\'o que com 100 amostras e 4 features, estamos no limite da rule-of-thumb 25:1, e isso vai gerar o \emph{paradoxo do overfitting} no slide 36.
+\end{frame}
+
+% 13
+\begin{frame}{Slide 13 --- Configura\c{c}\~oes}
+\footnotesize
+Sobre a infraestrutura: o modelo \'e gpt-4o-mini da OpenAI, temperatura zero, com tr\^es sementes [42, 123, 7] e tr\^es repeti\c{c}\~oes por configura\c{c}\~ao --- o que d\'a nove observa\c{c}\~oes para bootstrap. Os tamanhos few-shot s\~ao 0, 5, 10, 20 e 40. Quatro estrat\'egias de exemplos: easy, hard, mixed, random. Tr\^es experts na Fase D. Os hiperpar\^ametros do Perceptron seguem o artigo de origem, CILAMCE 2017: $\eta = 0{,}001$, $C = 1{,}0$ --- escolhi $C=1$ porque foi o valor mais conservador da faixa do artigo. Concorr\^encia ass\'incrona com sem\'aforo de 10 e timeout de 60 segundos. No total, esta execu\c{c}\~ao fez 115 mil chamadas de LLM em cerca de tr\^es horas.
+\end{frame}
+
+% 14
+\begin{frame}{Slide 14 --- Por que m\'ultiplas seeds?}
+\footnotesize
+A justificativa de usar tr\^es sementes e tr\^es repeti\c{c}\~oes \'e qu\'adrupla. Primeiro, a gera\c{c}\~ao de dados sint\'eticos \'e estoc\'astica --- uma seed pode produzir um arranjo at\'ipico de pontos. Segundo, o LLM tem estocasticidade residual mesmo com temperatura zero, por causa do batching em GPU. Terceiro, m\'ultiplas seeds permitem bootstrap 95\% CI, teste de H5 e descarte de achados que dependem de uma seed espec\'ifica. Quarto, \'e pr\'atica padr\~ao em ML emp\'irico para evitar p-hacking de seed. Com nove observa\c{c}\~oes por configura\c{c}\~ao, temos margem para infer\^encia estat\'istica robusta.
+\end{frame}
+
+% 15
+\begin{frame}{Slide 15 --- Algoritmo 1: Perceptron Estruturado}
+\footnotesize
+O primeiro algoritmo \'e o Perceptron Estruturado com relaxa\c{c}\~ao de margem, do artigo de Coelho, Borges e Fonseca Neto no CILAMCE 2017. A formula\c{c}\~ao \'e a Equa\c{c}\~ao 28 do artigo: maximizar $\gamma$ sujeito a que a diferen\c{c}a de dist\^ancias mais $\lambda \alpha_i$ seja maior ou igual a $\gamma \|w\|$, com $w \geq 0$. A regra de corre\c{c}\~ao (Equa\c{c}\~ao 29) atualiza $w$ por ponto violado. H\'a busca bin\'aria em $\gamma$: incrementamos $\gamma$ em $\Delta = 0{,}05$ enquanto o algoritmo converge. Cito literalmente o artigo: \emph{a taxa de aprendizado $\eta$ foi 0{,}001 e a constante $C$ variou de 1 at\'e 0{,}1}. Quando n\~ao converge, faz fallback best-effort.
+\end{frame}
+
+% 16
+\begin{frame}{Slide 16 --- Algoritmo 2: NNLS}
+\footnotesize
+O segundo algoritmo \'e mais simples: m\'inimos quadrados n\~ao-negativos, formulado como $\min \|Aw - b\|^2$ sujeito a $w \geq 0$. A matriz $A$ \'e constru\'ida com as diferen\c{c}as de quadrados de coordenadas: linha $i$ tem $(x_{ij} - c_{kj})^2 - (x_{ij} - c_{\ell j})^2$. O vetor $b$ \'e um vetor de uns --- a margem-alvo. Como a raz\~ao entre componentes de $w$ \'e invariante \`a escala de $b$, esse valor n\~ao importa. O algoritmo \'e o m\'etodo de conjunto ativo de Lawson-Hanson, dispon\'ivel no \texttt{scipy.optimize.nnls}. A grande vantagem sobre o Perceptron: zero hiperpar\^ametros, determin\'istico, garantido a encontrar o \'otimo global do problema convexo.
+\end{frame}
+
+% 17
+\begin{frame}{Slide 17 --- Robustez da coleta}
+\footnotesize
+Vale destacar como tornamos a coleta robusta. O parser tem sete camadas em cascata para lidar com respostas malformadas do LLM: regex direto, busca por keyword, contexto, similaridade de string e assim por diante. Se ainda assim falha, tentamos at\'e cinco vezes reenviando com refor\c{c}o da instru\c{c}\~ao. S\'o no \'ultimo recurso usamos um fallback determin\'istico baseado em hash MD5 das coordenadas --- substitu\'i a aritm\'etica modular original porque ela introduzia vi\'es geom\'etrico. Para velocidade, usamos sem\'aforo ass\'incrono de 10 chamadas simult\^aneas, reduzindo o tempo em uma ordem de magnitude. Cada requisi\c{c}\~ao tem timeout de 60s e wrap externo de 90s para evitar travamento.
+\end{frame}
+
+% 18
+\begin{frame}{Slide 18 --- Oracle: recupera\c{c}\~ao de $W$ conhecido}
+\footnotesize
+Antes de aplicar Perceptron e NNLS ao LLM, fa\c{c}o um sanity check fundamental: e se o $W$ verdadeiro fosse conhecido? Gero dados sint\'eticos rotulados por um $W$ or\'aculo --- por exemplo $[0{,}1;\ 2{,}0]$ --- e checo se os dois algoritmos recuperam esse $W$. Os resultados confirmam: cosseno acima de 0,95 nas tr\^es configura\c{c}\~oes anisotr\'opicas testadas (x2 dominante, x1 dominante, anisotropia forte). Se os algoritmos falhassem aqui --- com or\'aculo perfeito --- qualquer achado sobre o LLM ficaria comprometido. \'E o piso de sanidade da metodologia.
+\end{frame}
+
+% 19
+\begin{frame}{Slide 19 --- Oracle: transfer\^encia entre geometrias}
+\footnotesize
+O segundo sanity check \'e a transfer\^encia. Aprende-se $W$ em uma configura\c{c}\~ao --- digamos x2 dominante --- e aplica-se em outra, como x1 dominante ou anisotropia extrema. A consist\^encia cai, como esperado. Esse achado importa: mostra que a m\'etrica e a geometria s\~ao espec\'ificas a cada problema. N\~ao existe um $W$ universal independente dos centr\'oides. Quando a geometria muda, $W$ tem de ser reaprendido. Isso justifica metodologicamente por que recalculamos centr\'oides em B e C a partir das decis\~oes do LLM em cada problema.
+\end{frame}
+
+% 20
+\begin{frame}{Slide 20 --- Transi\c{c}\~ao Bloco I}
+\footnotesize
+Daqui em diante entramos no Bloco I --- o LLM como fonte de decis\~oes. O esquema \'e simples: o LLM rotula, n\'os aprendemos $W$ a partir das decis\~oes dele. As Fases A, B e C cobrem os Problemas A, B e C lineares. As hip\'oteses testadas neste bloco s\~ao H1 (consist\^encia) e H2 (few-shot amplifica concord\^ancia).
+\end{frame}
+
+% 21
+\begin{frame}{Slide 21 --- Fase A descri\c{c}\~ao}
+\footnotesize
+A Fase A funciona assim, passo a passo. O LLM recebe os 150 pontos do Problema A em zero-shot, sem nenhum exemplo. Para cada ponto, responde A ou B com temperatura zero. Essas 150 respostas formam meu par $(X, y_{\text{LLM}})$. Aqui um detalhe metodol\'ogico crucial: os centr\'oides s\~ao recalculados \emph{a partir das respostas do LLM}, n\~ao da classe verdadeira. Isso \'e proposital --- ancoramos a m\'etrica no que o LLM acha que s\~ao as classes, n\~ao na verdade do problema. Depois, Perceptron Estruturado e NNLS aprendem $W$ independentemente, e reportamos a fidelidade: que fra\c{c}\~ao das decis\~oes do LLM a m\'etrica consegue reproduzir.
+\end{frame}
+
+% 22
+\begin{frame}{Slide 22 --- Fase A: $W$ e fidelidade}
+\footnotesize
+Para a seed 42, o $W$ aprendido \'e bem assim\'etrico: $w_1$ por volta de 0{,}95 e $w_2$ por volta de 0{,}05, tanto no Perceptron quanto no NNLS. Isso significa que o LLM, mesmo sem exemplos, est\'a usando majoritariamente $x_1$ para classificar --- o que faz sentido, j\'a que o Problema A \'e linearmente separ\'avel em $x_1$. A fidelidade fica em torno de 83\%: a m\'etrica reproduz mais de quatro em cada cinco decis\~oes do LLM. O gr\'afico mostra os pontos coloridos pelo erro da m\'etrica --- s\~ao basicamente os pontos pr\'oximos da fronteira.
+\end{frame}
+
+% 23
+\begin{frame}{Slide 23 --- Erros por regi\~ao}
+\footnotesize
+Quando decompomos os erros por regi\~ao do plano, o padr\~ao \'e bem claro. Pr\'oximo \`a fronteira --- onde $|x_1| < 0{,}5$ --- est\~ao concentrados cerca de 60\% dos erros. Na margem m\'edia, 30\%. Longe da fronteira, s\'o 10\%. E o LLM tamb\'em erra mais perto da fronteira: cai de 96\% de acerto longe para 75\% perto. Os erros do LLM e da m\'etrica se concentram nas mesmas regi\~oes --- evid\^encia indireta de que a m\'etrica est\'a modelando o LLM, n\~ao s\'o o problema. Se modelasse s\'o o problema, os erros estariam descorrelacionados.
+\end{frame}
+
+% 24
+\begin{frame}{Slide 24 --- Distribui\c{c}\~ao de $W$}
+\footnotesize
+Quando olhamos o $W$ aprendido entre as tr\^es sementes, a distribui\c{c}\~ao \'e qualitativamente est\'avel. $w_1$ sempre muito maior que $w_2$. As raz\~oes s\~ao pr\'oximas, e o cosseno entre $W$'s de sementes diferentes \'e maior que 0{,}97. Isso sustenta H5 --- estabilidade. Diferen\c{c}as quantitativas existem, mas a interpreta\c{c}\~ao do crit\'erio decis\'orio do LLM \'e a mesma em todas as sementes.
+\end{frame}
+
+% 25
+\begin{frame}{Slide 25 --- Consolidado por seed}
+\footnotesize
+Esse painel consolida visualmente o que acabei de dizer: as tr\^es sementes produzem resultados qualitativamente id\^enticos para fidelidade, $W$ e m\'etricas de avalia\c{c}\~ao. Os boxplots ficam compactos, sem outliers extremos. \'E a evid\^encia visual mais direta para H5 --- a estabilidade entre sementes. Se um colega rodar de novo este experimento com outra semente qualquer, deveria chegar a esse mesmo padr\~ao.
+\end{frame}
+
+% 26
+\begin{frame}{Slide 26 --- Compara\c{c}\~ao de algoritmos}
+\footnotesize
+Aqui comparo lado a lado Perceptron e NNLS no mesmo conjunto de decis\~oes do LLM. O cosseno entre os $W$'s estimados \'e tipicamente acima de 0{,}97. Eles concordam quase perfeitamente. Isso \'e importante porque mostra que a evid\^encia n\~ao depende do m\'etodo de estima\c{c}\~ao --- se o LLM tivesse um padr\~ao decis\'orio espec\'ifico que s\'o um dos algoritmos detectasse, ter\'iamos um problema metodol\'ogico. Como ambos chegam ao mesmo $W$, o achado \'e robusto.
+\end{frame}
+
+% 27
+\begin{frame}{Slide 27 --- Sensibilidade a hiperpar\^ametros}
+\footnotesize
+Fa\c{c}o tamb\'em uma an\'alise de sensibilidade do Perceptron aos seus tr\^es hiperpar\^ametros: $\eta$, $C$ e $\Delta_\gamma$. Vario cada um em duas ordens de magnitude em torno do default. A fidelidade fica entre 80 e 85\% --- robusta. A raz\~ao $w_1/w_2$ varia de 18 a 28, ent\~ao a interpreta\c{c}\~ao qualitativa ($w_1 \gg w_2$) n\~ao muda. Conclus\~ao: dentro de uma faixa razo\'avel de hiperpar\^ametros, os resultados s\~ao est\'aveis. N\~ao h\'a cherry-picking.
+\end{frame}
+
+% 28
+\begin{frame}{Slide 28 --- Fidelidade vs Acur\'acia}
+\footnotesize
+Aqui chega o ponto que o orientador certamente vai questionar, e quero adiantar a resposta. Fidelidade e acur\'acia s\~ao coisas \emph{diferentes}. Fidelidade \'e o quanto a m\'etrica reproduz o LLM. Acur\'acia LLM vs real \'e o quanto o LLM est\'a correto. Na seed 42, Problema A, zero-shot: fidelidade \'e 83\%, mas a acur\'acia do LLM contra o ground truth \'e \emph{28\%}. O LLM literalmente inverteu as classes! E mesmo assim, a m\'etrica reproduz suas decis\~oes invertidas com 83\% de fidelidade. Isso mostra que estamos medindo CONSIST\^ENCIA INTERNA do LLM --- H1 --- n\~ao corre\c{c}\~ao. Mesmo errando a verdade, o LLM \'e consistente consigo mesmo.
+\end{frame}
+
+% 29
+\begin{frame}{Slide 29 --- Fases B e C descri\c{c}\~ao}
+\footnotesize
+Agora as Fases B e C. A pergunta \'e: a m\'etrica $\hat W$ aprendida em A generaliza para outras geometrias? O LLM classifica os pontos de B (e depois C) em zero-shot. Aplico $\hat W$ vinda da Fase A nos pontos de B, com centr\'oides recalculados localmente em B a partir das respostas do LLM. Comparo as predi\c{c}\~oes da m\'etrica com as decis\~oes do LLM em B. Reporto tr\^es m\'etricas: consist\^encia simples (\% de concord\^ancia), Cohen's Kappa (que corrige por concord\^ancia ao acaso) e F1.
+\end{frame}
+
+% 30
+\begin{frame}{Slide 30 --- Fases B e C resultados}
+\footnotesize
+Os resultados mostram consist\^encia tipicamente entre 75 e 85\% nas Fases B e C, com Kappa entre 0{,}5 e 0{,}7 --- concord\^ancia moderada a substancial. O ganho da Fase A para B/C com few-shot \'e de 5 a 10 pontos percentuais, conforme H2 previa. Vale notar que a Fase A j\'a tinha 17\% de erro (fidelidade 83\%); B e C herdam essa ru\'ido base mais o efeito da rota\c{c}\~ao geom\'etrica. Mesmo assim, $\hat W$ transfere. H1 \'e sustentada.
+\end{frame}
+
+% 31
+\begin{frame}{Slide 31 --- Ablativo de centr\'oides}
+\footnotesize
+Este \'e um detalhe metodol\'ogico que o professor pode levantar. Em B e C, posso usar centr\'oides locais (recalculados em B a partir das respostas do LLM em B) ou centr\'oides transferidos (reaproveitados do Problema A). Testei os dois. Na seed 42, Fase B: locais d\~ao 71\% de consist\^encia, transferidos d\~ao 77\%. Os transferidos podem ganhar quando a geometria de B \'e pr\'oxima de A. Mas como padr\~ao usei os \emph{locais} --- s\~ao mais fi\'eis \`a decis\~ao real do LLM em cada problema. \'E a escolha mais conservadora e a que evita ``trapacear'' reaproveitando informa\c{c}\~ao de A.
+\end{frame}
+
+% 32
+\begin{frame}{Slide 32 --- Fases B e C discuss\~ao}
+\footnotesize
+Em termos interpretativos: Kappa entre 0{,}5 e 0{,}7 indica concord\^ancia moderada-substancial corrigida por acaso --- n\~ao \'e ouro, mas est\'a muito acima do que se espera por sorte. A Fase A tem fidelidade 83\%; B e C herdam esse ru\'ido base. O ganho zero-shot $\to$ few-shot, da ordem de 5 a 10 pontos percentuais, alinha-se com H2. H1 \'e sustentada: a m\'etrica transfere com perda moderada, n\~ao colapso. \'E o resultado esperado se o LLM realmente tem um crit\'erio est\'avel.
+\end{frame}
+
+% 33
+\begin{frame}{Slide 33 --- Resumo num\'erico}
+\footnotesize
+Para dimensionar o experimento: 115 mil e quinhentas chamadas de LLM nesta execu\c{c}\~ao, em cerca de tr\^es horas de coleta, custando entre 30 e 50 d\'olares de API. As configura\c{c}\~oes s\~ao 3 seeds vezes 3 reps vezes 5 n\_shots vezes 4 estrat\'egias vezes 3 experts, dando nove observa\c{c}\~oes por configura\c{c}\~ao --- suficiente para bootstrap CI. Fidelidade na Fase A fica entre 82 e 85\%, consist\^encia em B entre 75 e 82\%, em C entre 70 e 80\%. \'E experimento de escala adequada para uma tese de mestrado.
+\end{frame}
+
+% 34
+\begin{frame}{Slide 34 --- Proje\c{c}\~ao R3/R4 metodologia}
+\footnotesize
+Agora R3 e R4. Na reuni\~ao do dia 30, o orientador disse algo como: em A/B/C lineares, ir de 84\% para 75\% n\~ao deve ajudar; mas na meia-lua e no peso $\times$ altura, espera-se que ajude. R3 adiciona $x_1 x_2$ (kernel quadr\'atico m\'inimo, hip\'erbole). R4 adiciona $x_1^2$ e $x_2^2$ --- corresponde a uma elipse alinhada, que \'e exatamente a forma do classificador \'otimo de peso $\times$ altura. O LLM s\'o v\^e $(x_1, x_2)$; o aumento de features acontece depois, na augmenta\c{c}\~ao de $X$ antes de aprender $W$.
+\end{frame}
+
+% 35
+\begin{frame}{Slide 35 --- R3/R4 em A/B/C}
+\footnotesize
+Em A/B/C lineares, os ganhos do NNLS ao passar de R3 para R4 s\~ao baixos: cerca de +2,7\% em A, +1,1\% em B, +0,8\% em C --- praticamente zero, conforme o orientador previu. O Perceptron, por\'em, mostra +18,7\%, o que \'e suspeito. Provavelmente \'e overfitting com 4 pesos para 150 amostras ou n\~ao-converg\^encia da busca bin\'aria em $\gamma$ com mais dimens\~oes. Por isso uso o NNLS como evid\^encia robusta nos problemas lineares. A conclus\~ao: R3/R4 n\~ao ajuda em A/B/C, como o esperado. Isso prepara a transi\c{c}\~ao para o Bloco II, onde testamos em problemas n\~ao-lineares de verdade.
+\end{frame}
+
+% 36
+\begin{frame}{Slide 36 --- Paradoxo do overfitting}
+\footnotesize
+Este \'e um achado contraintuitivo que vale apresentar. Em peso $\times$ altura, ao passar de 2 para 4 features, a fidelidade do Perceptron sobe quase 23 pontos percentuais --- a m\'etrica decora melhor o LLM. Mas a acur\'acia contra o r\'otulo real \emph{cai} de 1 a 23 p.p. Como isso \'e poss\'ivel? Porque o LLM em si erra muito com prompt neutro ($x_1, x_2$), e a m\'etrica com 4 pesos para 70 amostras de treino tem graus de liberdade suficientes para \emph{decorar o ru\'ido das decis\~oes erradas do LLM}. \'E overfitting cl\'assico. Mensagem para o orientador: subir $n_{\text{feat}}$ s\'o vale se houver n\~ao-linearidade real \emph{e} dados suficientes.
+\end{frame}
+
+% 37
+\begin{frame}{Slide 37 --- Vi\'es de ordem das classes}
+\footnotesize
+Aqui testei se a ordem em que apresento as op\c{c}\~oes ao LLM --- ``A ou B'' versus ``B ou A'', ``0 ou 1'' versus ``1 ou 0'' --- altera o resultado. A diferen\c{c}a observada \'e marginal: menos de 3 pontos percentuais em qualquer combina\c{c}\~ao. Esse vi\'es existe, mas n\~ao \'e dominante. N\~ao explica nenhum dos achados principais. Vale registr\'a-lo para descartar como confound.
+\end{frame}
+
+% 38
+\begin{frame}{Slide 38 --- Variantes de prompt design}
+\footnotesize
+Quatro variantes de prompt testadas. \emph{Default}: o baseline atual. \emph{Geometric}: contexto espacial expl\'icito, falando em ``grupos de pontos em um plano cartesiano''. \emph{CoT}, chain-of-thought: pedindo ``pense passo a passo antes de responder''. \emph{Tabular}: coordenadas apresentadas como tabela markdown. Todas as quatro rodam as Fases A, B e C completas, em todas as seeds. Se $W$ aprendido muda muito entre variantes, significa que o prompt confunde a medi\c{c}\~ao e o crit\'erio n\~ao \'e t\~ao est\'avel quanto parecia.
+\end{frame}
+
+% 39
+\begin{frame}{Slide 39 --- Variantes de prompt resultados}
+\footnotesize
+O resultado \'e bom para a tese: o scatter de $W$ entre as quatro variantes mostra que os pontos colapsam pr\'oximos uns dos outros. Variantes produzem $W$'s qualitativamente equivalentes; a raz\~ao $w_1/w_2$ varia menos de 5\%. Isso \'e evid\^encia adicional de H1: o crit\'erio est\'a no LLM, n\~ao na forma do prompt. Trocar a reda\c{c}\~ao mant\'em a mesma m\'etrica.
+\end{frame}
+
+% 40
+\begin{frame}{Slide 40 --- Nomes sem\^anticos de features}
+\footnotesize
+Aqui muda o nome das features no prompt: $(x_1, x_2)$ neutro, $(\text{altura}, \text{peso})$ sem\^antico, $(\text{feature\_1}, \text{feature\_2})$ t\'ecnico. Em problemas sint\'eticos sem prior cultural, $W$ \'e est\'avel entre as variantes. Mas em problemas onde existe prior --- por exemplo peso/altura, que est\'a correlacionado com g\^enero em todo o corpus de treinamento do LLM --- o $W$ pode mover sensivelmente. Isso vai aparecer com toda for\c{c}a na aplica\c{c}\~ao da base real, na Parte 11. Posicionei este slide junto com as variantes de prompt porque conceitualmente \'e uma variante: mudar o nome das features \emph{\'e} uma reformula\c{c}\~ao do prompt.
+\end{frame}
+
+% 41
+\begin{frame}{Slide 41 --- Prompts literais 1/2}
+\footnotesize
+Mostro aqui o texto exato que chega ao LLM no zero-shot e no few-shot default. Isso \'e importante porque, para a banca avaliar o experimento, \'e essencial ver o que \emph{de fato} chega ao modelo, n\~ao s\'o uma descri\c{c}\~ao em alto n\'ivel. O zero-shot tem tr\^es linhas: contexto, ponto a classificar, formato da resposta. O few-shot adiciona cinco exemplos rotulados antes da pergunta. Trechos tomados do \texttt{llm\_interactions.json} desta execu\c{c}\~ao.
+\end{frame}
+
+% 42
+\begin{frame}{Slide 42 --- Prompts literais 2/2}
+\footnotesize
+Aqui est\~ao as tr\^es variantes lado a lado. O \emph{geometric} prefixa a pergunta com a met\'afora espacial: ``voc\^e v\^e dois grupos de pontos''. O \emph{CoT} insere instru\c{c}\~ao expl\'icita de raciocinar passo a passo, com tr\^es passos enumerados. O \emph{tabular} formata os exemplos como tabela markdown, simulando uma planilha. Todos os tr\^es terminam com a mesma instru\c{c}\~ao: ``responda apenas A ou B''. A inten\c{c}\~ao \'e manter o sinal de sa\'ida controlado e variar s\'o a forma de entrada.
+\end{frame}
+
+% 43
+\begin{frame}{Slide 43 --- Transi\c{c}\~ao Bloco II}
+\footnotesize
+Entramos agora no Bloco II. A invers\~ao \'e completa: aqui um perito (ou m\'etrica or\'aculo) rotula, e o LLM tenta reproduzir o crit\'erio dele a partir de exemplos few-shot. Cobre a Fase D nos Problemas D, peso $\times$ altura e meia-lua. As hip\'oteses prim\'arias deste bloco s\~ao H3 (LLM como aprendiz), H4 (exemplos dif\'iceis --- que ser\'a refutada) e H5 (estabilidade). Os problemas D, E e peso $\times$ altura j\'a foram apresentados nos slides 10, 11 e 12; aqui eu uso os experimentos sobre eles.
+\end{frame}
+
+% 44
+\begin{frame}{Slide 44 --- Fase D descri\c{c}\~ao}
+\footnotesize
+A Fase D passo a passo: o perito externo com $W_{\text{expert}} = [0{,}3;\ 1{,}5]$ rotula os 150 pontos do Problema D. Esse $W$ produz uma fronteira quase horizontal, j\'a que $w_2$ \'e cinco vezes maior que $w_1$. Divido em treino e teste. Para cada $n_{\text{shot}}$ de 0 a 40, seleciono exemplos do treino segundo uma das quatro estrat\'egias e envio ao LLM como few-shot. Depois pe\c{c}o ao LLM para classificar cada ponto do teste. Reporto acur\'acia, Kappa e F1 do LLM contra os r\'otulos do perito.
+\end{frame}
+
+% 45
+\begin{frame}{Slide 45 --- Estrat\'egias de exemplos}
+\footnotesize
+As quatro estrat\'egias de sele\c{c}\~ao s\~ao: \emph{easy} --- pontos com alta margem, longe da fronteira do perito; \emph{hard} --- pontos com baixa margem, pr\'oximos da fronteira; \emph{mixed} --- 50\% easy e 50\% hard; \emph{random} --- baseline. O gr\'afico mostra a distribui\c{c}\~ao espacial de cada estrat\'egia. \'E importante visualizar isso porque a intui\c{c}\~ao de H4 era: hard tem mais informa\c{c}\~ao, ent\~ao devia ganhar. Vamos ver no pr\'oximo slide que n\~ao \'e bem assim.
+\end{frame}
+
+% 46
+\begin{frame}{Slide 46 --- Curvas de aprendizado}
+\footnotesize
+As curvas de aprendizado mostram o LLM melhorando com $n_{\text{shot}}$ em todas as estrat\'egias --- isso sustenta H3 fortemente. O ganho \'e particularmente forte entre 0 e 5 exemplos; depois desacelera. \'E o padr\~ao cl\'assico de in-context learning. O LLM est\'a de fato aprendendo o crit\'erio do perito a partir dos exemplos, n\~ao s\'o memorizando r\'otulos.
+\end{frame}
+
+% 47
+\begin{frame}{Slide 47 --- Compara\c{c}\~ao de estrat\'egias}
+\footnotesize
+Aqui vem a refuta\c{c}\~ao da H4. As curvas mostram que \emph{easy} domina em $n_{\text{shot}}$ pequeno, ao contr\'ario do que a intui\c{c}\~ao a priori sugeria. Hard fica abaixo de easy, mixed e random em 5 e 10 exemplos. H4 \'e refutada --- estatisticamente, como vou mostrar dois slides adiante. A intui\c{c}\~ao do active learning, importada de modelos treinados com gradiente, n\~ao se aplica diretamente a LLMs in-context.
+\end{frame}
+
+% 48
+\begin{frame}{Slide 48 --- Por que easy vence hard}
+\footnotesize
+Por que isso acontece? Em modelos treinados com gradiente, exemplos amb\'iguos pr\'oximos da fronteira s\~ao informativos porque cont\^em sinal sobre onde colocar a fronteira. Mas o LLM in-context n\~ao tem mecanismo de gradiente; ele usa os exemplos como \emph{\^ancoras de classe}. Pontos prototipicos (easy, alta margem) s\~ao \^ancoras claras: ``\'e isto que A parece, e \'e isto que B parece''. Pontos amb\'iguos (hard) s\~ao confusos: ``este aqui \'e A? quase poderia ser B...''. Isso confunde, n\~ao ajuda. \'E coerente com Lyu et al.\ 2023 sobre prompts can\^onicos.
+\end{frame}
+
+% 49
+\begin{frame}{Slide 49 --- Refuta\c{c}\~ao H4 signific\^ancia}
+\footnotesize
+A refuta\c{c}\~ao \'e estatisticamente significativa. Em 5-shot, a diferen\c{c}a easy menos hard \'e +0{,}233 com IC95\% de [+0{,}119, +0{,}336] --- claramente n\~ao inclui zero. Em 10-shot, +0{,}201 com IC95\% [+0{,}107, +0{,}293]. Mas em 20-shot, +0{,}072 com IC95\% [-0{,}126, +0{,}210], que inclui zero --- n\~ao significativo. Metodologia: bootstrap 10 mil reamostras e Wilcoxon signed-rank pareado. Insight extra: o efeito \emph{desaparece} com mais exemplos. Ent\~ao a refuta\c{c}\~ao de H4 \'e espec\'ifica do regime de poucos exemplos. Com 20 exemplos, easy e hard convergem.
+\end{frame}
+
+% 50
+\begin{frame}{Slide 50 --- M\'ultiplos experts}
+\footnotesize
+Testei tr\^es experts diferentes na Fase D. \texttt{aniso\_x2} com $W=[0{,}3, 1{,}5]$ --- fronteira horizontal. \texttt{aniso\_x1} com $W=[1{,}5, 0{,}3]$ --- fronteira vertical. \texttt{euclidean} com $W=[1, 1]$. O LLM aprende todos eles, mas se sai melhor no Euclidean --- 90\% em 5-shot, 95\% em 40-shot. Faz sentido: \'e o crit\'erio mais natural. Os dois anisotr\'opicos s\~ao mais dif\'iceis e ficam em torno de 78--80\% em 5-shot, 87--89\% em 40-shot. Isso sustenta H3 amplamente: o LLM tem flexibilidade para adaptar-se a diferentes crit\'erios.
+\end{frame}
+
+% 51
+\begin{frame}{Slide 51 --- Experimento de dilui\c{c}\~ao}
+\footnotesize
+O experimento de dilui\c{c}\~ao foi desenhado para testar uma hip\'otese espec\'ifica: ser\'a que adicionar muitos easy ``dilui'' a informa\c{c}\~ao dos hard fixos? Fixei 4 exemplos hard e fui adicionando easy progressivamente: 0, 2, 4, 10, 16, 20. A curva resultante \'e monot\^onica crescente --- adicionar easy ajuda sempre, n\~ao h\'a dilui\c{c}\~ao. Isso refor\c{c}a o achado da H4: hard simplesmente n\~ao s\~ao informativos para LLM in-context.
+\end{frame}
+
+% 52
+\begin{frame}{Slide 52 --- Vi\'es de ordem dos exemplos}
+\footnotesize
+Aqui testo recency bias --- a ordem dos exemplos few-shot importa? Usei os mesmos exemplos com quatro ordena\c{c}\~oes: classe 0 primeiro, classe 1 primeiro, embaralhado, alternando. Testado em $n_{\text{shot}}$ de 5 a 40. A vari\^ancia entre ordena\c{c}\~oes \'e menor que 4 pontos percentuais. O recency bias existe, mas \'e pequeno para o tamanho de prompt que usamos. N\~ao explica resultados principais.
+\end{frame}
+
+% 53
+\begin{frame}{Slide 53 --- Baselines cl\'assicos configura\c{c}\~ao}
+\footnotesize
+Antes de migrar para problemas n\~ao-lineares, comparo o LLM com classificadores cl\'assicos. k-NN com $k$ ajustado ao $n_{\text{shot}}$ (m\'aximo 5, sempre \'impar), Logistic Regression linear L2-regularizada, e SVM com kernel RBF. Protocolo cr\'itico: os baselines s\~ao treinados nos \emph{mesmos} exemplos few-shot dados ao LLM e avaliados no \emph{mesmo} conjunto de teste. A pergunta \'e: o LLM faz algo que um classificador trivial n\~ao faria?
+\end{frame}
+
+% 54
+\begin{frame}{Slide 54 --- Baselines cl\'assicos resultados}
+\footnotesize
+Padr\~oes que emergem: em $n_{\text{shot}}$ baixo (5--10), o LLM compete ou supera os baselines. Em $n_{\text{shot}}$ alto (20--40), SVM e LR alcan\c{c}am ou superam o LLM. Por estrat\'egia: easy e random favorecem o LLM. Em hard, o LLM \'e o pior dos quatro. A mensagem para o orientador: o LLM n\~ao \'e universalmente superior. Sua vantagem aparece em regime de poucos dados e estrat\'egias prototipicas. Com 40 exemplos, baselines cl\'assicos podem ser melhores.
+\end{frame}
+
+% 55
+\begin{frame}{Slide 55 --- Peso $\times$ altura: variantes de prompt}
+\footnotesize
+Na base real, fa\c{c}o duas variantes de prompt para o LLM. \emph{Neutra}: as features s\~ao $x_1$ e $x_2$ --- LLM n\~ao sabe que \'e peso e altura. \emph{Sem\^antica}: as features s\~ao \emph{peso} e \emph{altura} --- LLM ativa o prior sem\^antico do treinamento massivo. A pergunta \'e a mesma em ambas: \emph{homem ou mulher}. Isso replica em base real o experimento de ``nomes sem\^anticos'' do slide 40, e testa se o LLM realmente usa priors. Spoiler: usa, e bastante.
+\end{frame}
+
+% 56
+\begin{frame}{Slide 56 --- Peso $\times$ altura R2/R3/R4}
+\footnotesize
+Aprendo $W$ em tr\^es configura\c{c}\~oes de features: R2 com $(x_1, x_2)$, R3 com $(x_1, x_2, x_1 x_2)$ que representa uma hip\'erbole, e R4 com $(x_1, x_2, x_1^2, x_2^2)$ que representa a elipse alinhada --- exatamente a forma do classificador \'otimo dado pelo orientador. O gr\'afico tem quatro pain\'eis: fidelidade pelo Perceptron, fidelidade pelo NNLS, acur\'acia contra o real pelo Perceptron, acur\'acia contra o real pelo NNLS. O esperado seria ganho ao passar de R2 para R4, j\'a que o problema \'e n\~ao-linear.
+\end{frame}
+
+% 57
+\begin{frame}{Slide 57 --- Acur\'acia vs r\'otulo REAL}
+\footnotesize
+O e-mail das 22:04 do orientador pediu explicitamente: ``apresentar tamb\'em a acur\'acia da m\'etrica para a rotula\c{c}\~ao da base de dados original''. Atendo a esse pedido nesta tabela. Em R2, fidelidade 70\% e acur\'acia 60\% --- gap de 10 p.p. Em R3, fidelidade sobe para 75\% mas acur\'acia cai para 55\% --- gap 20 p.p. Em R4, fidelidade 78\% e acur\'acia 37\% --- gap explodindo para 41 p.p. \'E o sinal do paradoxo do overfitting do slide 36, agora na pr\'opria base real do professor. Subir features s\'o ajuda se houver dados.
+\end{frame}
+
+% 58
+\begin{frame}{Slide 58 --- Fase D peso $\times$ altura}
+\footnotesize
+Identificada a melhor configura\c{c}\~ao de features, uso essa m\'etrica como rotuladora para a Fase D em peso $\times$ altura. Os exemplos do prompt incluem o mesmo n\'umero de features. Reporto acur\'acia, Kappa e F1 do LLM ao longo de $n_{\text{shot}}$ de 0 a 40. O gr\'afico tem dois pain\'eis: LLM versus m\'etrica e LLM versus real, ambos agrupados por variante de prompt --- $x_1/x_2$ versus peso/altura. Mostra como o LLM se sai como aprendiz num problema do mundo real, n\~ao s\'o sint\'etico.
+\end{frame}
+
+% 59
+\begin{frame}{Slide 59 --- LLM vs Perceptron baseline}
+\footnotesize
+Aqui atendo a outro pedido espec\'ifico da reuni\~ao, em torno de 35 minutos da diariza\c{c}\~ao: comparar o LLM in-context com um Perceptron Estruturado treinado nos \emph{mesmos} exemplos do expert. Para cada $n_{\text{shot}}$, treino um Perceptron e reporto sua acur\'acia em paralelo com a do LLM. O achado preliminar: em peso $\times$ altura com 5-shot, o Perceptron supera o LLM em cerca de 7 pontos percentuais (90\% versus 83\%). Quando h\'a dados rotulados dispon\'iveis, m\'etrica cl\'assica pode bater LLM in-context. O LLM ganha mesmo \'e onde n\~ao h\'a dados.
+\end{frame}
+
+% 60
+\begin{frame}{Slide 60 --- Quando o LLM ganha}
+\footnotesize
+An\'alise consolidada do showdown LLM vs Perceptron. Em peso $\times$ altura, o LLM ganha em todos os $n_{\text{shot}}$, de +2 a +11 p.p. Mas em $x_1/x_2$ neutro, o Perceptron ganha em $n_{\text{shot}}$ 10 e 20 por 3--7 p.p. Na meia-lua, o LLM ganha de novo em $n_{\text{shot}}$ 10, 20 e 40. Interpreta\c{c}\~ao: o LLM ganha quando tem \emph{priors sem\^anticos} (peso/altura) E $n_{\text{shot}}$ \'e pequeno. O Perceptron ganha quando as features s\~ao \emph{neutras} ($x_1/x_2$) E $n_{\text{shot}}$ \'e m\'edio. Mensagem: a vantagem do LLM vem dos priors do treinamento massivo, n\~ao do mecanismo de in-context learning per se.
+\end{frame}
+
+% 61
+\begin{frame}{Slide 61 --- Meia-lua R2/R3/R4}
+\footnotesize
+Mesma metodologia do slide 56, agora na meia-lua. Os achados na seed 42 com prompt $x_1/x_2$: em R2, fidelidade Perceptron 71\% e acur\'acia real 49\%; em R3, fidelidade 69\% mas acur\'acia salta para 57\% --- ganho de 8,6 p.p.; em R4, fidelidade 75\% e acur\'acia 58\%, ganho de 9,5 p.p. acumulado. \emph{Aqui sim} aumentar features ajuda --- a meia-lua \'e genuinamente n\~ao-linear, e h\'a 150 amostras de treino suficientes para 3 ou 4 pesos sem overfit.
+\end{frame}
+
+% 62
+\begin{frame}{Slide 62 --- Fase D meia-lua}
+\footnotesize
+Mesma curva de aprendizado da Fase D externa, agora na meia-lua. O ganho de zero-shot para 5-shot \'e particularmente forte aqui --- por volta de 20 pontos percentuais de acur\'acia. Faz sentido: a fronteira n\~ao-linear da meia-lua \'e dif\'icil sem nenhum exemplo, mas com poucos exemplos o LLM ``pega o jeito'' rapidamente. H3 \'e sustentada com muita for\c{c}a neste problema.
+\end{frame}
+
+% 63
+\begin{frame}{Slide 63 --- Comparativo linear vs n\~ao-linear}
+\footnotesize
+Consolidando os ganhos R2 $\to$ R4 nos tr\^es cen\'arios: em A, B e C lineares, ganho zero p.p.\ --- conforme o esperado. Na meia-lua sint\'etica, +9,5 p.p.\ --- conforme esperado. Em peso $\times$ altura real, ganho \emph{negativo} de $-1$ a $-23$ p.p.\ --- contr\'ario ao esperado, mas explicado pelo overfitting com 100 amostras. O padr\~ao: R4 ajuda em n\~ao-linearidade real \emph{quando h\'a dados suficientes}.
+\end{frame}
+
+% 64
+\begin{frame}{Slide 64 --- Resumo Bloco II}
+\footnotesize
+Tr\^es conclus\~oes fechadas do Bloco II. Um: H3 sustentada com forte ganho zero-to-5-shot --- 20 p.p. na meia-lua, 6,7 p.p. em peso/altura. Dois: H4 refutada com signific\^ancia em $n_{\text{shot}}$ 5 e 10, mas o efeito desaparece em 20. Tr\^es: R4 s\'o ajuda em problemas \emph{genuinamente n\~ao-lineares} E com dados suficientes --- meia-lua sint\'etica diz sim, peso/altura com 100 amostras diz n\~ao por overfitting, e A/B/C lineares dizem n\~ao como esperado.
+\end{frame}
+
+% 65
+\begin{frame}{Slide 65 --- Robustez entre seeds}
+\footnotesize
+O gr\'afico de robustez entre as tr\^es seeds mostra que a fidelidade na Fase A varia 83 $\pm$ 1 ponto percentual; consist\^encia na Fase B, 78 $\pm$ 2; na Fase C, 74 $\pm$ 3. Os desvios padr\~oes s\~ao pequenos. O comportamento qualitativo \'e id\^entico em todas as sementes. H5 \'e sustentada com folga.
+\end{frame}
+
+% 66
+\begin{frame}{Slide 66 --- Testes estat\'isticos principais}
+\footnotesize
+Uso tr\^es testes nas m\'etricas principais. Bootstrap 95\% CI com 10 mil reamostras. Wilcoxon signed-rank pareado. Cohen's $d$ para tamanho do efeito. Resultados de destaque: few-shot vs zero-shot na Fase D tem $\Delta = +0,18$ com IC95\% [+0,12, +0,24] e Cohen $d = 1,2$ (efeito grande). Easy vs hard em 5-shot: $\Delta = +0,23$, IC [+0,12, +0,34], Cohen $d = 1,5$ --- efeito grande. Cosseno entre $W$ Perceptron e NNLS: 0,98. Wilcoxon $p < 0,001$ em todos os principais.
+\end{frame}
+
+% 67
+\begin{frame}{Slide 67 --- Testes complementares}
+\footnotesize
+Tr\^es testes n\~ao-param\'etricos adicionais. Point-biserial correlation entre confian\c{c}a do LLM e acerto: $r = 0,42$, $p < 0,001$ --- o LLM ``sabe'' quando tem certeza. Mann-Whitney U comparando margem em acertos versus erros: $U = 8420$, $p < 0,001$ --- erros se concentram em pontos de baixa margem. Kruskal-Wallis testando se a ordem dos exemplos few-shot altera a distribui\c{c}\~ao de performance: $H = 2,1$, $p = 0,55$ --- n\~ao altera significativamente, refor\c{c}ando o slide 52.
+\end{frame}
+
+% 68
+\begin{frame}{Slide 68 --- Dashboards por seed}
+\footnotesize
+Tenho dashboards explorat\'orios por seed --- gr\'aficos 16 a 21 no arquivo de execu\c{c}\~ao --- com vis\~ao granular de tudo: scatter dos problemas, mapa de acertos e erros, matrizes de confus\~ao, an\'alise de margem, $W$ por algoritmo, dashboard consolidado. Tr\^es seeds, tudo em PNG, dispon\'ivel se a banca quiser detalhe. Mostro aqui apenas as matrizes de confus\~ao da seed 42 como exemplo --- as outras s\~ao qualitativamente id\^enticas.
+\end{frame}
+
+% 69
+\begin{frame}{Slide 69 --- Visualiza\c{c}\~ao ponto-a-ponto}
+\footnotesize
+Atendo aqui ao adendo do e-mail das 22:06: scatter ponto-a-ponto das rotula\c{c}\~oes do LLM em cada configura\c{c}\~ao --- por problema, variante de prompt e $n_{\text{shot}}$. Mostro como exemplo lado a lado peso $\times$ altura com prompt sem\^antico (esquerda) e com prompt neutro $x_1/x_2$ (direita), ambos em 5-shot da seed 42. Os mesmos pontos s\~ao classificados de forma muito diferente. \'E a evid\^encia visual mais direta do efeito do prior sem\^antico.
+\end{frame}
+
+% 70
+\begin{frame}{Slide 70 --- S\'intese das hip\'oteses}
+\footnotesize
+S\'intese final por bloco. Bloco I: H1 sustentada (Kappa entre 0,5 e 0,7); H2 sustentada (ganho 5--10 p.p. com few-shot). Bloco II: H3 sustentada (+20 p.p. na meia-lua de 0 para 5 exemplos); H4 \emph{refutada} com signific\^ancia ($p < 0,001$, Cohen $d = 1,5$) --- exemplos f\'aceis vencem dif\'iceis em $n_{\text{shot}}$ pequeno. Transversal: H5 sustentada (desvio entre sementes menor que 3 p.p.). Quatro das cinco hip\'oteses sustentadas; H4 refutada com diagn\'ostico claro.
+\end{frame}
+
+% 71
+\begin{frame}{Slide 71 --- Conclus\~oes principais}
+\footnotesize
+Cinco conclus\~oes para fechar. Uma: existe um crit\'erio decis\'orio est\'avel no LLM, recuper\'avel via otimiza\c{c}\~ao inversa --- H1. Duas: few-shot amplifica concord\^ancia LLM--m\'etrica --- H2. Tr\^es: o LLM aprende crit\'erio de perito via in-context learning --- H3 --- mas baselines cl\'assicos s\~ao competitivos com mais dados. Quatro: exemplos f\'aceis superam dif\'iceis em few-shot pequeno; efeito desaparece com 20+ exemplos. Cinco: kernel quadr\'atico s\'o ajuda em problemas n\~ao-lineares E com dados suficientes; overfitting \'e real com 100 amostras e 4 pesos.
+\end{frame}
+
+% 72
+\begin{frame}{Slide 72 --- Limita\c{c}\~oes e trabalhos futuros}
+\footnotesize
+Limita\c{c}\~oes: a m\'etrica diagonal n\~ao captura intera\c{c}\~oes lineares entre features --- $W$ cheia ou kernel resolveria. Estudei s\'o 2D; problemas reais s\~ao multidimensionais. Em peso $\times$ altura tenho apenas 100 amostras --- pouco para 4 features. Um \'unico LLM testado, embora Claude e Gemini estejam integrados no c\'odigo. E n\~ao h\'a controle de vers\~ao do LLM entre seeds --- o provider pode mudar silenciosamente. Dire\c{c}\~oes futuras: Mahalanobis cheia, kernel n\~ao-diagonal, bases UCI maiores, m\'ultiplos LLMs em paralelo, regulariza\c{c}\~ao L1 em $W$ para sele\c{c}\~ao autom\'atica de features.
+\end{frame}
+
+% 73
+\begin{frame}{Slide 73 --- Agradecimentos}
+\footnotesize
+Encerro com agradecimentos --- ao orientador Prof.\ Raul Fonseca Neto, ao PPGCC da UFJF, \`a minha fam\'ilia. Estou \`a disposi\c{c}\~ao da banca para perguntas. Tenho ainda dez slides de ap\^endice t\'ecnico cobrindo formula\c{c}\~ao matem\'atica completa do Perceptron, equival\^encia com NNLS, an\'alise de overfitting, conex\~oes com a literatura e reprodutibilidade, caso surjam perguntas espec\'ificas.
+\end{frame}
+
+% 74
+\begin{frame}{Slide 74 --- A1 Perceptron deriva\c{c}\~ao CILAMCE 2017}
+\footnotesize
+Se o professor pedir detalhe matem\'atico do Perceptron, este \'e o slide. A formula\c{c}\~ao primal \'e a Equa\c{c}\~ao 28 do artigo: max $\gamma$ sujeito a que $d_W(x_i, c_k) - d_W(x_i, c_\ell) + \lambda \alpha_i \geq \gamma \|w\|$, com $w \geq 0$ e $\alpha \geq 0$, onde $\lambda = 1/C$. A regra de corre\c{c}\~ao por ponto violado \'e a Equa\c{c}\~ao 29 --- atualiza $w$, $\alpha$ e $\alpha_i$. A atualiza\c{c}\~ao da margem entre n\'iveis (Eq.\ 31): $\gamma^{(t+1)} = \gamma^{(t)} + \Delta$, ou multiplica\c{c}\~ao por 2. Hiperpar\^ametros da Se\c{c}\~ao 6 do artigo: $\eta = 0{,}001$, $C \in [0{,}1; 1{,}0]$. Conex\~ao com Rosenblatt: $\gamma = 0$ e $\lambda = 0$ recuperam o perceptron cl\'assico.
+\end{frame}
+
+% 75
+\begin{frame}{Slide 75 --- A2 NNLS}
+\footnotesize
+Sobre o NNLS: $\min \|Aw - b\|^2$ com $w \geq 0$. A linha $i$ de $A$ tem $(x_{ij} - c_{kj})^2 - (x_{ij} - c_{\ell j})^2$. $b$ \'e vetor de uns --- target\_margin = 1. A raz\~ao $w_1/w_2$ \'e invariante \`a escala de $b$. Algoritmo: m\'etodo de conjunto ativo de Lawson-Hanson de 1974. Solu\c{c}\~ao \'unica em problemas bem-condicionados (rank de $A$ igual a $d$). Vantagens: zero hiperpar\^ametros, determin\'istico, garante \'otimo global do problema convexo.
+\end{frame}
+
+% 76
+\begin{frame}{Slide 76 --- A3 Equival\^encia}
+\footnotesize
+Resumo das diferen\c{c}as: Perceptron usa gradiente projetado, tem tr\^es hiperpar\^ametros, n\~ao \'e determin\'istico (depende de inicializa\c{c}\~ao) e n\~ao garante otimalidade global. NNLS usa programa\c{c}\~ao quadr\'atica via Lawson-Hanson, sem hiperpar\^ametros, determin\'istico, garante \'otimo global. Mas na pr\'atica, os dois algoritmos s\~ao equivalentes: cosseno entre $W$'s acima de 0,97 nas nossas execu\c{c}\~oes. Raz\~ao $w_1/w_2$ diverge menos de 5\%. \'E uma evid\^encia emp\'irica forte de consist\^encia.
+\end{frame}
+
+% 77
+\begin{frame}{Slide 77 --- B1 Overfitting}
+\footnotesize
+Caso emblem\'atico de overfitting: peso $\times$ altura com prompt neutro $(x_1, x_2)$ e 4 features. Fidelidade 78\% --- a m\'etrica decora 78\% das decis\~oes do LLM. Mas acur\'acia contra r\'otulo real \'e 37\% --- o LLM erra 63\% dos casos, pior que chute aleat\'orio! Diagn\'ostico: a m\'etrica com 4 pesos e 70 amostras de treino tem graus de liberdade suficientes para decorar o ru\'ido das decis\~oes erradas. Mitiga\c{c}\~oes poss\'iveis: regulariza\c{c}\~ao L1/L2, mais dados (bases UCI), valida\c{c}\~ao cruzada, sele\c{c}\~ao autom\'atica de features.
+\end{frame}
+
+% 78
+\begin{frame}{Slide 78 --- B2 Bias-Variance}
+\footnotesize
+Trade-off bias-variance na escolha de $n_{\text{feat}}$. Com 2 features: alto bias se o problema for n\~ao-linear, mas baixa vari\^ancia. Com 4 features: baixo bias (capta elipse), mas alta vari\^ancia em $n=100$. Rule of thumb ``10 amostras por par\^ametro'' sugere que com 70 amostras de treino, 4 pesos est\'a no limite. Recomenda\c{c}\~ao para trabalhos futuros: curva de aprendizado contra $n_{\text{feat}}$ para escolher inflex\~ao, e regulariza\c{c}\~ao adaptativa.
+\end{frame}
+
+% 79
+\begin{frame}{Slide 79 --- C1 XAI e otim.\ inversa}
+\footnotesize
+Conex\~oes com literatura de XAI: Ahuja e Orlin 2001 com a formula\c{c}\~ao cl\'assica de otimiza\c{c}\~ao inversa em programa\c{c}\~ao linear; Schultz e Joachims 2003 com margem SVM-style para metric learning; e Coelho, Borges, Fonseca Neto 2017 com o perceptron estruturado com relaxa\c{c}\~ao --- nosso algoritmo. Diferencia\c{c}\~ao: somos os primeiros a aplicar a LLMs com interface em texto, n\~ao num\'erica. M\'etodo black-box: n\~ao requer pesos do modelo. Comparado com SHAP, LIME ou attention visualization, nosso m\'etodo \'e \emph{independente de arquitetura}.
+\end{frame}
+
+% 80
+\begin{frame}{Slide 80 --- C2 In-context learning}
+\footnotesize
+Refer\^encias-chave em in-context learning: Brown et al.\ 2020 introduziu GPT-3 e o paradigma few-shot. Min et al.\ 2022 mostrou que ``ground truth labels don't matter'' e que o label space importa mais que a corretude individual. Wei et al.\ 2022 estudou habilidades emergentes em escala. Lyu et al.\ 2023 mostrou que prompts can\^onicos s\~ao mais efetivos. Nosso achado de refuta\c{c}\~ao de H4 (easy vence hard) alinha com Lyu et al.: pontos prototipicos s\~ao melhores \^ancoras que pontos amb\'iguos.
+\end{frame}
+
+% 81
+\begin{frame}{Slide 81 --- C3 Metric learning}
+\footnotesize
+Refer\^encias-chave em metric learning Mahalanobis: Xing et al.\ 2002 \'e o trabalho original. Davis et al.\ 2007 prop\^os ITML (Information-Theoretic Metric Learning). Schultz e Joachims 2003 trouxe o SVM-style margin. Para a justificativa da matriz diagonal especificamente, cito Liu et al.\ 2010 e Kedem et al.\ 2012 --- s\~ao trabalhos que mostraram que matriz diagonal frequentemente compete com a cheia em alta dimens\~ao.
+\end{frame}
+
+% 82
+\begin{frame}{Slide 82 --- D1 Pipeline reprodu\c{c}\~ao}
+\footnotesize
+Sobre reprodu\c{c}\~ao: um \'unico comando, \texttt{python src/dissertacao\_mestrado.py}. Tudo \'e controlado por cerca de 20 constantes no topo do arquivo: \texttt{RANDOM\_SEEDS}, \texttt{N\_REPETICOES}, \texttt{FEW\_SHOT\_SIZES}, \texttt{MAX\_CONCURRENCY}, flags como \texttt{RUN\_HOMEM\_MULHER}, \texttt{RUN\_PROBLEM\_E}. Tempo total: cerca de 3 horas coletando do LLM, mais 5 minutos de processamento estat\'istico. Custo de API: 30 a 50 d\'olares. Outputs: mais de 30 PNGs, 11 CSVs e um JSON com todas as 115 mil intera\c{c}\~oes individuais com o LLM.
+\end{frame}
+
+% 83
+\begin{frame}{Slide 83 --- D2 Limita\c{c}\~oes de reprodutibilidade}
+\footnotesize
+Por fim, limita\c{c}\~oes honestas de reprodutibilidade. O LLM evolui silenciosamente: a mesma vers\~ao ``gpt-4o-mini'' pode mudar entre execu\c{c}\~oes, conforme pol\'itica do provider. Temperatura zero \emph{n\~ao} garante determinismo --- batching em GPU produz diferen\c{c}as residuais em floats. Por isso usamos 3 seeds vezes 3 reps, totalizando 9 observa\c{c}\~oes por configura\c{c}\~ao. A estocasticidade residual medida \'e tipicamente menor que 2\% de varia\c{c}\~ao em consist\^encia entre reps da mesma seed. \'E o que \'e fact\'ivel hoje em pesquisa com LLMs comerciais.
+\end{frame}
+
+\end{document}

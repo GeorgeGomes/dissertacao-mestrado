@@ -1,0 +1,538 @@
+ROTEIRO DA APRESENTACAO — Dissertacao de Mestrado
+"Explicando Decisoes de LLMs via Otimizacao Inversa"
+Total: 65 slides
+=====================================================
+
+Notas globais (apos reuniao 30/04/2026 e e-mails do orientador):
+- LP Max-Margin foi REMOVIDO do trabalho. Apenas Perceptron Estruturado e
+  NNLS sao usados como algoritmos de otimizacao inversa.
+- Apresentacao reorganizada em DOIS blocos tematicos:
+    Bloco I  — LLM como FONTE de decisoes (otimizacao inversa: A, B, C).
+    Bloco II — LLM como APRENDIZ (in-context learning: D, peso x altura,
+               meia-lua).
+- Parte 2 (peso x altura) e Parte 3 (meia-lua) sao NOVAS, motivadas pelo
+  e-mail 22:04 e pela reuniao ~2558s ("vai em todas as duas analises").
+- Slide 46 (NOVO): comparacao LLM in-context vs Perceptron treinado nos
+  mesmos exemplos do expert (pedido da reuniao ~2110s).
+- Novos PNGs: 27_external_learning_curve, 28_external_features_comparison,
+  29_external_decision_boundary, 30_external_llm_vs_perceptron.
+
+
+PARTE 1 — INTRODUCAO E MOTIVACAO
+=================================
+
+Slide 1 — Capa
+Mostrar: Apenas texto
+Oq fazer: Titulo do trabalho, nome do autor, orientador, programa, data.
+
+Slide 2 — Motivacao
+Mostrar: Apenas texto
+Oq fazer: Explicar que LLMs sao caixas-pretas; apresentar a pergunta central
+("LLMs possuem um processo decisorio estavel e aprendivel?"); justificar a
+relevancia (explainability, auditoria de IA).
+
+Slide 3 — Hipoteses
+Mostrar: Apenas texto
+Oq fazer: Enumerar H1 (consistencia), H2 (few-shot amplifica), H3 (LLM como
+aprendiz), H4 (exemplos dificeis), H5 (estabilidade).
+
+Slide 4 — Abordagem
+Mostrar: Texto e formula
+Oq fazer: Explicar otimizacao inversa; mostrar a formula da metrica de
+Mahalanobis diagonal d_W(x,c); justificar classificacao nearest-centroid.
+
+
+PARTE 2 — DESIGN EXPERIMENTAL
+=============================
+
+Slide 5 — Visao geral dos dados sinteticos 2D
+Mostrar: Texto e grafico
+Oq fazer: Apresentar os 5 problemas usados — A, B, C lineares (gaussianas
+anisotropicas), D (perito externo, linear) e E (meia-lua, NAO-LINEAR);
+adicionar tambem o estudo de caso real peso x altura (homem/mulher).
+
+Slide 6 — Problema A (treino da metrica)
+Mostrar: Texto e grafico
+Oq fazer: Listar parametros (centroides, cluster_std, n=150); mostrar scatter
+do Problema A.
+
+Slide 7 — Problema B (teste de consistencia 1)
+Mostrar: Texto e grafico
+Oq fazer: Listar parametros (n=100, centroides deslocados verticalmente, rotacao
+horaria); mostrar scatter do Problema B.
+
+Slide 8 — Problema C (teste de consistencia 2)
+Mostrar: Texto e grafico
+Oq fazer: Listar parametros (n=100, centroides com rotacao ANTI-HORARIA — classe
+0 para baixo, classe 1 para cima); destacar que a orientacao oposta a B garante
+que os dois testes nao sao redundantes; mostrar scatter do Problema C.
+
+Slide 9 — Problema D (expert externo)
+Mostrar: Texto e grafico
+Oq fazer: Listar parametros (n=150) e W_expert; mostrar scatter do Problema
+D com a fronteira de decisao do expert.
+
+Slide 10 — Configuracoes de execucao
+Mostrar: Apenas texto (tabela)
+Oq fazer: Listar RANDOM_SEEDS=[42,123,7], N_REPETICOES=3, temperatura=0.0,
+modelo gpt-4o-mini, e nomes de classes variados.
+
+Slide 11 — Por que multiplas seeds? (NOVO)
+Mostrar: Apenas texto
+Oq fazer: Justificar o uso de 3 seeds com 3 repeticoes:
+  (i) geracao dos dados sinteticos e estocastica — uma unica seed pode
+      produzir resultado atipico;
+  (ii) o LLM tem estocasticidade residual mesmo com temperatura=0;
+  (iii) multiplas seeds permitem bootstrap 95% CI, testar reprodutibilidade
+       (H5) e descartar achados dependentes de seed especifica;
+  (iv) pratica padrao em ML empirico para evitar "p-hacking de seed".
+
+Slide 12 — Algoritmo 1: Perceptron Estruturado (PSEUDO-CODIGO COMPLETO)
+Mostrar: Texto e diagrama/pseudocodigo
+Oq fazer: Explicar relaxacao de margem e busca binaria em gamma; mostrar
+PSEUDO-CODIGO COMPLETO com TODOS os parametros:
+  - taxa de aprendizado eta = 1 (padrao, ~948s da reuniao)
+  - delta_gamma (incremento da busca binaria)
+  - C (parametro de relaxacao)
+  - max_iter
+Mencionar fallback best_effort quando o algoritmo nao converge dentro de max_iter.
+
+Slide 13 — Algoritmo 2: NNLS (PSEUDO-CODIGO COMPLETO)
+Mostrar: Texto e formula
+Oq fazer: Mostrar PSEUDO-CODIGO formal do NNLS:
+  - Construcao da matriz A a partir das diferencas de distancias aos centroides;
+  - Construcao do vetor b (margem-alvo, vetor de 1s);
+  - Chamada w = scipy.optimize.nnls(A, b) com restricao w >= 0;
+  - Normalizacao opcional w / ||w||.
+Mostrar a formulacao min ||Aw-b||^2 s.t. w>=0 e o fato de a razao entre
+componentes de w ser invariante a escala.
+
+Slide 14 — Robustez da coleta de decisoes do LLM
+Mostrar: Texto e diagrama
+Oq fazer: Detalhar o pipeline de chamada ao LLM:
+  (i) parser de 7 camadas para respostas malformadas (parse_llm_response),
+  (ii) MAX_FORMAT_RETRIES=5 reenvios com reforco da instrucao,
+  (iii) fallback deterministico por hash MD5 das coordenadas (substitui
+       aritmetica modular para nao introduzir vies geometrico),
+  (iv) concorrencia assincrona via asyncio.Semaphore(MAX_CONCURRENCY=10),
+       reduzindo ~10x o tempo de coleta.
+
+
+===================================================================
+BLOCO I — LLM como FONTE de decisoes (otimizacao inversa)
+===================================================================
+
+Slide 15 — Transicao: Bloco I (NOVO)
+Mostrar: Apenas texto
+Oq fazer: Marcar o inicio do Bloco I conceitual:
+  - O LLM rotula; nos aprendemos W a partir das decisoes dele.
+  - Cobre Fases A, B e C, sobre os Problemas A, B, C lineares.
+  - Hipoteses ligadas a este bloco: H1 (consistencia), H2 (few-shot amplifica).
+
+
+PARTE 3 — FASE A: APRENDIZADO DA METRICA
+========================================
+
+Slide 16 — Fase A: descricao
+Mostrar: Apenas texto
+Oq fazer: Explicar que o LLM classifica 150 pontos do Problema A em
+zero-shot; cada algoritmo aprende W a partir dessas decisoes.
+
+Slide 17 — Fase A: W aprendido e fidelidade
+Mostrar: Texto, tabela e grafico
+Oq fazer: Tabela com W numerico por algoritmo (Perceptron, NNLS); reportar
+fidelidade (% de decisoes reproduzidas); mostrar grafico
+11_metric_errors_phase_a_seed*.png.
+
+Slide 18 — Fase A: analise quantitativa de erros por regiao
+Mostrar: Texto e tabela
+Oq fazer: Apresentar a decomposicao dos erros da metrica por regiao do plano
+(saida de print_error_analysis_by_region): quantos erros ocorrem perto da
+fronteira vs longe dela; discutir se a metrica diagonal captura a geometria
+local e quando ela falha.
+
+Slide 19 — Fase A: distribuicao de W entre seeds (REFORCADO)
+Mostrar: Texto e grafico
+Oq fazer: Mostrar grafico 10_w_distribution.png; discutir estabilidade de
+W entre seeds e entre algoritmos. Foco em comparacao visual entre as 3
+seeds (boxplots/violinos da fidelidade, scatter de W por seed).
+
+Slide 20 — Fase A: comparacao consolidada por seed (NOVO)
+Mostrar: Texto, tabelas e graficos
+Oq fazer: Consolidar os graficos por-seed em um painel comparativo lado a
+lado mostrando os resultados das 3 seeds (42, 123, 7):
+  - Boxplot de fidelidade da Fase A por seed.
+  - Distribuicao do W aprendido por seed.
+  - Tabela de Kappa, F1, acuracia por seed x algoritmo.
+Mensagem: demonstrar visualmente que os resultados sao qualitativamente
+iguais entre seeds — sustenta H5.
+
+Slide 21 — Fase A: comparacao de algoritmos
+Mostrar: Texto, tabela e grafico
+Oq fazer: Mostrar grafico 14_algorithm_comparison.png; tabela com W dos 2
+algoritmos (Perceptron e NNLS); discutir robustez ao metodo de estimacao;
+reportar similaridade de cosseno entre os Ws estimados.
+
+Slide 22 — Fase A: sensibilidade a hiperparametros do Perceptron
+Mostrar: Texto e tabela
+Oq fazer: Apresentar a analise de sensibilidade do Perceptron Estruturado
+(print_hyperparameter_sensitivity) aos hiperparametros eta, C e delta_gamma;
+mostrar como a fidelidade e o W estimado variam com cada hiperparametro;
+argumentar que os resultados do Perceptron sao robustos dentro de uma faixa
+razoavel de configuracoes.
+
+
+PARTE 4 — FASES B E C: TESTE DE CONSISTENCIA
+============================================
+
+Slide 23 — Fases B e C: descricao
+Mostrar: Apenas texto
+Oq fazer: Explicar a pergunta (W generaliza?); descrever aplicacao de W_LLM
+nos Problemas B e C; listar metricas (consistencia, Kappa, F1).
+
+Slide 24 — Fases B e C: resultados
+Mostrar: Texto, tabela e grafico
+Oq fazer: Tabela com consistencia/Kappa/F1 por fase, seed e nome de classe;
+mostrar grafico 02_consistency_extended.png.
+
+Slide 25 — Fases B e C: discussao
+Mostrar: Apenas texto
+Oq fazer: Interpretar Kappa; avaliar H1; discutir o efeito da fidelidade
+baixa da Fase A e a diferenca zero-shot vs few-shot.
+
+
+PARTE 5 — VIES E SENSIBILIDADE
+===============================
+
+Slide 26 — Vies de ordem das classes
+Mostrar: Texto, tabela e grafico
+Oq fazer: Comparar pares A/B vs B/A, 0/1 vs 1/0 etc.; mostrar grafico
+15_class_order_bias.png; concluir sobre existencia/magnitude do vies.
+
+Slide 27 — Nomes semanticos de features
+Mostrar: Texto, tabela e grafico
+Oq fazer: Comparar W aprendido com (x1/x2), (altura/peso), (feature_1/
+feature_2); mostrar grafico 03_class_names_effect.png.
+
+Slide 28 — Variantes de prompt (1/2): design
+Mostrar: Apenas texto
+Oq fazer: Descrever as 4 variantes testadas (default, geometric, cot,
+tabular) e o protocolo (Fases A-C completas em todas as seeds).
+
+Slide 29 — Variantes de prompt (2/2): resultados
+Mostrar: Texto, tabela e grafico
+Oq fazer: Mostrar grafico 17_prompt_variant_comparison.png (scatter de Ws);
+tabela com W/consistencia/Kappa por variante; discutir sensibilidade.
+
+Slide 30 — Prompts literais (1/2): zero-shot e few-shot default (NOVO)
+Mostrar: Texto em fonte monoespacada (verbatim/lstlisting)
+Oq fazer: Exibir o TEXTO EXATO enviado ao LLM:
+  - Prompt zero-shot padrao (build_prompt_zero_shot).
+  - Prompt few-shot padrao com 5 exemplos (build_prompt_few_shot).
+Mostrar exatamente como aparece no llm_interactions.json.
+
+Slide 31 — Prompts literais (2/2): variantes geometric/CoT/tabular (NOVO)
+Mostrar: Texto em fonte monoespacada (verbatim/lstlisting)
+Oq fazer: Exibir lado a lado o TEXTO EXATO dos prompts variantes:
+  - geometric (contexto espacial explicito).
+  - cot (chain-of-thought, "pense passo a passo").
+  - tabular (coordenadas como tabela markdown).
+Para a banca avaliar o experimento, e essencial ver o que de fato chega
+ao LLM, nao apenas a descricao.
+
+
+===================================================================
+BLOCO II — LLM como APRENDIZ (in-context learning)
+===================================================================
+
+Slide 32 — Transicao: Bloco II (NOVO)
+Mostrar: Apenas texto
+Oq fazer: Marcar o inicio do Bloco II conceitual:
+  - Um perito (expert ou metrica oraculo) rotula; o LLM tenta reproduzir.
+  - Cobre Fase D, peso x altura (real), meia-lua (sintetico nao-linear).
+  - Hipoteses ligadas a este bloco: H3 (LLM como aprendiz), H4 (exemplos
+    dificeis), H5 (estabilidade).
+
+
+PARTE 6 — FASE D: LLM COMO APRENDIZ
+====================================
+
+Slide 33 — Fase D: descricao
+Mostrar: Texto e grafico
+Oq fazer: Explicar a inversao de papeis; mostrar grafico 06_problem_d_
+expert.png com fronteira do expert.
+
+Slide 34 — Estrategias de selecao de exemplos
+Mostrar: Texto e grafico
+Oq fazer: Listar 4 estrategias (easy, hard, mixed, random); mostrar
+grafico 07_phase_d_example_strategies.png com a distribuicao espacial.
+
+Slide 35 — Fase D: curvas de aprendizado
+Mostrar: Texto e grafico
+Oq fazer: Mostrar grafico 08_phase_d_learning_curve.png; discutir se o LLM
+melhora com n_shot (avalia H3).
+
+Slide 36 — Fase D: comparacao de estrategias
+Mostrar: Texto e grafico
+Oq fazer: Mostrar grafico 09_phase_d_strategy_comparison.png; destacar que
+H4 foi refutada (easy > hard).
+
+Slide 37 — Refutacao de H4: por que "easy" vence "hard"?
+Mostrar: Apenas texto
+Oq fazer: Discutir interpretacao da refutacao de H4: exemplos prototipicos
+(alta margem) funcionam como ancoras de classe, enquanto exemplos ambiguos
+(baixa margem) nao oferecem sinal claro ao LLM e podem ate confundir;
+contrastar com a intuicao de active learning em modelos treinados com
+gradiente, onde exemplos dificeis costumam ser mais informativos; discutir
+implicacao para few-shot prompting em LLMs.
+
+Slide 38 — Multiplos experts
+Mostrar: Texto e tabela
+Oq fazer: Listar 3 experts (aniso_x2, aniso_x1, euclidean); tabela com
+performance do LLM por expert.
+
+Slide 39 — Experimento de diluicao
+Mostrar: Texto e grafico
+Oq fazer: Descrever o design (4 hard fixos + easy progressivos); mostrar
+grafico 12_dilution_experiment.png; discutir ponto de degradacao.
+
+Slide 40 — Vies de ordem dos exemplos few-shot
+Mostrar: Texto e grafico
+Oq fazer: Descrever as 4 ordenacoes (class0_first, class1_first, shuffled,
+alternating) em n_shot=[5,10,20,40]; mostrar grafico 16_example_order_bias.png.
+
+
+PARTE 7 — ESTUDO DE CASO REAL: peso x altura (NAO-LINEAR ELIPSE) (NOVA)
+=======================================================================
+
+Slide 41 — Base real: peso x altura (homem/mulher)
+Mostrar: Texto e grafico
+Oq fazer: Descrever a base enviada pelo orientador (~100 amostras,
+normalizadas, balanceado 50/50); explicar que o classificador otimo
+bayesiano e UMA ELIPSE — fronteira QUADRATICA da forma
+  f(x1, x2) = x2^2 - x2 + x1^2 - x1 + cte
+Mostrar scatter da base com a fronteira otima sobreposta.
+
+Slide 42 — Variantes de prompt na base real
+Mostrar: Texto
+Oq fazer: Listar as 2 variantes de entrada do prompt:
+  - neutra: (x1, x2)
+  - semantica: (peso, altura)
+Pergunta: classificar como homem ou mulher.
+Justificar: replica o experimento de "nomes semanticos de features"
+(slide 27) agora em base real.
+
+Slide 43 — Fase A peso x altura com 2 / 3 / 4 features
+Mostrar: Texto, tabela e grafico
+Oq fazer: Aprender W em 3 configuracoes:
+  - 2 features: (peso, altura)
+  - 3 features (hiperbole): (peso, altura, peso*altura)
+  - 4 features (elipse): (peso, altura, peso^2, altura^2)
+Tabela com fidelidade (vs LLM) e acuracia (vs rotulo real) para cada
+configuracao, separada por variante de prompt. Esperado: ganho ao
+ir de 2 -> 3 ou 4 features (problema e nao-linear).
+Imagens:
+  - 28_external_features_comparison.png (bar chart 2/3/4 features, 4 paineis:
+    fid_perc, fid_nnls, acc_perc_real, acc_nnls_real).
+  - 29_external_decision_boundary.png (fronteira projetada em R2 por n_features).
+
+Slide 44 — Fase A peso x altura: acuracia ORIGINAL (rotulo real)
+Mostrar: Texto e tabela
+Oq fazer: Atender ao item explicito do e-mail (22:04, ponto 4):
+"Apresentar tambem a acuracia da metrica para a rotulacao da base de
+dados original." Tabela com colunas
+(n_features, fidelidade_vs_LLM, acuracia_vs_real, gap).
+
+Slide 45 — Fase D peso x altura: LLM com a melhor metrica
+Mostrar: Texto e grafico
+Oq fazer: Identificada a melhor configuracao de features (2/3/4 — item
+44), usar essa metrica como ROTULADORA para a Fase D. Os exemplos do
+prompt devem incluir o MESMO numero de features. Reportar acuracia,
+Kappa, F1 do LLM ao longo de n_shot in [0, 5, 10, 20, 40].
+Imagem: 27_external_learning_curve.png (curva acuracia × n_shot agrupada
+por variante de prompt: x1/x2 vs peso/altura, com 2 paineis — LLM_vs_metric
+e LLM_vs_real).
+
+Slide 46 — LLM vs Perceptron baseline na Fase D (NOVO)
+Mostrar: Texto, tabela e grafico
+Oq fazer: Responder ao pedido do orientador na reuniao (~2110s):
+"comparar o LLM com o aprendizado de metrica pelo Perceptron treinado
+nos MESMOS exemplos do expert". Para cada n_shot da Fase D externa,
+treinar um Perceptron Estruturado nos exemplos rotulados pelo expert
+e reportar a acuracia dessa metrica em paralelo com a acuracia do LLM
+in-context. Imagem: 30_external_llm_vs_perceptron.png (bar chart com
+LLM vs Perceptron por n_shot, separado por problema e variante de prompt).
+Achado preliminar da execucao 13/05/2026: em peso/altura com n_shot=5,
+Perceptron supera LLM em ~7 p.p. (90.0% vs 83.3%) — sugere que quando
+ha dados rotulados disponiveis, metrica classica pode bater LLM
+in-context. Discutir implicacao: LLM ganha quando NAO ha dados; com
+poucos exemplos rotulados, Perceptron e competitivo.
+
+
+PARTE 8 — SEGUNDO PROBLEMA NAO-LINEAR: meia-lua (NOVA)
+=======================================================
+
+Slide 47 — Problema E: meia-lua
+Mostrar: Texto e grafico
+Oq fazer: Apresentar a meia-lua (sklearn.datasets.make_moons, n=150,
+noise=0.15); justificar como caso canonico de nao-linearidade. Reuniao
+~2853s: "A base da meia-lua voce acha em qualquer lugar ai." Mostrar
+scatter do Problema E.
+
+Slide 48 — Fase A meia-lua com 2 / 3 / 4 features
+Mostrar: Texto, tabela e grafico
+Oq fazer: Espelhar o item 43 com a meia-lua. Esperado: ganho ao adicionar
+features quadraticas — a meia-lua nao e linearmente separavel. Mesma
+tabela (n_features, fidelidade_vs_LLM, acuracia_vs_real, gap).
+Imagem: 28_external_features_comparison.png (mesma figura do slide 43,
+agora destacando o painel "meia_lua_seed*" do bar chart). Tambem
+29_external_decision_boundary.png para visualizar a fronteira aprendida
+nos 3 nveis de feature na meia-lua.
+
+Slide 49 — Fase D meia-lua: LLM com a melhor metrica
+Mostrar: Texto e grafico
+Oq fazer: Espelhar o item 45 com a meia-lua. Curvas de aprendizado por
+n_shot in [0, 5, 10, 20, 40].
+Imagem: 27_external_learning_curve.png (curva agregada peso×altura + meia-lua,
+permite comparar visualmente quao rapido o LLM aprende em cada problema).
+
+Slide 50 — Comparacao cruzada linear vs nao-linear
+Mostrar: Tabela consolidada + heatmap visual
+Oq fazer: Tabela com ganhos (ou ausencia deles) ao passar de 2 para 3/4
+features em TRES cenarios:
+  - A/B/C lineares (gaussianas) — sem ganho esperado;
+  - meia-lua (nao-linear sintetico) — ganho esperado;
+  - peso x altura (nao-linear real, elipse) — ganho esperado.
+Este e o argumento central do artigo (reuniao ~2843s).
+Visual sugerido: heatmap 3x4 (3 problemas × 4 metricas: Δ fid 2→3, Δ fid 2→4,
+Δ acc 2→3, Δ acc 2→4) construido a partir de results_cross_linearity.csv.
+Marcar verde os ganhos, vermelho as perdas, cinza neutro. Mensagem visual:
+verde concentrado nas linhas de meia-lua e peso×altura, cinza/vermelho na
+linha A/B/C lineares.
+
+
+PARTE 9 — VALIDACOES ADICIONAIS
+================================
+
+Slide 51 — Validacao oracle: recuperacao de W
+Mostrar: Texto e grafico
+Oq fazer: Explicar o sanity check com W conhecido; gerar dados sinteticos
+rotulados por W conhecido e checar se os 2 algoritmos recuperam esse W;
+mostrar grafico 22_oracle_w_recovery.png; interpretar resultado (se os
+algoritmos falhassem aqui, qualquer achado sobre o LLM ficaria comprometido).
+
+Slide 52 — Validacao oracle: transferencia entre geometrias
+Mostrar: Texto e grafico
+Oq fazer: Explicar o experimento de transferencia: aprende-se W em uma
+configuracao anisotropica (ex. x2_dom) e aplica-se em outra (x1_dom,
+forte_aniso); medir queda de consistencia quando a geometria muda; mostrar
+grafico 23_oracle_transfer_*.png; discutir que a queda ocorre porque a
+metrica e a geometria sao especificas a cada problema — nao ha "W universal"
+independente dos centroides.
+
+Slide 53 — Projecao R3: metodologia
+Mostrar: Texto e formula
+Oq fazer: Motivar a feature x3=x1*x2; explicar como o LLM e os 2 algoritmos
+sao aplicados em R3. Conectar com a discussao da reuniao ~2520s (em
+problemas lineares 84% -> 75%, ou seja, NAO ajuda; mas na meia-lua e peso
+x altura espera-se que ajude).
+
+Slide 54 — Projecao R3: resultados
+Mostrar: Texto, tabela e grafico
+Oq fazer: Mostrar tabela com fidelidade, concordancia cruzada R2 vs R3 e
+pesos por algoritmo; mostrar grafico 13_r3_vs_r2.png.
+Sanity check com R4 (4 features = elipse) em A/B/C lineares: o codigo roda
+agora tambem com 4 pesos e exporta em results_r3_comparison_*.csv. Achado da
+execucao 13/05/2026:
+  - NNLS Δ R3→R4 = +2.7% (proximo de zero, conforme expectativa do orientador
+    para problemas lineares)
+  - Perceptron Δ R3→R4 = +18.7% (ganho grande mas SUSPEITO — pode ser
+    overfitting do Perceptron com 4 pesos para 150 pontos, ou nao-convergencia
+    da busca binaria em gamma).
+Conclusao para discutir com o orientador: usar NNLS como evidencia robusta.
+
+Slide 55 — Baselines classicos: configuracao
+Mostrar: Apenas texto
+Oq fazer: Listar k-NN (k ajustado ao n_shot), Logistic Regression (L2) e
+SVM (RBF); descrever o protocolo de avaliacao — baselines treinados nos
+MESMOS exemplos few-shot dados ao LLM e avaliados no MESMO conjunto de
+teste (responde: o LLM faz algo que um classificador trivial nao faria?).
+
+Slide 56 — Baselines classicos: resultados
+Mostrar: Texto, tabela e grafico
+Oq fazer: Tabela comparativa LLM vs baselines por estrategia; mostrar
+grafico 18_classical_baselines.png; concluir onde o LLM tem vantagem (e
+onde nao tem) frente aos baselines classicos.
+
+
+PARTE 10 — ANALISE ESTATISTICA
+==============================
+
+Slide 57 — Robustez entre seeds
+Mostrar: Texto e grafico
+Oq fazer: Mostrar grafico 05_seed_comparison.png; reportar media, desvio
+padrao, min/max entre as 3 seeds.
+
+Slide 58 — Testes estatisticos principais
+Mostrar: Texto e tabela
+Oq fazer: Reportar bootstrap 95% CI (10k reamostragens), Wilcoxon pareado
+e Cohen's d nas metricas principais; discutir o que e estatisticamente
+robusto (consistencia, ganhos de few-shot, etc.).
+
+Slide 59 — Testes estatisticos complementares
+Mostrar: Texto e tabela
+Oq fazer: Apresentar 3 testes nao-parametricos adicionais:
+  (i) Point-biserial correlation — entre confianca do LLM e acerto;
+  (ii) Mann-Whitney U — compara margem de acertos vs erros;
+  (iii) Kruskal-Wallis por n_shot — testa se a ordem dos exemplos few-shot
+       altera significativamente a distribuicao de performance.
+Discutir a complementaridade em relacao aos testes principais.
+
+Slide 60 — Dashboards exploratorios por seed
+Mostrar: Texto e grafico
+Oq fazer: Apresentar os graficos por-seed como evidencia granular:
+16_dataset_overview, 17_hits_errors, 18_w_algorithms, 19_experiment_dashboard,
+20_confusion_matrices, 21_margin_analysis. Selecionar 1-2 paineis
+representativos para o slide e argumentar que a analise por seed confirma
+padroes observados nos agregados.
+
+Slide 61 — Visualizacao ponto-a-ponto das rotulacoes do LLM (NOVO)
+Mostrar: Grafico
+Oq fazer: Para cada problema (A, B, C, D, E, peso x altura) e cada
+configuracao (variantes de prompt, n-shot), mostrar scatter plot com a
+classe predita pelo LLM em cores. Adendo do e-mail 22:06: "Faltou uma
+coisa importante: Mostrar graficamente todas as rotulacoes feitas pela LLM."
+Sugestao de nome: 24_llm_labels_problem_*.png.
+
+
+PARTE 11 — CONCLUSOES
+=====================
+
+Slide 62 — Sintese das hipoteses (REORGANIZADO POR BLOCO)
+Mostrar: Apenas texto (tabela)
+Oq fazer: Resumir H1 a H5 com veredito (confirmada/refutada/parcial) e
+justificativa em uma linha cada, AGRUPADAS POR BLOCO:
+  Bloco I (LLM como fonte): H1, H2.
+  Bloco II (LLM como aprendiz): H3, H4.
+  Transversal: H5.
+
+Slide 63 — Conclusoes principais
+Mostrar: Apenas texto
+Oq fazer: 3-5 conclusoes principais:
+  - Existe um criterio decisorio estavel no LLM (H1 sustentada);
+  - few-shot amplifica a concordancia (H2 sustentada);
+  - LLM e capaz de aprender criterio de um perito (H3 sustentada);
+  - exemplos "easy" superam "hard" (H4 refutada);
+  - kernel quadratico so ajuda em problemas nao-lineares (R3 em A/B/C
+    lineares nao melhora; em meia-lua e peso x altura ajuda).
+
+Slide 64 — Trabalhos futuros e limitacoes
+Mostrar: Apenas texto
+Oq fazer: Listar limitacoes (metrica diagonal, 2D, n_amostras=100 em peso
+x altura) e direcoes futuras (matriz Mahalanobis cheia, mais dimensoes,
+outros LLMs, formulacao dos metodos a refinar — Maurico/Angelo).
+
+Slide 65 — Agradecimentos e perguntas
+Mostrar: Apenas texto
+Oq fazer: Slide de encerramento com agradecimentos e abertura para
+perguntas da banca.

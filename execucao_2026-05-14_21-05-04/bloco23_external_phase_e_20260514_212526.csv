@@ -1,0 +1,5 @@
+problem_name,seed,feature_names,n_features,n_shot,accuracy_llm_vs_metric,accuracy_llm_vs_true,kappa_llm_vs_metric,f1_llm_vs_metric,accuracy_perceptron_baseline_vs_true,n_malformed
+homem_mulher,42,x1/x2,3,0,0.6,0.5333333333333333,0.19999999999999996,0.7,,0
+homem_mulher,42,x1/x2,3,5,0.7333333333333333,0.4,0.4666666666666667,0.7894736842105263,0.26666666666666666,0
+homem_mulher,42,peso/altura,2,0,0.6333333333333333,0.6666666666666666,0.2028985507246377,0.717948717948718,,0
+homem_mulher,42,peso/altura,2,5,1.0,0.9,1.0,1.0,0.9,0

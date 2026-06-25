@@ -1,0 +1,1538 @@
+{
+  "audio_file": "reuniao_raul_20_05_2026.m4a",
+  "language": "pt",
+  "duration": 3539.63,
+  "num_speakers": 3,
+  "segments": [
+    {
+      "speaker": "SPEAKER_01",
+      "start": 0.0,
+      "end": 1.82,
+      "text": "Aqui caiu um pedaço d 'água hoje."
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 2.18,
+      "end": 2.68,
+      "text": "Sério?"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 3.02,
+      "end": 5.1,
+      "text": "Violento. Nossa. É, ontem..."
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 5.1,
+      "end": 8.66,
+      "text": "Agora melhorou. Foi até duas horas da tarde, assim, na hora."
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 8.9,
+      "end": 36.51,
+      "text": "Nossa. Aqui tá muito frio, cara. É, aqui começou. Nossa, tá... Tá insuportável de frio. Tá demais. Tá uns 8 graus, mais ou menos? Ah, agora eu acho que deve... Deixa eu ver. Assim, a sensação em casa aqui tá mais ou menos isso. Ó, você mora em lugar frio? a fora eu não sei é porque eu moro apartamento aqui aí é meio mais frio né mas aí tem umas regiões"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 36.51,
+      "end": 45.49,
+      "text": "que fazem mais frio acho que no sul tem tem é faz um grau faz dois né frente do centro centro mais quente"
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 45.49,
+      "end": 49.01,
+      "text": "sim mas"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 49.01,
+      "end": 52.55,
+      "text": "você não me mandou um relatório não né"
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 52.58,
+      "end": 55.38,
+      "text": "não acho que eu esqueci que deixa eu te mandar aqui."
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 56.12,
+      "end": 56.92,
+      "text": "Manda aqui que eu vou"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 56.92,
+      "end": 87.81,
+      "text": "abrir, facilita. Isso, deixa eu te mandar. Beleza,"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 95.43,
+      "end": 96.41,
+      "text": "chegou ainda não."
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 101.62,
+      "end": 104.86,
+      "text": "Deixa eu ver quantos megas ele tem. 4 megas já chega."
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 115.03,
+      "end": 118.14,
+      "text": "Chegou. Aí você conseguiu rodar essa base?"
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 119.16,
+      "end": 207.9,
+      "text": "Raul, consegui. Eu vou até aqui, deixa eu passar a base. Cadê? Deixa eu primeiro mostrar aqui, a gente segue em ordem, aí fica melhor. Peraí, tá vendo aí? Sim, abriu pra mim. 84? Putz, velho! É, não. Vamos rápido, porque muita coisa que a gente já viu... Eu sei! ...viu quase tudo. E no final tem uns slides aí só pra se a gente só de anotação, então não precisamos não. mas vamos lá então então a gente tem o bloco 1 beleza que é o LL eu meio que separe em blocos e problemas tá então no bloco 1 a gente tem o problema A o B o C e o D então o A é o treino B e C é para testar a consistência e o D é o não linear que é o da da meia lua que a gente até combinou tá então aqui como está sendo feito os problemas problema a beleza é o problema b é tá um pouco mais eu girei um pouco mais para cima e o problema se eu invertir tá que a gente tinha conversado"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 208.47,
+      "end": 209.97,
+      "text": "aqui estava muito parecido"
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 209.97,
+      "end": 218.17,
+      "text": "o bácuo mesmo isso beleza e o problema de aí é esse daqui é esse daqui não é uma lua não tá passando não"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 220.76,
+      "end": 223.04,
+      "text": "graçado é"
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 223.11,
+      "end": 224.13,
+      "text": "tá passando eu"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 224.13,
+      "end": 226.1,
+      "text": "que tava errado eu eu não estava vendo o pdf,"
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 227.74,
+      "end": 228.92,
+      "text": "mas tem como aumentar"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 228.92,
+      "end": 231.08,
+      "text": "a tela aí, botar tela inteira?"
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 231.22,
+      "end": 246.42,
+      "text": "tem como aumentar a tela? não, só que não está a tela inteira pera aí, deixa eu ver se eu consigo aqui, diminuir aqui e ajustar aqui é que a minha tela é muito grande aí ela... agora está melhor,"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 246.62,
+      "end": 247.82,
+      "text": "aí agora"
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 247.82,
+      "end": 254.09,
+      "text": "agora está melhor? boa, então vamos assim aqui então beleza, aqui é o..."
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 254.09,
+      "end": 259.65,
+      "text": "mas tenta chegar mais para o alto a janela ela tá ela tá no meio da tela"
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 259.65,
+      "end": 277.65,
+      "text": "é que aqui no Mac não dá não mexe não mexe deixa eu ver se eu consigo apresentar para vocês como é que apresenta entendeu ela tá muito estreita eu entendi eu entendi calma aí que hoje apareceu um slide"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 277.65,
+      "end": 285.33,
+      "text": "todo Sim, eu falei. Fui screen mode."
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 286.77,
+      "end": 292.41,
+      "text": "E agora? Não, mesma coisa. É porque ele não pega o Fui screen mode."
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 295.86,
+      "end": 302.3,
+      "text": "Ah, mas se você for fazendo o rolando devagar dá, dá pra ver. Tá bom. Então beleza. Aí tem que rolar devagar."
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 302.92,
+      "end": 344.35,
+      "text": "Tá. Tá, problema A, beleza. Aí. Esse problema é o isso e esse é o não linear tá ele foi feito com esse meio que meio que mons aqui então ele criou isso e criou esse daqui tá beleza então esses são os problemas aí aqui basicamente eu troquei as ordens das coisas que era só para saber se os é se os dois é algoritmos estavam recuperando corretamente os W's tá que que é o hora corre cover mas tá assim então já já temos já até conversou na última aula tá mas"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 345.71,
+      "end": 346.91,
+      "text": "o melo também"
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 352.19,
+      "end": 367.91,
+      "text": "eu não acho que eu só fiz no os expertes é x2 dominante x1 dominante o forte aniso mas não é no do meia lua acho que não tá aqui é interessante fazer é né então espera aí deixa eu marcar aqui porque se não é a"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 367.91,
+      "end": 371.62,
+      "text": "nota também"
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 391.37,
+      "end": 397.24,
+      "text": "tá no hora com o recovery fazer do meia lua também beleza tá"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 397.24,
+      "end": 406.15,
+      "text": "aqui de novo isso aí você você você falou que você dava o daíblio e ele tentava achar o"
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 409.38,
+      "end": 424.73,
+      "text": "não foi simplesmente isso aqui é simplesmente para saber se os meus seus meus algoritmos o perceptron e o NNLS tá conseguindo recuperar o W entendeu? porque eu tenho W. Mas como é que"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 424.73,
+      "end": 431.41,
+      "text": "você sabe que o W é verdadeiro? Eu tenho, eu que criei o dado. Ah, sei que criou o W."
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 432.74,
+      "end": 442.73,
+      "text": "Isso, entendeu? Esse é o meu W verdadeiro, eu tenho qual que é ele. Então aí eu faço por exemplo, eu faço com... É, mas aí"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 442.73,
+      "end": 445.93,
+      "text": "é complicado você fazer a minha Lua a partir de W, não?"
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 446.55,
+      "end": 461.15,
+      "text": "é então por isso que eu acho difícil é então dá pra fazer eu acho que não ou seja então faz sentido fazer o meio a lua conhecida aqui né"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 464.93,
+      "end": 479.47,
+      "text": "não faz porque vai entrar o o W vai aprender ele vai aprender o problema é você gerar sinteticamente a partir de um W seu porque aquela geração ali ela é não linear, né? Então assim..."
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 479.47,
+      "end": 482.59,
+      "text": "Ah, tá, entendi, entendi. Mas você"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 482.59,
+      "end": 493.55,
+      "text": "pode ter um W que aproxima, você pode ter uma mudança ali de métrica que aproxima um pouco da melo."
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 494.26,
+      "end": 494.56,
+      "text": "Lógico,"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 494.6,
+      "end": 502.26,
+      "text": "uma gaussiana vai ser melhor, Bindente, mas você pode ter. Aí eu não sei o que você achou. Vai bem ainda, né? Sim."
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 503.65,
+      "end": 525.62,
+      "text": "Tá. Bom, aqui recupera o W, beleza. É... que as origem que são os problemas a não eu fui aqui ao problema aí esse daqui é do problema aí a fecha prendeu dá a fechou"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 526.61,
+      "end": 528.21,
+      "text": "98 %"
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 528.21,
+      "end": 532.53,
+      "text": "é o perceptor 99 o nls 98"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 546.71,
+      "end": 579.37,
+      "text": "a partir do seu conjunto já rotulado você você aprendeu uma métrica que acertou esses percentuais. Isso. Tá. É só definir melhor esses problemas, né? Porque você começa falando de via B, C e D, aí depois já fala de E, já fala de X1 domínio. Tá, deixa eu por aqui, é verdade."
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 580.77,
+      "end": 581.59,
+      "text": "Tem que ter"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 581.59,
+      "end": 599.24,
+      "text": "uma matura única, né? se não... problemas... talvez esses x2 aí seja o b, o x1, o a, não sei morri não sei, depois tem problema a de novo problema a é o mais difícil, qual que é o problema a?"
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 599.36,
+      "end": 602.58,
+      "text": "problema a é o primeiro, é o que eu faço treinamento"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 605.97,
+      "end": 608.17,
+      "text": "tá, a fidelidade é menor ou por quê?"
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 610.73,
+      "end": 618.6,
+      "text": "a fidelidade tá menor, olha problema a é esse daqui, olha esse é o problema a"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 623.42,
+      "end": 637.14,
+      "text": "Ele é quase linearmente separável, né? Estranho, né? Ele era pra ser mais fácil de acertar, né? Até numa métrica euclidiana."
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 639.4,
+      "end": 641.08,
+      "text": "É... É, isso é verdade."
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 644.93,
+      "end": 648.17,
+      "text": "O W você não tem ali não, que ele aprendeu."
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 649.02,
+      "end": 656.22,
+      "text": "O que ele aprendeu eu tenho, mas não tá aqui na tela. Não tá aí, né? É, mas eu posso colocar. O"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 656.22,
+      "end": 669.01,
+      "text": "que parece que no primeiro problema não tem muita distorção não né? Se eu usar uma métrica e eu pular de ano, você praticamente acerta quase tudo ali né? São dois centros bem separados."
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 688.77,
+      "end": 692.23,
+      "text": "Bom basicamente é o problema... Peraí,"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 692.57,
+      "end": 705.07,
+      "text": "volta a alta transparência. Eu entendi aquela frase lá. Você recalcula os centroides."
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 706.95,
+      "end": 711.15,
+      "text": "Blocais. Isso a gente já tinha discutido. Isso, exatamente."
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 713.43,
+      "end": 714.51,
+      "text": "E usa o mesmo W."
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 714.93,
+      "end": 715.31,
+      "text": "É."
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 721.85,
+      "end": 730.12,
+      "text": "E aí vocês queiram que métrica não é independente? Não conseguiu acertar da mesma forma com a mesma métrica?"
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 731.04,
+      "end": 732.84,
+      "text": "É. Ela é"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 732.84,
+      "end": 735.14,
+      "text": "independente da geometria ou não é independente?"
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 735.99,
+      "end": 740.39,
+      "text": "Ela não é independente. que acho que ela não consegue acertar não é?"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 741.46,
+      "end": 746.53,
+      "text": "não consegue? como é que você não está com uma fidelidade quase tudo em 100 %?"
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 747.25,
+      "end": 779.12,
+      "text": "mas eu acho que eu peguei desse daqui do problema A, não consegue esse daqui a fidelidade é 100 % ou será que eu... pera ai é, eu concluo isso aí deixa eu ver uma coisa aqui no código, pera ai pode ser que o não ali não faz sentido é ué tem que ser o é é a gente entende é exatamente deixa eu até colocar aqui"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 779.12,
+      "end": 784.14,
+      "text": "assim mas eu acho que você tem certeza que esse problema é o da meia lua"
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 784.71,
+      "end": 810.43,
+      "text": "o problema da meia lua é o e tem certeza que eu vejo ah não não não meia lua é o d o problema é o o problema é ele também é linear esse é o problema aí cadê é que ele tá no bloco dois"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 813.07,
+      "end": 816.09,
+      "text": "organiza melhor tanto a nomenclatura quanto"
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 816.09,
+      "end": 819.15,
+      "text": "tá ele tá no bloco dois ele também é linear"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 819.15,
+      "end": 826.09,
+      "text": "é são problemas bem parecidos a médica funcionou não"
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 826.09,
+      "end": 861.11,
+      "text": "isso aqui é linear é o D que é que é da minha não tá aí não tá aqui aí é o que a gente falou pra fazer né bom que é o aqui a gente já já falou né o bloco 1 aprendizagem que é só gráfico de distribuição eu posso tirar esses gráficos também tem muito gráfico aqui"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 861.11,
+      "end": 872.95,
+      "text": "que o dado que você aprende a partir da rotulação da LLM né exatamente o dado está explicado aí nessas fases iniciais tudo bem"
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 872.95,
+      "end": 880.21,
+      "text": "eu acho que aqui ó aqui ó é já está lá no bloco 1 no início do bloco 1"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 880.21,
+      "end": 895.6,
+      "text": "tá explicando isso tá a bancada onde ele em zero shot nós aprendemos W tá? entendeu? aí tá, consistência tá"
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 898.97,
+      "end": 950.66,
+      "text": "beleza, aí eu coloco uma explicação aqui que é a medida de consistência interna, não de corretude que tipo não é o que tá certo, é o que LLM rotulou pra explicar direito aqui são os W's aprendidos por cada seed no perceptron e no NNLS, é que a consistência do problema B e C, B em C, em cada seed, que eu rodei em 3 seeds né?"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 951.81,
+      "end": 957.84,
+      "text": "mas isso aí você não tinha postado na tabela lá de cima? ah não, lá de cima"
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 957.84,
+      "end": 974.07,
+      "text": "eu não entendi. A lá de cima é o perceptron que aprende uma métrica através dos dados que eu estou dando para o perceptron, que é o oráculo, entendeu? Eu sou o oráculo, eu sou que é a verdade."
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 974.97,
+      "end": 981.93,
+      "text": "Aqui está aprendendo a estratégia da LLM. Isso, exatamente. E no problema A não está aí não?"
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 985.33,
+      "end": 986.41,
+      "text": "É porque no problema"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 986.41,
+      "end": 992.11,
+      "text": "A... É onde ele aprende a métrica, não é? isso é onde ela testa"
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 992.11,
+      "end": 1010.42,
+      "text": "isso exatamente o teste em beira você aqui tem os mapas de erros onde ele acertou onde ele errou no B você"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 1010.45,
+      "end": 1012.23,
+      "text": "é isso é interessante fazer"
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 1014.04,
+      "end": 1018.54,
+      "text": "posso depois até colocar para ficar maior né colocar um em cada"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 1018.54,
+      "end": 1019.82,
+      "text": "slide"
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 1026.11,
+      "end": 1078.04,
+      "text": "Agora, o que acontece? Basicamente é o R2, R3 e R4 que a gente tinha conversado. No problema A e no problema da meia lua. Então o que acontece aqui? Quando a gente está olhando no problema A, tanto usando perceptual quanto usando NNLS, a gente não tem uma melhora muito grande. Você pode ver, ó. São lineares, né? É, exatamente. Tem um pouco, mas tem uma melhora muito grande. Só que olhe o de baixo, olhe o da meia -lua. A diferença. 10 pontos percentuais em R3, 74. É,"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 1079.22,
+      "end": 1080.54,
+      "text": "pegou na linearidade."
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 1085.29,
+      "end": 1086.89,
+      "text": "É o que a gente tinha conversado."
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 1089.11,
+      "end": 1097.13,
+      "text": "Agora, você testou o LLM contra o Grand Truth, contra os dados verdadeiros? Sim, sim. É na fase final,"
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 1097.43,
+      "end": 1114.31,
+      "text": "tá? É, é no outro bloco. Então, aqui é tudo que a gente já tinha falado antes, agora tem bastante slide que é, viés de ordem da classe, aí tem isso aqui, positivo, negativo, invertido, AB invertido."
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 1114.73,
+      "end": 1129.8,
+      "text": "Ah, isso é interessante, tem até um artigo que trata isso. Depois eu vou te passar uma lista dos artigos que eu li, que eu fui juntando, pra embasar seu texto, entendeu? Boa. Tem uns quatro ou cinco só."
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 1131.33,
+      "end": 1186.79,
+      "text": "aqui é o gráfico do viés de ordem, aqui é o variante dos prompts, um exemplo da variante do prompt, esse é o prompt padrão que eu passei, aí eu faço a variante geométrica, essa variante aqui, o cot e o tabular, só variantes aqui, e aqui eu mostro os resultados por esses variantes. tá vendo? Então basicamente o default domina, infidelidade, as variações mais elaboradas de um métrico, corte tabular, caem em alguns percentuais. O gráfico, aí aqui a semântica de nomes, mesma coisa, com gráfico."
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 1187.07,
+      "end": 1190.75,
+      "text": "Depois tem que analisar com calma, né, pra poder você escreveu uma conclusão?"
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 1191.31,
+      "end": 1225.42,
+      "text": "sim sim aqui é só um exemplo de como eu mandei os fios o fio pronto tá exemplo um dois três bom vai basicamente aqui acaba o bloco 1 tá aí o bloco 2 LLM como aprendiz basicamente o LLM consegue aprender o fliter externo ok"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 1225.42,
+      "end": 1226.56,
+      "text": "aqui"
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 1228.58,
+      "end": 1232.37,
+      "text": "tá o problema que é o ground through."
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 1239.04,
+      "end": 1245.4,
+      "text": "Esse aí é um perceptrum? Rodou? Esse aqui"
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 1245.4,
+      "end": 1247.08,
+      "text": "é um"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 1249.58,
+      "end": 1255.56,
+      "text": "perceptrum? Esse daqui seria um classicador ótimo aí."
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 1258.16,
+      "end": 1270.82,
+      "text": "Não erra nada. Beleza então aqui é o problema aí, que é esse daqui e aqui é o problema da meia novamente pra gente fazer aí vai ser uma"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 1273.76,
+      "end": 1278.0,
+      "text": "uma curva, uma gaussiana trascador, eu acho"
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 1280.4,
+      "end": 1285.76,
+      "text": "aqui é o passo a passo, então o perito rotula 150 pontos aqui no"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 1285.76,
+      "end": 1290.44,
+      "text": "outro problema da meia lua você deveria colocar também a superfície de separação"
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 1291.34,
+      "end": 1302.53,
+      "text": "usando a SM gaussiana você tem como plotar isso? tem, tem sim, deixa eu marcar aqui aaaa no slide é tanto slide"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 1315.65,
+      "end": 1322.02,
+      "text": "é porque a gente compara com a superfície de separação da LLM né, tem uns artigos que fazem essas estes"
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 1322.02,
+      "end": 1364.9,
+      "text": "gráficos. Beleza, então basicamente preto rotula, divide, treino e teste pra cada, ele vai colocando os shots lá, 15, 10, 20 tá, depois mede a curácia, aí aqui basicamente é do problema E aí tá a curácia em EZ, várias amostras, EZ, Hard, Rando, 5 a 10. Basicamente 10 ele já consegue somente em EZ, 86, mas o Rando foi o Mixed também."
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 1375.59,
+      "end": 1385.75,
+      "text": "Vai melhorando bem, né? Exatamente. Porque não tem nada de contexto, agora eu quero ver no problema de homem e mulher, eu acho que ele nos vira o shot vai ter desempenho bom."
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 1387.22,
+      "end": 1392.48,
+      "text": "Aí está aqui a estratégia de seleção lá como funciona Easy, Hard, Mixer de"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 1392.48,
+      "end": 1393.42,
+      "text": "Handle"
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 1396.33,
+      "end": 1407.92,
+      "text": "que é a curva de aprendizagem. Bacana. Aí aqui é o porquê Easy vence Hard em poucos exemplos."
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 1413.54,
+      "end": 1415.4,
+      "text": "Ele não tem atualização de parâmetro."
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 1421.98,
+      "end": 1440.84,
+      "text": "Aí aqui é basicamente o problema com múltiplos peritos. Repete o experimento com três peritos diferentes para checar se o aprendizado de encontro depende da geometria do perito é é mais um ablativo tá"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 1440.84,
+      "end": 1441.14,
+      "text": "mas"
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 1441.14,
+      "end": 1442.1,
+      "text": "não varia"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 1442.1,
+      "end": 1442.9,
+      "text": "tanto"
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 1445.94,
+      "end": 1448.62,
+      "text": "aí aqui é o experimento de diluição"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 1450.44,
+      "end": 1451.9,
+      "text": "4"
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 1451.9,
+      "end": 1470.52,
+      "text": "hardfix e o resto vai jogar nos exe aqui aí aqui pro bloco 2 é viés de ordem também no bloco 2 tá classe 0 primeiro Então,"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 1472.43,
+      "end": 1472.85,
+      "text": "um"
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 1472.85,
+      "end": 1478.05,
+      "text": "pessoal grave."
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 1478.27,
+      "end": 1489.84,
+      "text": "Esses estudos aí que eles chamam de avaleite, não? Tá. É, todo o paper de LLM tem isso. Exatamente."
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 1493.02,
+      "end": 1505.7,
+      "text": "Tem que ter. Ó, o problema F agora, que é o da meia lua. Tá? Ó, o LLM aprende via fio -shot, problema não linear."
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 1516.55,
+      "end": 1533.19,
+      "text": "Tá, então vamos entender isso aí. Ele consegue 84, 86 com 10? 86 com 10. o meu e esse é o curácia versus o grão truque"
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 1534.69,
+      "end": 1540.6,
+      "text": "é o ver é o como eu gerei o dado né da meia lua eu tenho a verdade né"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 1545.21,
+      "end": 1550.73,
+      "text": "tá esse é curácia versus versus daeblo é que o daeblo rotula aprendido"
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 1550.73,
+      "end": 1560.1,
+      "text": "exatamente o da rotura aprendido o Raul deixa eu só pegar uma água aqui que eu tô com a garganta aqui só Então, eu não vou mentir, pera"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 1560.1,
+      "end": 1560.82,
+      "text": "aí,"
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 1616.62,
+      "end": 1617.24,
+      "text": "pronto."
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 1629.92,
+      "end": 1639.15,
+      "text": "Peri o teu Grand Truth da minha lua. Tá, eu não tô entendendo aqui, métrica W recuperada a partir do zero shot."
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 1642.36,
+      "end": 1647.04,
+      "text": "É isso? Isso, das decisões da LLM. Igual o problema A no bloco 1."
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 1648.48,
+      "end": 1653.22,
+      "text": "Tá, essa métrica possivelmente não tem nada a ver com o Grand Truth."
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 1655.98,
+      "end": 1666.2,
+      "text": "Não, a métrica A não tem nada a ver com o Grand Truth. O Grand Truth é o outro lá que eu tenho. que eu faço a curácia versus Grand Truth e o Tampere Perceptum versus Grand Truth."
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 1673.1,
+      "end": 1699.02,
+      "text": "Tá, mas aí eu não entendi o seguinte, você repete o experimento? Como assim? Porque para você aprender a métrica, você rotulou tudo com o LLM, correto? Sumiu a apresentação."
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 1700.33,
+      "end": 1701.31,
+      "text": "Deixa eu apresentar de novo."
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 1715.98,
+      "end": 1777.47,
+      "text": "Vamos lá, você tem lá o problema da meia lua. aquele problema lá que você mostrou, né? Ele tem o grotluff dele, tá? Que é a rotulação correta do perito. Aí você vai e rotula pelos hiroshot, usando a LLM. Ela não tem menor noção que o problema é a meia lua. Não. Não. Aí eu não tô entendendo então, E mesmo assim ela acerta 55, é quase chutar, tá? Não tá, só tem duas classes? É... É, quase chutar. É... bom, tudo bem. Mas aí você aprende a métrica no zero shot. Sim. Como é que você compara então a curaça versus a métrica?"
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 1784.24,
+      "end": 1800.94,
+      "text": "Pode ser 100 % se você... Faz sentido. Faz sentido. faz sentido eu acho que não faz sentido nenhum é essa coluna"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 1803.18,
+      "end": 1809.26,
+      "text": "essa coluna não faz sentido não porque o W tá prendendo em cima da coisa"
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 1811.87,
+      "end": 1819.72,
+      "text": "deixa eu marcar aqui pra... pode falar"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 1819.72,
+      "end": 1838.11,
+      "text": "Não, pera aí, mesmo assim, aí o que a gente tem que ver? É porque você tem um processo aí de ir informando, tá? Aí quando você põe cinco, você aprende a métrica de novo?"
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 1840.93,
+      "end": 1843.69,
+      "text": "Exato, pra cada ano eu aprendo a métrica de novo."
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 1844.31,
+      "end": 1853.96,
+      "text": "Ah tá, isso é interessante. Quando você aprende a métrica de novo, o que que vai acontecer? Aí você pode comparar o resultado."
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 1859.72,
+      "end": 1867.3,
+      "text": "você pode até ver que cada vez ele vai aumentando lá curácia ao Grand Truth, mas aumenta pouco né, mas vai aumentando."
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 1867.5,
+      "end": 1893.44,
+      "text": "Ah mas olha só, eu não tô entendendo o porquê dessa métrica aí, porque você, você, você, a comparação do da LLM com o Grand Truth, beleza, ela vai aumentando, apesar de que aumenta até 10 depois piora. Isso, mas"
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 1893.44,
+      "end": 1913.55,
+      "text": "é meio que um padrão, assim, nos outros eu via que ele sempre depois até 10, você cava bom, depois ele ia piorando. Depende dos exemplos que você está entregando. Sim, também depende dos exemplos, exato."
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 1913.83,
+      "end": 1916.37,
+      "text": "Se eles são escolhidos randomicamente, isso aí você tem que explicar."
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 1917.85,
+      "end": 1919.89,
+      "text": "É, eu acho que nesse daqui eu tenho que explicar, né?"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 1920.43,
+      "end": 1991.99,
+      "text": "Tem que falar se esses exemplos aí foram escolhidos de forma random, como foram os rar, sei lá. Eu acho que o ideal aí é random. tá aí tá essa comparação da LLM com um Grand Truth beleza é da métrica também né porque pode dar resultados diferentes né porque ele aprende uma métrica mas na hora que você e você usa o algoritmo da métrica você faz a comparação da distância aos centroides né sim tá então você você teria aí alguma coisa do tipo eu tô melhorando a minha é meu entendimento do problema e eu tô conseguindo transmitir isso por uma métrica"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 1991.99,
+      "end": 1992.63,
+      "text": "e"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 1992.63,
+      "end": 2042.38,
+      "text": "o ocuritmo do caso aí do perceptor vai forçar a margem mas depois no final das contas ele é um centoide parametrizado, né? Ele também vai melhorando, né? À medida que eu vou mostrando mais exemplos, né? É, mas isso não tá sendo monótono, né? E o que significaria, tá? Então isso aqui eu achei muito estranho, foi de 5 com 28 com 10 passar para quase 89 % de acurácia. Quer dizer, Será que esse negócio não tem uma regularidade?"
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 2044.44,
+      "end": 2048.22,
+      "text": "Você está falando do Perceptron versus o Ground Truth?"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 2049.06,
+      "end": 2049.28,
+      "text": "É."
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 2050.32,
+      "end": 2053.7,
+      "text": "Depois cai para 44? É, está estranho."
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 2053.84,
+      "end": 2082.02,
+      "text": "Sendo que a métrica melhorou? Não é a métrica. Quando você fala o acurácio da LLM é o entendimento do problema. Ele está melhorando. Então eu acho que o algoritmo do Percepto também tinha que melhorando, né? Eu não sei, tem que refazer esse experimento aqui porque tá muito estranho, é esse salto pra 89 e depois cai de novo pra 44."
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 2083.38,
+      "end": 2104.34,
+      "text": "É, porque por exemplo, o de 5 tá 82 no primeiro lá, na curaça versus o métrico. É, aqui também ele melhorou e depois piorou de novo. depois piorou mas tipo não foi muito né não melhorou tanto também não foi tanto assim obviamente que olhando aí pode ser que os exemplos de 20 aí deve ter estragado"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 2107.9,
+      "end": 2126.8,
+      "text": "Roda de novo esse 20 e outra coisa isso aqui é interessante você rodar não só uma vez né pra ter uma média sei lá, acontecer de você ter um resultado meio anacrônico assim né"
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 2127.15,
+      "end": 2129.37,
+      "text": "Tá bom, deixa eu marcar aqui."
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 2164.81,
+      "end": 2227.88,
+      "text": "né? É, a partir do momento que você aprendeu a métrica a partir da rotulação da LLM. Não, não, isso aqui faz sentido sim. Quer dizer que o aprendizado não foi 100%, né? Você quer dizer isso? Isso. Tá, ele conseguiu chegar perto. O melhor desempenho foi realmente com 10, tá vendo? Isso aqui também tá legal. Isso aqui, essas duas outras colunas não estou entendendo. Tá isso aqui é o acerto da da métrica em relação ao a LLM. Isso aqui é a LLM em relação ao Grand Truff, ao perito. E esse aqui seria o percepto usando a métrica em relação ao Grand Truff. E esse F1 é o quê? é"
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 2227.88,
+      "end": 2228.18,
+      "text": "o f1"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 2228.18,
+      "end": 2232.72,
+      "text": "score e esse outro"
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 2232.72,
+      "end": 2233.1,
+      "text": "é o"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 2233.1,
+      "end": 2239.32,
+      "text": "capa eu não sei o que é esse capa não sei o que é não vai ser isso que você está explicando ele não"
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 2239.32,
+      "end": 2243.14,
+      "text": "acho que lá embaixo eu não sei se eu estou explicando no texto"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 2243.14,
+      "end": 2244.7,
+      "text": "eu acho que essas coisas tem que ser"
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 2244.7,
+      "end": 2245.18,
+      "text": "explicadas"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 2245.18,
+      "end": 2257.88,
+      "text": "na no artigo na dissertação eu acho que não custa nada a formulinha né não beleza beleza pode passar"
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 2261.36,
+      "end": 2276.87,
+      "text": "bom aqui é um pequeno de zero shot com 10 shot que aquela explicação lá aqui é uns Baselines de KNN LS SVN versus LLM seria assim ah se eu tivesse problemas"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 2276.87,
+      "end": 2278.49,
+      "text": "oi"
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 2278.49,
+      "end": 2299.52,
+      "text": "tô reunido se eu tiver esses mesmos problemas os os novos baseline conseguem resolver entendeu? Versus LLM aqui basicamente eu resumo do final do bloco 2"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 2304.14,
+      "end": 2305.0,
+      "text": "e"
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 2307.02,
+      "end": 2309.68,
+      "text": "aqui é o bloco 3"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 2309.71,
+      "end": 2310.15,
+      "text": "no caso"
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 2310.15,
+      "end": 2316.65,
+      "text": "real você me passou sem amostras, correto? sem balanciada"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 2316.65,
+      "end": 2319.25,
+      "text": "eu não consegui o Dimmu não, ele não está disponível"
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 2320.74,
+      "end": 2353.19,
+      "text": "Então basicamente você me passou sem amostras, pesos reais, altura, outro lado. Aí tem a geometria que você falou lá, elíptica e quadrática. Eu fiz os experimentos aqui, vamos ver. Então esse daqui é o dado. Então a gente fez duas variantes, features, X1 e X2, sem prior semântico e com semântico."
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 2353.19,
+      "end": 2354.87,
+      "text": "vai dar diferença agora."
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 2355.11,
+      "end": 2379.54,
+      "text": "Pes e altura. Aí aqui é os gráficos, deixa eu ver a tabela, deve estar aqui. Aqui é a fidelidade em dois, em três features e em quatro features."
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 2381.15,
+      "end": 2385.0,
+      "text": "Vou explicar isso aí. Por que a"
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 2385.0,
+      "end": 2385.74,
+      "text": "fidelidade"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 2385.74,
+      "end": 2386.36,
+      "text": "vê as LL?"
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 2388.06,
+      "end": 2407.89,
+      "text": "O LLM rotula os pontos em zero shot com prompt semântico. peso e altura estimamos o W e otimização inversa e reportamos as duas métricas fidelidade versus o LLM aí"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 2407.89,
+      "end": 2410.61,
+      "text": "o o zero shot"
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 2412.05,
+      "end": 2412.99,
+      "text": "aí"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 2412.99,
+      "end": 2414.03,
+      "text": "é só zero shot"
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 2414.03,
+      "end": 2417.27,
+      "text": "deixa eu ver aqui no próximo acho que eu só fiz zero shot"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 2418.97,
+      "end": 2423.15,
+      "text": "ah não é interessante fazer também não fiz aqui ó"
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 2423.15,
+      "end": 2426.5,
+      "text": "aqui ó tá a gente interessante."
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 2447.48,
+      "end": 2450.92,
+      "text": "Mas tem outra transparência anterior? Deixa eu ver."
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 2454.19,
+      "end": 2461.47,
+      "text": "Essa daqui é aquela que mostra fidelidade. Deixa eu ver essa daqui."
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 2461.93,
+      "end": 2469.29,
+      "text": "Deixa eu ver essa fidelidade, eu entendi. O que seria isso? A curácia versus fel. Aí você rodou o NNLS. Isso."
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 2471.78,
+      "end": 2477.98,
+      "text": "Fidelidade versus versus o NNLS e versus o LNM."
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 2480.56,
+      "end": 2487.18,
+      "text": "Peraí, mira a coluna aí. O que você quer que é CN e Fiat aí? O que é isso? Número de features. É o número de"
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 2487.18,
+      "end": 2492.57,
+      "text": "features. Dois, que é o que a gente tem. Aí aqui é em três. E o quatro."
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 2492.71,
+      "end": 2494.93,
+      "text": "Tá, aí o LN versus Grand Truff?"
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 2497.85,
+      "end": 2514.44,
+      "text": "O Fidelidad. Mira a coluna. É o LNM versus o NNLS, né? fidelidade. Como assim? Por exemplo, nesse primeiro aí... Ah, a mesma história,"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 2514.56,
+      "end": 2534.93,
+      "text": "o NMS reproduz os rótulos da LLM, tá? Então, ele só consegue aprender mais com quatro features. E pra LLM só se apresenta duas sempre. Eu"
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 2534.93,
+      "end": 2544.27,
+      "text": "só apresento duas, exatamente. E aí depois o real é o Grand é que ali tá confundindo devido a NLS né"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 2547.24,
+      "end": 2595.66,
+      "text": "e aí eu tô achando estranho isso aqui é a métrica contra o américo como fosse um algoritmo contra o problema mas que acertou né isso eu tô achando estranho seguinte como se isso fosse teste fosse uma validação cruzada poderia tá vendo overfit não é o ato fitz Mas não é isso é só o treinamento né? Isso é só o treinamento. Isso é o que eu acerto dentro do 100. Não tá fazendo muito sentido cair essa curácia com mais uma feature."
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 2598.25,
+      "end": 2600.81,
+      "text": "No real né? É."
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 2606.42,
+      "end": 2720.81,
+      "text": "Não tá fazendo muito sentido. Você tá me entendendo se fosse um conjunto de validação, um conjunto de teste, poderia estar vendo um overfit né? você está aí no caso com um classificador muito complexo, né? Porque o problema, ele não é tão complexo assim. Então se você faz uma curva tipo elipse ou uma parábola, que acerta todo mundo ali no treinamento, pode ser que para novos dados a variância seja grande e ela erre, né? É a questão do dilema bias -variância. agora ali só tá um erro de treinamento e aí quanto mais complexo o modelo menos ele é você pega um polinômio de grau mais elevado você vai cada vez vai melhorando o aceto no conjunto amendo né então não tá fazendo muito sentido talvez você roda o perceptor aqui não tá fazendo muito sentido é você cair a curar só com quatro fitos dá uma olhada nesse resultado também entendeu? Agora, como ele é um problema que apesar do clássico do ótimo ali volta lá na figura até tem tem um livro lá do Niu. Qual figura aqui? Apesar do clássico do ótimo aqui ser uma uma uma como é o nome mesmo da uma elipse né? Elíptica, uma curva elíptica né? Você percebe que um hiper plano aqui ó, quase que também você acerta todo mundo botado uma fitria a mais melhora curar você não melhora tanto mas melhora você vai acertar uma mais dois a mais entendeu ou errar uma menos dois a menos né"
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 2720.81,
+      "end": 2721.57,
+      "text": "sim"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 2721.86,
+      "end": 2723.2,
+      "text": "é"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 2725.14,
+      "end": 2725.78,
+      "text": "mas"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 2725.78,
+      "end": 2751.05,
+      "text": "e também outra coisa vai lá outra coisa você vai praticamente é em r2 é complicado porque olha só você não errar ninguém aqui você vai ter que fazer uma curva aqui o polinômio muito elevado não sei a do 2 ou 3 está no próprio exemplo absoluta"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 2751.05,
+      "end": 2752.37,
+      "text": "mesmo"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 2752.37,
+      "end": 2828.2,
+      "text": "aqui um mais aquele é ele vai errar é impossível com uma curva quadrática você você acertar todo mundo tá então eu acho que o os resultados de acurácia lá tão tão correto volta lá é você devia botar talvez também como você tem um problema aí bem específico a quantidade a mostra que errou eu vou três ou quatro ou cinco entendeu tá bom agora então esse aumento aqui é interessante isso aqui que você tem que rever essa queda aqui ó, ela tá esquisita. mesmo porque a própria LLM melhorou, tá bem? a métrica melhorou em relação a LLM né? ela deveria também melhorar em relação ao real, sei lá. é bom que neutro isso aqui você deu prompt homenulé não pesa altura"
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 2828.74,
+      "end": 2837.06,
+      "text": "esse daqui foi o peso a altura é x1 x2 a pergunta é sempre homem mulher isso homem mulher exatamente"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 2838.3,
+      "end": 2841.12,
+      "text": "tá aí despenca mas não tem a tabelinha"
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 2842.14,
+      "end": 2846.34,
+      "text": "não deu até tenho aqui mas acho que não coloquei interessante"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 2846.34,
+      "end": 2857.85,
+      "text": "ter interessante colocar aqui que aí é um problema que não tem que não tem um via semântico, mesmo você aumentando as features, não"
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 2857.85,
+      "end": 2858.89,
+      "text": "melhora."
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 2867.4,
+      "end": 2869.6,
+      "text": "Você fica pior do que chutar."
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 2871.22,
+      "end": 2887.76,
+      "text": "X1, X2, o semântico, peso, altura, tá vendo? É o contexto. Por que esse meio -lua tá fazendo isso? É que é o segundo, né? Deixa eu ver."
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 2888.36,
+      "end": 2896.99,
+      "text": "não tem nada a ver em entrar nesse bloco 3, esse é só o problema do amigo né, não ia misturar as coisas"
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 2896.99,
+      "end": 2910.22,
+      "text": "não. É verdade, eu tenho que dar uma revisada aqui que tem algumas sujeiras, as que não tem nada a ver aqui. Não tem nada a ver aqui, tem tanta coisa aqui que não tem nada a"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 2910.22,
+      "end": 2946.46,
+      "text": "ver. Então é isso, a conclusão dessa terceira fase é que esse aprendizado em contexto ele depende essencialmente do prompt do contexto. Do contrário ele é um método que vai precisar que seja apresentado algumas amostras para ele conseguir criar algum tipo de identificação do problema"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 2946.46,
+      "end": 2947.54,
+      "text": "mesmo"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 2947.54,
+      "end": 2995.95,
+      "text": "com bilhões de parâmetros Então eu acho que a pesquisa está indo num caminho que a gente estava pensando, né? É interessante, né? Vai dar trabalho é escrever isso de forma de um artigo científico, né? Porque agora tem que... Mas o todo, os resultados, o trabalho que você fez está excelente, quer dizer, já dá insumo para escrever um artigo, entendeu? Até a dissertação, né? A gente tem agora que fazer um refinamento de tudo. E que tentar quebrar essas inconsistências que estão aparecendo uma ou outra aí que pode ser aleatória, pode ser quando rodou, não sei."
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 2996.11,
+      "end": 3000.17,
+      "text": "É, tem muito como, tem muita coisa que eu estou fazendo. E tem que evitar essas"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 3000.17,
+      "end": 3011.61,
+      "text": "inconsistências, por quê? Porque fica um ponto fraco, não fica uma ponta solta, né? o cara vai lá, mas por que que esse negócio caiu? Não era pra cair, não sei por que."
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 3011.87,
+      "end": 3014.51,
+      "text": "É, é, é, exato. Eu vou, eu vou dar uma..."
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 3014.51,
+      "end": 3028.61,
+      "text": "Mas eu vou dar, você me passou, eu vou imprimir, é... e vou dar um refinamento também, e aí eu falei pro Yurka, a gente via reunião hoje, e que eu ia passar pra ele o material, tá?"
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 3028.85,
+      "end": 3029.25,
+      "text": "Tá."
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 3029.45,
+      "end": 3030.07,
+      "text": "Na próxima"
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 3030.07,
+      "end": 3035.79,
+      "text": "reunião a gente chama ele o Sol. Beleza. Eu vou dar uma refinada nesse material. Não é refinado em"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 3035.79,
+      "end": 3039.53,
+      "text": "tudo, tudo que a gente comentou hoje você deve ter anotado. Anotei, anotei, tá tudo"
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 3039.53,
+      "end": 3040.03,
+      "text": "bem. Mas"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 3040.03,
+      "end": 3066.98,
+      "text": "o... Eu acho assim, por mim não tem tudo mais que ficar testando nada não, entendeu? Agora é a gente saber, inferir isso tudo aí, algum tipo de... Como é que fala mesmo? Em inglês fica até mais fácil, remake não é..."
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 3068.1,
+      "end": 3068.44,
+      "text": "Mas"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 3068.44,
+      "end": 3078.95,
+      "text": "conclusões, né? não é assim não é importante né você fazer todos esses experimentos no final tem como concluir algo né"
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 3078.95,
+      "end": 3083.29,
+      "text": "é exatamente é"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 3083.29,
+      "end": 3184.96,
+      "text": "então assim mas eu acho que tem já subsido o suficiente né para assim para para você justificar o título do trabalho né a gente tem que a gente qual que é o título não é é explicando o raciocínio das LLMs através da aprendizado inverso então a gente tem que ter bala suficiente para justificar esse estudo entendeu então tem que ser conclusivo de alguma forma sim tá é assim tem estudos que não são conclusivos né? Às vezes o cara estuda, estuda, estuda e depois no final das contas não chega a conclusão nenhuma falar esse negócio aí realmente não tem pé nem cabeça não dá pra concluir nada. Mas eu acho que não é o caso aí. Eu acho que ficou muito claro a questão semântica, a questão do contexto, a questão da de uma certa estabilidade da LLM né? A questão também da cegueira dela quando ela não tem nenhum tipo de formação no zero shot, entendeu? É uma loteria, né? Sim, sim. Então é por aí. Vamos amadurecendo um pouco as ideias e você faz essas correções e a gente já procura começar a botar isso numa forma de texto, entendeu? Isso é muito importante. a começar a escrever textualmente mesmo"
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 3184.96,
+      "end": 3189.24,
+      "text": "né? Tá bom Raul, eu marquei tudo aqui que a gente passou. Porque"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 3189.24,
+      "end": 3269.01,
+      "text": "assim, tá fácil pra você escrever agora, não tá mais com a ajuda do chat IPT, porque você já tem muita coisa equacionada, já tem muita coisa explicada, você já tem todas essas fases né, então tá muito fácil. Eu vou te mandar então esses artigos? Por favor. é interessante porque cada um tem uma visão diferente da questão da LLM e do raciocínio da LLM. Um analisa problemas de classificação igual a gente, outros já analisam translação, outros já mexem no próprio Transformer, já atualizam parâmetros. Então assim, mas não são muitos não, tem aquele é um artigo famoso né de 2022 do do do pessoal da quando lançaram o chat PT 3 né é onde onde criar a primeira ideia do aprendizado em Context né aquele tal de Tom Tom Brau depois fundou a a outra empresa lá Antrópica é o artigo tem 70 mil citações mas é um artigo totalmente experimental. Você já"
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 3269.01,
+      "end": 3274.37,
+      "text": "viu esse artigo? Eu dei uma lida no início dele. Isso"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 3274.37,
+      "end": 3304.1,
+      "text": "é experimental, o que você está fazendo. Não tem muita diferença não, né? Muito bem feito, lógico, né? Então são uns quatro ou cinco artigos, né? Mas aquele primeiro de todos, né? A ilusão, não sei o quê, né? É pra você se basear na sua escrita. Você pega muito o modelo dos caras, né? a parte de testes, né? A introdução não fica difícil escrever não, tá?"
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 3305.48,
+      "end": 3306.62,
+      "text": "Beleza, ótimo."
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 3306.78,
+      "end": 3413.14,
+      "text": "Aí vou te mandar, deixa eu ver aqui se eu estou com todos aqui. Não, não estou não. Ah não, estou, devo estar, só que está na pasta, dentro da pasta a generativa tem uma pasta chamada LLM. Tem uns artigos sobre transforma. Esse artigo é interessante uma introdução ao uso de transforma usando o hooking face. Eu acho que eu tenho todos aqui. Esse paper é do do Benjo. Só sobre o translater. Esse é o grandão. Language Models are few shot learners. você"
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 3424.63,
+      "end": 3427.53,
+      "text": "já tem ele né esse eu tenho"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 3430.64,
+      "end": 3443.6,
+      "text": "é então não tem aqui não eu não vou ter aqui não lá na universidade mais eu te passo"
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 3443.6,
+      "end": 3447.23,
+      "text": "tá bom sem problema beleza"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 3447.23,
+      "end": 3489.92,
+      "text": "ah não pera aí tem um aqui não não não aqui não tem não esse negócio eu tá com três computador cara quatro na verdade aí você baixa umas coisas num não tá no outro. Joga tudo no Google Drive? Ah, meu Google Drive já estourou, já, já não tem mais. Ah, um saco de narada. Eu fico passando no email, baixando, eu baixo, baixo, vou criando as pastinhas. Aí, assim, eu separei umas coisas, essas coisas de orientação, tão mais lá no computador da"
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 3489.92,
+      "end": 3495.88,
+      "text": "universidade, entendeu? É, eu só uso o drive, não ponho nada na máquina que senão nunca mais eu acho."
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 3497.25,
+      "end": 3501.99,
+      "text": "Eu tenho medo de ter sanguadão pau e você perder tudo nas nuvens aí, sei lá."
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 3501.99,
+      "end": 3502.49,
+      "text": "Ah, perde"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 3502.49,
+      "end": 3504.13,
+      "text": "nada. Eu quero estudar a época antiga, meu."
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 3504.91,
+      "end": 3522.96,
+      "text": "Eu vi o backup e disse... Não, perde nada aqui. Aqui, mas tá beleza, então. Acho que rendeu bem. Boa. Eu vou fazer essas alternativas. Pode até marcar então pra quarta que vem? Vamos, vamos. Beleza. Já vou fazer aqui. Então"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 3522.96,
+      "end": 3525.0,
+      "text": "tá. Um bom final de semana pra você. Valeu. Você"
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 3525.0,
+      "end": 3526.5,
+      "text": "também, Raul. Obrigado, tchau tchau."
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 3526.6,
+      "end": 3532.7,
+      "text": "É quarta ainda, ainda tem quinta e sexta. Exatamente. Mas, a gente não se vê. Valeu então. Tá bom,"
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 3532.92,
+      "end": 3534.14,
+      "text": "valeu. Falou. Falou."
+    }
+  ]
+}

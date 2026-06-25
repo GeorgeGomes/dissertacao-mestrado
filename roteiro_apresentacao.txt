@@ -1,0 +1,1089 @@
+ROTEIRO DA APRESENTACAO — Dissertacao de Mestrado
+"Explicando Decisoes de LLMs via Otimizacao Inversa"
+Total: 84 slides (75 corpo principal + 9 apendice tecnico)
+=====================================================
+
+ORGANIZACAO EM 3 BLOCOS AUTO-CONTIDOS (refactor 14/05/2026, slides 15/05/2026):
+
+  BLOCO 1 — LLM como FONTE (otimizacao inversa)
+    Problema A — linear sintetico
+    Problema B — linear rotacao HORARIA AGRESSIVA (centroides +/-1.5)
+    Problema C — linear rotacao ANTI-HORARIA AGRESSIVA (centroides +/-1.5)
+    Problema D — meia-lua sintetica (nao-linear)
+
+  BLOCO 2 — LLM como APRENDIZ (perito externo, Problema E)
+    Problema E = antigo Problema D (perito linear W=[0.3, 1.5])
+    Problema F — meia-lua sintetica (perito = ground truth)
+
+  BLOCO 3 — Estudo de caso REAL
+    Problema G (Problema G (peso x altura)) (base do orientador, fronteira eliptica)
+
+Cada bloco apresenta SEUS problemas, roda SEUS experimentos e fecha
+antes do proximo bloco comecar. Experimentos transversais distribuidos:
+Oracle no Bloco 1, vieses/prompt no Bloco 1, baselines clas. no Bloco 2.
+
+Outputs renomeados com prefixos bloco1_*, bloco2_*, bloco3_*, bloco23_*
+(externos compartilhados) e final_* (visualizacoes de fechamento).
+
+REGRA DE FORMATACAO: NO MAXIMO 2 IMAGENS POR SLIDE. Se um topico tiver
+mais figuras, sao distribuidas em slides consecutivos.
+
+
+===================================================================
+ABERTURA (1-9)
+===================================================================
+
+Slide 1 — Capa
+Mostrar: Apenas texto
+Oq fazer: Titulo do trabalho, nome do autor, orientador, programa, data.
+
+Slide 2 — Motivacao
+Mostrar: Apenas texto
+Oq fazer: LLMs sao caixas-pretas; pergunta central ("LLMs possuem um processo
+decisorio estavel e aprendivel?"); justificar relevancia (explainability,
+auditoria de IA).
+
+Slide 3 — Hipoteses
+Mostrar: Apenas texto
+Oq fazer: H1 (consistencia), H2 (few-shot amplifica), H3 (LLM como aprendiz),
+H4 (exemplos dificeis — refutada), H5 (estabilidade).
+
+Slide 4 — Abordagem (visao geral)
+Mostrar: Texto e formula
+Oq fazer: Otimizacao inversa em alto nivel; formula da metrica de
+Mahalanobis diagonal d_W(x,c); nearest-centroid.
+
+Slide 5 — Definicao matematica
+Mostrar: Formulas e texto
+Oq fazer: d_W = sum w_j (x_j - c_j)^2; classificador argmin; conexao com
+Mahalanobis cheia; margem geometrica; justificativa diagonal.
+
+Slide 6 — Configuracoes de execucao
+Mostrar: Apenas texto (tabela)
+Oq fazer: modelo gpt-4o-mini, T=0, RANDOM_SEEDS=[42,123,7], 3 reps,
+n_shots=[0,5,10,20,40], 4 estrategias, 3 experts, hiperparametros do
+Perceptron (eta=0.001, C=1.0, CILAMCE 2017), 115k chamadas LLM.
+
+Slide 7 — Algoritmo 1: Perceptron Estruturado com Relaxacao de Margem
+Mostrar: Texto e pseudocodigo
+Oq fazer: PSEUDOCODIGO COMPLETO do Perceptron Estruturado (Coelho, Borges
+& Fonseca Neto, CILAMCE 2017, Secao 5.2):
+
+  ENTRADA: X (m x d), y (m,), centroids (K x d)
+           eta=0.001, C=1.0, delta_gamma=0.05, max_epochs=100, tol=1e-5
+  SAIDA:   w (d,), gamma_otimo
+
+  Inicializacao:
+    w <- ones(d)
+    alpha <- zeros(m)
+    gamma_lo <- 0
+    gamma_hi <- inf
+    lambda <- 1 / C
+
+  Busca binaria em gamma (loop externo, Eq. 31):
+    repita ate |gamma_hi - gamma_lo| <= tol:
+      gamma <- gamma_init (incrementado por delta_gamma a cada iter viavel)
+
+      Perceptron interno para gamma fixo (loop sobre epocas):
+        para cada ponto i em ordem aleatoria:
+          k <- argmin distancia para centroide RIVAL
+          l <- classe verdadeira (y[i])
+          margem <- d_W(x_i, c_k) - d_W(x_i, c_l) + lambda * alpha[i]
+
+          se margem < gamma * ||w||:                  (violacao, Eq. 28)
+            g <- (x_i - c_l)^2 - (x_i - c_k)^2
+            factor <- 1 - eta * gamma / ||w||
+            w <- max(0, w * factor - eta * g)         (Eq. 29, projecao SDP)
+            alpha <- alpha * factor; alpha[i] += eta
+
+      se zero_violacoes:
+        gamma_lo <- gamma; w_star <- w; gamma <- gamma + delta_gamma
+      senao:
+        gamma_hi <- gamma; gamma <- (gamma_lo + gamma_hi) / 2
+
+  retorna w_star, gamma_lo
+
+Hiperparametros (artigo, Secao 6, p. 16): eta=0.001, C in [0.1, 1.0]
+(usamos 1.0).
+
+Slide 8 — Algoritmo 2: NNLS (Lawson-Hanson 1974)
+Mostrar: Texto e pseudocodigo
+Oq fazer: PSEUDOCODIGO formal do NNLS (Mínimos Quadrados Não-Negativos)
+para otimizacao inversa de metrica diagonal:
+
+  ENTRADA: X (m x d), y (m,), centroids (K x d)
+  SAIDA:   w (d,) com w >= 0
+
+  Construcao da matriz A (m x d) e do vetor b (m,):
+    para cada ponto i:
+      l <- classe verdadeira (y[i])
+      k <- centroide rival (k != l)
+      para cada dimensao j:
+        A[i, j] <- (x[i,j] - c[k,j])^2 - (x[i,j] - c[l,j])^2
+      b[i] <- 1                  (margem-alvo; razao w invariante a escala)
+
+  Resolver via scipy.optimize.nnls:
+    w <- scipy.optimize.nnls(A, b)
+
+  Formulacao matematica equivalente:
+    min ||A w - b||^2   sujeito a  w >= 0
+
+  Normalizacao opcional:
+    w <- w / ||w||
+
+  retorna w, gamma=0 (NNLS nao define margem geometrica explicita)
+
+Algoritmo: metodo de conjunto ativo de Lawson-Hanson (1974).
+Vantagens sobre Perceptron Estruturado:
+  - Zero hiperparametros (deterministico, reproduzivel bit-a-bit)
+  - Otimalidade global garantida (problema QP convexo)
+  - Solucao unica em problemas bem-condicionados (rank(A) = d)
+  - Tempo polinomial (sem busca binaria externa)
+Cosseno tipico com W estimado pelo Perceptron: > 0.97 (validacao cruzada
+do metodo).
+
+Slide 9 — Robustez da coleta
+Mostrar: Texto e diagrama
+Oq fazer: Pipeline LLM com 5 camadas: parser 7 camadas, MAX_FORMAT_RETRIES=5,
+fallback MD5, asyncio.Semaphore(10), timeout 60s + asyncio.wait_for(90s).
+
+
+===================================================================
+BLOCO 1 — LLM COMO FONTE (slides 10-34)
+===================================================================
+Narrativa: o LLM rotula; nos aprendemos W via otimizacao inversa.
+Cobre Problemas A/B/C lineares + D meia-lua. Testa H1, H2.
+
+Slide 10 — Transicao Bloco 1
+Mostrar: Apenas texto (slide grande)
+Oq fazer: Marcar inicio do Bloco 1:
+  - "LLM como FONTE de decisoes"
+  - Problemas A, B, C lineares + D meia-lua
+  - Hipoteses ligadas: H1, H2
+
+Slide 11 — Visao geral dos 4 problemas do Bloco 1
+Mostrar: APENAS TEXTO (sem imagens)
+Oq fazer: Apresentar textualmente os 4 problemas que serao detalhados
+nos proximos slides:
+  - Problema A (treino): gaussianas lineares, centroides (-2,0)/(2,0),
+    n=150. Bancada onde o LLM rotula em zero-shot e nos aprendemos W.
+  - Problema B (consistencia 1): rotacao horaria dos centroides
+    (-2,+1.5)/(2,-1.5), n=100. Testa transferencia da metrica em geometria
+    severamente deslocada.
+  - Problema C (consistencia 2): rotacao anti-horaria
+    (-2,-1.5)/(2,+1.5), n=100. Pareada simetricamente com B; controla
+    contra vies sistematico do LLM.
+  - Problema D (nao-linear): meia-lua sintetica via make_moons(n=150,
+    noise=0.15). Problema-controle para R3/R4 — esperamos ganho de
+    augmentacao de features apenas aqui.
+
+Slide 12 — Problema A: treino da metrica (linear)
+Mostrar: Texto, codigo e grafico
+Oq fazer:
+  PROPOSITO: Bancada de treinamento — LLM classifica em zero-shot,
+  e W e estimado via otim inversa.
+  COMO FOI GERADO:
+    1. sklearn.datasets.make_blobs
+    2. Centroides: (-2.0, 0.0) e (2.0, 0.0)
+    3. cluster_std = 1.2 (isotropico)
+    4. n_samples = 150
+    5. random_state in {42, 123, 7}
+  PARAMETROS:
+    - PROBLEM_A_CENTERS = [(-2.0, 0.0), (2.0, 0.0)]
+    - PROBLEM_A_STD = 1.2
+  CODIGO:
+    def create_problem_a(n=150, seed=42):
+        X, y = make_blobs(n_samples=n, centers=[(-2.0,0.0),(2.0,0.0)],
+                          cluster_std=1.2, random_state=seed)
+        return X, y
+  IMAGEM: bloco1_01_problemas_lineares_problema_a.png
+  POR QUE: linearmente separavel em x_1; fronteira ideal x_1=0; sobreposicao
+  parcial (nao trivial mas facil para o LLM).
+
+Slide 13 — Problema B: linear, rotacao horaria
+Mostrar: Texto, codigo e grafico
+Oq fazer:
+  PROPOSITO: Testar se W aprendida em A consegue prever as decisoes do
+  LLM em geometria deslocada AGRESSIVAMENTE.
+  COMO FOI GERADO:
+    1. make_blobs
+    2. Centroides: (-2.0, +1.5) e (2.0, -1.5)
+    3. cluster_std = 1.2
+    4. n_samples = 100
+  PARAMETROS:
+    - PROBLEM_B_CENTERS = [(-2.0, 1.5), (2.0, -1.5)]
+  CODIGO:
+    def create_problem_b(n=100, seed=43):
+        X, y = make_blobs(n_samples=n, centers=[(-2.0,1.5),(2.0,-1.5)],
+                          cluster_std=1.2, random_state=seed)
+        return X, y
+  IMAGEM: bloco1_01_problemas_lineares_problema_b.png
+  POR QUE: Rotacao HORARIA com magnitude SIMETRICA a C (+/-1.5) — pareada
+  para nao depender da direcao da rotacao. Mais agressiva que a versao
+  anterior (+/-0.8) — testa transferencia em condicoes severas.
+
+Slide 14 — Problema C: linear, rotacao anti-horaria
+Mostrar: Texto, codigo e grafico
+Oq fazer:
+  PROPOSITO: Mesma severidade de B, mas DIRECAO OPOSTA. Garante que B/C
+  testam transferencia em geometrias simetricamente desviadas, sem viesar
+  para um lado.
+  COMO FOI GERADO:
+    1. make_blobs
+    2. Centroides: (-2.0, -1.5) e (2.0, +1.5)
+    3. cluster_std = 1.2
+    4. n_samples = 100
+  PARAMETROS:
+    - PROBLEM_C_CENTERS = [(-2.0, -1.5), (2.0, 1.5)]
+  CODIGO:
+    def create_problem_c(n=100, seed=44):
+        X, y = make_blobs(n_samples=n, centers=[(-2.0,-1.5),(2.0,1.5)],
+                          cluster_std=1.2, random_state=seed)
+        return X, y
+  IMAGEM: bloco1_01_problemas_lineares_problema_c.png
+  POR QUE: Direcao OPOSTA a B; mesma magnitude (+/-1.5). Pareadas. Se houvesse
+  vies sistematico do LLM ou da metrica, apareceria em apenas uma das duas.
+
+Slide 15 — Problema D: meia-lua (nao-linear sintetico)
+Mostrar: Texto, codigo e grafico
+Oq fazer:
+  PROPOSITO: Caso canonico de fronteira nao-linear. Inserido no Bloco 1
+  para testar se a metrica diagonal aumentada (R3, R4) captura nao-linearidade
+  a partir das decisoes zero-shot do LLM.
+  COMO FOI GERADO:
+    1. sklearn.datasets.make_moons (nao make_blobs!)
+    2. n_samples = 150
+    3. noise = 0.15
+    4. random_state in {42, 123, 7}
+  CODIGO:
+    from sklearn.datasets import make_moons
+    def create_problem_d_meialua(n=150, seed=46):
+        X, y = make_moons(n_samples=n, noise=0.15, random_state=seed)
+        return X, y
+  IMAGEM: bloco1_02_problema_d_meialua_seed42_overview.png
+  POR QUE: noise=0.15 e valor classico; duas semi-luas reconheciveis
+  com sobreposicao parcial nas extremidades. Problema-controle POSITIVO
+  para R3/R4 — esperamos ganho aqui.
+
+Slide 16 — Oracle Recovery (1/4): descricao + tabela do W recuperado
+Mostrar: Texto e tabela
+Oq fazer: Sanity check antes de aplicar Perceptron/NNLS ao LLM. Pergunta:
+"se o W verdadeiro fosse conhecido, os dois algoritmos o recuperariam?"
+Procedimento:
+  1. Gerar dados sinteticos rotulados por W_oracle conhecido em 3 configs
+     anisotropicas (x1_dom, x2_dom, forte_aniso).
+  2. Aprender W_hat via Perceptron Estruturado e NNLS.
+  3. Medir cosseno(W_hat, W_oracle), razao w1/w2 e fidelidade.
+
+Tabela de recuperacao (media 3 seeds):
+
+  | Expert        | W_oracle (ratio) | Algoritmo  | Ratio recup | Cosseno | Fid |
+  | x2_dom        | [4.0, 0.25] (16) | Perceptron | 1.32        | 0.824   | 100% |
+  | x2_dom        | [4.0, 0.25] (16) | NNLS       | inf         | 0.999   | 100% |
+  | x1_dom        | [0.25, 4.0] (0.06) | Perceptron | 0.78      | 0.824   | 100% |
+  | x1_dom        | [0.25, 4.0] (0.06) | NNLS       | 0.054     | 0.999   | 100% |
+  | forte_aniso   | [11.1, 0.44] (25)| Perceptron | 2.93        | 0.958   | 100% |
+  | forte_aniso   | [11.1, 0.44] (25)| NNLS       | 34.4        | 0.999   | 100% |
+
+Mensagem: NNLS preserva muito melhor a razao do W extremo (cosseno > 0.99),
+Perceptron tende a normalizar w para [1,1] (cosseno > 0.82). Ambos
+recuperam fidelidade 100% — o sinal de classificacao foi capturado.
+
+Slide 17 — Oracle Recovery (2/4): visualizacao
+Mostrar: Grafico
+Oq fazer: Visualizacao do scatter de W_recuperado por algoritmo em cada
+config anisotropica. NNLS pontos concentrados na direcao do W_oracle;
+Perceptron pontos mais proximos do centro (devido normalizacao).
+Imagem: bloco1_03_oracle_w_recovery.png (painel principal 2x2: cosseno,
+fidelidade, ratio, scatter de W).
+
+Slide 18 — Oracle Transfer (3/4): descricao + tabela
+Mostrar: Texto e tabela
+Oq fazer: Segundo sanity check, dual ao anterior. Pergunta: "se aprendo
+W em uma geometria, ele transfere para outra?"
+Procedimento:
+  1. Aprender W em uma configuracao (ex: x2_dom).
+  2. Aplicar este W em outras geometrias (x1_dom, forte_aniso, euclidean).
+  3. Medir cosseno e fidelidade nas geometrias destino.
+
+Tabela de transferencia (media 3 seeds):
+
+  | Origem       | Algoritmo  | Cosseno | Fidelidade |
+  | x2_dom       | Perceptron | 0.824   | 100%       |
+  | x2_dom       | NNLS       | 0.999   | 100%       |
+  | x1_dom       | Perceptron | 0.824   | 100%       |
+  | x1_dom       | NNLS       | 0.999   | 100%       |
+  | forte_aniso  | Perceptron | 0.958   | 100%       |
+  | forte_aniso  | NNLS       | 1.000   | 100%       |
+  | Problema A   | Perceptron | 0.748   | 95.6%      |
+  | Problema A   | NNLS       | 0.707   | 95.6%      |
+  | Problema E   | Perceptron | 0.999   | 99.9%      |
+  | Problema E   | NNLS       | 0.993   | 98.2%      |
+
+Mensagem: cosseno alto entre W estimado e W_oracle confirma que ambos
+algoritmos funcionam quando o sinal e claro. Implicacao para Problemas B/C:
+ao aplicar W_A em B/C, sempre recalculamos centroides LOCAIS.
+
+Slide 19 — Oracle Transfer (4/4): visualizacao
+Mostrar: Grafico
+Oq fazer: Visualizacao da transferencia: para cada configuracao
+anisotropica (sub-painel), W aprendido na origem vs W oracle de destino.
+Mostra graficamente o porque NNLS supera Perceptron na recuperacao da
+razao exata.
+Imagem: bloco1_04_oracle_transfer.png (painel principal mostrando todos
+os experts e algoritmos).
+
+Slide 20 — Problema A: descricao passo a passo
+Mostrar: Apenas texto
+Oq fazer:
+  1. LLM recebe 150 pontos do Problema A em zero-shot.
+  2. Responde A ou B com T=0.
+  3. 150 respostas formam (X_train, y_LLM).
+  4. Centroides RECALCULADOS a partir de y_LLM (crucial: ancoramos
+     metrica no que o LLM ACHA serem as classes, nao na verdade).
+  5. Perceptron e NNLS aprendem W independentemente.
+  6. Fidelidade = % decisoes do LLM reproduzidas pela metrica.
+
+Slide 21 — Problema A: W aprendido e fidelidade
+Mostrar: Texto, tabela e grafico
+Oq fazer: Tabela com W (w_1, w_2) por algoritmo; fidelidade ~83%; LLM
+usa majoritariamente x_1 (w_1 ~ 0.95, w_2 ~ 0.05) — coerente com
+separabilidade horizontal do Problema A.
+Imagem: bloco1_05_fase_a_errors_seed42.png.
+
+Slide 22 — Problema A: erros por regiao + distribuicao de W entre seeds
+Mostrar: Texto, tabela e grafico
+Oq fazer: Decomposicao dos erros (print_error_analysis_by_region):
+60% perto da fronteira, 30% media, 10% longe. LLM e metrica concentram
+erros nas mesmas regioes — evid. indireta de que a metrica modela o LLM.
+Distribuicao de W entre seeds qualitativamente estavel (cosseno > 0.97).
+Imagem: bloco1_06_w_distribution.png.
+
+Slide 23 — Problema A: comparacao Perceptron x NNLS + sensibilidade
+Mostrar: Texto, tabela e grafico
+Oq fazer: Cosseno entre W's > 0.97. Sensibilidade do Perceptron a eta,
+C, delta_gamma — fidelidade varia 80-85%, razao w_1/w_2 estavel.
+Robustez ao metodo de estimacao. Imagem: bloco1_07_algorithm_comparison.png.
+
+Slide 24 — Nossa medida: consistencia interna, nao corretude
+Mostrar: Texto
+Oq fazer: Decisao metodologica explicita para a banca.
+
+O trabalho mede CONSISTENCIA INTERNA do criterio decisorio do LLM:
+  - FIDELIDADE = quanto a metrica W reproduz as decisoes do LLM (Problema A).
+  - CONSISTENCIA = quanto W_A preve decisoes do LLM em B/C (Problemas B/C).
+  - ACURACIA LLM-PERITO = quanto o LLM aprende com o perito (Problema E).
+
+Decisao: NAO comparamos com ground truth nos problemas sinteticos.
+
+Razao: H1 testa se o LLM tem criterio decisorio ESTAVEL, nao se ele
+esta OBJETIVAMENTE CORRETO. Um LLM pode inverter classes e ainda assim
+ser internamente consistente — saber se o criterio e "certo" e ortogonal
+a pergunta de pesquisa.
+
+Excecao: Bloco 3 (Problema G (peso x altura)) reportara acuracia vs rotulo real,
+porque o orientador solicitou explicitamente no e-mail 22:04, ponto 4.
+La ha ground truth significativo (homem/mulher) e classificador otimo
+bayesiano (eliptico) conhecido — comparacao com a metrica aprendida
+faz sentido pedagogico naquele contexto.
+
+Slide 25 — Problema A: $W$ aprendido por seed e por algoritmo
+Mostrar: Tabela
+Oq fazer: Apresentar os pesos $W = (w_1, w_2)$ aprendidos para o Problema A
+por seed (42, 123, 7) e por algoritmo (Perceptron Estruturado e NNLS).
+Demonstra estabilidade entre execucoes e congruencia entre algoritmos.
+
+Fidelidade Problema A = % de pontos do Problema A em que o rotulo dado pela
+metrica $\hat W$ coincide com o rotulo do LLM (in-sample, mesmos pontos
+usados para estimar $\hat W$). Sanidade: se for baixa, o algoritmo nao
+ajustou uma metrica diagonal aos rotulos do LLM.
+
+  Perceptron Estruturado:
+    seed 42:  w = (0.0008, 0.0031)  | ratio w1/w2 = 0.245  | fid = 82.0%
+    seed 123: w = (0.0024, 0.0094)  | ratio w1/w2 = 0.251  | fid = 86.7%
+    seed 7:   w = (0.0256, 0.0725)  | ratio w1/w2 = 0.353  | fid = 86.0%
+
+  NNLS:
+    seed 42:  w = (0.0355, 0.1414)  | ratio w1/w2 = 0.251  | fid = 82.0%
+    seed 123: w = (0.0467, 0.1493)  | ratio w1/w2 = 0.313  | fid = 86.7%
+    seed 7:   w = (0.0381, 0.1492)  | ratio w1/w2 = 0.255  | fid = 87.3%
+
+Observacoes:
+  - Magnitudes de W variam entre algoritmos (Perceptron ~10x menor que NNLS),
+    mas as RAZOES w1/w2 sao similares — invariancia de escala da otim inversa.
+  - Razao w1/w2 ≈ 0.25-0.35 em ambos: $w_2$ pondera ~3-4x mais que $w_1$,
+    indicando que o LLM ancora mais em $x_2$ que esperado (Problema A e
+    linearmente separavel em $x_1$, mas com sobreposicao gaussiana).
+  - Fidelidade quase identica entre Perceptron e NNLS por seed.
+  - seed 7 produz $W$ com magnitude maior em ambos os algoritmos — variancia
+    proveniente do dataset gerado por essa seed.
+
+Slide 26 — Problemas B/C: tabela consolidada por algoritmo
+Mostrar: Apenas tabela
+Oq fazer: Tabela por seed com consistencia e Kappa nas Fases B (rot.
+horaria +/-1.5) e C (rot. anti-horaria +/-1.5), por algoritmo (media
+3 reps por seed, zero-shot). Consistencia = % de pontos em que o
+rotulo da metrica W_A (aprendida no Problema A) coincide com o
+rotulo do LLM em B/C; Kappa = Cohen corrigido por concordancia ao acaso.
+
+  Perceptron Estruturado:
+    seed 42:  Cons B 67,3% / kB 0,26 | Cons C 91,0% / kC 0,81
+    seed 123: Cons B 65,3% / kB 0,25 | Cons C 90,3% / kC 0,80
+    seed 7:   Cons B 76,0% / kB 0,47 | Cons C 86,3% / kC 0,71
+    media:    Cons B 69,5% / kB 0,33 | Cons C 89,2% / kC 0,77
+
+  NNLS:
+    seed 42:  Cons B 68,0% / kB 0,29 | Cons C 90,0% / kC 0,79
+    seed 123: Cons B 67,0% / kB 0,29 | Cons C 89,0% / kC 0,77
+    seed 7:   Cons B 76,0% / kB 0,47 | Cons C 84,0% / kC 0,66
+    media:    Cons B 70,3% / kB 0,35 | Cons C 87,7% / kC 0,74
+
+Mensagem: H1 sustentada. Kappa C >> Kappa B porque a rotacao
+anti-horaria preserva melhor o criterio decisorio do LLM.
+
+Nota metodologica (rodape): centroides LOCAIS (recalculados em B/C a
+partir de y_LLM). TRANSFERIDOS (do Problema A) testados como ablativo
+(Problema B: locais 65%, transferidos 77%; padrao adotado: LOCAIS, mais
+fieis a decisao do LLM em cada problema).
+
+Slide 27 — Problemas B/C: mapa de acertos/erros (seed 42)
+Mostrar: 2 imagens lado a lado
+Oq fazer: Painel visual complementando a tabela do slide 26. Mostrar
+o mapa ponto-a-ponto da metrica W_A aplicada em B (esquerda) e C
+(direita) na seed 42 (representativa da media). Verde = concorda com
+o LLM, vermelho = discorda.
+
+Imagens:
+  - final_05_hits_errors_seed42_problema_b.png (B, Cons ~68%, kappa ~0,29)
+  - final_05_hits_errors_seed42_problema_c.png (C, Cons ~90%, kappa ~0,79)
+
+Leitura: erros em B concentram-se na faixa central (regiao de
+sobreposicao das gaussianas rotacionadas), evidenciando que a metrica
+W_A nao foi calibrada para essa rotacao. Em C os erros sao esparsos
+e isolados, sem concentracao. Visualiza geometricamente por que
+kappa_C >> kappa_B mesmo com a mesma magnitude de rotacao — anti-
+horaria preserva a geometria decisoria do LLM melhor.
+
+Slide 28 — Consistencia R2/R3/R4: Problema A e meia-lua
+Mostrar: Apenas tabela
+Oq fazer: Tabela por seed apenas com Problema A (linear, 3 seeds) e
+meia-lua (nao-linear, dataset com 1 seed disponivel). B e C omitidos
+porque sao tambem lineares (mesma natureza que A) — augmentacao R3/R4
+seria redundante. Problema G (Problema G (peso x altura)) NAO aparece aqui — fica no Bloco 3.
+
+Fidelidade da metrica W vs y_LLM no proprio problema (in-sample).
+R2 = (x1, x2); R3 acrescenta x1*x2; R4 acrescenta x1^2, x2^2.
+
+  Problema A (linear, 3 seeds x 3 reps):
+  Perceptron Estruturado:
+    seed 42:  R2 82,0% | R3 84,7% | R4 84,7%
+    seed 123: R2 86,7% | R3 75,3% | R4 84,7%
+    seed 7:   R2 86,0% | R3 84,0% | R4 90,0%
+    media:    R2 84,9% | R3 81,3% | R4 86,4%
+  NNLS:
+    seed 42:  R2 82,0% | R3 84,0% | R4 86,0%
+    seed 123: R2 86,7% | R3 87,3% | R4 88,7%
+    seed 7:   R2 87,3% | R3 86,0% | R4 92,0%
+    media:    R2 85,3% | R3 85,8% | R4 88,9%
+
+  Meia-lua (nao-linear, apenas seed 42 do dataset):
+    Perceptron seed 42: R2 68,6% | R3 74,3% | R4 75,2%
+    NNLS       seed 42: R2 68,6% | R3 82,9% | R4 76,2%
+
+Leitura: em A linear R3/R4 da ganho dentro do ruido entre seeds (seed
+123 ate cai em R3 Perceptron). Na meia-lua nao-linear R3 sobe a
+fidelidade NNLS de 68,6% para 82,9% — augmentacao captura curvatura
+que metrica diagonal em R2 nao representa.
+
+Limitacao metodologica (importante citar para a banca): o pipeline
+rodou os 3 seeds (42, 123, 7), mas em zero-shot o LLM colapsou para
+uma unica classe nas seeds 123 e 7 (log: "classe unica no LLM,
+pulando"). Sem sinal de separacao entre classes, a estimacao inversa
+foi abortada nesses seeds. Apenas seed 42 sobreviveu. A meia-lua e o
+problema mais sensivel ao posicionamento das luas geradas por
+make_moons — em duas das tres configuracoes o LLM nao percebeu duas
+classes distintas. Isso e um achado em si: zero-shot do gpt-4o-mini
+em meia-lua e instavel.
+
+Slide 29 — Vies de ordem das classes: tabela
+Mostrar: Apenas tabela
+Oq fazer: Tabela com pares semanticos invertidos (n_shot=10, media 3
+seeds x 3 reps). Mede se trocar a ordem "A ou B" por "B ou A" altera
+as decisoes do LLM.
+
+  | Par                       | Fid A | Cons B | kB    | Cons C | kC   |
+  | A / B                     | 84,9% | 82,5%  | 0,64  | 96,0%  | 0,92 |
+  | B / A (invertido)         | 69,1% | 98,1%  | 0,96  | 91,1%  | 0,82 |
+  | 0 / 1                     | 62,2% | 93,7%  | 0,87  | 76,2%  | 0,47 |
+  | 1 / 0 (invertido)         | 72,4% | 76,5%  | 0,53  | 77,9%  | 0,56 |
+  | Positivo / Negativo       | 98,4% | 74,2%  | 0,48  | 88,0%  | 0,76 |
+  | Negativo / Positivo (inv.)| 95,1% | 83,8%  | 0,66  | 77,0%  | 0,42 |
+  | Azul / Vermelho           | 84,2% | 81,1%  | 0,55  | 95,3%  | 0,91 |
+  | Vermelho / Azul (inv.)    | 82,0% | 93,1%  | 0,86  | 94,1%  | 0,88 |
+
+Leitura: vies de ordem existe (~10-15 p.p. dentro de cada par), mas
+nao e dominante. Letras e numeros sao mais sensiveis que cores e
+rotulos semanticos.
+
+Slide 30 — Vies de ordem das classes: grafico
+Mostrar: Apenas grafico
+Oq fazer: Mesmo conteudo do slide 29 em forma visual.
+Imagem: bloco1_12_class_order_bias.png.
+
+Slide 31 — Variantes de prompt: exemplos
+Mostrar: 4 blocos de texto (prompts literais)
+Oq fazer: Mostrar lado a lado os 4 prompts (default, geometric, CoT,
+tabular) para o ponto exemplo x1=1,23 e x2=-0,45, classes A/B. Permite
+a banca visualizar as diferencas concretas antes da tabela de resultados.
+
+  default:
+    "You are a binary classifier for 2D points.
+     Classify as Class A or Class B.
+     Answer ONLY with 'A' or 'B'.
+     Point: x1 = 1.2300, x2 = -0.4500"
+
+  geometric:
+    "You are a binary classifier for 2D points in Euclidean space.
+     Points exist in a 2D metric space. Classify based on spatial
+     proximity to cluster centers.
+     Classify as Class A or Class B.
+     Point: x1=1.2300, x2=-0.4500"
+
+  CoT:
+    "Classify as Class A or Class B.
+     Point: x1 = 1.2300, x2 = -0.4500
+     Think step by step, then state your final classification
+     ('A' or 'B') on the last line."
+
+  tabular:
+    "Classify as Class A or Class B.
+     Point to classify:
+     | Feature | Value   |
+     |---------|---------|
+     | x1      |  1.2300 |
+     | x2      | -0.4500 |"
+
+Slide 32 — Variantes de prompt: tabela
+Mostrar: Apenas tabela
+Oq fazer: Tabela com 4 variantes (default, geometric, CoT, tabular)
+nas Problemas A-C, zero-shot, media 3 seeds x 3 reps, config A/B + x1/x2:
+
+  | Variante  | Fid A | Cons B | kB    | Cons C | kC    |
+  | default   | 84,9% | 69,6%  | 0,33  | 89,2%  | 0,77  |
+  | geometric | 79,1% | 68,2%  | 0,14  | 75,3%  | 0,35  |
+  | CoT       | 71,8% | 60,4%  | 0,14  | 79,8%  | 0,60  |
+  | tabular   | 64,4% | 64,3%  | 0,15  | 72,7%  | 0,20  |
+
+Descricao:
+  - default: template baseline, coordenadas em prosa.
+  - geometric: contexto espacial (eixos, regioes).
+  - CoT: chain-of-thought, raciocinio passo a passo.
+  - tabular: coordenadas em tabela markdown.
+
+Leitura: default domina; variantes elaboradas caem 13-20 p.p. em Fid A.
+CoT e tabular nao melhoram, pioram. Sensibilidade ao prompt e real
+(~ate 20 p.p.) — default adotado como referencia.
+
+Slide 33 — Variantes de prompt: grafico
+Mostrar: Apenas grafico
+Oq fazer: Mesmo conteudo do slide 31 em forma visual.
+Imagem: bloco1_13_prompt_variants.png.
+
+Slide 34 — Nomes semanticos de classes e features: tabela
+Mostrar: Apenas tabela
+Oq fazer: Tabela em duas partes mostrando o efeito de nomes sobre W.
+
+(a) Classes (n_shot=10, features x1/x2):
+  | Par                  | Fid A | Cons B | kB    | Cons C | kC   |
+  | A / B                | 84,9% | 82,5%  | 0,64  | 96,0%  | 0,92 |
+  | 0 / 1                | 62,2% | 93,7%  | 0,87  | 76,2%  | 0,47 |
+  | Positivo / Negativo  | 98,4% | 74,2%  | 0,48  | 88,0%  | 0,76 |
+  | Azul / Vermelho      | 84,2% | 81,1%  | 0,55  | 95,3%  | 0,91 |
+
+(b) Features (zero-shot, classes A/B):
+  | Features              | Fid A | Cons B | kB     | Cons C | kC   |
+  | x1 / x2               | 84,9% | 69,6%  |  0,33  | 89,2%  | 0,77 |
+  | altura / peso         | 70,7% | 47,0%  | -0,09  | 88,0%  | 0,76 |
+  | feature_1 / feature_2 | 80,0% | 75,0%  |  0,39  | 81,0%  | 0,61 |
+
+Leitura: classes semanticas (Pos/Neg) inflam Fid A para 98% mas
+degradam kappa_B — LLM ancora no nome em vez da geometria. Em
+features, altura/peso quebra consistencia em B (kappa negativo,
+pior que aleatorio): prior cultural sobrescreve o criterio espacial.
+
+Slide 35 — Nomes semanticos de classes e features: graficos
+Mostrar: 2 imagens lado a lado
+Oq fazer: Painel visual complementar a tabela do slide 34.
+Imagens:
+  - bloco1_14a_class_names_effect.png (efeito nome de classe)
+  - bloco1_14b_feature_names_effect.png (efeito nome de feature)
+
+Visualmente fica claro: impacto em features (b) e bem maior que em
+classes (a). Argumenta a decisao metodologica de usar nomes neutros
+(x1/x2 e A/B) em todo o Bloco 1.
+
+Slide 36 — Prompt few-shot (default)
+Mostrar: Bloco verbatim
+Oq fazer: Mostrar o template literal do prompt few-shot (default) com
+n_shot=5: cinco exemplos rotulados seguidos do ponto-alvo. Variantes
+geometric, CoT e tabular ja foram cobertas no slide 31.
+
+  Template:
+    "You are a binary classifier for 2D points.
+     You will see 5 labeled examples and then a point to classify.
+
+     Examples:
+     Example 1: x1 = -2.3000, x2 =  0.1000  -> A
+     Example 2: x1 =  2.1000, x2 = -0.2000  -> B
+     Example 3: x1 = -1.8000, x2 =  0.4000  -> A
+     Example 4: x1 =  1.7000, x2 =  0.3000  -> B
+     Example 5: x1 = -2.5000, x2 = -0.1000  -> A
+
+     Classify as Class A or Class B.
+     Point: x1 = 0.2340, x2 = 0.5670"
+
+Slide 37 — Resumo Bloco 1
+Mostrar: Texto (3-5 bullets)
+Oq fazer: Fechamento do Bloco 1:
+  - H1 SUSTENTADA: criterio decisorial estavel do LLM (Kappa 0.5-0.7).
+  - H2 SUSTENTADA: few-shot amplifica concordancia LLM-metrica (+5-10 p.p.).
+  - R3/R4 so ajuda no problema nao-linear (D meia-lua); zero em A/B/C.
+  - W aprendido estavel entre seeds (H5) e entre 2 algoritmos.
+  - Rotacoes B/C agressivas (+/-1.5) nao quebram a transferencia da metrica.
+
+
+===================================================================
+BLOCO 2 — LLM COMO APRENDIZ (slides 35-51)
+===================================================================
+Narrativa: agora o LLM e o APRENDIZ. Um perito externo (ou ground truth)
+rotula; o LLM tenta reproduzir o criterio a partir de exemplos few-shot.
+Cobre Problemas E (linear, antigo D, expert W=[0.3,1.5]) e F (meia-lua,
+perito = ground truth). Testa H3, H4, H5.
+
+Slide 38 — Transicao Bloco 2
+Mostrar: Apenas texto (slide grande)
+Oq fazer: Marcar inicio do Bloco 2:
+  - "LLM como APRENDIZ via in-context learning"
+  - Problema E (linear, perito anisotropico) + F (meia-lua, ground truth)
+  - Hipoteses ligadas: H3, H4, H5
+
+Slide 39 — Visao geral dos 2 problemas do Bloco 2
+Mostrar: Texto e grafico (1 imagem)
+Oq fazer: Panel resumo com Problema E (linear com fronteira do expert)
+e F (meia-lua ground truth). Imagem: bloco2_01_problema_e_expert.png.
+
+Slide 40 — Problema E: perito linear (antigo Problema D)
+Mostrar: Texto, codigo e grafico
+Oq fazer:
+  PROPOSITO: papeis invertidos. Perito externo com W_expert = [0.3, 1.5]
+  (x_2 dominante) rotula 150 pontos linearmente separaveis. LLM recebe
+  alguns r\'otulos como few-shot e tenta reproduzir o criterio.
+  COMO FOI GERADO:
+    1. make_blobs
+    2. Centroides: (-1.5, +1.0) e (1.5, -1.0)
+    3. cluster_std = 1.3 (mais espalhados)
+    4. n_samples = 150
+    5. Rotulos APLICADOS via W_expert (predict_with_metric)
+  PARAMETROS:
+    - centers = [(-1.5, 1.0), (1.5, -1.0)]
+    - W_expert = [0.3, 1.5] (x_2 dominante)
+  CODIGO:
+    def create_problem_e_expert(n=150, seed=45):
+        X, y_raw = make_blobs(n_samples=n,
+                              centers=[(-1.5,1.0),(1.5,-1.0)],
+                              cluster_std=1.3, random_state=seed)
+        # Rotulos reaplicados via W_expert
+        y = predict_with_metric(X, EXPERT_CENTROIDS, EXPERT_W)
+        return X, y
+  IMAGEM: bloco2_01_problema_e_expert.png (fronteira quase horizontal,
+  pois w_2 >> w_1).
+  POR QUE: fronteira pouco intuitiva geometricamente; LLM precisa
+  CAPTURAR o padrao via exemplos, nao basta Euclidiana.
+
+Slide 41 — Problema F: meia-lua (perito = ground truth)
+Mostrar: Texto, codigo e grafico
+Oq fazer:
+  PROPOSITO: agora um problema NAO-LINEAR no papel de aprendiz. O "perito"
+  e simplesmente o ground truth do make_moons — duas semi-luas com
+  rotulagem perfeita. LLM tenta capturar a fronteira nao-linear via
+  exemplos few-shot.
+  COMO FOI GERADO:
+    1. sklearn.datasets.make_moons
+    2. n_samples = 150
+    3. noise = 0.15
+    4. Rotulos = y do proprio make_moons (sem reaplicar)
+  CODIGO:
+    def create_problem_f_meialua(n=150, seed=46):
+        X, y = make_moons(n_samples=n, noise=0.15, random_state=seed)
+        return X, y  # ground truth como perito
+  IMAGEM: bloco1_02_problema_d_meialua_seed42_overview.png (reaproveitada)
+  POR QUE: testa H3 em regime n\~ao-linear genuino. Em meia-lua com
+  prompt sem augmenta\c{c}\~ao, o LLM precisa capturar a fronteira em S
+  apenas a partir de exemplos rotulados.
+
+Slide 42 — Problema E no Problema E: descricao
+Mostrar: Texto e grafico
+Oq fazer:
+  1. Perito (W_expert) rotula os 150 pontos.
+  2. Divide em treino/teste.
+  3. Para cada n_shot in [0,5,10,20,40]: seleciona exemplos via estrategia.
+  4. Envia exemplos + ponto de teste em prompt few-shot.
+  5. Mede acuracia, Kappa, F1 do LLM vs rotulos do perito.
+  Imagem: bloco2_01_problema_e_expert.png.
+
+Slide 43 — Problema E: tabela de resultados
+Mostrar: Apenas tabela
+Oq fazer: Tabela consolidada dos resultados da Problema E (LLM aprende
+com perito linear W=[0,3, 1,5], x2 dominante). Acuracia e Kappa do
+LLM vs expert, por estrategia x n_shot, media 3 seeds x 3 reps.
+
+  n_shot |    easy    |   hard     |   mixed    |  random   |
+         | Acc   k    | Acc   k    | Acc   k    | Acc   k   |
+   0     | 60,4% 0,22 | 60,4% 0,22 | 60,4% 0,22 | 60,4% 0,22|
+   5     | 85,6% 0,72 | 61,9% 0,24 | 81,8% 0,64 | 84,7% 0,69|
+  10     | 86,6% 0,73 | 67,2% 0,35 | 79,7% 0,60 | 88,0% 0,76|
+  20     | 90,6% 0,81 | 84,3% 0,68 | 87,0% 0,74 | 92,1% 0,84|
+  40     | 88,8% 0,78 | 97,8% 0,96 | 97,3% 0,95 | 94,0% 0,88|
+
+Leitura: zero-shot ~60% (perto do aleatorio). Few-shot amplifica
+fortemente (H2 sustentada). Refutacao H4 nuancada: em n_shot <= 20
+easy domina hard (+25 p.p.); em n_shot=40 hard ultrapassa (97,8%
+vs 88,8%). Estrategia nao e monotonicamente boa — depende do regime.
+
+Slide 44 — Estrategias de selecao de exemplos
+Mostrar: Texto e grafico
+Oq fazer: 4 estrategias: easy (alta margem), hard (baixa margem), mixed,
+random (baseline). Imagem: bloco2_03_phase_e_strategies.png.
+
+Slide 45 — Problema E: curvas de aprendizado
+Mostrar: Texto e grafico
+Oq fazer: Curvas de acuracia vs n_shot para cada estrategia. LLM melhora
+em todas — H3 SUSTENTADA. Ganho forte 0->5-shot, depois desacelera.
+Imagem: bloco2_04_phase_e_learning_curve.png.
+
+Slide 46 — Refutacao H4: significancia estatistica
+Mostrar: Texto e tabela
+Oq fazer: Bootstrap 10k + Wilcoxon signed-rank pareado:
+  - 5-shot: Delta easy-hard = +0.233, IC95% [+0.119, +0.336] (SIG)
+  - 10-shot: +0.201, IC95% [+0.107, +0.293] (SIG)
+  - 20-shot: +0.072, IC95% [-0.126, +0.210] (n.s.)
+Insight: efeito desaparece em n_shot >= 20 — refutacao especifica do
+regime de poucos exemplos.
+
+Slide 47 — Multiplos experts
+Mostrar: Texto e tabela
+Oq fazer: 3 experts: aniso_x2 [0.3, 1.5], aniso_x1 [1.5, 0.3], euclidean
+[1, 1]. LLM aprende todos, melhor performance no Euclidean (90% em
+5-shot, 95% em 40-shot). H3 sustentada amplamente — LLM tem flexibilidade.
+
+Slide 48 — Experimento de diluicao
+Mostrar: Texto e grafico
+Oq fazer: 4 hard fixos + easy progressivos (0, 2, 4, 10, 16, 20). Curva
+monotonica crescente — adicionar easy ajuda sempre, nao ha diluicao.
+Reforca achado da H4. Imagem: bloco2_06_dilution.png.
+
+Slide 49 — Vies de ordem dos exemplos few-shot: tabela
+Mostrar: Apenas tabela
+Oq fazer: Fixa estrategia mixed e mesmos exemplos; varia apenas
+a ordem em que aparecem no prompt. Testa recency bias.
+
+Ordenacoes:
+  - class0_first: todos da classe 0, depois classe 1
+  - class1_first: classe 1 primeiro, depois classe 0
+  - shuffled: ordem aleatoria
+  - alternating: 0, 1, 0, 1, ...
+
+  | Ordenacao    | n=5 (Acc/k)  | n=10 (Acc/k) | n=20 (Acc/k) |
+  | class0_first | 81,9% / 0,64 | 79,3% / 0,59 | 86,8% / 0,73 |
+  | class1_first | 78,6% / 0,57 | 82,8% / 0,66 | 85,5% / 0,71 |
+  | shuffled     | 82,0% / 0,64 | 87,2% / 0,75 | 85,8% / 0,72 |
+  | alternating  | 82,2% / 0,64 | 84,9% / 0,70 | 86,8% / 0,74 |
+  | amplitude    | 3,6 p.p.     | 7,9 p.p.     | 1,3 p.p.     |
+
+Leitura: amplitude maxima 7,9 p.p. em n=10; colapsa em n=20.
+Recency bias e marginal — criterio robusto a ordem.
+
+Slide 50 — Vies de ordem dos exemplos few-shot: grafico
+Mostrar: Apenas grafico
+Oq fazer: Imagem bloco2_07_example_order.png complementando a tabela
+do slide 49.
+
+Slide 51 — Problema E no Problema F (meia-lua): descricao
+Mostrar: Texto e grafico
+Oq fazer: Espelha Slide 39 com Problema F. Perito = ground truth da
+meia-lua. LLM ve apenas (x_1, x_2) — nao recebe augmentacao R3/R4.
+Pergunta: o LLM in-context consegue aprender a fronteira nao-linear so
+com exemplos rotulados?
+Imagem: bloco1_02_problema_d_meialua_seed42_overview.png.
+
+Slide 52 — Problema E meia-lua: curvas e ganho 0->5-shot
+Mostrar: Texto e grafico
+Oq fazer: Curvas de aprendizado por n_shot in [0, 5, 10, 20, 40] na
+meia-lua. Ganho zero-shot -> 5-shot ~ +20 p.p. de acuracia. H3 sustentada
+FORTEMENTE neste problema nao-linear — LLM capta a forma da fronteira
+a partir de poucos exemplos.
+Imagem: bloco23_external_learning_curve.png (filtro meia-lua).
+
+Slide 53 — Baselines classicos: k-NN, LR, SVM x LLM
+Mostrar: Texto e grafico
+Oq fazer: Protocolo: k-NN (k=min(5,n_shot/2) impar), Logistic Regression
+(L2), SVM (RBF) treinados nos MESMOS exemplos few-shot dados ao LLM e
+avaliados no MESMO conjunto de teste.
+Padrao: n_shot pequeno -> LLM compete/supera; n_shot grande -> SVM/LR
+alcancam ou superam. Easy/random favorece LLM; hard -> LLM e o pior.
+LLM nao e universalmente superior.
+Imagem: bloco2_09_classical_baselines.png.
+
+Slide 54 — LLM vs Perceptron baseline (Bloco 2)
+Mostrar: Texto e grafico
+Oq fazer: Para cada n_shot, treinar Perceptron Estruturado nos mesmos
+exemplos do expert e reportar acuracia em paralelo com LLM in-context.
+Em meia-lua: LLM > Perceptron em n_shot >= 10 (+2.2 a +6.7 p.p.).
+Imagem: bloco23_external_llm_vs_perceptron.png.
+
+Slide 55 — Resumo Bloco 2
+Mostrar: Texto (3-5 bullets)
+Oq fazer: Fechamento do Bloco 2:
+  - H3 SUSTENTADA: LLM aprende criterio de perito (+20 p.p. meia-lua,
+    0->5-shot; +90% acuracia no euclidean expert em 5-shot).
+  - H4 REFUTADA com significancia em n_shot pequeno (Cohen d ~ 1.5);
+    efeito desaparece em n_shot >= 20.
+  - Baselines classicos competitivos em n_shot alto — LLM nao e
+    universalmente superior.
+  - Recency bias e vies de classes sao marginais.
+
+
+===================================================================
+BLOCO 3 — ESTUDO DE CASO REAL: PESO x ALTURA (slides 52-64)
+===================================================================
+Narrativa: aplicar tudo o que foi visto em uma base REAL fornecida
+pelo orientador. Permite testar se achados sinteticos replicam.
+
+Slide 56 — Transicao Bloco 3
+Mostrar: Apenas texto (slide grande)
+Oq fazer: Marcar inicio do Bloco 3:
+  - "Estudo de caso REAL"
+  - Base do orientador (100 amostras, Problema G (peso x altura))
+  - Classificador otimo bayesiano com fronteira eliptica
+
+Slide 57 — Problema G (Problema G (peso x altura)): apresentacao didatica
+Mostrar: Texto, codigo e grafico
+Oq fazer:
+  PROPOSITO: unico problema com dados reais. Base enviada pelo orientador
+  no e-mail 19:15 de 30/04/2026.
+  COMO FOI GERADO:
+    1. CSV em dados_reais/homem_mulher/peso_altura.csv (consolidado dos
+       .txt do NeuroSolutions).
+    2. 100 amostras, 50 H + 50 M.
+    3. Features ja normalizadas em [-1, 1].
+  CODIGO:
+    def create_problem_homem_mulher(csv="dados_reais/homem_mulher/peso_altura.csv"):
+        df = pd.read_csv(csv)
+        X = df[["peso", "altura"]].values
+        y = df["classe"].values
+        return X, y
+  IMAGEM: bloco3_01_peso_altura_overview.png
+
+Slide 58 — Variantes de prompt na base real
+Mostrar: Texto
+Oq fazer: Duas variantes de prompt:
+  - NEUTRA: features = (x_1, x_2)
+  - SEMANTICA: features = (peso, altura)
+Pergunta: homem ou mulher. Testa se LLM ativa priors semanticos do
+treinamento (correlacao peso/altura com genero). Replica em base real
+o experimento de nomes semanticos do slide 31.
+
+Slide 59 — Problema A Problema G (peso x altura): R2 / R3 / R4
+Mostrar: Texto, tabela e grafico
+Oq fazer: Aprende W em 3 configuracoes em Problema G (peso x altura):
+  - R2: (x_1, x_2)
+  - R3: (x_1, x_2, x_1*x_2)
+  - R4: (x_1, x_2, x_1^2, x_2^2)  <- forma da fronteira otima
+Tabela com fidelidade (vs LLM) e acuracia (vs real) por config x prompt
+variante. Imagem: bloco23_external_features_comparison.png.
+
+Slide 60 — Problema A: acuracia vs rotulo REAL (e-mail 22:04)
+Mostrar: Texto e tabela
+Oq fazer: Atende pedido do orientador (e-mail 22:04, ponto 4): apresentar
+acuracia da metrica para a rotulacao da base de dados original.
+  - R2: fid 70%, acc_real 60%, gap 10 p.p.
+  - R3: fid 75%, acc_real 55%, gap 20 p.p.
+  - R4: fid 78%, acc_real 37%, gap 41 p.p. (!)
+Imagem: bloco23_external_decision_boundary.png.
+
+Slide 61 — Paradoxo do overfitting (fidelidade sobe, acuracia cai)
+Mostrar: Texto e tabela
+Oq fazer: Em Problema G (peso x altura), ao passar de 2 para 4 features:
+  - Fidelidade Perceptron sobe +22.9% (metrica decora melhor o LLM).
+  - Acuracia vs real cai -1.4% a -22.9% (LLM em si erra muito).
+Diagnostico: 4 pesos para 70 amostras de treino = graus de liberdade
+suficientes para decorar o ruido das decisoes ERRADAS do LLM. Overfitting
+classico. Mensagem: subir n_feat so vale com nao-linearidade real E
+dados suficientes.
+
+Slide 62 — Problema E Problema G (peso x altura): descricao
+Mostrar: Texto e grafico
+Oq fazer: Identificada a melhor configuracao de features, usa-la como
+ROTULADORA da Problema E. Exemplos do prompt incluem o mesmo n_feat. Reporta
+acuracia, Kappa, F1 do LLM ao longo de n_shot in [0, 5, 10, 20, 40].
+
+Slide 63 — Problema E: curvas por variante de prompt
+Mostrar: Texto e grafico
+Oq fazer: Curvas de aprendizado separadas por variante (x_1/x_2 vs
+peso/altura), com 2 paineis: LLM_vs_metric e LLM_vs_real.
+Imagem: bloco23_external_learning_curve.png (filtro Problema G (peso x altura)).
+
+Slide 64 — LLM vs Perceptron baseline na base real
+Mostrar: Texto, tabela e grafico
+Oq fazer: Atende pedido do orientador (reuniao ~2110s). Para cada n_shot,
+treinar Perceptron Estruturado nos mesmos exemplos do expert. Achado:
+em Problema G (peso x altura) com n_shot=5, Perceptron supera LLM em ~7 p.p. (90.0%
+vs 83.3%). Quando ha dados rotulados, metrica classica e competitiva.
+Imagem: bloco23_external_llm_vs_perceptron.png (filtro Problema G (peso x altura)).
+
+Slide 65 — Quando o LLM ganha?
+Mostrar: Texto e tabela
+Oq fazer: Sintese:
+  - peso/altura | LLM > Perceptron em TODOS n_shots (+2.2 a +11.1 p.p.)
+  - x_1/x_2     | LLM perde em n_shot=10 e 20 (-3 a -7 p.p.)
+  - meia-lua    | LLM > Perceptron em n_shot >= 10 (+2.2 a +6.7 p.p.)
+Interpretacao: LLM ganha quando ha PRIORS SEMANTICOS E n_shot pequeno.
+Perceptron ganha quando features sao neutras E n_shot medio. Vantagem
+do LLM vem dos priors do treinamento massivo, nao do ICL per se.
+
+Slide 66 — Visualizacao ponto-a-ponto (e-mail 22:06)
+Mostrar: 2 graficos
+Oq fazer: Atende adendo do e-mail 22:06. Scatter por (problema, variante
+prompt, n_shot). Mostrar lado a lado: Problema G (peso x altura) prompt SEMANTICO vs
+NEUTRO, ambos em 5-shot da seed 42. Mesmos pontos classificados de forma
+muito diferente — evidencia visual mais direta do efeito do prior semantico.
+Imagens (2): final_08_llm_labels_seed42_peso_altura_5.png + final_08_llm_labels_seed42_x1_x2_5.png.
+
+Slide 67 — Resumo Bloco 3
+Mostrar: Texto (3-5 bullets)
+Oq fazer: Fechamento do Bloco 3:
+  - Priors semanticos sao reais: prompt peso/altura > x_1/x_2 em consistencia.
+  - R4 (elipse) recupera a forma teorica, mas overfitt-a com 100 amostras.
+  - Achado prático: subir n_feat so com dados; senao, manter R2.
+  - LLM ganha contra Perceptron em Problema G (peso x altura) (prior semantico), mas
+    perde em meia-lua e em prompt neutro x_1/x_2 com n_shot medio.
+
+
+===================================================================
+FECHAMENTO (slides 68-75)
+===================================================================
+
+Slide 68 — Sintese cruzada dos 3 blocos
+Mostrar: Tabela
+Oq fazer: Tabela com ganhos R2 -> R4 em todos os cenarios (3 blocos):
+  - A/B/C lineares       | ~0 p.p.  | esperado SEM ganho
+  - Meia-lua sintetica   | +9.5 p.p.| esperado COM ganho
+  - Problema G (Problema G (peso x altura)) (real) | -1 a -23 p.p. | contraintuitivo (overfit)
+Heatmap visual e tabela final. CSV: final_cross_linearity.csv.
+
+Slide 69 — Robustez entre seeds
+Mostrar: Texto e grafico
+Oq fazer: Media +/- desvio entre 3 seeds:
+  - Fidelidade Problema A: 83.1% +/- 1.2 p.p.
+  - Consistencia Problema B: 78.5% +/- 2.3 p.p.
+  - Consistencia Problema C: 74.2% +/- 3.1 p.p.
+Imagem: bloco1_08_seed_comparison.png.
+
+Slide 70 — Testes estatisticos principais
+Mostrar: Texto e tabela
+Oq fazer: Bootstrap 95% CI (10k reamostras), Wilcoxon pareado, Cohen's d:
+  - Few-shot vs zero-shot (Problema E): Delta=+0.18, IC[+0.12,+0.24], d=1.2
+  - Easy vs Hard (5-shot): Delta=+0.23, IC[+0.12,+0.34], d=1.5
+  - Cosseno W Perc x NNLS: 0.98
+  - R2 vs R4 (meia-lua, acc_real): Delta=+0.10, IC[+0.05,+0.15], d=0.9
+Wilcoxon p < 0.001 em todos principais.
+
+Slide 71 — Testes estatisticos complementares
+Mostrar: Texto e tabela
+Oq fazer: 3 testes nao-parametricos:
+  (i) Point-biserial r=0.42 (confianca LLM x acerto), p<0.001
+  (ii) Mann-Whitney U=8420 (margem em acertos vs erros), p<0.001
+  (iii) Kruskal-Wallis H=2.1 (ordem exemplos x acuracia), p=0.55 n.s.
+
+Slide 72 — Sintese das hipoteses (por bloco)
+Mostrar: Tabela
+Oq fazer: Veredito por bloco:
+  Bloco 1 (LLM fonte):    H1 SUSTENTADA, H2 SUSTENTADA.
+  Bloco 2 (LLM aprendiz): H3 SUSTENTADA, H4 REFUTADA com sig.
+  Transversal:            H5 SUSTENTADA (sigma_seed < 3 p.p.).
+
+Slide 73 — Conclusoes principais
+Mostrar: Apenas texto (numerado)
+Oq fazer: 5 conclusoes:
+  1. Criterio decisorio estavel recuperavel via otim inversa (H1).
+  2. Few-shot amplifica concordancia (H2).
+  3. LLM aprende criterio de perito via ICL (H3); baselines competitivos
+     com mais dados.
+  4. Exemplos easy > hard em few-shot pequeno; efeito some em n_shot>=20.
+  5. R3/R4 so ajuda em nao-linearidade real E com dados suficientes.
+
+Slide 74 — Limitacoes
+Mostrar: Apenas texto
+Oq fazer: M\'etrica diagonal nao captura intera\c{c}oes lineares entre
+features. Estudo 2D apenas. n_amostras=100 em Problema G (peso x altura) (pouco para
+4 features). 1 LLM apenas (gpt-4o-mini). Sem controle de versao do LLM
+entre execucoes.
+
+Slide 75 — Agradecimentos
+Mostrar: Apenas texto
+Oq fazer: Slide de encerramento — orientador, PPGCC UFJF, familia.
+
+Slide 76 — A1: Perceptron Estruturado, derivacao CILAMCE 2017
+Mostrar: Formulas e pseudocodigo
+Oq fazer: Formulacao primal (Eq 28), regra de correcao (Eq 29),
+atualizacao da margem (Eq 31). Hiperparametros: eta=0.001, C in [0.1,1.0].
+Conexao com Rosenblatt (gamma=0, lambda=0 -> classico).
+
+Slide 77 — A2: NNLS, Lawson-Hanson
+Mostrar: Formula e algoritmo
+Oq fazer: min ||Aw-b||^2 s.t. w>=0. Construcao de A_ij e b. Lawson-Hanson
+(1974), conjunto ativo. Solucao unica em problemas bem-condicionados.
+
+Slide 78 — A3: Equivalencia empirica Perceptron x NNLS
+Mostrar: Texto e tabela
+Oq fazer: Cosseno entre W's > 0.97. Razao w_1/w_2 divergencia < 5%.
+Perceptron e NNLS empiricamente equivalentes em problemas convexos.
+
+Slide 79 — B1: Overfitting com poucos dados
+Mostrar: Texto e tabela
+Oq fazer: Caso emblematico Problema G (peso x altura), prompt x_1/x_2, 4 features:
+fidelidade 78%, acuracia 37% (pior que chute!). Mitigacao: L1/L2, mais
+dados, CV k-fold, selecao automatica de features.
+
+Slide 80 — C1: XAI e otimizacao inversa
+Mostrar: Apenas texto
+Oq fazer: Ahuja & Orlin 2001 (otim inv em PL); Schultz & Joachims 2003
+(SVM-style metric learning); Coelho et al CILAMCE 2017. Diferenciacao:
+aplicacao a LLMs (novo), black-box, independente de arquitetura.
+
+Slide 81 — C2: In-context learning e few-shot
+Mostrar: Apenas texto
+Oq fazer: Brown et al 2020 (GPT-3); Min et al 2022 (ground truth doesn't
+matter); Wei et al 2022 (emergent abilities); Lyu et al 2023 (prompts
+canonicos — alinhado com nossa refutacao H4).
+
+Slide 82 — C3: Metric learning Mahalanobis
+Mostrar: Apenas texto
+Oq fazer: Xing et al 2002 (original); Davis et al 2007 (ITML); Schultz
+& Joachims 2003 (SVM-style margin). Diagonal: Liu et al 2010, Kedem et
+al 2012.
+
+Slide 83 — D1: Pipeline reproducao + diagnostico gamma
+Mostrar: Texto e comando + 1 grafico
+Oq fazer: `python src/dissertacao_mestrado.py`. Controlado por ~20
+constantes (RANDOM_SEEDS, N_REPETICOES, FEW_SHOT_SIZES, MAX_CONCURRENCY,
+flags). Tempo ~3h, custo $30-50, outputs: 30+ PNGs (bloco1_*, bloco2_*,
+bloco3_*, bloco23_*, final_*), 11 CSVs, 1 JSON com todas as interacoes.
+Mostrar grafico final_10_gamma_convergence.png como diagnostico do item
+b da reuniao 30/04 (~520s).
+
+Slide 84 — D2: Limitacoes de reproducibilidade
+Mostrar: Apenas texto
+Oq fazer: LLM evolui silenciosamente; temperatura=0 nao garante
+determinismo (batching GPU); 3 seeds x 3 reps = 9 observacoes. Variacao
+residual tipica < 2% entre reps da mesma seed.

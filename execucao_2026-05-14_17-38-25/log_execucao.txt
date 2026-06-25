@@ -1,0 +1,3879 @@
+
+======================================================================
+ EXPERIMENTO: CONSISTÊNCIA DECISIONAL DE LLMs VIA OTIMIZAÇÃO INVERSA (v5.0)
+======================================================================
+
+  Organizado em 3 BLOCOS auto-contidos:
+    BLOCO 1 — LLM como FONTE (otim. inversa em A/B/C lineares + D meia-lua)
+    BLOCO 2 — LLM como APRENDIZ (Fase E no perito linear E + meia-lua F)
+    BLOCO 3 — Estudo de caso REAL (peso × altura, elipse)
+  Pasta de execução: execucao_2026-05-14_17-38-25/
+  Data/hora: 14/05/2026 17:38:25
+
+    ═══════════════════════════════════════════════════
+    MODELS TO TEST (1):
+    - openai/gpt-4o-mini (temp=0.0)
+    ═══════════════════════════════════════════════════
+
+    FLAGS ATIVAS: Fases A-C, Fase E, Viés de Ordem, Nomes de Features, Diluição, Não-linearidade Implícita (R3), Múltiplos Experts, Comparação Algoritmos, Validação Oráculo, Viés Ordem Exemplos, Variantes de Prompt, Baselines Clássicos, Peso×Altura (real, elipse), Meia-lua (não-linear sintético)
+
+    PHASES A-C:
+      Few-shot sizes: [0, 5]
+      Class name variations: 4
+      Repetitions: 1
+      Seeds: [42]
+
+    PHASE D:
+      Few-shot sizes: [0, 5]
+      Example strategies: ['easy', 'hard', 'mixed', 'random']
+      Expert configs: ['aniso_x2', 'aniso_x1', 'euclidean']
+      Problem D samples: 150
+    ═══════════════════════════════════════════════════
+    
+
+══════════════════════════════════════════════════════════════════════
+ BLOCO 1 — LLM como FONTE | MODEL 1/1: openai/gpt-4o-mini (temp=0.0) | SEED 1/1: 42
+══════════════════════════════════════════════════════════════════════
+
+
+[PASSO 1] Gerando conjuntos de dados sintéticos com semente aleatória 42...
+  Dados gerados: A=150, B=100, C=100, D=150
+  Dados salvos em: execucao_2026-05-14_17-38-25/dados_sinteticos_seed42/
+
+[PASSO 2] Gerando visualizações iniciais...
+  Imagem salva: 01_all_three_problems.png
+  Imagem salva: 06_problem_d_expert.png
+  Imagem salva: bloco2_03_phase_e_strategies.png
+
+[PASSO 3] Iniciando Fases A-C...
+  Modelo: openai/gpt-4o-mini | Seeds: 42 | Few-shot: [0, 5]
+
+>>> Fases A-C: Experimento Principal
+  [ABC] n_shot=0, rep=1/1, seed=42
+
+──────────────────────────────────────────────────────────────────────
+ EXPERIMENT: Phase B/C=zero-shot | Classes: A/B | Rep: 1 | Seed: 42
+──────────────────────────────────────────────────────────────────────
+
+
+  [Iniciando Fase A: Estimando a Métrica W a partir das decisões do LLM...]
+
+  ══════════════════════════════════════════════════════════════
+  FASE A: ESTIMANDO A MÉTRICA W DO PROBLEMA A (ZERO-SHOT)
+  ══════════════════════════════════════════════════════════════
+  Objetivo: capturar o processo decisório INTRÍNSECO do LLM.
+  O LLM classifica pontos sem exemplos (zero-shot), e a métrica
+  Ŵ_LLM é inferida a partir dessas decisões via otimização inversa.
+
+  Passo 1: Coletando decisões do LLM no Problema A (zero-shot)...
+    Classes usadas: 'A' e 'B'
+    Pontos de treino: 150
+  [Problema A] Coletando decisões do LLM (zero-shot) — 150 pontos [async, concurrency=10]...
+    [ 10/150] 1.4s | ETA: 20s
+    [ 20/150] 2.1s | ETA: 13s
+    [ 30/150] 2.6s | ETA: 10s
+    [ 40/150] 3.1s | ETA: 9s
+    [ 50/150] 3.7s | ETA: 7s
+    [ 60/150] 4.3s | ETA: 7s
+    [ 70/150] 5.0s | ETA: 6s
+    [ 80/150] 5.5s | ETA: 5s
+    [ 90/150] 6.4s | ETA: 4s
+    [100/150] 7.0s | ETA: 3s
+    [110/150] 7.5s | ETA: 3s
+    [120/150] 8.0s | ETA: 2s
+    [130/150] 8.7s | ETA: 1s
+    [140/150] 9.2s | ETA: <1s
+    [150/150] 10.5s | ETA: <1s
+    ✓ Concluído em 10.5s — Classe A: 116 (77.3%) | Classe B: 34 (22.7%)
+
+  Passo 2: Calculando centróides a partir das decisões do LLM...
+    Centróide da Classe 0: (0.667, 0.245)
+    Centróide da Classe 1: (-2.456, -0.715)
+
+  Passo 3a: Estimando a métrica W via Perceptron Estruturado com Relaxação de Margem...
+    (Busca binária no gamma ótimo para maximizar a margem da fronteira de decisão)
+    [iter 1] γ=0.100000 (γ_lo=0.000000, γ_hi=∞)
+    [iter 2] γ=0.050000 (γ_lo=0.000000, γ_hi=0.100000)
+    [iter 3] γ=0.025000 (γ_lo=0.000000, γ_hi=0.050000)
+    [iter 4] γ=0.012500 (γ_lo=0.000000, γ_hi=0.025000)
+    [iter 5] γ=0.006250 (γ_lo=0.000000, γ_hi=0.012500)
+    [iter 6] γ=0.003125 (γ_lo=0.000000, γ_hi=0.006250)
+      Convergiu na época 46
+    [iter 7] γ=0.053125 (γ_lo=0.003125, γ_hi=0.006250)
+      Convergiu na época 1
+    [iter 8] γ=0.103125 (γ_lo=0.053125, γ_hi=0.006250)
+      Convergiu na época 1
+    [iter 9] γ=0.153125 (γ_lo=0.103125, γ_hi=0.006250)
+      Convergiu na época 1
+    [iter 10] γ=0.203125 (γ_lo=0.153125, γ_hi=0.006250)
+    [iter 11] γ=0.178125 (γ_lo=0.153125, γ_hi=0.203125)
+      Convergiu na época 1
+    [iter 12] γ=0.228125 (γ_lo=0.178125, γ_hi=0.203125)
+    [iter 13] γ=0.203125 (γ_lo=0.178125, γ_hi=0.228125)
+      Convergiu na época 4
+    [iter 14] γ=0.253125 (γ_lo=0.203125, γ_hi=0.228125)
+      Convergiu na época 1
+    [iter 15] γ=0.303125 (γ_lo=0.253125, γ_hi=0.228125)
+      Convergiu na época 1
+    [iter 16] γ=0.353125 (γ_lo=0.303125, γ_hi=0.228125)
+      Convergiu na época 1
+    [iter 17] γ=0.403125 (γ_lo=0.353125, γ_hi=0.228125)
+      Convergiu na época 1
+    [iter 18] γ=0.453125 (γ_lo=0.403125, γ_hi=0.228125)
+      Convergiu na época 1
+    [iter 19] γ=0.503125 (γ_lo=0.453125, γ_hi=0.228125)
+      Convergiu na época 1
+    [iter 20] γ=0.553125 (γ_lo=0.503125, γ_hi=0.228125)
+      Convergiu na época 1
+    [iter 21] γ=0.603125 (γ_lo=0.553125, γ_hi=0.228125)
+      Convergiu na época 1
+    [iter 22] γ=0.653125 (γ_lo=0.603125, γ_hi=0.228125)
+    [iter 23] γ=0.628125 (γ_lo=0.603125, γ_hi=0.653125)
+    [iter 24] γ=0.615625 (γ_lo=0.603125, γ_hi=0.628125)
+    [iter 25] γ=0.609375 (γ_lo=0.603125, γ_hi=0.615625)
+      Convergiu na época 1
+    [iter 26] γ=0.659375 (γ_lo=0.609375, γ_hi=0.615625)
+    [iter 27] γ=0.634375 (γ_lo=0.609375, γ_hi=0.659375)
+    [iter 28] γ=0.621875 (γ_lo=0.609375, γ_hi=0.634375)
+    [iter 29] γ=0.615625 (γ_lo=0.609375, γ_hi=0.621875)
+    [iter 30] γ=0.612500 (γ_lo=0.609375, γ_hi=0.615625)
+    [iter 31] γ=0.610938 (γ_lo=0.609375, γ_hi=0.612500)
+    [iter 32] γ=0.610156 (γ_lo=0.609375, γ_hi=0.610938)
+      Convergiu na época 1
+    [iter 33] γ=0.660156 (γ_lo=0.610156, γ_hi=0.610938)
+    [iter 34] γ=0.635156 (γ_lo=0.610156, γ_hi=0.660156)
+    [iter 35] γ=0.622656 (γ_lo=0.610156, γ_hi=0.635156)
+    [iter 36] γ=0.616406 (γ_lo=0.610156, γ_hi=0.622656)
+    [iter 37] γ=0.613281 (γ_lo=0.610156, γ_hi=0.616406)
+    [iter 38] γ=0.611719 (γ_lo=0.610156, γ_hi=0.613281)
+    [iter 39] γ=0.610937 (γ_lo=0.610156, γ_hi=0.611719)
+    [iter 40] γ=0.610547 (γ_lo=0.610156, γ_hi=0.610937)
+    [iter 41] γ=0.610352 (γ_lo=0.610156, γ_hi=0.610547)
+    [iter 42] γ=0.610254 (γ_lo=0.610156, γ_hi=0.610352)
+    >>> [Perceptron] Ŵ_LLM estimado (bruto): [0.0009, 0.0030]
+    >>> [Perceptron] Ŵ_LLM estimado (unitário): [0.2925, 0.9563]
+    >>> [Perceptron] Razão w1/w2: 0.3059  ← determina a geometria da fronteira
+    >>> [Perceptron] Gamma ótimo encontrado: 0.6102
+
+  Passo 3b: Estimando a métrica W via Mínimos Quadrados (NNLS)...
+    (Validação cruzada: se ambos convergem para W similar, resultado é robusto ao método)
+    [Mínimos Quadrados] W encontrado: [0.0358, 0.1425]
+    Resíduo: 8.8249
+    >>> [NNLS] Ŵ_LLM estimado (bruto): [0.0358, 0.1425]
+    >>> [NNLS] Ŵ_LLM estimado (normalizado): [0.201, 0.799]
+    >>> [NNLS] Razão w1/w2: 0.2514
+    >>> Similaridade cosseno (Perceptron vs NNLS): 0.9987
+
+  Passo 4: Verificando fidelidade das métricas estimadas...
+    [Perceptron] Fidelidade (métrica vs. LLM no Problema A): 82.0%
+    [NNLS]       Fidelidade (métrica vs. LLM no Problema A): 82.7%
+    Acurácia do LLM vs. ground truth: 30.0%
+    ⚠ Fidelidade baixa em ambos — a métrica pode não representar bem o LLM.
+
+  ══════════════════════════════════════════════════════════════
+  FASE B (Problema B): TESTE DE CONSISTÊNCIA
+  ══════════════════════════════════════════════════════════════
+  Aplicando a métrica W estimada no Problema A a este novo problema.
+  Objetivo: verificar se o LLM concorda com a métrica em dados não vistos.
+
+  Coletando decisões do LLM para 100 pontos de teste...
+  [FASE B (Problema B)] Coletando decisões do LLM (zero-shot) — 100 pontos [async, concurrency=10]...
+    [ 10/100] 1.4s | ETA: 12s
+    [ 20/100] 2.1s | ETA: 8s
+    [ 30/100] 2.8s | ETA: 6s
+    [ 40/100] 3.4s | ETA: 5s
+    [ 50/100] 4.0s | ETA: 4s
+    [ 60/100] 4.6s | ETA: 3s
+    [ 70/100] 5.5s | ETA: 2s
+    [ 80/100] 6.1s | ETA: 2s
+    [ 90/100] 6.8s | ETA: <1s
+    [100/100] 7.9s | ETA: <1s
+    ✓ Concluído em 7.9s — Classe A: 76 (76.0%) | Classe B: 24 (24.0%)
+    Predições da métrica (W_A + centróides locais): Classe 0=60, Classe 1=40
+    [Ablativo] Consistência com centróides LOCAIS:       70.0%
+    [Ablativo] Consistência com centróides TRANSFERIDOS: 84.0%
+    → ⚠ Centróides transferidos superiores (-14.0%) — investigar.
+
+  RESULTADOS: FASE B (Problema B)
+    CONSISTÊNCIA (LLM vs. Métrica W_A + centróides locais): 70.0%
+    Kappa de Cohen: 0.330
+    F1-Score: 0.700
+    Concordâncias: 70 | Discordâncias: 30
+    Consistência da linha de base Euclidiana: 74.0%
+    Conjunto de teste: 100 pontos (excluídos 0 exemplos few-shot)
+    O LLM mantém consistência PARCIAL com a métrica (W_A + centróides locais).
+
+  ══════════════════════════════════════════════════════════════
+  FASE C (Problema C): TESTE DE CONSISTÊNCIA
+  ══════════════════════════════════════════════════════════════
+  Aplicando a métrica W estimada no Problema A a este novo problema.
+  Objetivo: verificar se o LLM concorda com a métrica em dados não vistos.
+
+  Coletando decisões do LLM para 100 pontos de teste...
+  [FASE C (Problema C)] Coletando decisões do LLM (zero-shot) — 100 pontos [async, concurrency=10]...
+    [ 10/100] 1.3s | ETA: 11s
+    [ 20/100] 2.1s | ETA: 9s
+    [ 30/100] 2.7s | ETA: 6s
+    [ 40/100] 3.5s | ETA: 5s
+    [ 50/100] 4.1s | ETA: 4s
+    [ 60/100] 4.8s | ETA: 3s
+    [ 70/100] 5.4s | ETA: 2s
+    [ 80/100] 6.0s | ETA: 2s
+    [ 90/100] 6.7s | ETA: <1s
+    [100/100] 7.6s | ETA: <1s
+    ✓ Concluído em 7.6s — Classe A: 67 (67.0%) | Classe B: 33 (33.0%)
+    Predições da métrica (W_A + centróides locais): Classe 0=56, Classe 1=44
+    [Ablativo] Consistência com centróides LOCAIS:       89.0%
+    [Ablativo] Consistência com centróides TRANSFERIDOS: 86.0%
+    → Diferença marginal (+3.0%) — ambas abordagens comparáveis.
+
+  RESULTADOS: FASE C (Problema C)
+    CONSISTÊNCIA (LLM vs. Métrica W_A + centróides locais): 89.0%
+    Kappa de Cohen: 0.771
+    F1-Score: 0.890
+    Concordâncias: 89 | Discordâncias: 11
+    Consistência da linha de base Euclidiana: 86.0%
+    Conjunto de teste: 100 pontos (excluídos 0 exemplos few-shot)
+    O LLM MANTÉM consistência elevada com a métrica (W_A + centróides locais).
+
+  --- Comparação Perceptron vs NNLS (Fases B/C) ---
+    [Perceptron] Consistência B: 70.0% | Kappa B: 0.330
+    [NNLS]       Consistência B: 68.0% | Kappa B: 0.286
+    [Perceptron] Consistência C: 89.0% | Kappa C: 0.771
+    [NNLS]       Consistência C: 91.0% | Kappa C: 0.810
+  [ABC] n_shot=5, rep=1/1, seed=42
+  ✓ Experimento principal concluído (2 n_shots × 1 reps)
+
+>>> Fases A-C: Variações de nomes de classe (10-shot)
+  [ABC-Nomes] classes=(0,1), rep=1/1, seed=42
+
+──────────────────────────────────────────────────────────────────────
+ EXPERIMENT: Phase B/C=10-shot | Classes: 0/1 | Rep: 1 | Seed: 42
+──────────────────────────────────────────────────────────────────────
+
+
+  [Iniciando Fase A: Estimando a Métrica W a partir das decisões do LLM...]
+
+  ══════════════════════════════════════════════════════════════
+  FASE A: ESTIMANDO A MÉTRICA W DO PROBLEMA A (ZERO-SHOT)
+  ══════════════════════════════════════════════════════════════
+  Objetivo: capturar o processo decisório INTRÍNSECO do LLM.
+  O LLM classifica pontos sem exemplos (zero-shot), e a métrica
+  Ŵ_LLM é inferida a partir dessas decisões via otimização inversa.
+
+  Passo 1: Coletando decisões do LLM no Problema A (zero-shot)...
+    Classes usadas: '0' e '1'
+    Pontos de treino: 150
+  [Problema A] Coletando decisões do LLM (zero-shot) — 150 pontos [async, concurrency=10]...
+    [ 10/150] 1.5s | ETA: 21s
+    [ 20/150] 2.1s | ETA: 14s
+    [ 30/150] 2.6s | ETA: 10s
+    [ 40/150] 3.2s | ETA: 9s
+    [ 50/150] 3.8s | ETA: 8s
+    [ 60/150] 4.5s | ETA: 7s
+    [ 70/150] 5.3s | ETA: 6s
+    [ 80/150] 6.1s | ETA: 5s
+    [ 90/150] 7.0s | ETA: 5s
+    [100/150] 7.6s | ETA: 4s
+    [110/150] 8.3s | ETA: 3s
+    [120/150] 9.0s | ETA: 2s
+    [130/150] 9.6s | ETA: 1s
+    [140/150] 10.5s | ETA: <1s
+    [150/150] 12.9s | ETA: <1s
+    ✓ Concluído em 12.9s — Classe 0: 8 (5.3%) | Classe 1: 142 (94.7%)
+
+  Passo 2: Calculando centróides a partir das decisões do LLM...
+    Centróide da Classe 0: (-1.773, -0.696)
+    Centróide da Classe 1: (0.057, 0.068)
+
+  Passo 3a: Estimando a métrica W via Perceptron Estruturado com Relaxação de Margem...
+    (Busca binária no gamma ótimo para maximizar a margem da fronteira de decisão)
+    [iter 1] γ=0.100000 (γ_lo=0.000000, γ_hi=∞)
+    [iter 2] γ=0.050000 (γ_lo=0.000000, γ_hi=0.100000)
+      Convergiu na época 22
+    [iter 3] γ=0.100000 (γ_lo=0.050000, γ_hi=0.100000)
+      Convergiu na época 1
+    >>> [Perceptron] Ŵ_LLM estimado (bruto): [0.0001, 0.0004]
+    >>> [Perceptron] Ŵ_LLM estimado (unitário): [0.2420, 0.9703]
+    >>> [Perceptron] Razão w1/w2: 0.2494  ← determina a geometria da fronteira
+    >>> [Perceptron] Gamma ótimo encontrado: 0.1000
+
+  Passo 3b: Estimando a métrica W via Mínimos Quadrados (NNLS)...
+    (Validação cruzada: se ambos convergem para W similar, resultado é robusto ao método)
+    [Mínimos Quadrados] W encontrado: [0.0350, 0.1416]
+    Resíduo: 10.9569
+    >>> [NNLS] Ŵ_LLM estimado (bruto): [0.0350, 0.1416]
+    >>> [NNLS] Ŵ_LLM estimado (normalizado): [0.198, 0.802]
+    >>> [NNLS] Razão w1/w2: 0.2469
+    >>> Similaridade cosseno (Perceptron vs NNLS): 1.0000
+
+  Passo 4: Verificando fidelidade das métricas estimadas...
+    [Perceptron] Fidelidade (métrica vs. LLM no Problema A): 66.0%
+    [NNLS]       Fidelidade (métrica vs. LLM no Problema A): 66.0%
+    Acurácia do LLM vs. ground truth: 54.0%
+    ⚠ Fidelidade baixa em ambos — a métrica pode não representar bem o LLM.
+
+  ══════════════════════════════════════════════════════════════
+  FASE B (Problema B): TESTE DE CONSISTÊNCIA
+  ══════════════════════════════════════════════════════════════
+  Aplicando a métrica W estimada no Problema A a este novo problema.
+  Objetivo: verificar se o LLM concorda com a métrica em dados não vistos.
+
+  Selecionando 10 exemplos few-shot (Aprendizado Ativo, rotulados pela métrica)...
+      Classe 0: 5 pontos selecionados, faixa de margem [0.001, 0.002]
+      Classe 1: 5 pontos selecionados, faixa de margem [0.002, 0.003]
+
+  Coletando decisões do LLM para 90 pontos de teste...
+  [FASE B (Problema B)] Coletando decisões do LLM (10-shot) — 90 pontos [async, concurrency=10]...
+    [10/90] 1.8s | ETA: 14s
+    [20/90] 2.4s | ETA: 8s
+    [30/90] 2.9s | ETA: 6s
+    [40/90] 3.6s | ETA: 5s
+    [50/90] 4.3s | ETA: 3s
+    [60/90] 4.8s | ETA: 2s
+    [70/90] 5.7s | ETA: 2s
+    [80/90] 6.4s | ETA: <1s
+    [90/90] 7.8s | ETA: <1s
+    ✓ Concluído em 7.8s — Classe 0: 56 (62.2%) | Classe 1: 34 (37.8%)
+    Predições da métrica (W_A + centróides locais): Classe 0=46, Classe 1=44
+    [Ablativo] Consistência com centróides LOCAIS:       84.4%
+    [Ablativo] Consistência com centróides TRANSFERIDOS: 56.7%
+    → Centróides locais melhoram em 27.8% — recálculo justificado.
+    [k-NN] k=5, treino=10 pontos
+    k-NN (k=5): acc_expert=97.8%, kappa=0.956, f1=0.978, acc_gt=4.4%
+    [Logistic Regression] treino=10 pontos, coefs=[0.29099248 1.08080356]
+    Logistic Regression: acc_expert=78.9%, kappa=0.580, f1=0.786, acc_gt=21.1%
+    [SVM (RBF)] treino=10 pontos, support_vectors=[3 3]
+    SVM (RBF): acc_expert=80.0%, kappa=0.603, f1=0.793, acc_gt=20.0%
+
+  BASELINES CLÁSSICOS (FASE B (Problema B), 10-shot):
+    Classificador             Cons. vs Métrica    Kappa
+    ───────────────────────── ──────────────── ────────
+    k-NN (k=5)                          97.8%    0.956
+    Logistic Regression                 78.9%    0.580
+    SVM (RBF)                           80.0%    0.603
+    LLM                                 84.4%    0.687
+
+  RESULTADOS: FASE B (Problema B)
+    CONSISTÊNCIA (LLM vs. Métrica W_A + centróides locais): 84.4%
+    Kappa de Cohen: 0.687
+    F1-Score: 0.844
+    Concordâncias: 76 | Discordâncias: 14
+    Consistência da linha de base Euclidiana: 81.1%
+    Conjunto de teste: 90 pontos (excluídos 10 exemplos few-shot)
+    O LLM mantém consistência PARCIAL com a métrica (W_A + centróides locais).
+
+  ══════════════════════════════════════════════════════════════
+  FASE C (Problema C): TESTE DE CONSISTÊNCIA
+  ══════════════════════════════════════════════════════════════
+  Aplicando a métrica W estimada no Problema A a este novo problema.
+  Objetivo: verificar se o LLM concorda com a métrica em dados não vistos.
+
+  Selecionando 10 exemplos few-shot (Aprendizado Ativo, rotulados pela métrica)...
+      Classe 0: 5 pontos selecionados, faixa de margem [0.003, 0.004]
+      Classe 1: 5 pontos selecionados, faixa de margem [0.004, 0.004]
+
+  Coletando decisões do LLM para 90 pontos de teste...
+  [FASE C (Problema C)] Coletando decisões do LLM (10-shot) — 90 pontos [async, concurrency=10]...
+    [10/90] 1.4s | ETA: 11s
+    [20/90] 2.2s | ETA: 8s
+    [30/90] 2.8s | ETA: 6s
+    [40/90] 3.5s | ETA: 4s
+    [50/90] 4.0s | ETA: 3s
+    [60/90] 4.6s | ETA: 2s
+    [70/90] 5.3s | ETA: 2s
+    [80/90] 6.2s | ETA: <1s
+    [90/90] 13.0s | ETA: <1s
+    ✓ Concluído em 13.0s — Classe 0: 80 (88.9%) | Classe 1: 10 (11.1%)
+    Predições da métrica (W_A + centróides locais): Classe 0=54, Classe 1=36
+    [Ablativo] Consistência com centróides LOCAIS:       71.1%
+    [Ablativo] Consistência com centróides TRANSFERIDOS: 57.8%
+    → Centróides locais melhoram em 13.3% — recálculo justificado.
+    [k-NN] k=5, treino=10 pontos
+    k-NN (k=5): acc_expert=88.9%, kappa=0.779, f1=0.890, acc_gt=98.9%
+    [Logistic Regression] treino=10 pontos, coefs=[0.54561861 0.65305268]
+    Logistic Regression: acc_expert=88.9%, kappa=0.779, f1=0.890, acc_gt=98.9%
+    [SVM (RBF)] treino=10 pontos, support_vectors=[2 2]
+    SVM (RBF): acc_expert=87.8%, kappa=0.758, f1=0.879, acc_gt=97.8%
+
+  BASELINES CLÁSSICOS (FASE C (Problema C), 10-shot):
+    Classificador             Cons. vs Métrica    Kappa
+    ───────────────────────── ──────────────── ────────
+    k-NN (k=5)                          88.9%    0.779
+    Logistic Regression                 88.9%    0.779
+    SVM (RBF)                           87.8%    0.758
+    LLM                                 71.1%    0.316
+
+  RESULTADOS: FASE C (Problema C)
+    CONSISTÊNCIA (LLM vs. Métrica W_A + centróides locais): 71.1%
+    Kappa de Cohen: 0.316
+    F1-Score: 0.711
+    Concordâncias: 64 | Discordâncias: 26
+    Consistência da linha de base Euclidiana: 70.0%
+    Conjunto de teste: 90 pontos (excluídos 10 exemplos few-shot)
+    O LLM mantém consistência PARCIAL com a métrica (W_A + centróides locais).
+
+  --- Comparação Perceptron vs NNLS (Fases B/C) ---
+    [Perceptron] Consistência B: 84.4% | Kappa B: 0.687
+    [NNLS]       Consistência B: 84.4% | Kappa B: 0.687
+    [Perceptron] Consistência C: 71.1% | Kappa C: 0.316
+    [NNLS]       Consistência C: 71.1% | Kappa C: 0.316
+  [ABC-Nomes] classes=(Positivo,Negativo), rep=1/1, seed=42
+
+──────────────────────────────────────────────────────────────────────
+ EXPERIMENT: Phase B/C=10-shot | Classes: Positivo/Negativo | Rep: 1 | Seed: 42
+──────────────────────────────────────────────────────────────────────
+
+
+  [Iniciando Fase A: Estimando a Métrica W a partir das decisões do LLM...]
+
+  ══════════════════════════════════════════════════════════════
+  FASE A: ESTIMANDO A MÉTRICA W DO PROBLEMA A (ZERO-SHOT)
+  ══════════════════════════════════════════════════════════════
+  Objetivo: capturar o processo decisório INTRÍNSECO do LLM.
+  O LLM classifica pontos sem exemplos (zero-shot), e a métrica
+  Ŵ_LLM é inferida a partir dessas decisões via otimização inversa.
+
+  Passo 1: Coletando decisões do LLM no Problema A (zero-shot)...
+    Classes usadas: 'Positivo' e 'Negativo'
+    Pontos de treino: 150
+  [Problema A] Coletando decisões do LLM (zero-shot) — 150 pontos [async, concurrency=10]...
+    [ 10/150] 1.1s | ETA: 16s
+    [ 20/150] 1.7s | ETA: 11s
+    [ 30/150] 2.4s | ETA: 10s
+    [ 40/150] 3.0s | ETA: 8s
+    [ 50/150] 3.7s | ETA: 7s
+    [ 60/150] 4.4s | ETA: 7s
+    [ 70/150] 5.0s | ETA: 6s
+    [ 80/150] 5.6s | ETA: 5s
+    [ 90/150] 6.3s | ETA: 4s
+    [100/150] 6.7s | ETA: 3s
+    [110/150] 7.8s | ETA: 3s
+    [120/150] 8.5s | ETA: 2s
+    [130/150] 9.0s | ETA: 1s
+    [140/150] 9.7s | ETA: <1s
+    [150/150] 10.7s | ETA: <1s
+    ✓ Concluído em 10.7s — Classe Positivo: 78 (52.0%) | Classe Negativo: 72 (48.0%)
+
+  Passo 2: Calculando centróides a partir das decisões do LLM...
+    Centróide da Classe 0: (1.905, 0.325)
+    Centróide da Classe 1: (-2.149, -0.295)
+
+  Passo 3a: Estimando a métrica W via Perceptron Estruturado com Relaxação de Margem...
+    (Busca binária no gamma ótimo para maximizar a margem da fronteira de decisão)
+    [iter 1] γ=0.100000 (γ_lo=0.000000, γ_hi=∞)
+    [iter 2] γ=0.050000 (γ_lo=0.000000, γ_hi=0.100000)
+    [iter 3] γ=0.025000 (γ_lo=0.000000, γ_hi=0.050000)
+    [iter 4] γ=0.012500 (γ_lo=0.000000, γ_hi=0.025000)
+    [iter 5] γ=0.006250 (γ_lo=0.000000, γ_hi=0.012500)
+    [iter 6] γ=0.003125 (γ_lo=0.000000, γ_hi=0.006250)
+    [iter 7] γ=0.001563 (γ_lo=0.000000, γ_hi=0.003125)
+    [iter 8] γ=0.000781 (γ_lo=0.000000, γ_hi=0.001563)
+      Convergiu na época 49
+    [iter 9] γ=0.050781 (γ_lo=0.000781, γ_hi=0.001563)
+    [iter 10] γ=0.025781 (γ_lo=0.000781, γ_hi=0.050781)
+      Convergiu na época 39
+    [iter 11] γ=0.075781 (γ_lo=0.025781, γ_hi=0.050781)
+    [iter 12] γ=0.050781 (γ_lo=0.025781, γ_hi=0.075781)
+      Convergiu na época 48
+    [iter 13] γ=0.100781 (γ_lo=0.050781, γ_hi=0.075781)
+    [iter 14] γ=0.075781 (γ_lo=0.050781, γ_hi=0.100781)
+    [iter 15] γ=0.063281 (γ_lo=0.050781, γ_hi=0.075781)
+      Convergiu na época 33
+    [iter 16] γ=0.113281 (γ_lo=0.063281, γ_hi=0.075781)
+    [iter 17] γ=0.088281 (γ_lo=0.063281, γ_hi=0.113281)
+      Convergiu na época 42
+    [iter 18] γ=0.138281 (γ_lo=0.088281, γ_hi=0.113281)
+    [iter 19] γ=0.113281 (γ_lo=0.088281, γ_hi=0.138281)
+      Convergiu na época 31
+    [iter 20] γ=0.163281 (γ_lo=0.113281, γ_hi=0.138281)
+    [iter 21] γ=0.138281 (γ_lo=0.113281, γ_hi=0.163281)
+    [iter 22] γ=0.125781 (γ_lo=0.113281, γ_hi=0.138281)
+      Convergiu na época 30
+    [iter 23] γ=0.175781 (γ_lo=0.125781, γ_hi=0.138281)
+    [iter 24] γ=0.150781 (γ_lo=0.125781, γ_hi=0.175781)
+      Convergiu na época 48
+    [iter 25] γ=0.200781 (γ_lo=0.150781, γ_hi=0.175781)
+    [iter 26] γ=0.175781 (γ_lo=0.150781, γ_hi=0.200781)
+      Convergiu na época 46
+    [iter 27] γ=0.225781 (γ_lo=0.175781, γ_hi=0.200781)
+    [iter 28] γ=0.200781 (γ_lo=0.175781, γ_hi=0.225781)
+      Convergiu na época 43
+    [iter 29] γ=0.250781 (γ_lo=0.200781, γ_hi=0.225781)
+    [iter 30] γ=0.225781 (γ_lo=0.200781, γ_hi=0.250781)
+      Convergiu na época 50
+    [iter 31] γ=0.275781 (γ_lo=0.225781, γ_hi=0.250781)
+    [iter 32] γ=0.250781 (γ_lo=0.225781, γ_hi=0.275781)
+      Convergiu na época 45
+    [iter 33] γ=0.300781 (γ_lo=0.250781, γ_hi=0.275781)
+    [iter 34] γ=0.275781 (γ_lo=0.250781, γ_hi=0.300781)
+      Convergiu na época 37
+    [iter 35] γ=0.325781 (γ_lo=0.275781, γ_hi=0.300781)
+    [iter 36] γ=0.300781 (γ_lo=0.275781, γ_hi=0.325781)
+      Convergiu na época 46
+    [iter 37] γ=0.350781 (γ_lo=0.300781, γ_hi=0.325781)
+    [iter 38] γ=0.325781 (γ_lo=0.300781, γ_hi=0.350781)
+    [iter 39] γ=0.313281 (γ_lo=0.300781, γ_hi=0.325781)
+      Convergiu na época 22
+    [iter 40] γ=0.363281 (γ_lo=0.313281, γ_hi=0.325781)
+    [iter 41] γ=0.338281 (γ_lo=0.313281, γ_hi=0.363281)
+      Convergiu na época 46
+    [iter 42] γ=0.388281 (γ_lo=0.338281, γ_hi=0.363281)
+    [iter 43] γ=0.363281 (γ_lo=0.338281, γ_hi=0.388281)
+    [iter 44] γ=0.350781 (γ_lo=0.338281, γ_hi=0.363281)
+      Convergiu na época 20
+    [iter 45] γ=0.400781 (γ_lo=0.350781, γ_hi=0.363281)
+    [iter 46] γ=0.375781 (γ_lo=0.350781, γ_hi=0.400781)
+    [iter 47] γ=0.363281 (γ_lo=0.350781, γ_hi=0.375781)
+      Convergiu na época 28
+    [iter 48] γ=0.413281 (γ_lo=0.363281, γ_hi=0.375781)
+    [iter 49] γ=0.388281 (γ_lo=0.363281, γ_hi=0.413281)
+    [iter 50] γ=0.375781 (γ_lo=0.363281, γ_hi=0.388281)
+      Convergiu na época 32
+    >>> [Perceptron] Ŵ_LLM estimado (bruto): [0.1551, 0.9488]
+    >>> [Perceptron] Ŵ_LLM estimado (unitário): [0.1613, 0.9869]
+    >>> [Perceptron] Razão w1/w2: 0.1634  ← determina a geometria da fronteira
+    >>> [Perceptron] Gamma ótimo encontrado: 0.3758
+
+  Passo 3b: Estimando a métrica W via Mínimos Quadrados (NNLS)...
+    (Validação cruzada: se ambos convergem para W similar, resultado é robusto ao método)
+    [Mínimos Quadrados] W encontrado: [0.0422, 0.1584]
+    Resíduo: 6.0762
+    >>> [NNLS] Ŵ_LLM estimado (bruto): [0.0422, 0.1584]
+    >>> [NNLS] Ŵ_LLM estimado (normalizado): [0.210, 0.790]
+    >>> [NNLS] Razão w1/w2: 0.2660
+    >>> Similaridade cosseno (Perceptron vs NNLS): 0.9952
+
+  Passo 4: Verificando fidelidade das métricas estimadas...
+    [Perceptron] Fidelidade (métrica vs. LLM no Problema A): 99.3%
+    [NNLS]       Fidelidade (métrica vs. LLM no Problema A): 96.0%
+    Acurácia do LLM vs. ground truth: 10.0%
+    Ambas as métricas estimadas reproduzem bem as decisões do LLM.
+
+  ══════════════════════════════════════════════════════════════
+  FASE B (Problema B): TESTE DE CONSISTÊNCIA
+  ══════════════════════════════════════════════════════════════
+  Aplicando a métrica W estimada no Problema A a este novo problema.
+  Objetivo: verificar se o LLM concorda com a métrica em dados não vistos.
+
+  Selecionando 10 exemplos few-shot (Aprendizado Ativo, rotulados pela métrica)...
+      Classe 0: 5 pontos selecionados, faixa de margem [3.833, 6.966]
+      Classe 1: 5 pontos selecionados, faixa de margem [3.451, 5.438]
+
+  Coletando decisões do LLM para 90 pontos de teste...
+  [FASE B (Problema B)] Coletando decisões do LLM (10-shot) — 90 pontos [async, concurrency=10]...
+    [10/90] 1.2s | ETA: 10s
+    [20/90] 1.8s | ETA: 6s
+    [30/90] 2.6s | ETA: 5s
+    [40/90] 3.1s | ETA: 4s
+    [50/90] 3.8s | ETA: 3s
+    [60/90] 4.5s | ETA: 2s
+    [70/90] 5.3s | ETA: 2s
+    [80/90] 6.0s | ETA: <1s
+    [90/90] 11.7s | ETA: <1s
+    ✓ Concluído em 11.7s — Classe Positivo: 52 (57.8%) | Classe Negativo: 38 (42.2%)
+    Predições da métrica (W_A + centróides locais): Classe 0=48, Classe 1=42
+    [Ablativo] Consistência com centróides LOCAIS:       57.8%
+    [Ablativo] Consistência com centróides TRANSFERIDOS: 76.7%
+    → ⚠ Centróides transferidos superiores (-18.9%) — investigar.
+    [k-NN] k=5, treino=10 pontos
+    k-NN (k=5): acc_expert=14.4%, kappa=-0.711, f1=0.145, acc_gt=7.8%
+    [Logistic Regression] treino=10 pontos, coefs=[-0.93412101 -0.67589086]
+    Logistic Regression: acc_expert=31.1%, kappa=-0.384, f1=0.311, acc_gt=24.4%
+    [SVM (RBF)] treino=10 pontos, support_vectors=[3 3]
+    SVM (RBF): acc_expert=32.2%, kappa=-0.364, f1=0.322, acc_gt=25.6%
+
+  BASELINES CLÁSSICOS (FASE B (Problema B), 10-shot):
+    Classificador             Cons. vs Métrica    Kappa
+    ───────────────────────── ──────────────── ────────
+    k-NN (k=5)                          14.4%   -0.711
+    Logistic Regression                 31.1%   -0.384
+    SVM (RBF)                           32.2%   -0.364
+    LLM                                 57.8%    0.147
+
+  RESULTADOS: FASE B (Problema B)
+    CONSISTÊNCIA (LLM vs. Métrica W_A + centróides locais): 57.8%
+    Kappa de Cohen: 0.147
+    F1-Score: 0.578
+    Concordâncias: 52 | Discordâncias: 38
+    Consistência da linha de base Euclidiana: 65.6%
+    Conjunto de teste: 90 pontos (excluídos 10 exemplos few-shot)
+    ⚠ O LLM NÃO mantém consistência com a métrica (W_A + centróides locais).
+
+  ══════════════════════════════════════════════════════════════
+  FASE C (Problema C): TESTE DE CONSISTÊNCIA
+  ══════════════════════════════════════════════════════════════
+  Aplicando a métrica W estimada no Problema A a este novo problema.
+  Objetivo: verificar se o LLM concorda com a métrica em dados não vistos.
+
+  Selecionando 10 exemplos few-shot (Aprendizado Ativo, rotulados pela métrica)...
+      Classe 0: 5 pontos selecionados, faixa de margem [6.997, 8.705]
+      Classe 1: 5 pontos selecionados, faixa de margem [7.658, 9.258]
+
+  Coletando decisões do LLM para 90 pontos de teste...
+  [FASE C (Problema C)] Coletando decisões do LLM (10-shot) — 90 pontos [async, concurrency=10]...
+    [10/90] 1.2s | ETA: 10s
+    [20/90] 2.0s | ETA: 7s
+    [30/90] 2.7s | ETA: 5s
+    [40/90] 3.5s | ETA: 4s
+    [50/90] 4.0s | ETA: 3s
+    [60/90] 4.7s | ETA: 2s
+    [70/90] 5.6s | ETA: 2s
+    [80/90] 6.2s | ETA: <1s
+    [90/90] 11.4s | ETA: <1s
+    ✓ Concluído em 11.4s — Classe Positivo: 40 (44.4%) | Classe Negativo: 50 (55.6%)
+    Predições da métrica (W_A + centróides locais): Classe 0=44, Classe 1=46
+    [Ablativo] Consistência com centróides LOCAIS:       95.6%
+    [Ablativo] Consistência com centróides TRANSFERIDOS: 91.1%
+    → Diferença marginal (+4.4%) — ambas abordagens comparáveis.
+    [k-NN] k=5, treino=10 pontos
+    k-NN (k=5): acc_expert=95.6%, kappa=0.911, f1=0.956, acc_gt=1.1%
+    [Logistic Regression] treino=10 pontos, coefs=[-0.54561861 -0.65305268]
+    Logistic Regression: acc_expert=95.6%, kappa=0.911, f1=0.956, acc_gt=1.1%
+    [SVM (RBF)] treino=10 pontos, support_vectors=[2 2]
+    SVM (RBF): acc_expert=96.7%, kappa=0.933, f1=0.967, acc_gt=2.2%
+
+  BASELINES CLÁSSICOS (FASE C (Problema C), 10-shot):
+    Classificador             Cons. vs Métrica    Kappa
+    ───────────────────────── ──────────────── ────────
+    k-NN (k=5)                          95.6%    0.911
+    Logistic Regression                 95.6%    0.911
+    SVM (RBF)                           96.7%    0.933
+    LLM                                 95.6%    0.911
+
+  RESULTADOS: FASE C (Problema C)
+    CONSISTÊNCIA (LLM vs. Métrica W_A + centróides locais): 95.6%
+    Kappa de Cohen: 0.911
+    F1-Score: 0.956
+    Concordâncias: 86 | Discordâncias: 4
+    Consistência da linha de base Euclidiana: 90.0%
+    Conjunto de teste: 90 pontos (excluídos 10 exemplos few-shot)
+    O LLM MANTÉM consistência elevada com a métrica (W_A + centróides locais).
+
+  --- Comparação Perceptron vs NNLS (Fases B/C) ---
+    [Perceptron] Consistência B: 57.8% | Kappa B: 0.147
+    [NNLS]       Consistência B: 57.8% | Kappa B: 0.147
+    [Perceptron] Consistência C: 95.6% | Kappa C: 0.911
+    [NNLS]       Consistência C: 94.4% | Kappa C: 0.888
+  [ABC-Nomes] classes=(Azul,Vermelho), rep=1/1, seed=42
+
+──────────────────────────────────────────────────────────────────────
+ EXPERIMENT: Phase B/C=10-shot | Classes: Azul/Vermelho | Rep: 1 | Seed: 42
+──────────────────────────────────────────────────────────────────────
+
+
+  [Iniciando Fase A: Estimando a Métrica W a partir das decisões do LLM...]
+
+  ══════════════════════════════════════════════════════════════
+  FASE A: ESTIMANDO A MÉTRICA W DO PROBLEMA A (ZERO-SHOT)
+  ══════════════════════════════════════════════════════════════
+  Objetivo: capturar o processo decisório INTRÍNSECO do LLM.
+  O LLM classifica pontos sem exemplos (zero-shot), e a métrica
+  Ŵ_LLM é inferida a partir dessas decisões via otimização inversa.
+
+  Passo 1: Coletando decisões do LLM no Problema A (zero-shot)...
+    Classes usadas: 'Azul' e 'Vermelho'
+    Pontos de treino: 150
+  [Problema A] Coletando decisões do LLM (zero-shot) — 150 pontos [async, concurrency=10]...
+    [ 10/150] 1.2s | ETA: 17s
+    [ 20/150] 1.9s | ETA: 13s
+    [ 30/150] 2.5s | ETA: 10s
+    [ 40/150] 3.2s | ETA: 9s
+    [ 50/150] 3.8s | ETA: 8s
+    [ 60/150] 4.5s | ETA: 7s
+    [ 70/150] 5.1s | ETA: 6s
+    [ 80/150] 5.7s | ETA: 5s
+    [ 90/150] 6.6s | ETA: 4s
+    [100/150] 7.3s | ETA: 4s
+    [110/150] 8.0s | ETA: 3s
+    [120/150] 8.7s | ETA: 2s
+    [130/150] 9.5s | ETA: 1s
+    [140/150] 10.1s | ETA: <1s
+    [150/150] 11.9s | ETA: <1s
+    ✓ Concluído em 11.9s — Classe Azul: 104 (69.3%) | Classe Vermelho: 46 (30.7%)
+
+  Passo 2: Calculando centróides a partir das decisões do LLM...
+    Centróide da Classe 0: (0.947, 0.249)
+    Centróide da Classe 1: (-2.274, -0.473)
+
+  Passo 3a: Estimando a métrica W via Perceptron Estruturado com Relaxação de Margem...
+    (Busca binária no gamma ótimo para maximizar a margem da fronteira de decisão)
+    [iter 1] γ=0.100000 (γ_lo=0.000000, γ_hi=∞)
+    [iter 2] γ=0.050000 (γ_lo=0.000000, γ_hi=0.100000)
+    [iter 3] γ=0.025000 (γ_lo=0.000000, γ_hi=0.050000)
+    [iter 4] γ=0.012500 (γ_lo=0.000000, γ_hi=0.025000)
+      Convergiu na época 50
+    [iter 5] γ=0.062500 (γ_lo=0.012500, γ_hi=0.025000)
+      Convergiu na época 1
+    [iter 6] γ=0.112500 (γ_lo=0.062500, γ_hi=0.025000)
+    [iter 7] γ=0.087500 (γ_lo=0.062500, γ_hi=0.112500)
+      Convergiu na época 3
+    [iter 8] γ=0.137500 (γ_lo=0.087500, γ_hi=0.112500)
+      Convergiu na época 1
+    [iter 9] γ=0.187500 (γ_lo=0.137500, γ_hi=0.112500)
+      Convergiu na época 1
+    [iter 10] γ=0.237500 (γ_lo=0.187500, γ_hi=0.112500)
+      Convergiu na época 1
+    [iter 11] γ=0.287500 (γ_lo=0.237500, γ_hi=0.112500)
+      Convergiu na época 1
+    [iter 12] γ=0.337500 (γ_lo=0.287500, γ_hi=0.112500)
+    [iter 13] γ=0.312500 (γ_lo=0.287500, γ_hi=0.337500)
+      Convergiu na época 1
+    [iter 14] γ=0.362500 (γ_lo=0.312500, γ_hi=0.337500)
+    [iter 15] γ=0.337500 (γ_lo=0.312500, γ_hi=0.362500)
+    [iter 16] γ=0.325000 (γ_lo=0.312500, γ_hi=0.337500)
+      Convergiu na época 2
+    [iter 17] γ=0.375000 (γ_lo=0.325000, γ_hi=0.337500)
+      Convergiu na época 1
+    [iter 18] γ=0.425000 (γ_lo=0.375000, γ_hi=0.337500)
+    [iter 19] γ=0.400000 (γ_lo=0.375000, γ_hi=0.425000)
+      Convergiu na época 1
+    [iter 20] γ=0.450000 (γ_lo=0.400000, γ_hi=0.425000)
+    [iter 21] γ=0.425000 (γ_lo=0.400000, γ_hi=0.450000)
+    [iter 22] γ=0.412500 (γ_lo=0.400000, γ_hi=0.425000)
+      Convergiu na época 1
+    [iter 23] γ=0.462500 (γ_lo=0.412500, γ_hi=0.425000)
+    [iter 24] γ=0.437500 (γ_lo=0.412500, γ_hi=0.462500)
+    [iter 25] γ=0.425000 (γ_lo=0.412500, γ_hi=0.437500)
+    [iter 26] γ=0.418750 (γ_lo=0.412500, γ_hi=0.425000)
+    [iter 27] γ=0.415625 (γ_lo=0.412500, γ_hi=0.418750)
+    [iter 28] γ=0.414062 (γ_lo=0.412500, γ_hi=0.415625)
+      Convergiu na época 1
+    [iter 29] γ=0.464062 (γ_lo=0.414062, γ_hi=0.415625)
+      Convergiu na época 3
+    [iter 30] γ=0.514062 (γ_lo=0.464062, γ_hi=0.415625)
+      Convergiu na época 1
+    [iter 31] γ=0.564063 (γ_lo=0.514062, γ_hi=0.415625)
+    [iter 32] γ=0.539062 (γ_lo=0.514062, γ_hi=0.564063)
+    [iter 33] γ=0.526563 (γ_lo=0.514062, γ_hi=0.539062)
+      Convergiu na época 1
+    [iter 34] γ=0.576563 (γ_lo=0.526563, γ_hi=0.539062)
+    [iter 35] γ=0.551563 (γ_lo=0.526563, γ_hi=0.576563)
+    [iter 36] γ=0.539062 (γ_lo=0.526563, γ_hi=0.551563)
+    [iter 37] γ=0.532813 (γ_lo=0.526563, γ_hi=0.539062)
+      Convergiu na época 1
+    [iter 38] γ=0.582813 (γ_lo=0.532813, γ_hi=0.539062)
+    [iter 39] γ=0.557813 (γ_lo=0.532813, γ_hi=0.582813)
+    [iter 40] γ=0.545313 (γ_lo=0.532813, γ_hi=0.557813)
+    [iter 41] γ=0.539062 (γ_lo=0.532813, γ_hi=0.545313)
+    [iter 42] γ=0.535937 (γ_lo=0.532813, γ_hi=0.539062)
+      Convergiu na época 1
+    [iter 43] γ=0.585938 (γ_lo=0.535937, γ_hi=0.539062)
+    [iter 44] γ=0.560937 (γ_lo=0.535937, γ_hi=0.585938)
+    [iter 45] γ=0.548437 (γ_lo=0.535937, γ_hi=0.560937)
+    [iter 46] γ=0.542187 (γ_lo=0.535937, γ_hi=0.548437)
+    [iter 47] γ=0.539062 (γ_lo=0.535937, γ_hi=0.542187)
+    [iter 48] γ=0.537500 (γ_lo=0.535937, γ_hi=0.539062)
+    [iter 49] γ=0.536719 (γ_lo=0.535937, γ_hi=0.537500)
+      Convergiu na época 1
+    [iter 50] γ=0.586719 (γ_lo=0.536719, γ_hi=0.537500)
+    >>> [Perceptron] Ŵ_LLM estimado (bruto): [0.0003, 0.0029]
+    >>> [Perceptron] Ŵ_LLM estimado (unitário): [0.1047, 0.9945]
+    >>> [Perceptron] Razão w1/w2: 0.1053  ← determina a geometria da fronteira
+    >>> [Perceptron] Gamma ótimo encontrado: 0.5367
+
+  Passo 3b: Estimando a métrica W via Mínimos Quadrados (NNLS)...
+    (Validação cruzada: se ambos convergem para W similar, resultado é robusto ao método)
+    [Mínimos Quadrados] W encontrado: [0.0390, 0.1517]
+    Resíduo: 8.8024
+    >>> [NNLS] Ŵ_LLM estimado (bruto): [0.0390, 0.1517]
+    >>> [NNLS] Ŵ_LLM estimado (normalizado): [0.204, 0.796]
+    >>> [NNLS] Razão w1/w2: 0.2570
+    >>> Similaridade cosseno (Perceptron vs NNLS): 0.9893
+
+  Passo 4: Verificando fidelidade das métricas estimadas...
+    [Perceptron] Fidelidade (métrica vs. LLM no Problema A): 82.0%
+    [NNLS]       Fidelidade (métrica vs. LLM no Problema A): 84.0%
+    Acurácia do LLM vs. ground truth: 23.3%
+    ⚠ Fidelidade baixa em ambos — a métrica pode não representar bem o LLM.
+
+  ══════════════════════════════════════════════════════════════
+  FASE B (Problema B): TESTE DE CONSISTÊNCIA
+  ══════════════════════════════════════════════════════════════
+  Aplicando a métrica W estimada no Problema A a este novo problema.
+  Objetivo: verificar se o LLM concorda com a métrica em dados não vistos.
+
+  Selecionando 10 exemplos few-shot (Aprendizado Ativo, rotulados pela métrica)...
+      Classe 0: 5 pontos selecionados, faixa de margem [0.012, 0.018]
+      Classe 1: 5 pontos selecionados, faixa de margem [0.009, 0.014]
+
+  Coletando decisões do LLM para 90 pontos de teste...
+  [FASE B (Problema B)] Coletando decisões do LLM (10-shot) — 90 pontos [async, concurrency=10]...
+    [10/90] 1.0s | ETA: 8s
+    [20/90] 1.6s | ETA: 6s
+    [30/90] 2.2s | ETA: 4s
+    [40/90] 2.9s | ETA: 4s
+    [50/90] 3.8s | ETA: 3s
+    [60/90] 4.5s | ETA: 2s
+    [70/90] 5.4s | ETA: 2s
+    [80/90] 6.0s | ETA: <1s
+    [90/90] 6.4s | ETA: <1s
+    ✓ Concluído em 6.4s — Classe Azul: 67 (74.4%) | Classe Vermelho: 23 (25.6%)
+    Predições da métrica (W_A + centróides locais): Classe 0=56, Classe 1=34
+    [Ablativo] Consistência com centróides LOCAIS:       87.8%
+    [Ablativo] Consistência com centróides TRANSFERIDOS: 84.4%
+    → Diferença marginal (+3.3%) — ambas abordagens comparáveis.
+    [k-NN] k=5, treino=10 pontos
+    k-NN (k=5): acc_expert=86.7%, kappa=0.735, f1=0.869, acc_gt=97.8%
+    [Logistic Regression] treino=10 pontos, coefs=[-0.28008858 -1.06755585]
+    Logistic Regression: acc_expert=91.1%, kappa=0.813, f1=0.912, acc_gt=80.0%
+    [SVM (RBF)] treino=10 pontos, support_vectors=[3 3]
+    SVM (RBF): acc_expert=91.1%, kappa=0.804, f1=0.909, acc_gt=80.0%
+
+  BASELINES CLÁSSICOS (FASE B (Problema B), 10-shot):
+    Classificador             Cons. vs Métrica    Kappa
+    ───────────────────────── ──────────────── ────────
+    k-NN (k=5)                          86.7%    0.735
+    Logistic Regression                 91.1%    0.813
+    SVM (RBF)                           91.1%    0.804
+    LLM                                 87.8%    0.722
+
+  RESULTADOS: FASE B (Problema B)
+    CONSISTÊNCIA (LLM vs. Métrica W_A + centróides locais): 87.8%
+    Kappa de Cohen: 0.722
+    F1-Score: 0.878
+    Concordâncias: 79 | Discordâncias: 11
+    Consistência da linha de base Euclidiana: 77.8%
+    Conjunto de teste: 90 pontos (excluídos 10 exemplos few-shot)
+    O LLM MANTÉM consistência elevada com a métrica (W_A + centróides locais).
+
+  ══════════════════════════════════════════════════════════════
+  FASE C (Problema C): TESTE DE CONSISTÊNCIA
+  ══════════════════════════════════════════════════════════════
+  Aplicando a métrica W estimada no Problema A a este novo problema.
+  Objetivo: verificar se o LLM concorda com a métrica em dados não vistos.
+
+  Selecionando 10 exemplos few-shot (Aprendizado Ativo, rotulados pela métrica)...
+      Classe 0: 5 pontos selecionados, faixa de margem [0.019, 0.025]
+      Classe 1: 5 pontos selecionados, faixa de margem [0.017, 0.025]
+
+  Coletando decisões do LLM para 90 pontos de teste...
+  [FASE C (Problema C)] Coletando decisões do LLM (10-shot) — 90 pontos [async, concurrency=10]...
+    [10/90] 1.4s | ETA: 11s
+    [20/90] 2.7s | ETA: 9s
+    [30/90] 3.4s | ETA: 7s
+    [40/90] 4.1s | ETA: 5s
+    [50/90] 5.0s | ETA: 4s
+    [60/90] 5.7s | ETA: 3s
+    [70/90] 6.4s | ETA: 2s
+    [80/90] 7.4s | ETA: <1s
+    [90/90] 8.4s | ETA: <1s
+    ✓ Concluído em 8.4s — Classe Azul: 33 (36.7%) | Classe Vermelho: 57 (63.3%)
+    Predições da métrica (W_A + centróides locais): Classe 0=40, Classe 1=50
+    [Ablativo] Consistência com centróides LOCAIS:       87.8%
+    [Ablativo] Consistência com centróides TRANSFERIDOS: 84.4%
+    → Diferença marginal (+3.3%) — ambas abordagens comparáveis.
+    [k-NN] k=5, treino=10 pontos
+    k-NN (k=5): acc_expert=93.3%, kappa=0.867, f1=0.934, acc_gt=1.1%
+    [Logistic Regression] treino=10 pontos, coefs=[-0.51760706 -0.68639204]
+    Logistic Regression: acc_expert=93.3%, kappa=0.867, f1=0.934, acc_gt=1.1%
+    [SVM (RBF)] treino=10 pontos, support_vectors=[2 2]
+    SVM (RBF): acc_expert=92.2%, kappa=0.845, f1=0.922, acc_gt=2.2%
+
+  BASELINES CLÁSSICOS (FASE C (Problema C), 10-shot):
+    Classificador             Cons. vs Métrica    Kappa
+    ───────────────────────── ──────────────── ────────
+    k-NN (k=5)                          93.3%    0.867
+    Logistic Regression                 93.3%    0.867
+    SVM (RBF)                           92.2%    0.845
+    LLM                                 87.8%    0.748
+
+  RESULTADOS: FASE C (Problema C)
+    CONSISTÊNCIA (LLM vs. Métrica W_A + centróides locais): 87.8%
+    Kappa de Cohen: 0.748
+    F1-Score: 0.878
+    Concordâncias: 79 | Discordâncias: 11
+    Consistência da linha de base Euclidiana: 81.1%
+    Conjunto de teste: 90 pontos (excluídos 10 exemplos few-shot)
+    O LLM MANTÉM consistência elevada com a métrica (W_A + centróides locais).
+
+  --- Comparação Perceptron vs NNLS (Fases B/C) ---
+    [Perceptron] Consistência B: 87.8% | Kappa B: 0.722
+    [NNLS]       Consistência B: 83.3% | Kappa B: 0.639
+    [Perceptron] Consistência C: 87.8% | Kappa C: 0.748
+    [NNLS]       Consistência C: 85.6% | Kappa C: 0.706
+  ✓ Variações de nomes de classe concluídas
+
+>>> Fases A-C: Teste de inversão de ordem das classes
+  [ABC-Inversão] classes=(B,A), rep=1/1, seed=42
+
+──────────────────────────────────────────────────────────────────────
+ EXPERIMENT: Phase B/C=10-shot | Classes: B/A | Rep: 1 | Seed: 42
+──────────────────────────────────────────────────────────────────────
+
+
+  [Iniciando Fase A: Estimando a Métrica W a partir das decisões do LLM...]
+
+  ══════════════════════════════════════════════════════════════
+  FASE A: ESTIMANDO A MÉTRICA W DO PROBLEMA A (ZERO-SHOT)
+  ══════════════════════════════════════════════════════════════
+  Objetivo: capturar o processo decisório INTRÍNSECO do LLM.
+  O LLM classifica pontos sem exemplos (zero-shot), e a métrica
+  Ŵ_LLM é inferida a partir dessas decisões via otimização inversa.
+
+  Passo 1: Coletando decisões do LLM no Problema A (zero-shot)...
+    Classes usadas: 'B' e 'A'
+    Pontos de treino: 150
+  [Problema A] Coletando decisões do LLM (zero-shot) — 150 pontos [async, concurrency=10]...
+    [ 10/150] 1.5s | ETA: 21s
+    [ 20/150] 2.0s | ETA: 13s
+    [ 30/150] 2.7s | ETA: 11s
+    [ 40/150] 3.2s | ETA: 9s
+    [ 50/150] 3.8s | ETA: 8s
+    [ 60/150] 4.5s | ETA: 7s
+    [ 70/150] 5.4s | ETA: 6s
+    [ 80/150] 6.0s | ETA: 5s
+    [ 90/150] 6.8s | ETA: 5s
+    [100/150] 7.5s | ETA: 4s
+    [110/150] 8.3s | ETA: 3s
+    [120/150] 9.0s | ETA: 2s
+    [130/150] 9.8s | ETA: 2s
+    [140/150] 10.4s | ETA: <1s
+    [150/150] 15.2s | ETA: <1s
+    ✓ Concluído em 15.2s — Classe B: 47 (31.3%) | Classe A: 103 (68.7%)
+
+  Passo 2: Calculando centróides a partir das decisões do LLM...
+    Centróide da Classe 0: (0.871, -0.492)
+    Centróide da Classe 1: (-0.457, 0.265)
+
+  Passo 3a: Estimando a métrica W via Perceptron Estruturado com Relaxação de Margem...
+    (Busca binária no gamma ótimo para maximizar a margem da fronteira de decisão)
+    [iter 1] γ=0.100000 (γ_lo=0.000000, γ_hi=∞)
+    [iter 2] γ=0.050000 (γ_lo=0.000000, γ_hi=0.100000)
+      Convergiu na época 23
+    [iter 3] γ=0.100000 (γ_lo=0.050000, γ_hi=0.100000)
+      Convergiu na época 1
+    >>> [Perceptron] Ŵ_LLM estimado (bruto): [0.0007, 0.0027]
+    >>> [Perceptron] Ŵ_LLM estimado (unitário): [0.2415, 0.9704]
+    >>> [Perceptron] Razão w1/w2: 0.2489  ← determina a geometria da fronteira
+    >>> [Perceptron] Gamma ótimo encontrado: 0.1000
+
+  Passo 3b: Estimando a métrica W via Mínimos Quadrados (NNLS)...
+    (Validação cruzada: se ambos convergem para W similar, resultado é robusto ao método)
+    [Mínimos Quadrados] W encontrado: [0.0428, 0.1738]
+    Resíduo: 11.1229
+    >>> [NNLS] Ŵ_LLM estimado (bruto): [0.0428, 0.1738]
+    >>> [NNLS] Ŵ_LLM estimado (normalizado): [0.198, 0.802]
+    >>> [NNLS] Razão w1/w2: 0.2464
+    >>> Similaridade cosseno (Perceptron vs NNLS): 1.0000
+
+  Passo 4: Verificando fidelidade das métricas estimadas...
+    [Perceptron] Fidelidade (métrica vs. LLM no Problema A): 64.0%
+    [NNLS]       Fidelidade (métrica vs. LLM no Problema A): 64.0%
+    Acurácia do LLM vs. ground truth: 41.3%
+    ⚠ Fidelidade baixa em ambos — a métrica pode não representar bem o LLM.
+
+  ══════════════════════════════════════════════════════════════
+  FASE B (Problema B): TESTE DE CONSISTÊNCIA
+  ══════════════════════════════════════════════════════════════
+  Aplicando a métrica W estimada no Problema A a este novo problema.
+  Objetivo: verificar se o LLM concorda com a métrica em dados não vistos.
+
+  Selecionando 10 exemplos few-shot (Aprendizado Ativo, rotulados pela métrica)...
+      Classe 0: 5 pontos selecionados, faixa de margem [0.016, 0.021]
+      Classe 1: 5 pontos selecionados, faixa de margem [0.020, 0.022]
+
+  Coletando decisões do LLM para 90 pontos de teste...
+  [FASE B (Problema B)] Coletando decisões do LLM (10-shot) — 90 pontos [async, concurrency=10]...
+    [10/90] 1.4s | ETA: 11s
+    [20/90] 2.2s | ETA: 8s
+    [30/90] 2.8s | ETA: 6s
+    [40/90] 3.5s | ETA: 4s
+    [50/90] 4.1s | ETA: 3s
+    [60/90] 4.9s | ETA: 2s
+    [70/90] 5.6s | ETA: 2s
+    [80/90] 6.3s | ETA: <1s
+    [90/90] 8.2s | ETA: <1s
+    ✓ Concluído em 8.2s — Classe B: 48 (53.3%) | Classe A: 42 (46.7%)
+    Predições da métrica (W_A + centróides locais): Classe 0=47, Classe 1=43
+    [Ablativo] Consistência com centróides LOCAIS:       98.9%
+    [Ablativo] Consistência com centróides TRANSFERIDOS: 96.7%
+    → Diferença marginal (+2.2%) — ambas abordagens comparáveis.
+    [k-NN] k=5, treino=10 pontos
+    k-NN (k=5): acc_expert=98.9%, kappa=0.978, f1=0.989, acc_gt=1.1%
+    [Logistic Regression] treino=10 pontos, coefs=[-0.51118423  0.71696925]
+    Logistic Regression: acc_expert=98.9%, kappa=0.978, f1=0.989, acc_gt=1.1%
+    [SVM (RBF)] treino=10 pontos, support_vectors=[2 2]
+    SVM (RBF): acc_expert=98.9%, kappa=0.978, f1=0.989, acc_gt=1.1%
+
+  BASELINES CLÁSSICOS (FASE B (Problema B), 10-shot):
+    Classificador             Cons. vs Métrica    Kappa
+    ───────────────────────── ──────────────── ────────
+    k-NN (k=5)                          98.9%    0.978
+    Logistic Regression                 98.9%    0.978
+    SVM (RBF)                           98.9%    0.978
+    LLM                                 98.9%    0.978
+
+  RESULTADOS: FASE B (Problema B)
+    CONSISTÊNCIA (LLM vs. Métrica W_A + centróides locais): 98.9%
+    Kappa de Cohen: 0.978
+    F1-Score: 0.989
+    Concordâncias: 89 | Discordâncias: 1
+    Consistência da linha de base Euclidiana: 97.8%
+    Conjunto de teste: 90 pontos (excluídos 10 exemplos few-shot)
+    O LLM MANTÉM consistência elevada com a métrica (W_A + centróides locais).
+
+  ══════════════════════════════════════════════════════════════
+  FASE C (Problema C): TESTE DE CONSISTÊNCIA
+  ══════════════════════════════════════════════════════════════
+  Aplicando a métrica W estimada no Problema A a este novo problema.
+  Objetivo: verificar se o LLM concorda com a métrica em dados não vistos.
+
+  Selecionando 10 exemplos few-shot (Aprendizado Ativo, rotulados pela métrica)...
+      Classe 0: 5 pontos selecionados, faixa de margem [0.010, 0.016]
+      Classe 1: 5 pontos selecionados, faixa de margem [0.012, 0.019]
+
+  Coletando decisões do LLM para 90 pontos de teste...
+  [FASE C (Problema C)] Coletando decisões do LLM (10-shot) — 90 pontos [async, concurrency=10]...
+    [10/90] 1.7s | ETA: 14s
+    [20/90] 2.5s | ETA: 9s
+    [30/90] 3.2s | ETA: 6s
+    [40/90] 3.9s | ETA: 5s
+    [50/90] 4.9s | ETA: 4s
+    [60/90] 5.6s | ETA: 3s
+    [70/90] 6.2s | ETA: 2s
+    [80/90] 6.8s | ETA: <1s
+    [90/90] 7.8s | ETA: <1s
+    ✓ Concluído em 7.8s — Classe B: 47 (52.2%) | Classe A: 43 (47.8%)
+    Predições da métrica (W_A + centróides locais): Classe 0=45, Classe 1=45
+    [Ablativo] Consistência com centróides LOCAIS:       95.6%
+    [Ablativo] Consistência com centróides TRANSFERIDOS: 65.6%
+    → Centróides locais melhoram em 30.0% — recálculo justificado.
+    [k-NN] k=5, treino=10 pontos
+    k-NN (k=5): acc_expert=97.8%, kappa=0.956, f1=0.978, acc_gt=95.6%
+    [Logistic Regression] treino=10 pontos, coefs=[0.21654064 0.90854283]
+    Logistic Regression: acc_expert=97.8%, kappa=0.956, f1=0.978, acc_gt=95.6%
+    [SVM (RBF)] treino=10 pontos, support_vectors=[2 3]
+    SVM (RBF): acc_expert=96.7%, kappa=0.933, f1=0.967, acc_gt=94.4%
+
+  BASELINES CLÁSSICOS (FASE C (Problema C), 10-shot):
+    Classificador             Cons. vs Métrica    Kappa
+    ───────────────────────── ──────────────── ────────
+    k-NN (k=5)                          97.8%    0.956
+    Logistic Regression                 97.8%    0.956
+    SVM (RBF)                           96.7%    0.933
+    LLM                                 95.6%    0.911
+
+  RESULTADOS: FASE C (Problema C)
+    CONSISTÊNCIA (LLM vs. Métrica W_A + centróides locais): 95.6%
+    Kappa de Cohen: 0.911
+    F1-Score: 0.956
+    Concordâncias: 86 | Discordâncias: 4
+    Consistência da linha de base Euclidiana: 93.3%
+    Conjunto de teste: 90 pontos (excluídos 10 exemplos few-shot)
+    O LLM MANTÉM consistência elevada com a métrica (W_A + centróides locais).
+
+  --- Comparação Perceptron vs NNLS (Fases B/C) ---
+    [Perceptron] Consistência B: 98.9% | Kappa B: 0.978
+    [NNLS]       Consistência B: 98.9% | Kappa B: 0.978
+    [Perceptron] Consistência C: 95.6% | Kappa C: 0.911
+    [NNLS]       Consistência C: 95.6% | Kappa C: 0.911
+  [ABC-Inversão] classes=(1,0), rep=1/1, seed=42
+
+──────────────────────────────────────────────────────────────────────
+ EXPERIMENT: Phase B/C=10-shot | Classes: 1/0 | Rep: 1 | Seed: 42
+──────────────────────────────────────────────────────────────────────
+
+
+  [Iniciando Fase A: Estimando a Métrica W a partir das decisões do LLM...]
+
+  ══════════════════════════════════════════════════════════════
+  FASE A: ESTIMANDO A MÉTRICA W DO PROBLEMA A (ZERO-SHOT)
+  ══════════════════════════════════════════════════════════════
+  Objetivo: capturar o processo decisório INTRÍNSECO do LLM.
+  O LLM classifica pontos sem exemplos (zero-shot), e a métrica
+  Ŵ_LLM é inferida a partir dessas decisões via otimização inversa.
+
+  Passo 1: Coletando decisões do LLM no Problema A (zero-shot)...
+    Classes usadas: '1' e '0'
+    Pontos de treino: 150
+  [Problema A] Coletando decisões do LLM (zero-shot) — 150 pontos [async, concurrency=10]...
+    [ 10/150] 1.4s | ETA: 19s
+    [ 20/150] 2.0s | ETA: 13s
+    [ 30/150] 2.7s | ETA: 11s
+    [ 40/150] 3.5s | ETA: 10s
+    [ 50/150] 4.0s | ETA: 8s
+    [ 60/150] 4.8s | ETA: 7s
+    [ 70/150] 5.6s | ETA: 6s
+    [ 80/150] 6.3s | ETA: 6s
+    [ 90/150] 7.2s | ETA: 5s
+    [100/150] 7.7s | ETA: 4s
+    [110/150] 8.3s | ETA: 3s
+    [120/150] 8.9s | ETA: 2s
+    [130/150] 9.8s | ETA: 2s
+    [140/150] 10.7s | ETA: <1s
+    [150/150] 14.3s | ETA: <1s
+    ✓ Concluído em 14.3s — Classe 1: 148 (98.7%) | Classe 0: 2 (1.3%)
+
+  Passo 2: Calculando centróides a partir das decisões do LLM...
+    Centróide da Classe 0: (-0.024, 0.052)
+    Centróide da Classe 1: (-1.300, -1.790)
+
+  Passo 3a: Estimando a métrica W via Perceptron Estruturado com Relaxação de Margem...
+    (Busca binária no gamma ótimo para maximizar a margem da fronteira de decisão)
+    [iter 1] γ=0.100000 (γ_lo=0.000000, γ_hi=∞)
+    [iter 2] γ=0.050000 (γ_lo=0.000000, γ_hi=0.100000)
+    [iter 3] γ=0.025000 (γ_lo=0.000000, γ_hi=0.050000)
+      Convergiu na época 23
+    [iter 4] γ=0.075000 (γ_lo=0.025000, γ_hi=0.050000)
+    [iter 5] γ=0.050000 (γ_lo=0.025000, γ_hi=0.075000)
+    [iter 6] γ=0.037500 (γ_lo=0.025000, γ_hi=0.050000)
+      Convergiu na época 1
+    [iter 7] γ=0.087500 (γ_lo=0.037500, γ_hi=0.050000)
+    [iter 8] γ=0.062500 (γ_lo=0.037500, γ_hi=0.087500)
+    [iter 9] γ=0.050000 (γ_lo=0.037500, γ_hi=0.062500)
+    [iter 10] γ=0.043750 (γ_lo=0.037500, γ_hi=0.050000)
+      Convergiu na época 1
+    [iter 11] γ=0.093750 (γ_lo=0.043750, γ_hi=0.050000)
+    [iter 12] γ=0.068750 (γ_lo=0.043750, γ_hi=0.093750)
+    [iter 13] γ=0.056250 (γ_lo=0.043750, γ_hi=0.068750)
+      Convergiu na época 3
+    [iter 14] γ=0.106250 (γ_lo=0.056250, γ_hi=0.068750)
+    [iter 15] γ=0.081250 (γ_lo=0.056250, γ_hi=0.106250)
+    [iter 16] γ=0.068750 (γ_lo=0.056250, γ_hi=0.081250)
+      Convergiu na época 1
+    [iter 17] γ=0.118750 (γ_lo=0.068750, γ_hi=0.081250)
+    [iter 18] γ=0.093750 (γ_lo=0.068750, γ_hi=0.118750)
+    [iter 19] γ=0.081250 (γ_lo=0.068750, γ_hi=0.093750)
+    [iter 20] γ=0.075000 (γ_lo=0.068750, γ_hi=0.081250)
+    [iter 21] γ=0.071875 (γ_lo=0.068750, γ_hi=0.075000)
+      Convergiu na época 1
+    [iter 22] γ=0.121875 (γ_lo=0.071875, γ_hi=0.075000)
+    [iter 23] γ=0.096875 (γ_lo=0.071875, γ_hi=0.121875)
+    [iter 24] γ=0.084375 (γ_lo=0.071875, γ_hi=0.096875)
+    [iter 25] γ=0.078125 (γ_lo=0.071875, γ_hi=0.084375)
+    [iter 26] γ=0.075000 (γ_lo=0.071875, γ_hi=0.078125)
+    [iter 27] γ=0.073438 (γ_lo=0.071875, γ_hi=0.075000)
+    [iter 28] γ=0.072656 (γ_lo=0.071875, γ_hi=0.073438)
+      Convergiu na época 1
+    [iter 29] γ=0.122656 (γ_lo=0.072656, γ_hi=0.073438)
+    [iter 30] γ=0.097656 (γ_lo=0.072656, γ_hi=0.122656)
+    [iter 31] γ=0.085156 (γ_lo=0.072656, γ_hi=0.097656)
+    [iter 32] γ=0.078906 (γ_lo=0.072656, γ_hi=0.085156)
+    [iter 33] γ=0.075781 (γ_lo=0.072656, γ_hi=0.078906)
+    [iter 34] γ=0.074219 (γ_lo=0.072656, γ_hi=0.075781)
+    [iter 35] γ=0.073438 (γ_lo=0.072656, γ_hi=0.074219)
+    [iter 36] γ=0.073047 (γ_lo=0.072656, γ_hi=0.073438)
+      Convergiu na época 1
+    [iter 37] γ=0.123047 (γ_lo=0.073047, γ_hi=0.073438)
+    [iter 38] γ=0.098047 (γ_lo=0.073047, γ_hi=0.123047)
+    [iter 39] γ=0.085547 (γ_lo=0.073047, γ_hi=0.098047)
+    [iter 40] γ=0.079297 (γ_lo=0.073047, γ_hi=0.085547)
+    [iter 41] γ=0.076172 (γ_lo=0.073047, γ_hi=0.079297)
+    [iter 42] γ=0.074609 (γ_lo=0.073047, γ_hi=0.076172)
+    [iter 43] γ=0.073828 (γ_lo=0.073047, γ_hi=0.074609)
+    [iter 44] γ=0.073438 (γ_lo=0.073047, γ_hi=0.073828)
+    [iter 45] γ=0.073242 (γ_lo=0.073047, γ_hi=0.073438)
+      Convergiu na época 1
+    [iter 46] γ=0.123242 (γ_lo=0.073242, γ_hi=0.073438)
+    [iter 47] γ=0.098242 (γ_lo=0.073242, γ_hi=0.123242)
+    [iter 48] γ=0.085742 (γ_lo=0.073242, γ_hi=0.098242)
+    [iter 49] γ=0.079492 (γ_lo=0.073242, γ_hi=0.085742)
+    [iter 50] γ=0.076367 (γ_lo=0.073242, γ_hi=0.079492)
+    >>> [Perceptron] Ŵ_LLM estimado (bruto): [0.0000, 0.0000]
+    >>> [Perceptron] Ŵ_LLM estimado (unitário): [0.0000, 1.0000]
+    >>> [Perceptron] Razão w1/w2: 0.0000  ← determina a geometria da fronteira
+    >>> [Perceptron] Gamma ótimo encontrado: 0.0732
+
+  Passo 3b: Estimando a métrica W via Mínimos Quadrados (NNLS)...
+    (Validação cruzada: se ambos convergem para W similar, resultado é robusto ao método)
+    [Mínimos Quadrados] W encontrado: [0.0242, 0.1068]
+    Resíduo: 9.4714
+    >>> [NNLS] Ŵ_LLM estimado (bruto): [0.0242, 0.1068]
+    >>> [NNLS] Ŵ_LLM estimado (normalizado): [0.185, 0.815]
+    >>> [NNLS] Razão w1/w2: 0.2271
+    >>> Similaridade cosseno (Perceptron vs NNLS): 0.9737
+
+  Passo 4: Verificando fidelidade das métricas estimadas...
+    [Perceptron] Fidelidade (métrica vs. LLM no Problema A): 79.3%
+    [NNLS]       Fidelidade (métrica vs. LLM no Problema A): 79.3%
+    Acurácia do LLM vs. ground truth: 48.7%
+    ⚠ Fidelidade baixa em ambos — a métrica pode não representar bem o LLM.
+
+  ══════════════════════════════════════════════════════════════
+  FASE B (Problema B): TESTE DE CONSISTÊNCIA
+  ══════════════════════════════════════════════════════════════
+  Aplicando a métrica W estimada no Problema A a este novo problema.
+  Objetivo: verificar se o LLM concorda com a métrica em dados não vistos.
+
+  Selecionando 10 exemplos few-shot (Aprendizado Ativo, rotulados pela métrica)...
+      Classe 0: 5 pontos selecionados, faixa de margem [0.000, 0.000]
+      Classe 1: 5 pontos selecionados, faixa de margem [0.000, 0.000]
+
+  Coletando decisões do LLM para 90 pontos de teste...
+  [FASE B (Problema B)] Coletando decisões do LLM (10-shot) — 90 pontos [async, concurrency=10]...
+    [10/90] 1.3s | ETA: 10s
+    [20/90] 1.9s | ETA: 7s
+    [30/90] 2.6s | ETA: 5s
+    [40/90] 3.3s | ETA: 4s
+    [50/90] 4.3s | ETA: 3s
+    [60/90] 5.1s | ETA: 3s
+    [70/90] 5.9s | ETA: 2s
+    [80/90] 6.6s | ETA: <1s
+    [90/90] 7.8s | ETA: <1s
+    ✓ Concluído em 7.8s — Classe 1: 44 (48.9%) | Classe 0: 46 (51.1%)
+    Predições da métrica (W_A + centróides locais): Classe 0=45, Classe 1=45
+    [Ablativo] Consistência com centróides LOCAIS:       98.9%
+    [Ablativo] Consistência com centróides TRANSFERIDOS: 82.2%
+    → Centróides locais melhoram em 16.7% — recálculo justificado.
+    [k-NN] k=5, treino=10 pontos
+    k-NN (k=5): acc_expert=96.7%, kappa=0.933, f1=0.967, acc_gt=98.9%
+    [Logistic Regression] treino=10 pontos, coefs=[ 0.36830228 -0.85412958]
+    Logistic Regression: acc_expert=95.6%, kappa=0.911, f1=0.956, acc_gt=97.8%
+    [SVM (RBF)] treino=10 pontos, support_vectors=[2 2]
+    SVM (RBF): acc_expert=94.4%, kappa=0.889, f1=0.944, acc_gt=96.7%
+
+  BASELINES CLÁSSICOS (FASE B (Problema B), 10-shot):
+    Classificador             Cons. vs Métrica    Kappa
+    ───────────────────────── ──────────────── ────────
+    k-NN (k=5)                          96.7%    0.933
+    Logistic Regression                 95.6%    0.911
+    SVM (RBF)                           94.4%    0.889
+    LLM                                 98.9%    0.978
+
+  RESULTADOS: FASE B (Problema B)
+    CONSISTÊNCIA (LLM vs. Métrica W_A + centróides locais): 98.9%
+    Kappa de Cohen: 0.978
+    F1-Score: 0.989
+    Concordâncias: 89 | Discordâncias: 1
+    Consistência da linha de base Euclidiana: 96.7%
+    Conjunto de teste: 90 pontos (excluídos 10 exemplos few-shot)
+    O LLM MANTÉM consistência elevada com a métrica (W_A + centróides locais).
+
+  ══════════════════════════════════════════════════════════════
+  FASE C (Problema C): TESTE DE CONSISTÊNCIA
+  ══════════════════════════════════════════════════════════════
+  Aplicando a métrica W estimada no Problema A a este novo problema.
+  Objetivo: verificar se o LLM concorda com a métrica em dados não vistos.
+
+  Selecionando 10 exemplos few-shot (Aprendizado Ativo, rotulados pela métrica)...
+      Classe 0: 5 pontos selecionados, faixa de margem [0.000, 0.000]
+      Classe 1: 5 pontos selecionados, faixa de margem [0.000, 0.000]
+
+  Coletando decisões do LLM para 90 pontos de teste...
+  [FASE C (Problema C)] Coletando decisões do LLM (10-shot) — 90 pontos [async, concurrency=10]...
+    [10/90] 1.6s | ETA: 13s
+    [20/90] 2.3s | ETA: 8s
+    [30/90] 2.9s | ETA: 6s
+    [40/90] 3.6s | ETA: 5s
+    [50/90] 4.3s | ETA: 3s
+    [60/90] 4.9s | ETA: 2s
+    [70/90] 5.5s | ETA: 2s
+    [80/90] 6.2s | ETA: <1s
+    [90/90] 7.4s | ETA: <1s
+    ✓ Concluído em 7.4s — Classe 1: 25 (27.8%) | Classe 0: 65 (72.2%)
+    Predições da métrica (W_A + centróides locais): Classe 0=36, Classe 1=54
+    [Ablativo] Consistência com centróides LOCAIS:       83.3%
+    [Ablativo] Consistência com centróides TRANSFERIDOS: 63.3%
+    → Centróides locais melhoram em 20.0% — recálculo justificado.
+    [k-NN] k=5, treino=10 pontos
+    k-NN (k=5): acc_expert=87.8%, kappa=0.756, f1=0.879, acc_gt=2.2%
+    [Logistic Regression] treino=10 pontos, coefs=[-0.33717288 -0.83864821]
+    Logistic Regression: acc_expert=86.7%, kappa=0.735, f1=0.868, acc_gt=3.3%
+    [SVM (RBF)] treino=10 pontos, support_vectors=[3 3]
+    SVM (RBF): acc_expert=86.7%, kappa=0.735, f1=0.868, acc_gt=3.3%
+
+  BASELINES CLÁSSICOS (FASE C (Problema C), 10-shot):
+    Classificador             Cons. vs Métrica    Kappa
+    ───────────────────────── ──────────────── ────────
+    k-NN (k=5)                          87.8%    0.756
+    Logistic Regression                 86.7%    0.735
+    SVM (RBF)                           86.7%    0.735
+    LLM                                 83.3%    0.634
+
+  RESULTADOS: FASE C (Problema C)
+    CONSISTÊNCIA (LLM vs. Métrica W_A + centróides locais): 83.3%
+    Kappa de Cohen: 0.634
+    F1-Score: 0.833
+    Concordâncias: 75 | Discordâncias: 15
+    Consistência da linha de base Euclidiana: 80.0%
+    Conjunto de teste: 90 pontos (excluídos 10 exemplos few-shot)
+    O LLM mantém consistência PARCIAL com a métrica (W_A + centróides locais).
+
+  --- Comparação Perceptron vs NNLS (Fases B/C) ---
+    [Perceptron] Consistência B: 98.9% | Kappa B: 0.978
+    [NNLS]       Consistência B: 97.8% | Kappa B: 0.956
+    [Perceptron] Consistência C: 83.3% | Kappa C: 0.634
+    [NNLS]       Consistência C: 80.0% | Kappa C: 0.584
+  [ABC-Inversão] classes=(Negativo,Positivo), rep=1/1, seed=42
+
+──────────────────────────────────────────────────────────────────────
+ EXPERIMENT: Phase B/C=10-shot | Classes: Negativo/Positivo | Rep: 1 | Seed: 42
+──────────────────────────────────────────────────────────────────────
+
+
+  [Iniciando Fase A: Estimando a Métrica W a partir das decisões do LLM...]
+
+  ══════════════════════════════════════════════════════════════
+  FASE A: ESTIMANDO A MÉTRICA W DO PROBLEMA A (ZERO-SHOT)
+  ══════════════════════════════════════════════════════════════
+  Objetivo: capturar o processo decisório INTRÍNSECO do LLM.
+  O LLM classifica pontos sem exemplos (zero-shot), e a métrica
+  Ŵ_LLM é inferida a partir dessas decisões via otimização inversa.
+
+  Passo 1: Coletando decisões do LLM no Problema A (zero-shot)...
+    Classes usadas: 'Negativo' e 'Positivo'
+    Pontos de treino: 150
+  [Problema A] Coletando decisões do LLM (zero-shot) — 150 pontos [async, concurrency=10]...
+    [ 10/150] 1.4s | ETA: 20s
+    [ 20/150] 2.2s | ETA: 14s
+    [ 30/150] 3.0s | ETA: 12s
+    [ 40/150] 3.7s | ETA: 10s
+    [ 50/150] 4.3s | ETA: 9s
+    [ 60/150] 4.9s | ETA: 7s
+    [ 70/150] 5.5s | ETA: 6s
+    [ 80/150] 6.3s | ETA: 5s
+    [ 90/150] 6.9s | ETA: 5s
+    [100/150] 7.5s | ETA: 4s
+    [110/150] 8.4s | ETA: 3s
+    [120/150] 9.1s | ETA: 2s
+    [130/150] 9.8s | ETA: 2s
+    [140/150] 10.3s | ETA: <1s
+    [150/150] 10.9s | ETA: <1s
+    ✓ Concluído em 10.9s — Classe Negativo: 83 (55.3%) | Classe Positivo: 67 (44.7%)
+
+  Passo 2: Calculando centróides a partir das decisões do LLM...
+    Centróide da Classe 0: (-1.461, -0.471)
+    Centróide da Classe 1: (1.719, 0.645)
+
+  Passo 3a: Estimando a métrica W via Perceptron Estruturado com Relaxação de Margem...
+    (Busca binária no gamma ótimo para maximizar a margem da fronteira de decisão)
+    [iter 1] γ=0.100000 (γ_lo=0.000000, γ_hi=∞)
+    [iter 2] γ=0.050000 (γ_lo=0.000000, γ_hi=0.100000)
+    [iter 3] γ=0.025000 (γ_lo=0.000000, γ_hi=0.050000)
+    [iter 4] γ=0.012500 (γ_lo=0.000000, γ_hi=0.025000)
+    [iter 5] γ=0.006250 (γ_lo=0.000000, γ_hi=0.012500)
+    [iter 6] γ=0.003125 (γ_lo=0.000000, γ_hi=0.006250)
+    [iter 7] γ=0.001563 (γ_lo=0.000000, γ_hi=0.003125)
+    [iter 8] γ=0.000781 (γ_lo=0.000000, γ_hi=0.001563)
+    [iter 9] γ=0.000391 (γ_lo=0.000000, γ_hi=0.000781)
+    [iter 10] γ=0.000195 (γ_lo=0.000000, γ_hi=0.000391)
+    [iter 11] γ=0.000098 (γ_lo=0.000000, γ_hi=0.000195)
+    ⚠️ Perceptron: separação perfeita não encontrada. Retornando melhor esforço (violações: 8). Métrica pode ser imprecisa.
+    >>> [Perceptron] Ŵ_LLM estimado (bruto): [0.2256, 1.1784]
+    >>> [Perceptron] Ŵ_LLM estimado (unitário): [0.1880, 0.9822]
+    >>> [Perceptron] Razão w1/w2: 0.1915  ← determina a geometria da fronteira
+    >>> [Perceptron] Gamma ótimo encontrado: 0.0000
+
+  Passo 3b: Estimando a métrica W via Mínimos Quadrados (NNLS)...
+    (Validação cruzada: se ambos convergem para W similar, resultado é robusto ao método)
+    [Mínimos Quadrados] W encontrado: [0.0414, 0.1662]
+    Resíduo: 7.4922
+    >>> [NNLS] Ŵ_LLM estimado (bruto): [0.0414, 0.1662]
+    >>> [NNLS] Ŵ_LLM estimado (normalizado): [0.200, 0.800]
+    >>> [NNLS] Razão w1/w2: 0.2494
+    >>> Similaridade cosseno (Perceptron vs NNLS): 0.9985
+
+  Passo 4: Verificando fidelidade das métricas estimadas...
+    [Perceptron] Fidelidade (métrica vs. LLM no Problema A): 92.7%
+    [NNLS]       Fidelidade (métrica vs. LLM no Problema A): 94.0%
+    Acurácia do LLM vs. ground truth: 81.3%
+    Ambas as métricas estimadas reproduzem bem as decisões do LLM.
+
+  ══════════════════════════════════════════════════════════════
+  FASE B (Problema B): TESTE DE CONSISTÊNCIA
+  ══════════════════════════════════════════════════════════════
+  Aplicando a métrica W estimada no Problema A a este novo problema.
+  Objetivo: verificar se o LLM concorda com a métrica em dados não vistos.
+
+  Selecionando 10 exemplos few-shot (Aprendizado Ativo, rotulados pela métrica)...
+      Classe 0: 5 pontos selecionados, faixa de margem [6.994, 10.628]
+      Classe 1: 5 pontos selecionados, faixa de margem [5.249, 9.237]
+
+  Coletando decisões do LLM para 90 pontos de teste...
+  [FASE B (Problema B)] Coletando decisões do LLM (10-shot) — 90 pontos [async, concurrency=10]...
+    [10/90] 1.5s | ETA: 12s
+    [20/90] 2.0s | ETA: 7s
+    [30/90] 2.6s | ETA: 5s
+    [40/90] 3.1s | ETA: 4s
+    [50/90] 3.7s | ETA: 3s
+    [60/90] 4.4s | ETA: 2s
+    [70/90] 4.9s | ETA: 1s
+    [80/90] 5.5s | ETA: <1s
+    [90/90] 6.1s | ETA: <1s
+    ✓ Concluído em 6.1s — Classe Negativo: 55 (61.1%) | Classe Positivo: 35 (38.9%)
+    Predições da métrica (W_A + centróides locais): Classe 0=47, Classe 1=43
+    [Ablativo] Consistência com centróides LOCAIS:       86.7%
+    [Ablativo] Consistência com centróides TRANSFERIDOS: 75.6%
+    → Centróides locais melhoram em 11.1% — recálculo justificado.
+    [k-NN] k=5, treino=10 pontos
+    k-NN (k=5): acc_expert=96.7%, kappa=0.933, f1=0.967, acc_gt=4.4%
+    [Logistic Regression] treino=10 pontos, coefs=[0.29099248 1.08080356]
+    Logistic Regression: acc_expert=80.0%, kappa=0.604, f1=0.798, acc_gt=21.1%
+    [SVM (RBF)] treino=10 pontos, support_vectors=[3 3]
+    SVM (RBF): acc_expert=78.9%, kappa=0.585, f1=0.781, acc_gt=20.0%
+
+  BASELINES CLÁSSICOS (FASE B (Problema B), 10-shot):
+    Classificador             Cons. vs Métrica    Kappa
+    ───────────────────────── ──────────────── ────────
+    k-NN (k=5)                          96.7%    0.933
+    Logistic Regression                 80.0%    0.604
+    SVM (RBF)                           78.9%    0.585
+    LLM                                 86.7%    0.731
+
+  RESULTADOS: FASE B (Problema B)
+    CONSISTÊNCIA (LLM vs. Métrica W_A + centróides locais): 86.7%
+    Kappa de Cohen: 0.731
+    F1-Score: 0.867
+    Concordâncias: 78 | Discordâncias: 12
+    Consistência da linha de base Euclidiana: 82.2%
+    Conjunto de teste: 90 pontos (excluídos 10 exemplos few-shot)
+    O LLM MANTÉM consistência elevada com a métrica (W_A + centróides locais).
+
+  ══════════════════════════════════════════════════════════════
+  FASE C (Problema C): TESTE DE CONSISTÊNCIA
+  ══════════════════════════════════════════════════════════════
+  Aplicando a métrica W estimada no Problema A a este novo problema.
+  Objetivo: verificar se o LLM concorda com a métrica em dados não vistos.
+
+  Selecionando 10 exemplos few-shot (Aprendizado Ativo, rotulados pela métrica)...
+      Classe 0: 5 pontos selecionados, faixa de margem [13.222, 17.810]
+      Classe 1: 5 pontos selecionados, faixa de margem [11.352, 14.317]
+
+  Coletando decisões do LLM para 90 pontos de teste...
+  [FASE C (Problema C)] Coletando decisões do LLM (10-shot) — 90 pontos [async, concurrency=10]...
+    [10/90] 1.3s | ETA: 10s
+    [20/90] 2.1s | ETA: 7s
+    [30/90] 2.7s | ETA: 5s
+    [40/90] 3.3s | ETA: 4s
+    [50/90] 3.9s | ETA: 3s
+    [60/90] 4.8s | ETA: 2s
+    [70/90] 5.4s | ETA: 2s
+    [80/90] 6.2s | ETA: <1s
+    [90/90] 7.0s | ETA: <1s
+    ✓ Concluído em 7.0s — Classe Negativo: 80 (88.9%) | Classe Positivo: 10 (11.1%)
+    Predições da métrica (W_A + centróides locais): Classe 0=56, Classe 1=34
+    [Ablativo] Consistência com centróides LOCAIS:       73.3%
+    [Ablativo] Consistência com centróides TRANSFERIDOS: 62.2%
+    → Centróides locais melhoram em 11.1% — recálculo justificado.
+    [k-NN] k=5, treino=10 pontos
+    k-NN (k=5): acc_expert=86.7%, kappa=0.735, f1=0.869, acc_gt=98.9%
+    [Logistic Regression] treino=10 pontos, coefs=[0.54561861 0.65305268]
+    Logistic Regression: acc_expert=86.7%, kappa=0.735, f1=0.869, acc_gt=98.9%
+    [SVM (RBF)] treino=10 pontos, support_vectors=[2 2]
+    SVM (RBF): acc_expert=85.6%, kappa=0.714, f1=0.858, acc_gt=97.8%
+
+  BASELINES CLÁSSICOS (FASE C (Problema C), 10-shot):
+    Classificador             Cons. vs Métrica    Kappa
+    ───────────────────────── ──────────────── ────────
+    k-NN (k=5)                          86.7%    0.735
+    Logistic Regression                 86.7%    0.735
+    SVM (RBF)                           85.6%    0.714
+    LLM                                 73.3%    0.341
+
+  RESULTADOS: FASE C (Problema C)
+    CONSISTÊNCIA (LLM vs. Métrica W_A + centróides locais): 73.3%
+    Kappa de Cohen: 0.341
+    F1-Score: 0.733
+    Concordâncias: 66 | Discordâncias: 24
+    Consistência da linha de base Euclidiana: 70.0%
+    Conjunto de teste: 90 pontos (excluídos 10 exemplos few-shot)
+    O LLM mantém consistência PARCIAL com a métrica (W_A + centróides locais).
+
+  --- Comparação Perceptron vs NNLS (Fases B/C) ---
+    [Perceptron] Consistência B: 86.7% | Kappa B: 0.731
+    [NNLS]       Consistência B: 85.6% | Kappa B: 0.710
+    [Perceptron] Consistência C: 73.3% | Kappa C: 0.341
+    [NNLS]       Consistência C: 73.3% | Kappa C: 0.341
+  [ABC-Inversão] classes=(Vermelho,Azul), rep=1/1, seed=42
+
+──────────────────────────────────────────────────────────────────────
+ EXPERIMENT: Phase B/C=10-shot | Classes: Vermelho/Azul | Rep: 1 | Seed: 42
+──────────────────────────────────────────────────────────────────────
+
+
+  [Iniciando Fase A: Estimando a Métrica W a partir das decisões do LLM...]
+
+  ══════════════════════════════════════════════════════════════
+  FASE A: ESTIMANDO A MÉTRICA W DO PROBLEMA A (ZERO-SHOT)
+  ══════════════════════════════════════════════════════════════
+  Objetivo: capturar o processo decisório INTRÍNSECO do LLM.
+  O LLM classifica pontos sem exemplos (zero-shot), e a métrica
+  Ŵ_LLM é inferida a partir dessas decisões via otimização inversa.
+
+  Passo 1: Coletando decisões do LLM no Problema A (zero-shot)...
+    Classes usadas: 'Vermelho' e 'Azul'
+    Pontos de treino: 150
+  [Problema A] Coletando decisões do LLM (zero-shot) — 150 pontos [async, concurrency=10]...
+    [ 10/150] 1.6s | ETA: 23s
+    [ 20/150] 2.4s | ETA: 16s
+    [ 30/150] 3.2s | ETA: 13s
+    [ 40/150] 3.8s | ETA: 11s
+    [ 50/150] 4.5s | ETA: 9s
+    [ 60/150] 5.1s | ETA: 8s
+    [ 70/150] 5.7s | ETA: 7s
+    [ 80/150] 6.5s | ETA: 6s
+    [ 90/150] 7.2s | ETA: 5s
+    [100/150] 7.8s | ETA: 4s
+    [110/150] 8.7s | ETA: 3s
+    [120/150] 9.4s | ETA: 2s
+    [130/150] 10.3s | ETA: 2s
+    [140/150] 10.9s | ETA: <1s
+    [150/150] 13.0s | ETA: <1s
+    ✓ Concluído em 13.0s — Classe Vermelho: 93 (62.0%) | Classe Azul: 57 (38.0%)
+
+  Passo 2: Calculando centróides a partir das decisões do LLM...
+    Centróide da Classe 0: (-1.297, -0.154)
+    Centróide da Classe 1: (2.009, 0.324)
+
+  Passo 3a: Estimando a métrica W via Perceptron Estruturado com Relaxação de Margem...
+    (Busca binária no gamma ótimo para maximizar a margem da fronteira de decisão)
+    [iter 1] γ=0.100000 (γ_lo=0.000000, γ_hi=∞)
+    [iter 2] γ=0.050000 (γ_lo=0.000000, γ_hi=0.100000)
+    [iter 3] γ=0.025000 (γ_lo=0.000000, γ_hi=0.050000)
+    [iter 4] γ=0.012500 (γ_lo=0.000000, γ_hi=0.025000)
+    [iter 5] γ=0.006250 (γ_lo=0.000000, γ_hi=0.012500)
+    [iter 6] γ=0.003125 (γ_lo=0.000000, γ_hi=0.006250)
+    [iter 7] γ=0.001563 (γ_lo=0.000000, γ_hi=0.003125)
+    [iter 8] γ=0.000781 (γ_lo=0.000000, γ_hi=0.001563)
+    [iter 9] γ=0.000391 (γ_lo=0.000000, γ_hi=0.000781)
+    [iter 10] γ=0.000195 (γ_lo=0.000000, γ_hi=0.000391)
+    [iter 11] γ=0.000098 (γ_lo=0.000000, γ_hi=0.000195)
+    ⚠️ Perceptron: separação perfeita não encontrada. Retornando melhor esforço (violações: 20). Métrica pode ser imprecisa.
+    >>> [Perceptron] Ŵ_LLM estimado (bruto): [0.0261, 0.0850]
+    >>> [Perceptron] Ŵ_LLM estimado (unitário): [0.2936, 0.9559]
+    >>> [Perceptron] Razão w1/w2: 0.3071  ← determina a geometria da fronteira
+    >>> [Perceptron] Gamma ótimo encontrado: 0.0000
+
+  Passo 3b: Estimando a métrica W via Mínimos Quadrados (NNLS)...
+    (Validação cruzada: se ambos convergem para W similar, resultado é robusto ao método)
+    [Mínimos Quadrados] W encontrado: [0.0410, 0.1534]
+    Resíduo: 8.8002
+    >>> [NNLS] Ŵ_LLM estimado (bruto): [0.0410, 0.1534]
+    >>> [NNLS] Ŵ_LLM estimado (normalizado): [0.211, 0.789]
+    >>> [NNLS] Razão w1/w2: 0.2676
+    >>> Similaridade cosseno (Perceptron vs NNLS): 0.9993
+
+  Passo 4: Verificando fidelidade das métricas estimadas...
+    [Perceptron] Fidelidade (métrica vs. LLM no Problema A): 84.0%
+    [NNLS]       Fidelidade (métrica vs. LLM no Problema A): 84.0%
+    Acurácia do LLM vs. ground truth: 85.3%
+    ⚠ Fidelidade baixa em ambos — a métrica pode não representar bem o LLM.
+
+  ══════════════════════════════════════════════════════════════
+  FASE B (Problema B): TESTE DE CONSISTÊNCIA
+  ══════════════════════════════════════════════════════════════
+  Aplicando a métrica W estimada no Problema A a este novo problema.
+  Objetivo: verificar se o LLM concorda com a métrica em dados não vistos.
+
+  Selecionando 10 exemplos few-shot (Aprendizado Ativo, rotulados pela métrica)...
+      Classe 0: 5 pontos selecionados, faixa de margem [0.593, 0.721]
+      Classe 1: 5 pontos selecionados, faixa de margem [0.544, 0.845]
+
+  Coletando decisões do LLM para 90 pontos de teste...
+  [FASE B (Problema B)] Coletando decisões do LLM (10-shot) — 90 pontos [async, concurrency=10]...
+    [10/90] 3.6s | ETA: 29s
+    [20/90] 5.8s | ETA: 20s
+    [30/90] 8.2s | ETA: 16s
+    [40/90] 10.2s | ETA: 13s
+    [50/90] 12.2s | ETA: 10s
+    [60/90] 13.5s | ETA: 7s
+    [70/90] 14.3s | ETA: 4s
+    [80/90] 15.2s | ETA: 2s
+    [90/90] 17.0s | ETA: <1s
+    ✓ Concluído em 17.0s — Classe Vermelho: 59 (65.6%) | Classe Azul: 31 (34.4%)
+    Predições da métrica (W_A + centróides locais): Classe 0=47, Classe 1=43
+    [Ablativo] Consistência com centróides LOCAIS:       86.7%
+    [Ablativo] Consistência com centróides TRANSFERIDOS: 82.2%
+    → Diferença marginal (+4.4%) — ambas abordagens comparáveis.
+    [k-NN] k=5, treino=10 pontos
+    k-NN (k=5): acc_expert=94.4%, kappa=0.888, f1=0.944, acc_gt=93.3%
+    [Logistic Regression] treino=10 pontos, coefs=[0.9676473 0.0669234]
+    Logistic Regression: acc_expert=90.0%, kappa=0.799, f1=0.899, acc_gt=91.1%
+    [SVM (RBF)] treino=10 pontos, support_vectors=[2 3]
+    SVM (RBF): acc_expert=92.2%, kappa=0.843, f1=0.921, acc_gt=91.1%
+
+  BASELINES CLÁSSICOS (FASE B (Problema B), 10-shot):
+    Classificador             Cons. vs Métrica    Kappa
+    ───────────────────────── ──────────────── ────────
+    k-NN (k=5)                          94.4%    0.888
+    Logistic Regression                 90.0%    0.799
+    SVM (RBF)                           92.2%    0.843
+    LLM                                 86.7%    0.730
+
+  RESULTADOS: FASE B (Problema B)
+    CONSISTÊNCIA (LLM vs. Métrica W_A + centróides locais): 86.7%
+    Kappa de Cohen: 0.730
+    F1-Score: 0.867
+    Concordâncias: 78 | Discordâncias: 12
+    Consistência da linha de base Euclidiana: 87.8%
+    Conjunto de teste: 90 pontos (excluídos 10 exemplos few-shot)
+    O LLM MANTÉM consistência elevada com a métrica (W_A + centróides locais).
+
+  ══════════════════════════════════════════════════════════════
+  FASE C (Problema C): TESTE DE CONSISTÊNCIA
+  ══════════════════════════════════════════════════════════════
+  Aplicando a métrica W estimada no Problema A a este novo problema.
+  Objetivo: verificar se o LLM concorda com a métrica em dados não vistos.
+
+  Selecionando 10 exemplos few-shot (Aprendizado Ativo, rotulados pela métrica)...
+      Classe 0: 5 pontos selecionados, faixa de margem [0.888, 1.013]
+      Classe 1: 5 pontos selecionados, faixa de margem [0.657, 0.892]
+
+  Coletando decisões do LLM para 90 pontos de teste...
+  [FASE C (Problema C)] Coletando decisões do LLM (10-shot) — 90 pontos [async, concurrency=10]...
+    [10/90] 1.4s | ETA: 11s
+    [20/90] 2.1s | ETA: 7s
+    [30/90] 2.7s | ETA: 5s
+    [40/90] 3.5s | ETA: 4s
+    [50/90] 4.4s | ETA: 4s
+    [60/90] 5.2s | ETA: 3s
+    [70/90] 6.0s | ETA: 2s
+    [80/90] 7.0s | ETA: <1s
+    [90/90] 14.4s | ETA: <1s
+    ✓ Concluído em 14.4s — Classe Vermelho: 33 (36.7%) | Classe Azul: 57 (63.3%)
+    Predições da métrica (W_A + centróides locais): Classe 0=43, Classe 1=47
+    [Ablativo] Consistência com centróides LOCAIS:       84.4%
+    [Ablativo] Consistência com centróides TRANSFERIDOS: 81.1%
+    → Diferença marginal (+3.3%) — ambas abordagens comparáveis.
+    [k-NN] k=5, treino=10 pontos
+    k-NN (k=5): acc_expert=95.6%, kappa=0.911, f1=0.956, acc_gt=97.8%
+    [Logistic Regression] treino=10 pontos, coefs=[0.7644218  0.41306826]
+    Logistic Regression: acc_expert=95.6%, kappa=0.911, f1=0.956, acc_gt=97.8%
+    [SVM (RBF)] treino=10 pontos, support_vectors=[2 3]
+    SVM (RBF): acc_expert=94.4%, kappa=0.889, f1=0.944, acc_gt=96.7%
+
+  BASELINES CLÁSSICOS (FASE C (Problema C), 10-shot):
+    Classificador             Cons. vs Métrica    Kappa
+    ───────────────────────── ──────────────── ────────
+    k-NN (k=5)                          95.6%    0.911
+    Logistic Regression                 95.6%    0.911
+    SVM (RBF)                           94.4%    0.889
+    LLM                                 84.4%    0.685
+
+  RESULTADOS: FASE C (Problema C)
+    CONSISTÊNCIA (LLM vs. Métrica W_A + centróides locais): 84.4%
+    Kappa de Cohen: 0.685
+    F1-Score: 0.844
+    Concordâncias: 76 | Discordâncias: 14
+    Consistência da linha de base Euclidiana: 84.4%
+    Conjunto de teste: 90 pontos (excluídos 10 exemplos few-shot)
+    O LLM mantém consistência PARCIAL com a métrica (W_A + centróides locais).
+
+  --- Comparação Perceptron vs NNLS (Fases B/C) ---
+    [Perceptron] Consistência B: 86.7% | Kappa B: 0.730
+    [NNLS]       Consistência B: 86.7% | Kappa B: 0.730
+    [Perceptron] Consistência C: 84.4% | Kappa C: 0.685
+    [NNLS]       Consistência C: 85.6% | Kappa C: 0.706
+  ✓ Teste de inversão de ordem das classes concluído
+
+>>> Fases A-C: Teste de variantes de prompt
+  [ABC-Prompt] variant=geometric, rep=1/1, seed=42
+
+──────────────────────────────────────────────────────────────────────
+ EXPERIMENT: Phase B/C=zero-shot | Classes: A/B | Rep: 1 | Seed: 42
+──────────────────────────────────────────────────────────────────────
+
+
+  [Iniciando Fase A: Estimando a Métrica W a partir das decisões do LLM...]
+
+  ══════════════════════════════════════════════════════════════
+  FASE A: ESTIMANDO A MÉTRICA W DO PROBLEMA A (ZERO-SHOT) [prompt: geometric]
+  ══════════════════════════════════════════════════════════════
+  Objetivo: capturar o processo decisório INTRÍNSECO do LLM.
+  O LLM classifica pontos sem exemplos (zero-shot), e a métrica
+  Ŵ_LLM é inferida a partir dessas decisões via otimização inversa.
+
+  Passo 1: Coletando decisões do LLM no Problema A (zero-shot)...
+    Classes usadas: 'A' e 'B'
+    Pontos de treino: 150
+  [Problema A [prompt: geometric]] Coletando decisões do LLM (zero-shot) — 150 pontos [async, concurrency=10]...
+    [ 10/150] 1.2s | ETA: 17s
+    [ 20/150] 1.9s | ETA: 12s
+    [ 30/150] 2.5s | ETA: 10s
+    [ 40/150] 3.6s | ETA: 10s
+    [ 50/150] 4.3s | ETA: 9s
+    [ 60/150] 5.1s | ETA: 8s
+    [ 70/150] 5.7s | ETA: 7s
+    [ 80/150] 6.6s | ETA: 6s
+    [ 90/150] 7.6s | ETA: 5s
+    [100/150] 8.2s | ETA: 4s
+    [110/150] 8.7s | ETA: 3s
+    [120/150] 9.5s | ETA: 2s
+    [130/150] 10.2s | ETA: 2s
+    [140/150] 10.9s | ETA: <1s
+    [150/150] 13.8s | ETA: <1s
+    ✓ Concluído em 13.8s — Classe A: 146 (97.3%) | Classe B: 4 (2.7%)
+
+  Passo 2: Calculando centróides a partir das decisões do LLM...
+    Centróide da Classe 0: (-0.015, 0.078)
+    Centróide da Classe 1: (-1.003, -1.828)
+
+  Passo 3a: Estimando a métrica W via Perceptron Estruturado com Relaxação de Margem...
+    (Busca binária no gamma ótimo para maximizar a margem da fronteira de decisão)
+    [iter 1] γ=0.100000 (γ_lo=0.000000, γ_hi=∞)
+    [iter 2] γ=0.050000 (γ_lo=0.000000, γ_hi=0.100000)
+    [iter 3] γ=0.025000 (γ_lo=0.000000, γ_hi=0.050000)
+    [iter 4] γ=0.012500 (γ_lo=0.000000, γ_hi=0.025000)
+    [iter 5] γ=0.006250 (γ_lo=0.000000, γ_hi=0.012500)
+      Convergiu na época 22
+    [iter 6] γ=0.056250 (γ_lo=0.006250, γ_hi=0.012500)
+      Convergiu na época 1
+    [iter 7] γ=0.106250 (γ_lo=0.056250, γ_hi=0.012500)
+      Convergiu na época 1
+    [iter 8] γ=0.156250 (γ_lo=0.106250, γ_hi=0.012500)
+      Convergiu na época 1
+    [iter 9] γ=0.206250 (γ_lo=0.156250, γ_hi=0.012500)
+      Convergiu na época 1
+    [iter 10] γ=0.256250 (γ_lo=0.206250, γ_hi=0.012500)
+      Convergiu na época 1
+    [iter 11] γ=0.306250 (γ_lo=0.256250, γ_hi=0.012500)
+    [iter 12] γ=0.281250 (γ_lo=0.256250, γ_hi=0.306250)
+      Convergiu na época 1
+    [iter 13] γ=0.331250 (γ_lo=0.281250, γ_hi=0.306250)
+    [iter 14] γ=0.306250 (γ_lo=0.281250, γ_hi=0.331250)
+    [iter 15] γ=0.293750 (γ_lo=0.281250, γ_hi=0.306250)
+      Convergiu na época 1
+    [iter 16] γ=0.343750 (γ_lo=0.293750, γ_hi=0.306250)
+    [iter 17] γ=0.318750 (γ_lo=0.293750, γ_hi=0.343750)
+    [iter 18] γ=0.306250 (γ_lo=0.293750, γ_hi=0.318750)
+    [iter 19] γ=0.300000 (γ_lo=0.293750, γ_hi=0.306250)
+    [iter 20] γ=0.296875 (γ_lo=0.293750, γ_hi=0.300000)
+    [iter 21] γ=0.295312 (γ_lo=0.293750, γ_hi=0.296875)
+      Convergiu na época 1
+    [iter 22] γ=0.345312 (γ_lo=0.295312, γ_hi=0.296875)
+    [iter 23] γ=0.320312 (γ_lo=0.295312, γ_hi=0.345312)
+    [iter 24] γ=0.307812 (γ_lo=0.295312, γ_hi=0.320312)
+    [iter 25] γ=0.301562 (γ_lo=0.295312, γ_hi=0.307812)
+    [iter 26] γ=0.298437 (γ_lo=0.295312, γ_hi=0.301562)
+    [iter 27] γ=0.296875 (γ_lo=0.295312, γ_hi=0.298437)
+    [iter 28] γ=0.296094 (γ_lo=0.295312, γ_hi=0.296875)
+    [iter 29] γ=0.295703 (γ_lo=0.295312, γ_hi=0.296094)
+    [iter 30] γ=0.295508 (γ_lo=0.295312, γ_hi=0.295703)
+    [iter 31] γ=0.295410 (γ_lo=0.295312, γ_hi=0.295508)
+    >>> [Perceptron] Ŵ_LLM estimado (bruto): [0.0005, 0.0023]
+    >>> [Perceptron] Ŵ_LLM estimado (unitário): [0.1984, 0.9801]
+    >>> [Perceptron] Razão w1/w2: 0.2024  ← determina a geometria da fronteira
+    >>> [Perceptron] Gamma ótimo encontrado: 0.2953
+
+  Passo 3b: Estimando a métrica W via Mínimos Quadrados (NNLS)...
+    (Validação cruzada: se ambos convergem para W similar, resultado é robusto ao método)
+    [Mínimos Quadrados] W encontrado: [0.0238, 0.1083]
+    Resíduo: 9.3540
+    >>> [NNLS] Ŵ_LLM estimado (bruto): [0.0238, 0.1083]
+    >>> [NNLS] Ŵ_LLM estimado (normalizado): [0.180, 0.820]
+    >>> [NNLS] Razão w1/w2: 0.2199
+    >>> Similaridade cosseno (Perceptron vs NNLS): 0.9999
+
+  Passo 4: Verificando fidelidade das métricas estimadas...
+    [Perceptron] Fidelidade (métrica vs. LLM no Problema A): 80.7%
+    [NNLS]       Fidelidade (métrica vs. LLM no Problema A): 80.0%
+    Acurácia do LLM vs. ground truth: 48.7%
+    ⚠ Fidelidade baixa em ambos — a métrica pode não representar bem o LLM.
+
+  ══════════════════════════════════════════════════════════════
+  FASE B (Problema B): TESTE DE CONSISTÊNCIA
+  ══════════════════════════════════════════════════════════════
+  Aplicando a métrica W estimada no Problema A a este novo problema.
+  Objetivo: verificar se o LLM concorda com a métrica em dados não vistos.
+
+  Coletando decisões do LLM para 100 pontos de teste...
+  [FASE B (Problema B)] Coletando decisões do LLM (zero-shot) — 100 pontos [async, concurrency=10]...
+    [ 10/100] 1.1s | ETA: 10s
+    [ 20/100] 1.7s | ETA: 7s
+    [ 30/100] 2.2s | ETA: 5s
+    [ 40/100] 2.8s | ETA: 4s
+    [ 50/100] 3.6s | ETA: 4s
+    [ 60/100] 4.2s | ETA: 3s
+    [ 70/100] 4.9s | ETA: 2s
+    [ 80/100] 5.5s | ETA: 1s
+    [ 90/100] 6.1s | ETA: <1s
+    [100/100] 7.3s | ETA: <1s
+    ✓ Concluído em 7.3s — Classe A: 95 (95.0%) | Classe B: 5 (5.0%)
+    Predições da métrica (W_A + centróides locais): Classe 0=73, Classe 1=27
+    [Ablativo] Consistência com centróides LOCAIS:       74.0%
+    [Ablativo] Consistência com centróides TRANSFERIDOS: 68.0%
+    → Centróides locais melhoram em 6.0% — recálculo justificado.
+
+  RESULTADOS: FASE B (Problema B)
+    CONSISTÊNCIA (LLM vs. Métrica W_A + centróides locais): 74.0%
+    Kappa de Cohen: 0.113
+    F1-Score: 0.740
+    Concordâncias: 74 | Discordâncias: 26
+    Consistência da linha de base Euclidiana: 64.0%
+    Conjunto de teste: 100 pontos (excluídos 0 exemplos few-shot)
+    O LLM mantém consistência PARCIAL com a métrica (W_A + centróides locais).
+
+  ══════════════════════════════════════════════════════════════
+  FASE C (Problema C): TESTE DE CONSISTÊNCIA
+  ══════════════════════════════════════════════════════════════
+  Aplicando a métrica W estimada no Problema A a este novo problema.
+  Objetivo: verificar se o LLM concorda com a métrica em dados não vistos.
+
+  Coletando decisões do LLM para 100 pontos de teste...
+  [FASE C (Problema C)] Coletando decisões do LLM (zero-shot) — 100 pontos [async, concurrency=10]...
+    [ 10/100] 1.2s | ETA: 10s
+    [ 20/100] 2.0s | ETA: 8s
+    [ 30/100] 2.6s | ETA: 6s
+    [ 40/100] 3.4s | ETA: 5s
+    [ 50/100] 3.9s | ETA: 4s
+    [ 60/100] 4.6s | ETA: 3s
+    [ 70/100] 5.4s | ETA: 2s
+    [ 80/100] 6.1s | ETA: 2s
+    [ 90/100] 6.7s | ETA: <1s
+    [100/100] 9.5s | ETA: <1s
+    ✓ Concluído em 9.5s — Classe A: 92 (92.0%) | Classe B: 8 (8.0%)
+    Predições da métrica (W_A + centróides locais): Classe 0=67, Classe 1=33
+    [Ablativo] Consistência com centróides LOCAIS:       75.0%
+    [Ablativo] Consistência com centróides TRANSFERIDOS: 69.0%
+    → Centróides locais melhoram em 6.0% — recálculo justificado.
+
+  RESULTADOS: FASE C (Problema C)
+    CONSISTÊNCIA (LLM vs. Métrica W_A + centróides locais): 75.0%
+    Kappa de Cohen: 0.300
+    F1-Score: 0.750
+    Concordâncias: 75 | Discordâncias: 25
+    Consistência da linha de base Euclidiana: 70.0%
+    Conjunto de teste: 100 pontos (excluídos 0 exemplos few-shot)
+    O LLM mantém consistência PARCIAL com a métrica (W_A + centróides locais).
+
+  --- Comparação Perceptron vs NNLS (Fases B/C) ---
+    [Perceptron] Consistência B: 74.0% | Kappa B: 0.113
+    [NNLS]       Consistência B: 73.0% | Kappa B: 0.106
+    [Perceptron] Consistência C: 75.0% | Kappa C: 0.300
+    [NNLS]       Consistência C: 73.0% | Kappa C: 0.278
+  [ABC-Prompt] variant=cot, rep=1/1, seed=42
+
+──────────────────────────────────────────────────────────────────────
+ EXPERIMENT: Phase B/C=zero-shot | Classes: A/B | Rep: 1 | Seed: 42
+──────────────────────────────────────────────────────────────────────
+
+
+  [Iniciando Fase A: Estimando a Métrica W a partir das decisões do LLM...]
+
+  ══════════════════════════════════════════════════════════════
+  FASE A: ESTIMANDO A MÉTRICA W DO PROBLEMA A (ZERO-SHOT) [prompt: cot]
+  ══════════════════════════════════════════════════════════════
+  Objetivo: capturar o processo decisório INTRÍNSECO do LLM.
+  O LLM classifica pontos sem exemplos (zero-shot), e a métrica
+  Ŵ_LLM é inferida a partir dessas decisões via otimização inversa.
+
+  Passo 1: Coletando decisões do LLM no Problema A (zero-shot)...
+    Classes usadas: 'A' e 'B'
+    Pontos de treino: 150
+  [Problema A [prompt: cot]] Coletando decisões do LLM (zero-shot) — 150 pontos [async, concurrency=10]...
+    [ 10/150] 8.8s | ETA: 123s
+    [ 20/150] 13.6s | ETA: 88s
+    [ 30/150] 18.6s | ETA: 74s
+    [ 40/150] 24.5s | ETA: 67s
+    [ 50/150] 30.3s | ETA: 61s
+    [ 60/150] 34.9s | ETA: 52s
+    [ 70/150] 39.9s | ETA: 46s
+    [ 80/150] 44.4s | ETA: 39s
+    [ 90/150] 48.3s | ETA: 32s
+    [100/150] 53.3s | ETA: 27s
+    [110/150] 58.5s | ETA: 21s
+    [120/150] 61.3s | ETA: 15s
+    [130/150] 66.4s | ETA: 10s
+    [140/150] 70.8s | ETA: 5s
+    [150/150] 77.5s | ETA: <1s
+    ✓ Concluído em 77.5s — Classe A: 97 (64.7%) | Classe B: 53 (35.3%)
+
+  Passo 2: Calculando centróides a partir das decisões do LLM...
+    Centróide da Classe 0: (0.334, 0.323)
+    Centróide da Classe 1: (-0.727, -0.514)
+
+  Passo 3a: Estimando a métrica W via Perceptron Estruturado com Relaxação de Margem...
+    (Busca binária no gamma ótimo para maximizar a margem da fronteira de decisão)
+    [iter 1] γ=0.100000 (γ_lo=0.000000, γ_hi=∞)
+    [iter 2] γ=0.050000 (γ_lo=0.000000, γ_hi=0.100000)
+    [iter 3] γ=0.025000 (γ_lo=0.000000, γ_hi=0.050000)
+      Convergiu na época 21
+    [iter 4] γ=0.075000 (γ_lo=0.025000, γ_hi=0.050000)
+      Convergiu na época 3
+    [iter 5] γ=0.125000 (γ_lo=0.075000, γ_hi=0.050000)
+      Convergiu na época 2
+    [iter 6] γ=0.175000 (γ_lo=0.125000, γ_hi=0.050000)
+      Convergiu na época 1
+    [iter 7] γ=0.225000 (γ_lo=0.175000, γ_hi=0.050000)
+      Convergiu na época 2
+    [iter 8] γ=0.275000 (γ_lo=0.225000, γ_hi=0.050000)
+      Convergiu na época 1
+    [iter 9] γ=0.325000 (γ_lo=0.275000, γ_hi=0.050000)
+    [iter 10] γ=0.300000 (γ_lo=0.275000, γ_hi=0.325000)
+      Convergiu na época 2
+    [iter 11] γ=0.350000 (γ_lo=0.300000, γ_hi=0.325000)
+      Convergiu na época 1
+    [iter 12] γ=0.400000 (γ_lo=0.350000, γ_hi=0.325000)
+      Convergiu na época 1
+    [iter 13] γ=0.450000 (γ_lo=0.400000, γ_hi=0.325000)
+      Convergiu na época 1
+    [iter 14] γ=0.500000 (γ_lo=0.450000, γ_hi=0.325000)
+    [iter 15] γ=0.475000 (γ_lo=0.450000, γ_hi=0.500000)
+    [iter 16] γ=0.462500 (γ_lo=0.450000, γ_hi=0.475000)
+    [iter 17] γ=0.456250 (γ_lo=0.450000, γ_hi=0.462500)
+      Convergiu na época 1
+    [iter 18] γ=0.506250 (γ_lo=0.456250, γ_hi=0.462500)
+    [iter 19] γ=0.481250 (γ_lo=0.456250, γ_hi=0.506250)
+    [iter 20] γ=0.468750 (γ_lo=0.456250, γ_hi=0.481250)
+    [iter 21] γ=0.462500 (γ_lo=0.456250, γ_hi=0.468750)
+    [iter 22] γ=0.459375 (γ_lo=0.456250, γ_hi=0.462500)
+      Convergiu na época 1
+    [iter 23] γ=0.509375 (γ_lo=0.459375, γ_hi=0.462500)
+    [iter 24] γ=0.484375 (γ_lo=0.459375, γ_hi=0.509375)
+    [iter 25] γ=0.471875 (γ_lo=0.459375, γ_hi=0.484375)
+    [iter 26] γ=0.465625 (γ_lo=0.459375, γ_hi=0.471875)
+    [iter 27] γ=0.462500 (γ_lo=0.459375, γ_hi=0.465625)
+    [iter 28] γ=0.460937 (γ_lo=0.459375, γ_hi=0.462500)
+      Convergiu na época 1
+    [iter 29] γ=0.510937 (γ_lo=0.460937, γ_hi=0.462500)
+    [iter 30] γ=0.485937 (γ_lo=0.460937, γ_hi=0.510937)
+    [iter 31] γ=0.473437 (γ_lo=0.460937, γ_hi=0.485937)
+    [iter 32] γ=0.467187 (γ_lo=0.460937, γ_hi=0.473437)
+    [iter 33] γ=0.464062 (γ_lo=0.460937, γ_hi=0.467187)
+    [iter 34] γ=0.462500 (γ_lo=0.460937, γ_hi=0.464062)
+    [iter 35] γ=0.461719 (γ_lo=0.460937, γ_hi=0.462500)
+      Convergiu na época 1
+    [iter 36] γ=0.511719 (γ_lo=0.461719, γ_hi=0.462500)
+    [iter 37] γ=0.486719 (γ_lo=0.461719, γ_hi=0.511719)
+    [iter 38] γ=0.474219 (γ_lo=0.461719, γ_hi=0.486719)
+    [iter 39] γ=0.467969 (γ_lo=0.461719, γ_hi=0.474219)
+    [iter 40] γ=0.464844 (γ_lo=0.461719, γ_hi=0.467969)
+    [iter 41] γ=0.463281 (γ_lo=0.461719, γ_hi=0.464844)
+    [iter 42] γ=0.462500 (γ_lo=0.461719, γ_hi=0.463281)
+    [iter 43] γ=0.462109 (γ_lo=0.461719, γ_hi=0.462500)
+      Convergiu na época 1
+    [iter 44] γ=0.512109 (γ_lo=0.462109, γ_hi=0.462500)
+    [iter 45] γ=0.487109 (γ_lo=0.462109, γ_hi=0.512109)
+    [iter 46] γ=0.474609 (γ_lo=0.462109, γ_hi=0.487109)
+    [iter 47] γ=0.468359 (γ_lo=0.462109, γ_hi=0.474609)
+    [iter 48] γ=0.465234 (γ_lo=0.462109, γ_hi=0.468359)
+    [iter 49] γ=0.463672 (γ_lo=0.462109, γ_hi=0.465234)
+    [iter 50] γ=0.462891 (γ_lo=0.462109, γ_hi=0.463672)
+    >>> [Perceptron] Ŵ_LLM estimado (bruto): [0.0001, 0.0007]
+    >>> [Perceptron] Ŵ_LLM estimado (unitário): [0.1347, 0.9909]
+    >>> [Perceptron] Razão w1/w2: 0.1360  ← determina a geometria da fronteira
+    >>> [Perceptron] Gamma ótimo encontrado: 0.4621
+
+  Passo 3b: Estimando a métrica W via Mínimos Quadrados (NNLS)...
+    (Validação cruzada: se ambos convergem para W similar, resultado é robusto ao método)
+    [Mínimos Quadrados] W encontrado: [0.0401, 0.1687]
+    Resíduo: 11.2030
+    >>> [NNLS] Ŵ_LLM estimado (bruto): [0.0401, 0.1687]
+    >>> [NNLS] Ŵ_LLM estimado (normalizado): [0.192, 0.808]
+    >>> [NNLS] Razão w1/w2: 0.2379
+    >>> Similaridade cosseno (Perceptron vs NNLS): 0.9951
+
+  Passo 4: Verificando fidelidade das métricas estimadas...
+    [Perceptron] Fidelidade (métrica vs. LLM no Problema A): 67.3%
+    [NNLS]       Fidelidade (métrica vs. LLM no Problema A): 66.0%
+    Acurácia do LLM vs. ground truth: 40.0%
+    ⚠ Fidelidade baixa em ambos — a métrica pode não representar bem o LLM.
+
+  ══════════════════════════════════════════════════════════════
+  FASE B (Problema B): TESTE DE CONSISTÊNCIA
+  ══════════════════════════════════════════════════════════════
+  Aplicando a métrica W estimada no Problema A a este novo problema.
+  Objetivo: verificar se o LLM concorda com a métrica em dados não vistos.
+
+  Coletando decisões do LLM para 100 pontos de teste...
+  [FASE B (Problema B)] Coletando decisões do LLM (zero-shot) — 100 pontos [async, concurrency=10]...
+    [ 10/100] 7.5s | ETA: 67s
+    [ 20/100] 11.5s | ETA: 46s
+    [ 30/100] 17.5s | ETA: 41s
+    [ 40/100] 22.3s | ETA: 33s
+    [ 50/100] 26.4s | ETA: 26s
+    [ 60/100] 31.7s | ETA: 21s
+    [ 70/100] 36.8s | ETA: 16s
+    [ 80/100] 40.8s | ETA: 10s
+    [ 90/100] 45.6s | ETA: 5s
+    [100/100] 53.2s | ETA: <1s
+    ✓ Concluído em 53.2s — Classe A: 83 (83.0%) | Classe B: 17 (17.0%)
+    Predições da métrica (W_A + centróides locais): Classe 0=58, Classe 1=42
+    [Ablativo] Consistência com centróides LOCAIS:       59.0%
+    [Ablativo] Consistência com centróides TRANSFERIDOS: 63.0%
+    → Diferença marginal (-4.0%) — ambas abordagens comparáveis.
+
+  RESULTADOS: FASE B (Problema B)
+    CONSISTÊNCIA (LLM vs. Métrica W_A + centróides locais): 59.0%
+    Kappa de Cohen: 0.083
+    F1-Score: 0.590
+    Concordâncias: 59 | Discordâncias: 41
+    Consistência da linha de base Euclidiana: 60.0%
+    Conjunto de teste: 100 pontos (excluídos 0 exemplos few-shot)
+    ⚠ O LLM NÃO mantém consistência com a métrica (W_A + centróides locais).
+
+  ══════════════════════════════════════════════════════════════
+  FASE C (Problema C): TESTE DE CONSISTÊNCIA
+  ══════════════════════════════════════════════════════════════
+  Aplicando a métrica W estimada no Problema A a este novo problema.
+  Objetivo: verificar se o LLM concorda com a métrica em dados não vistos.
+
+  Coletando decisões do LLM para 100 pontos de teste...
+  [FASE C (Problema C)] Coletando decisões do LLM (zero-shot) — 100 pontos [async, concurrency=10]...
+    [ 10/100] 5.9s | ETA: 53s
+    [ 20/100] 11.7s | ETA: 47s
+    [ 30/100] 16.0s | ETA: 37s
+    [ 40/100] 21.6s | ETA: 32s
+    [ 50/100] 27.4s | ETA: 27s
+    [ 60/100] 31.7s | ETA: 21s
+    [ 70/100] 37.9s | ETA: 16s
+    [ 80/100] 42.3s | ETA: 11s
+    [ 90/100] 46.2s | ETA: 5s
+    [100/100] 51.6s | ETA: <1s
+    ✓ Concluído em 51.7s — Classe A: 41 (41.0%) | Classe B: 59 (59.0%)
+    Predições da métrica (W_A + centróides locais): Classe 0=49, Classe 1=51
+    [Ablativo] Consistência com centróides LOCAIS:       78.0%
+    [Ablativo] Consistência com centróides TRANSFERIDOS: 80.0%
+    → Diferença marginal (-2.0%) — ambas abordagens comparáveis.
+
+  RESULTADOS: FASE C (Problema C)
+    CONSISTÊNCIA (LLM vs. Métrica W_A + centróides locais): 78.0%
+    Kappa de Cohen: 0.558
+    F1-Score: 0.780
+    Concordâncias: 78 | Discordâncias: 22
+    Consistência da linha de base Euclidiana: 77.0%
+    Conjunto de teste: 100 pontos (excluídos 0 exemplos few-shot)
+    O LLM mantém consistência PARCIAL com a métrica (W_A + centróides locais).
+
+  --- Comparação Perceptron vs NNLS (Fases B/C) ---
+    [Perceptron] Consistência B: 59.0% | Kappa B: 0.083
+    [NNLS]       Consistência B: 59.0% | Kappa B: 0.134
+    [Perceptron] Consistência C: 78.0% | Kappa C: 0.558
+    [NNLS]       Consistência C: 77.0% | Kappa C: 0.537
+  [ABC-Prompt] variant=tabular, rep=1/1, seed=42
+
+──────────────────────────────────────────────────────────────────────
+ EXPERIMENT: Phase B/C=zero-shot | Classes: A/B | Rep: 1 | Seed: 42
+──────────────────────────────────────────────────────────────────────
+
+
+  [Iniciando Fase A: Estimando a Métrica W a partir das decisões do LLM...]
+
+  ══════════════════════════════════════════════════════════════
+  FASE A: ESTIMANDO A MÉTRICA W DO PROBLEMA A (ZERO-SHOT) [prompt: tabular]
+  ══════════════════════════════════════════════════════════════
+  Objetivo: capturar o processo decisório INTRÍNSECO do LLM.
+  O LLM classifica pontos sem exemplos (zero-shot), e a métrica
+  Ŵ_LLM é inferida a partir dessas decisões via otimização inversa.
+
+  Passo 1: Coletando decisões do LLM no Problema A (zero-shot)...
+    Classes usadas: 'A' e 'B'
+    Pontos de treino: 150
+  [Problema A [prompt: tabular]] Coletando decisões do LLM (zero-shot) — 150 pontos [async, concurrency=10]...
+    [ 10/150] 1.5s | ETA: 21s
+    [ 20/150] 2.3s | ETA: 15s
+    [ 30/150] 3.0s | ETA: 12s
+    [ 40/150] 3.8s | ETA: 10s
+    [ 50/150] 4.7s | ETA: 9s
+    [ 60/150] 5.5s | ETA: 8s
+    [ 70/150] 6.1s | ETA: 7s
+    [ 80/150] 6.7s | ETA: 6s
+    [ 90/150] 7.5s | ETA: 5s
+    [100/150] 8.1s | ETA: 4s
+    [110/150] 8.7s | ETA: 3s
+    [120/150] 9.5s | ETA: 2s
+    [130/150] 10.2s | ETA: 2s
+    [140/150] 10.8s | ETA: <1s
+    [150/150] 12.5s | ETA: <1s
+    ✓ Concluído em 12.5s — Classe A: 142 (94.7%) | Classe B: 8 (5.3%)
+
+  Passo 2: Calculando centróides a partir das decisões do LLM...
+    Centróide da Classe 0: (0.144, 0.037)
+    Centróide da Classe 1: (-3.320, -0.143)
+
+  Passo 3a: Estimando a métrica W via Perceptron Estruturado com Relaxação de Margem...
+    (Busca binária no gamma ótimo para maximizar a margem da fronteira de decisão)
+    [iter 1] γ=0.100000 (γ_lo=0.000000, γ_hi=∞)
+    [iter 2] γ=0.050000 (γ_lo=0.000000, γ_hi=0.100000)
+    [iter 3] γ=0.025000 (γ_lo=0.000000, γ_hi=0.050000)
+    [iter 4] γ=0.012500 (γ_lo=0.000000, γ_hi=0.025000)
+    [iter 5] γ=0.006250 (γ_lo=0.000000, γ_hi=0.012500)
+    [iter 6] γ=0.003125 (γ_lo=0.000000, γ_hi=0.006250)
+    [iter 7] γ=0.001563 (γ_lo=0.000000, γ_hi=0.003125)
+    [iter 8] γ=0.000781 (γ_lo=0.000000, γ_hi=0.001563)
+    [iter 9] γ=0.000391 (γ_lo=0.000000, γ_hi=0.000781)
+    [iter 10] γ=0.000195 (γ_lo=0.000000, γ_hi=0.000391)
+    [iter 11] γ=0.000098 (γ_lo=0.000000, γ_hi=0.000195)
+    ⚠️ Perceptron: separação perfeita não encontrada. Retornando melhor esforço (violações: 38). Métrica pode ser imprecisa.
+    >>> [Perceptron] Ŵ_LLM estimado (bruto): [0.0278, 0.3860]
+    >>> [Perceptron] Ŵ_LLM estimado (unitário): [0.0718, 0.9974]
+    >>> [Perceptron] Razão w1/w2: 0.0720  ← determina a geometria da fronteira
+    >>> [Perceptron] Gamma ótimo encontrado: 0.0000
+
+  Passo 3b: Estimando a métrica W via Mínimos Quadrados (NNLS)...
+    (Validação cruzada: se ambos convergem para W similar, resultado é robusto ao método)
+    [Mínimos Quadrados] W encontrado: [0.0301, 0.0914]
+    Resíduo: 9.7664
+    >>> [NNLS] Ŵ_LLM estimado (bruto): [0.0301, 0.0914]
+    >>> [NNLS] Ŵ_LLM estimado (normalizado): [0.248, 0.752]
+    >>> [NNLS] Razão w1/w2: 0.3295
+    >>> Similaridade cosseno (Perceptron vs NNLS): 0.9698
+
+  Passo 4: Verificando fidelidade das métricas estimadas...
+    [Perceptron] Fidelidade (métrica vs. LLM no Problema A): 69.3%
+    [NNLS]       Fidelidade (métrica vs. LLM no Problema A): 68.7%
+    Acurácia do LLM vs. ground truth: 46.0%
+    ⚠ Fidelidade baixa em ambos — a métrica pode não representar bem o LLM.
+
+  ══════════════════════════════════════════════════════════════
+  FASE B (Problema B): TESTE DE CONSISTÊNCIA
+  ══════════════════════════════════════════════════════════════
+  Aplicando a métrica W estimada no Problema A a este novo problema.
+  Objetivo: verificar se o LLM concorda com a métrica em dados não vistos.
+
+  Coletando decisões do LLM para 100 pontos de teste...
+  [FASE B (Problema B)] Coletando decisões do LLM (zero-shot) — 100 pontos [async, concurrency=10]...
+    [ 10/100] 1.4s | ETA: 13s
+    [ 20/100] 1.9s | ETA: 8s
+    [ 30/100] 2.5s | ETA: 6s
+    [ 40/100] 3.3s | ETA: 5s
+    [ 50/100] 4.0s | ETA: 4s
+    [ 60/100] 5.0s | ETA: 3s
+    [ 70/100] 5.7s | ETA: 2s
+    [ 80/100] 6.3s | ETA: 2s
+    [ 90/100] 7.0s | ETA: <1s
+    [100/100] 9.8s | ETA: <1s
+    ✓ Concluído em 9.8s — Classe A: 92 (92.0%) | Classe B: 8 (8.0%)
+    Predições da métrica (W_A + centróides locais): Classe 0=63, Classe 1=37
+    [Ablativo] Consistência com centróides LOCAIS:       63.0%
+    [Ablativo] Consistência com centróides TRANSFERIDOS: 85.0%
+    → ⚠ Centróides transferidos superiores (-22.0%) — investigar.
+
+  RESULTADOS: FASE B (Problema B)
+    CONSISTÊNCIA (LLM vs. Métrica W_A + centróides locais): 63.0%
+    Kappa de Cohen: 0.053
+    F1-Score: 0.630
+    Concordâncias: 63 | Discordâncias: 37
+    Consistência da linha de base Euclidiana: 69.0%
+    Conjunto de teste: 100 pontos (excluídos 0 exemplos few-shot)
+    ⚠ O LLM NÃO mantém consistência com a métrica (W_A + centróides locais).
+
+  ══════════════════════════════════════════════════════════════
+  FASE C (Problema C): TESTE DE CONSISTÊNCIA
+  ══════════════════════════════════════════════════════════════
+  Aplicando a métrica W estimada no Problema A a este novo problema.
+  Objetivo: verificar se o LLM concorda com a métrica em dados não vistos.
+
+  Coletando decisões do LLM para 100 pontos de teste...
+  [FASE C (Problema C)] Coletando decisões do LLM (zero-shot) — 100 pontos [async, concurrency=10]...
+    [ 10/100] 1.6s | ETA: 15s
+    [ 20/100] 2.2s | ETA: 9s
+    [ 30/100] 3.2s | ETA: 7s
+    [ 40/100] 3.8s | ETA: 6s
+    [ 50/100] 4.6s | ETA: 5s
+    [ 60/100] 5.1s | ETA: 3s
+    [ 70/100] 5.6s | ETA: 2s
+    [ 80/100] 6.2s | ETA: 2s
+    [ 90/100] 6.8s | ETA: <1s
+    [100/100] 10.7s | ETA: <1s
+    ✓ Concluído em 10.7s — Classe A: 95 (95.0%) | Classe B: 5 (5.0%)
+    Predições da métrica (W_A + centróides locais): Classe 0=73, Classe 1=27
+    [Ablativo] Consistência com centróides LOCAIS:       78.0%
+    [Ablativo] Consistência com centróides TRANSFERIDOS: 59.0%
+    → Centróides locais melhoram em 19.0% — recálculo justificado.
+
+  RESULTADOS: FASE C (Problema C)
+    CONSISTÊNCIA (LLM vs. Métrica W_A + centróides locais): 78.0%
+    Kappa de Cohen: 0.249
+    F1-Score: 0.780
+    Concordâncias: 78 | Discordâncias: 22
+    Consistência da linha de base Euclidiana: 66.0%
+    Conjunto de teste: 100 pontos (excluídos 0 exemplos few-shot)
+    O LLM mantém consistência PARCIAL com a métrica (W_A + centróides locais).
+
+  --- Comparação Perceptron vs NNLS (Fases B/C) ---
+    [Perceptron] Consistência B: 63.0% | Kappa B: 0.053
+    [NNLS]       Consistência B: 83.0% | Kappa B: 0.378
+    [Perceptron] Consistência C: 78.0% | Kappa C: 0.249
+    [NNLS]       Consistência C: 70.0% | Kappa C: 0.135
+  ✓ Teste de variantes de prompt concluído
+
+>>> Fases A-C: Teste de nomes semânticos nas features
+    Features: altura/peso
+  [Features altura/peso] Coletando decisões do LLM (zero-shot) — 150 pontos [async, concurrency=10]...
+    [ 10/150] 1.5s | ETA: 21s
+    [ 20/150] 2.0s | ETA: 13s
+    [ 30/150] 2.7s | ETA: 11s
+    [ 40/150] 3.3s | ETA: 9s
+    [ 50/150] 3.9s | ETA: 8s
+    [ 60/150] 4.8s | ETA: 7s
+    [ 70/150] 5.4s | ETA: 6s
+    [ 80/150] 5.9s | ETA: 5s
+    [ 90/150] 6.6s | ETA: 4s
+    [100/150] 7.2s | ETA: 4s
+    [110/150] 8.0s | ETA: 3s
+    [120/150] 8.5s | ETA: 2s
+    [130/150] 9.2s | ETA: 1s
+    [140/150] 10.0s | ETA: <1s
+    [150/150] 13.3s | ETA: <1s
+    ✓ Concluído em 13.3s — Classe A: 52 (34.7%) | Classe B: 98 (65.3%)
+    [Perceptron] Ŵ_LLM com features altura/peso: [0.0253, 0.0238]
+    [NNLS]       Ŵ_LLM com features altura/peso: [0.0398, 0.1594]
+    Similaridade cosseno (Perceptron vs NNLS): 0.8419
+    [Perceptron] Fidelidade: 82.0%, Cons B: 65.0%, Cons C: 93.0%
+    [NNLS]       Fidelidade: 84.0%, Cons B: 75.0%, Cons C: 94.0%
+    Features: feature_1/feature_2
+  [Features feature_1/feature_2] Coletando decisões do LLM (zero-shot) — 150 pontos [async, concurrency=10]...
+    [ 10/150] 1.6s | ETA: 22s
+    [ 20/150] 2.3s | ETA: 15s
+    [ 30/150] 2.8s | ETA: 11s
+    [ 40/150] 3.5s | ETA: 9s
+    [ 50/150] 4.3s | ETA: 9s
+    [ 60/150] 5.0s | ETA: 8s
+    [ 70/150] 5.6s | ETA: 6s
+    [ 80/150] 6.3s | ETA: 5s
+    [ 90/150] 7.0s | ETA: 5s
+    [100/150] 7.6s | ETA: 4s
+    [110/150] 8.3s | ETA: 3s
+    [120/150] 8.8s | ETA: 2s
+    [130/150] 9.4s | ETA: 1s
+    [140/150] 10.0s | ETA: <1s
+    [150/150] 12.9s | ETA: <1s
+    ✓ Concluído em 12.9s — Classe A: 113 (75.3%) | Classe B: 37 (24.7%)
+    [Perceptron] Ŵ_LLM com features feature_1/feature_2: [0.0024, 0.0141]
+    [NNLS]       Ŵ_LLM com features feature_1/feature_2: [0.0364, 0.1429]
+    Similaridade cosseno (Perceptron vs NNLS): 0.9969
+    [Perceptron] Fidelidade: 86.7%, Cons B: 86.0%, Cons C: 82.0%
+    [NNLS]       Fidelidade: 86.7%, Cons B: 88.0%, Cons C: 81.0%
+  ✓ Teste de nomes de features concluído
+
+>>> Comparação de Algoritmos: Perceptron vs NNLS
+    [Mínimos Quadrados] W encontrado: [0.0358, 0.1425]
+    Resíduo: 8.8249
+    [NNLS] Rodando Fase B (Problema B)...
+
+  ══════════════════════════════════════════════════════════════
+  FASE B — NNLS: TESTE DE CONSISTÊNCIA
+  ══════════════════════════════════════════════════════════════
+  Aplicando a métrica W estimada no Problema A a este novo problema.
+  Objetivo: verificar se o LLM concorda com a métrica em dados não vistos.
+
+  Coletando decisões do LLM para 100 pontos de teste...
+  [FASE B — NNLS] Coletando decisões do LLM (zero-shot) — 100 pontos [async, concurrency=10]...
+    [ 10/100] 1.1s | ETA: 10s
+    [ 20/100] 2.0s | ETA: 8s
+    [ 30/100] 2.6s | ETA: 6s
+    [ 40/100] 3.1s | ETA: 5s
+    [ 50/100] 3.7s | ETA: 4s
+    [ 60/100] 4.3s | ETA: 3s
+    [ 70/100] 4.9s | ETA: 2s
+    [ 80/100] 5.7s | ETA: 1s
+    [ 90/100] 6.3s | ETA: <1s
+    [100/100] 8.2s | ETA: <1s
+    ✓ Concluído em 8.2s — Classe A: 77 (77.0%) | Classe B: 23 (23.0%)
+    Predições da métrica (W_A + centróides locais): Classe 0=61, Classe 1=39
+    [Ablativo] Consistência com centróides LOCAIS:       68.0%
+    [Ablativo] Consistência com centróides TRANSFERIDOS: 85.0%
+    → ⚠ Centróides transferidos superiores (-17.0%) — investigar.
+
+  RESULTADOS: FASE B — NNLS
+    CONSISTÊNCIA (LLM vs. Métrica W_A + centróides locais): 68.0%
+    Kappa de Cohen: 0.274
+    F1-Score: 0.680
+    Concordâncias: 68 | Discordâncias: 32
+    Consistência da linha de base Euclidiana: 82.0%
+    Conjunto de teste: 100 pontos (excluídos 0 exemplos few-shot)
+    ⚠ O LLM NÃO mantém consistência com a métrica (W_A + centróides locais).
+    [NNLS] Rodando Fase C (Problema C)...
+
+  ══════════════════════════════════════════════════════════════
+  FASE C — NNLS: TESTE DE CONSISTÊNCIA
+  ══════════════════════════════════════════════════════════════
+  Aplicando a métrica W estimada no Problema A a este novo problema.
+  Objetivo: verificar se o LLM concorda com a métrica em dados não vistos.
+
+  Coletando decisões do LLM para 100 pontos de teste...
+  [FASE C — NNLS] Coletando decisões do LLM (zero-shot) — 100 pontos [async, concurrency=10]...
+    [ 10/100] 1.6s | ETA: 14s
+    [ 20/100] 2.1s | ETA: 8s
+    [ 30/100] 2.7s | ETA: 6s
+    [ 40/100] 3.3s | ETA: 5s
+    [ 50/100] 3.9s | ETA: 4s
+    [ 60/100] 4.7s | ETA: 3s
+    [ 70/100] 5.2s | ETA: 2s
+    [ 80/100] 5.7s | ETA: 1s
+    [ 90/100] 6.4s | ETA: <1s
+    [100/100] 36.1s | ETA: <1s
+    ✓ Concluído em 36.1s — Classe A: 67 (67.0%) | Classe B: 33 (33.0%)
+    Predições da métrica (W_A + centróides locais): Classe 0=57, Classe 1=43
+    [Ablativo] Consistência com centróides LOCAIS:       90.0%
+    [Ablativo] Consistência com centróides TRANSFERIDOS: 86.0%
+    → Diferença marginal (+4.0%) — ambas abordagens comparáveis.
+
+  RESULTADOS: FASE C — NNLS
+    CONSISTÊNCIA (LLM vs. Métrica W_A + centróides locais): 90.0%
+    Kappa de Cohen: 0.790
+    F1-Score: 0.900
+    Concordâncias: 90 | Discordâncias: 10
+    Consistência da linha de base Euclidiana: 85.0%
+    Conjunto de teste: 100 pontos (excluídos 0 exemplos few-shot)
+    O LLM MANTÉM consistência elevada com a métrica (W_A + centróides locais).
+    --- Comparação Fase A (Fidelidade) ---
+    Perceptron: W=[0.0009, 0.0030], Fidelidade=82.0%
+    NNLS:       W=[0.0358, 0.1425], Fidelidade=82.7%
+    --- Comparação Fase B (Consistência) ---
+    Perceptron: Consistência B=70.0%, Kappa=0.330
+    NNLS:       Consistência B=68.0%, Kappa=0.274
+    --- Comparação Fase C (Consistência) ---
+    Perceptron: Consistência C=89.0%, Kappa=0.771
+    NNLS:       Consistência C=90.0%, Kappa=0.790
+  ✓ Comparação de algoritmos concluída
+
+>>> Validação do Oráculo: Algoritmos recuperam W conhecido?
+
+  ═══ Parte 1: Problemas A, B, C (W verdadeiro = [1.0, 1.0]) ═══
+
+  ── Problema A: centroides=[[-2.0, 0.0], [2.0, 0.0]], W_verdadeiro=[1. 1.]
+    [PERCEPTRON] W_rec=[0.0085, 0.9998] | Fidelidade=98.0% | Cosseno=0.7131 | Razão w1/w2: verdadeira=1.000 recuperada=0.008
+    [NNLS      ] W_rec=[0.0454, 0.0000] | Fidelidade=98.0% | Cosseno=0.7071 | Razão w1/w2: verdadeira=1.000 recuperada=inf
+
+  ── Problema B: centroides=[[-2.0, 1.5], [2.0, -1.5]], W_verdadeiro=[1. 1.]
+    [PERCEPTRON] W_rec=[0.9972, 0.9988] | Fidelidade=98.0% | Cosseno=1.0000 | Razão w1/w2: verdadeira=1.000 recuperada=0.998
+    [NNLS      ] W_rec=[0.0254, 0.0420] | Fidelidade=98.0% | Cosseno=0.9711 | Razão w1/w2: verdadeira=1.000 recuperada=0.606
+
+  ── Problema C: centroides=[[-2.0, -1.5], [2.0, 1.5]], W_verdadeiro=[1. 1.]
+    [PERCEPTRON] W_rec=[0.7851, 1.0923] | Fidelidade=99.0% | Cosseno=0.9869 | Razão w1/w2: verdadeira=1.000 recuperada=0.719
+    [NNLS      ] W_rec=[0.0317, 0.0327] | Fidelidade=98.0% | Cosseno=0.9999 | Razão w1/w2: verdadeira=1.000 recuperada=0.969
+
+  ═══ Parte 2: Problema E com experts (centroides do expert) ═══
+
+  ── Problema E / Expert aniso_x2: W=[0.3 1.5] (x2 dominante (original))
+    [PERCEPTRON] W_rec=[0.2268, 1.1099] | Fidelidade=100.0% | Cosseno=1.0000 | Razão w1/w2: verdadeira=0.200 recuperada=0.204
+    [NNLS      ] W_rec=[0.0298, 0.0922] | Fidelidade=95.3% | Cosseno=0.9933 | Razão w1/w2: verdadeira=0.200 recuperada=0.324
+
+  ── Problema E / Expert aniso_x1: W=[1.5 0.3] (x1 dominante (invertido))
+    [PERCEPTRON] W_rec=[1.1738, 0.3124] | Fidelidade=100.0% | Cosseno=0.9980 | Razão w1/w2: verdadeira=5.000 recuperada=3.757
+    [NNLS      ] W_rec=[0.0641, 0.0229] | Fidelidade=99.3% | Cosseno=0.9894 | Razão w1/w2: verdadeira=5.000 recuperada=2.801
+
+  ── Problema E / Expert euclidean: W=[1. 1.] (pesos iguais (Euclidiana))
+    [PERCEPTRON] W_rec=[0.9885, 0.9245] | Fidelidade=100.0% | Cosseno=0.9994 | Razão w1/w2: verdadeira=1.000 recuperada=1.069
+    [NNLS      ] W_rec=[0.0563, 0.0470] | Fidelidade=100.0% | Cosseno=0.9960 | Razão w1/w2: verdadeira=1.000 recuperada=1.197
+
+  ═══ Parte 3: Problemas anisotrópicos (W ≠ [1,1]) ═══
+
+  ── Aniso x2_dom: std=[0.5 2. ], W_verdadeiro=[4.000, 0.250] (x1 preciso, x2 ruidoso)
+    [PERCEPTRON] W_rec=[1.0000, 1.0000] | Fidelidade=100.0% | Cosseno=0.7498 | Razão w1/w2: verdadeira=16.000 recuperada=1.000
+    [NNLS      ] W_rec=[0.0576, 0.0016] | Fidelidade=100.0% | Cosseno=0.9994 | Razão w1/w2: verdadeira=16.000 recuperada=36.769
+
+  ── Aniso x1_dom: std=[2.  0.5], W_verdadeiro=[0.250, 4.000] (x1 ruidoso, x2 preciso)
+    [PERCEPTRON] W_rec=[1.0000, 1.0000] | Fidelidade=100.0% | Cosseno=0.7498 | Razão w1/w2: verdadeira=0.062 recuperada=1.000
+    [NNLS      ] W_rec=[0.0046, 0.0590] | Fidelidade=100.0% | Cosseno=0.9999 | Razão w1/w2: verdadeira=0.062 recuperada=0.078
+
+  ── Aniso forte_aniso: std=[0.3 1.5], W_verdadeiro=[11.111, 0.444] (anisotropia forte)
+    [PERCEPTRON] W_rec=[1.2763, 0.4759] | Fidelidade=100.0% | Cosseno=0.9502 | Razão w1/w2: verdadeira=25.000 recuperada=2.682
+    [NNLS      ] W_rec=[0.1038, 0.0029] | Fidelidade=100.0% | Cosseno=0.9999 | Razão w1/w2: verdadeira=25.000 recuperada=35.674
+  ✓ Validação do oráculo concluída para seed=42
+
+[PASSO 4] Fase E — Expert: aniso_x2 (x2 dominante (original))
+  W = [0.30, 1.50]
+
+══════════════════════════════════════════════════════════════════════
+ BLOCO 2 — LLM como APRENDIZ | FASE E: Expert aniso_x2
+══════════════════════════════════════════════════════════════════════
+
+  [Fase E] Expert=aniso_x2, n_shot=0, strategy=easy (1/8), seed=42
+
+  ══════════════════════════════════════════════════════════════
+  FASE E: LLM COMO APRENDIZ (zero-shot, estratégia=easy)
+  Métrica do Perito W = [0.30, 1.50]
+  ══════════════════════════════════════════════════════════════
+  O perito rotula os dados com sua métrica conhecida.
+  O LLM recebe exemplos do perito e deve APRENDER o padrão de classificação.
+
+  Passo 1: Classificação pelo Perito (métrica W_expert conhecida)
+    Rótulos do perito: Classe 0=73, Classe 1=77
+    Acurácia do perito vs. ground truth: 85.3%
+
+  Passo 3: LLM classificando 150 pontos de teste (zero-shot)...
+  [Fase E] Coletando decisões do LLM (zero-shot) — 150 pontos [async, concurrency=10]...
+    [ 10/150] 1.1s | ETA: 15s
+    [ 20/150] 1.8s | ETA: 12s
+    [ 30/150] 2.6s | ETA: 10s
+    [ 40/150] 3.2s | ETA: 9s
+    [ 50/150] 4.1s | ETA: 8s
+    [ 60/150] 4.9s | ETA: 7s
+    [ 70/150] 5.5s | ETA: 6s
+    [ 80/150] 6.3s | ETA: 6s
+    [ 90/150] 7.3s | ETA: 5s
+    [100/150] 8.1s | ETA: 4s
+    [110/150] 9.3s | ETA: 3s
+    [120/150] 10.2s | ETA: 3s
+    [130/150] 10.9s | ETA: 2s
+    [140/150] 11.5s | ETA: <1s
+    [150/150] 12.8s | ETA: <1s
+    ✓ Concluído em 12.8s — Classe A: 114 (76.0%) | Classe B: 36 (24.0%)
+
+  ═══════════════════════════════════════════════════════════
+  RESULTADOS: FASE E (zero-shot, estratégia=easy)
+  ═══════════════════════════════════════════════════════════
+    Concordância LLM vs. Perito:  56.7%
+    Kappa de Cohen:               0.145
+    F1-Score:                     0.567
+    
+    Acurácia do LLM vs. GT:       51.3%
+    Acurácia do Perito vs. GT:    85.3%
+    Concordâncias: 85 | Discordâncias: 65
+    → O LLM NÃO conseguiu aprender o padrão do perito com 0 exemplos.
+  [Fase E] Expert=aniso_x2, n_shot=0, strategy=hard (2/8), seed=42
+  [Fase E] Expert=aniso_x2, n_shot=0, strategy=mixed (3/8), seed=42
+  [Fase E] Expert=aniso_x2, n_shot=0, strategy=random (4/8), seed=42
+  [Fase E] Expert=aniso_x2, n_shot=5, strategy=easy (5/8), seed=42
+
+  ══════════════════════════════════════════════════════════════
+  FASE E: LLM COMO APRENDIZ (5-shot, estratégia=easy)
+  Métrica do Perito W = [0.30, 1.50]
+  ══════════════════════════════════════════════════════════════
+  O perito rotula os dados com sua métrica conhecida.
+  O LLM recebe exemplos do perito e deve APRENDER o padrão de classificação.
+
+  Passo 1: Classificação pelo Perito (métrica W_expert conhecida)
+    Rótulos do perito: Classe 0=73, Classe 1=77
+    Acurácia do perito vs. ground truth: 85.3%
+
+  Passo 2: Selecionando 5 exemplos (estratégia=easy)...
+    Estratégia: EASY — pontos LONGE da fronteira (mais fáceis)
+      Estratégia: EASY
+      Classe 0: 2 exemplos, faixa de margem [28.991, 30.416], média=29.704
+      Classe 1: 2 exemplos, faixa de margem [27.767, 27.996], média=27.882
+
+  Passo 3: LLM classificando 146 pontos de teste (5-shot)...
+    O LLM receberá 5 exemplos rotulados pelo perito como contexto.
+  [Fase E] Coletando decisões do LLM (4-shot) — 146 pontos [async, concurrency=10]...
+    [ 10/146] 1.8s | ETA: 24s
+    [ 20/146] 2.4s | ETA: 15s
+    [ 30/146] 3.1s | ETA: 12s
+    [ 40/146] 3.8s | ETA: 10s
+    [ 50/146] 4.4s | ETA: 9s
+    [ 60/146] 5.0s | ETA: 7s
+    [ 70/146] 5.9s | ETA: 6s
+    [ 80/146] 6.6s | ETA: 5s
+    [ 90/146] 7.3s | ETA: 5s
+    [100/146] 7.8s | ETA: 4s
+    [110/146] 8.5s | ETA: 3s
+    [120/146] 9.0s | ETA: 2s
+    [130/146] 9.7s | ETA: 1s
+    [140/146] 10.3s | ETA: <1s
+    [146/146] 13.7s | ETA: <1s
+    ✓ Concluído em 13.7s — Classe A: 72 (49.3%) | Classe B: 74 (50.7%)
+
+  ═══════════════════════════════════════════════════════════
+  RESULTADOS: FASE E (5-shot, estratégia=easy)
+  ═══════════════════════════════════════════════════════════
+    Concordância LLM vs. Perito:  91.1%
+    Kappa de Cohen:               0.822
+    F1-Score:                     0.911
+    
+    Acurácia do LLM vs. GT:       77.4%
+    Acurácia do Perito vs. GT:    85.3%
+    Concordâncias: 133 | Discordâncias: 13
+    → O LLM APRENDEU com sucesso o padrão de classificação do perito!
+  [Fase E] Expert=aniso_x2, n_shot=5, strategy=hard (6/8), seed=42
+
+  ══════════════════════════════════════════════════════════════
+  FASE E: LLM COMO APRENDIZ (5-shot, estratégia=hard)
+  Métrica do Perito W = [0.30, 1.50]
+  ══════════════════════════════════════════════════════════════
+  O perito rotula os dados com sua métrica conhecida.
+  O LLM recebe exemplos do perito e deve APRENDER o padrão de classificação.
+
+  Passo 1: Classificação pelo Perito (métrica W_expert conhecida)
+    Rótulos do perito: Classe 0=73, Classe 1=77
+    Acurácia do perito vs. ground truth: 85.3%
+
+  Passo 2: Selecionando 5 exemplos (estratégia=hard)...
+    Estratégia: HARD — pontos PRÓXIMOS à fronteira (mais difíceis)
+      Estratégia: HARD
+      Classe 0: 2 exemplos, faixa de margem [0.341, 0.478], média=0.409
+      Classe 1: 2 exemplos, faixa de margem [0.041, 0.168], média=0.105
+
+  Passo 3: LLM classificando 146 pontos de teste (5-shot)...
+    O LLM receberá 5 exemplos rotulados pelo perito como contexto.
+  [Fase E] Coletando decisões do LLM (4-shot) — 146 pontos [async, concurrency=10]...
+    [ 10/146] 1.3s | ETA: 18s
+    [ 20/146] 2.0s | ETA: 13s
+    [ 30/146] 2.6s | ETA: 10s
+    [ 40/146] 3.1s | ETA: 8s
+    [ 50/146] 3.7s | ETA: 7s
+    [ 60/146] 4.3s | ETA: 6s
+    [ 70/146] 5.0s | ETA: 5s
+    [ 80/146] 5.6s | ETA: 5s
+    [ 90/146] 6.2s | ETA: 4s
+    [100/146] 6.8s | ETA: 3s
+    [110/146] 7.4s | ETA: 2s
+    [120/146] 8.0s | ETA: 2s
+    [130/146] 8.5s | ETA: 1s
+    [140/146] 9.1s | ETA: <1s
+    [146/146] 9.7s | ETA: <1s
+    ✓ Concluído em 9.7s — Classe A: 25 (17.1%) | Classe B: 121 (82.9%)
+
+  ═══════════════════════════════════════════════════════════
+  RESULTADOS: FASE E (5-shot, estratégia=hard)
+  ═══════════════════════════════════════════════════════════
+    Concordância LLM vs. Perito:  56.2%
+    Kappa de Cohen:               0.107
+    F1-Score:                     0.562
+    
+    Acurácia do LLM vs. GT:       47.9%
+    Acurácia do Perito vs. GT:    85.3%
+    Concordâncias: 82 | Discordâncias: 64
+    → O LLM NÃO conseguiu aprender o padrão do perito com 5 exemplos.
+  [Fase E] Expert=aniso_x2, n_shot=5, strategy=mixed (7/8), seed=42
+
+  ══════════════════════════════════════════════════════════════
+  FASE E: LLM COMO APRENDIZ (5-shot, estratégia=mixed)
+  Métrica do Perito W = [0.30, 1.50]
+  ══════════════════════════════════════════════════════════════
+  O perito rotula os dados com sua métrica conhecida.
+  O LLM recebe exemplos do perito e deve APRENDER o padrão de classificação.
+
+  Passo 1: Classificação pelo Perito (métrica W_expert conhecida)
+    Rótulos do perito: Classe 0=73, Classe 1=77
+    Acurácia do perito vs. ground truth: 85.3%
+
+  Passo 2: Selecionando 5 exemplos (estratégia=mixed)...
+    Estratégia: MIXED — metade fáceis + metade difíceis (balanceado)
+      Estratégia: MIXED
+      Classe 0: 2 exemplos, faixa de margem [0.341, 30.416], média=15.378
+      Classe 1: 2 exemplos, faixa de margem [0.041, 27.996], média=14.018
+
+  Passo 3: LLM classificando 146 pontos de teste (5-shot)...
+    O LLM receberá 5 exemplos rotulados pelo perito como contexto.
+  [Fase E] Coletando decisões do LLM (4-shot) — 146 pontos [async, concurrency=10]...
+    [ 10/146] 1.1s | ETA: 15s
+    [ 20/146] 1.7s | ETA: 11s
+    [ 30/146] 2.3s | ETA: 9s
+    [ 40/146] 3.1s | ETA: 8s
+    [ 50/146] 3.7s | ETA: 7s
+    [ 60/146] 4.2s | ETA: 6s
+    [ 70/146] 4.7s | ETA: 5s
+    [ 80/146] 5.2s | ETA: 4s
+    [ 90/146] 5.7s | ETA: 4s
+    [100/146] 6.5s | ETA: 3s
+    [110/146] 7.0s | ETA: 2s
+    [120/146] 7.7s | ETA: 2s
+    [130/146] 8.3s | ETA: 1s
+    [140/146] 8.9s | ETA: <1s
+    [146/146] 11.9s | ETA: <1s
+    ✓ Concluído em 11.9s — Classe A: 94 (64.4%) | Classe B: 52 (35.6%)
+
+  ═══════════════════════════════════════════════════════════
+  RESULTADOS: FASE E (5-shot, estratégia=mixed)
+  ═══════════════════════════════════════════════════════════
+    Concordância LLM vs. Perito:  80.1%
+    Kappa de Cohen:               0.606
+    F1-Score:                     0.801
+    
+    Acurácia do LLM vs. GT:       80.8%
+    Acurácia do Perito vs. GT:    85.3%
+    Concordâncias: 117 | Discordâncias: 29
+    → O LLM tem ALINHAMENTO PARCIAL com o perito.
+  [Fase E] Expert=aniso_x2, n_shot=5, strategy=random (8/8), seed=42
+
+  ══════════════════════════════════════════════════════════════
+  FASE E: LLM COMO APRENDIZ (5-shot, estratégia=random)
+  Métrica do Perito W = [0.30, 1.50]
+  ══════════════════════════════════════════════════════════════
+  O perito rotula os dados com sua métrica conhecida.
+  O LLM recebe exemplos do perito e deve APRENDER o padrão de classificação.
+
+  Passo 1: Classificação pelo Perito (métrica W_expert conhecida)
+    Rótulos do perito: Classe 0=73, Classe 1=77
+    Acurácia do perito vs. ground truth: 85.3%
+
+  Passo 2: Selecionando 5 exemplos (estratégia=random)...
+    Estratégia: RANDOM — seleção aleatória (linha de base)
+      Estratégia: RANDOM
+      Classe 0: 2 exemplos, faixa de margem [0.515, 14.833], média=7.674
+      Classe 1: 2 exemplos, faixa de margem [4.610, 15.677], média=10.144
+
+  Passo 3: LLM classificando 146 pontos de teste (5-shot)...
+    O LLM receberá 5 exemplos rotulados pelo perito como contexto.
+  [Fase E] Coletando decisões do LLM (4-shot) — 146 pontos [async, concurrency=10]...
+    [ 10/146] 1.4s | ETA: 19s
+    [ 20/146] 2.0s | ETA: 12s
+    [ 30/146] 2.7s | ETA: 10s
+    [ 40/146] 3.3s | ETA: 9s
+    [ 50/146] 3.8s | ETA: 7s
+    [ 60/146] 4.4s | ETA: 6s
+    [ 70/146] 5.8s | ETA: 6s
+    [ 80/146] 6.3s | ETA: 5s
+    [ 90/146] 6.9s | ETA: 4s
+    [100/146] 7.6s | ETA: 3s
+    [110/146] 8.3s | ETA: 3s
+    [120/146] 9.2s | ETA: 2s
+    [130/146] 9.9s | ETA: 1s
+    [140/146] 10.5s | ETA: <1s
+    [146/146] 13.0s | ETA: <1s
+    ✓ Concluído em 13.0s — Classe A: 69 (47.3%) | Classe B: 77 (52.7%)
+
+  ═══════════════════════════════════════════════════════════
+  RESULTADOS: FASE E (5-shot, estratégia=random)
+  ═══════════════════════════════════════════════════════════
+    Concordância LLM vs. Perito:  86.3%
+    Kappa de Cohen:               0.726
+    F1-Score:                     0.863
+    
+    Acurácia do LLM vs. GT:       94.5%
+    Acurácia do Perito vs. GT:    85.3%
+    Concordâncias: 126 | Discordâncias: 20
+    → O LLM APRENDEU com sucesso o padrão de classificação do perito!
+
+[PASSO 4] Fase E — Expert: aniso_x1 (x1 dominante (invertido))
+  W = [1.50, 0.30]
+
+══════════════════════════════════════════════════════════════════════
+ BLOCO 2 — LLM como APRENDIZ | FASE E: Expert aniso_x1
+══════════════════════════════════════════════════════════════════════
+
+  [Fase E] Expert=aniso_x1, n_shot=0, strategy=easy (1/8), seed=42
+
+  ══════════════════════════════════════════════════════════════
+  FASE E: LLM COMO APRENDIZ (zero-shot, estratégia=easy)
+  Métrica do Perito W = [1.50, 0.30]
+  ══════════════════════════════════════════════════════════════
+  O perito rotula os dados com sua métrica conhecida.
+  O LLM recebe exemplos do perito e deve APRENDER o padrão de classificação.
+
+  Passo 1: Classificação pelo Perito (métrica W_expert conhecida)
+    Rótulos do perito: Classe 0=71, Classe 1=79
+    Acurácia do perito vs. ground truth: 92.0%
+
+  Passo 3: LLM classificando 150 pontos de teste (zero-shot)...
+  [Fase E] Coletando decisões do LLM (zero-shot) — 150 pontos [async, concurrency=10]...
+    [ 10/150] 1.3s | ETA: 19s
+    [ 20/150] 2.0s | ETA: 13s
+    [ 30/150] 2.7s | ETA: 11s
+    [ 40/150] 3.3s | ETA: 9s
+    [ 50/150] 4.2s | ETA: 8s
+    [ 60/150] 5.1s | ETA: 8s
+    [ 70/150] 5.7s | ETA: 7s
+    [ 80/150] 6.7s | ETA: 6s
+    [ 90/150] 7.5s | ETA: 5s
+    [100/150] 8.1s | ETA: 4s
+    [110/150] 8.9s | ETA: 3s
+    [120/150] 9.6s | ETA: 2s
+    [130/150] 10.3s | ETA: 2s
+    [140/150] 11.1s | ETA: <1s
+    [150/150] 29.2s | ETA: <1s
+    ✓ Concluído em 29.2s — Classe A: 109 (72.7%) | Classe B: 41 (27.3%)
+
+  ═══════════════════════════════════════════════════════════
+  RESULTADOS: FASE E (zero-shot, estratégia=easy)
+  ═══════════════════════════════════════════════════════════
+    Concordância LLM vs. Perito:  44.0%
+    Kappa de Cohen:               -0.094
+    F1-Score:                     0.440
+    
+    Acurácia do LLM vs. GT:       49.3%
+    Acurácia do Perito vs. GT:    92.0%
+    Concordâncias: 66 | Discordâncias: 84
+    → O LLM NÃO conseguiu aprender o padrão do perito com 0 exemplos.
+  [Fase E] Expert=aniso_x1, n_shot=0, strategy=hard (2/8), seed=42
+  [Fase E] Expert=aniso_x1, n_shot=0, strategy=mixed (3/8), seed=42
+  [Fase E] Expert=aniso_x1, n_shot=0, strategy=random (4/8), seed=42
+  [Fase E] Expert=aniso_x1, n_shot=5, strategy=easy (5/8), seed=42
+
+  ══════════════════════════════════════════════════════════════
+  FASE E: LLM COMO APRENDIZ (5-shot, estratégia=easy)
+  Métrica do Perito W = [1.50, 0.30]
+  ══════════════════════════════════════════════════════════════
+  O perito rotula os dados com sua métrica conhecida.
+  O LLM recebe exemplos do perito e deve APRENDER o padrão de classificação.
+
+  Passo 1: Classificação pelo Perito (métrica W_expert conhecida)
+    Rótulos do perito: Classe 0=71, Classe 1=79
+    Acurácia do perito vs. ground truth: 92.0%
+
+  Passo 2: Selecionando 5 exemplos (estratégia=easy)...
+    Estratégia: EASY — pontos LONGE da fronteira (mais fáceis)
+      Estratégia: EASY
+      Classe 0: 2 exemplos, faixa de margem [37.079, 44.367], média=40.723
+      Classe 1: 2 exemplos, faixa de margem [38.297, 40.393], média=39.345
+
+  Passo 3: LLM classificando 146 pontos de teste (5-shot)...
+    O LLM receberá 5 exemplos rotulados pelo perito como contexto.
+  [Fase E] Coletando decisões do LLM (4-shot) — 146 pontos [async, concurrency=10]...
+    [ 10/146] 1.4s | ETA: 20s
+    [ 20/146] 2.9s | ETA: 18s
+    [ 30/146] 4.7s | ETA: 18s
+    [ 40/146] 6.4s | ETA: 17s
+    [ 50/146] 6.9s | ETA: 13s
+    [ 60/146] 7.4s | ETA: 11s
+    [ 70/146] 8.3s | ETA: 9s
+    [ 80/146] 9.1s | ETA: 7s
+    [ 90/146] 9.7s | ETA: 6s
+    [100/146] 10.7s | ETA: 5s
+    [110/146] 11.6s | ETA: 4s
+    [120/146] 12.5s | ETA: 3s
+    [130/146] 13.0s | ETA: 2s
+    [140/146] 13.7s | ETA: <1s
+    [146/146] 14.4s | ETA: <1s
+    ✓ Concluído em 14.4s — Classe A: 93 (63.7%) | Classe B: 53 (36.3%)
+
+  ═══════════════════════════════════════════════════════════
+  RESULTADOS: FASE E (5-shot, estratégia=easy)
+  ═══════════════════════════════════════════════════════════
+    Concordância LLM vs. Perito:  74.0%
+    Kappa de Cohen:               0.487
+    F1-Score:                     0.740
+    
+    Acurácia do LLM vs. GT:       78.1%
+    Acurácia do Perito vs. GT:    92.0%
+    Concordâncias: 108 | Discordâncias: 38
+    → O LLM tem ALINHAMENTO PARCIAL com o perito.
+  [Fase E] Expert=aniso_x1, n_shot=5, strategy=hard (6/8), seed=42
+
+  ══════════════════════════════════════════════════════════════
+  FASE E: LLM COMO APRENDIZ (5-shot, estratégia=hard)
+  Métrica do Perito W = [1.50, 0.30]
+  ══════════════════════════════════════════════════════════════
+  O perito rotula os dados com sua métrica conhecida.
+  O LLM recebe exemplos do perito e deve APRENDER o padrão de classificação.
+
+  Passo 1: Classificação pelo Perito (métrica W_expert conhecida)
+    Rótulos do perito: Classe 0=71, Classe 1=79
+    Acurácia do perito vs. ground truth: 92.0%
+
+  Passo 2: Selecionando 5 exemplos (estratégia=hard)...
+    Estratégia: HARD — pontos PRÓXIMOS à fronteira (mais difíceis)
+      Estratégia: HARD
+      Classe 0: 2 exemplos, faixa de margem [2.227, 2.905], média=2.566
+      Classe 1: 2 exemplos, faixa de margem [0.092, 0.604], média=0.348
+
+  Passo 3: LLM classificando 146 pontos de teste (5-shot)...
+    O LLM receberá 5 exemplos rotulados pelo perito como contexto.
+  [Fase E] Coletando decisões do LLM (4-shot) — 146 pontos [async, concurrency=10]...
+    [ 10/146] 1.2s | ETA: 16s
+    [ 20/146] 2.5s | ETA: 15s
+    [ 30/146] 3.0s | ETA: 11s
+    [ 40/146] 3.6s | ETA: 9s
+    [ 50/146] 4.5s | ETA: 9s
+    [ 60/146] 5.3s | ETA: 8s
+    [ 70/146] 5.9s | ETA: 6s
+    [ 80/146] 6.5s | ETA: 5s
+    [ 90/146] 7.5s | ETA: 5s
+    [100/146] 8.3s | ETA: 4s
+    [110/146] 9.1s | ETA: 3s
+    [120/146] 9.6s | ETA: 2s
+    [130/146] 10.4s | ETA: 1s
+    [140/146] 11.1s | ETA: <1s
+    [146/146] 11.4s | ETA: <1s
+    ✓ Concluído em 11.4s — Classe A: 60 (41.1%) | Classe B: 86 (58.9%)
+
+  ═══════════════════════════════════════════════════════════
+  RESULTADOS: FASE E (5-shot, estratégia=hard)
+  ═══════════════════════════════════════════════════════════
+    Concordância LLM vs. Perito:  28.1%
+    Kappa de Cohen:               -0.453
+    F1-Score:                     0.281
+    
+    Acurácia do LLM vs. GT:       27.4%
+    Acurácia do Perito vs. GT:    92.0%
+    Concordâncias: 41 | Discordâncias: 105
+    → O LLM NÃO conseguiu aprender o padrão do perito com 5 exemplos.
+  [Fase E] Expert=aniso_x1, n_shot=5, strategy=mixed (7/8), seed=42
+
+  ══════════════════════════════════════════════════════════════
+  FASE E: LLM COMO APRENDIZ (5-shot, estratégia=mixed)
+  Métrica do Perito W = [1.50, 0.30]
+  ══════════════════════════════════════════════════════════════
+  O perito rotula os dados com sua métrica conhecida.
+  O LLM recebe exemplos do perito e deve APRENDER o padrão de classificação.
+
+  Passo 1: Classificação pelo Perito (métrica W_expert conhecida)
+    Rótulos do perito: Classe 0=71, Classe 1=79
+    Acurácia do perito vs. ground truth: 92.0%
+
+  Passo 2: Selecionando 5 exemplos (estratégia=mixed)...
+    Estratégia: MIXED — metade fáceis + metade difíceis (balanceado)
+      Estratégia: MIXED
+      Classe 0: 2 exemplos, faixa de margem [2.227, 44.367], média=23.297
+      Classe 1: 2 exemplos, faixa de margem [0.092, 40.393], média=20.242
+
+  Passo 3: LLM classificando 146 pontos de teste (5-shot)...
+    O LLM receberá 5 exemplos rotulados pelo perito como contexto.
+  [Fase E] Coletando decisões do LLM (4-shot) — 146 pontos [async, concurrency=10]...
+    [ 10/146] 1.5s | ETA: 20s
+    [ 20/146] 1.9s | ETA: 12s
+    [ 30/146] 2.3s | ETA: 9s
+    [ 40/146] 3.0s | ETA: 8s
+    [ 50/146] 3.7s | ETA: 7s
+    [ 60/146] 4.2s | ETA: 6s
+    [ 70/146] 4.7s | ETA: 5s
+    [ 80/146] 5.3s | ETA: 4s
+    [ 90/146] 6.0s | ETA: 4s
+    [100/146] 6.6s | ETA: 3s
+    [110/146] 7.2s | ETA: 2s
+    [120/146] 7.9s | ETA: 2s
+    [130/146] 8.6s | ETA: 1s
+    [140/146] 9.2s | ETA: <1s
+    [146/146] 9.8s | ETA: <1s
+    ✓ Concluído em 9.8s — Classe A: 96 (65.8%) | Classe B: 50 (34.2%)
+
+  ═══════════════════════════════════════════════════════════
+  RESULTADOS: FASE E (5-shot, estratégia=mixed)
+  ═══════════════════════════════════════════════════════════
+    Concordância LLM vs. Perito:  80.1%
+    Kappa de Cohen:               0.609
+    F1-Score:                     0.801
+    
+    Acurácia do LLM vs. GT:       82.9%
+    Acurácia do Perito vs. GT:    92.0%
+    Concordâncias: 117 | Discordâncias: 29
+    → O LLM tem ALINHAMENTO PARCIAL com o perito.
+  [Fase E] Expert=aniso_x1, n_shot=5, strategy=random (8/8), seed=42
+
+  ══════════════════════════════════════════════════════════════
+  FASE E: LLM COMO APRENDIZ (5-shot, estratégia=random)
+  Métrica do Perito W = [1.50, 0.30]
+  ══════════════════════════════════════════════════════════════
+  O perito rotula os dados com sua métrica conhecida.
+  O LLM recebe exemplos do perito e deve APRENDER o padrão de classificação.
+
+  Passo 1: Classificação pelo Perito (métrica W_expert conhecida)
+    Rótulos do perito: Classe 0=71, Classe 1=79
+    Acurácia do perito vs. ground truth: 92.0%
+
+  Passo 2: Selecionando 5 exemplos (estratégia=random)...
+    Estratégia: RANDOM — seleção aleatória (linha de base)
+      Estratégia: RANDOM
+      Classe 0: 2 exemplos, faixa de margem [13.516, 24.556], média=19.036
+      Classe 1: 2 exemplos, faixa de margem [18.263, 18.443], média=18.353
+
+  Passo 3: LLM classificando 146 pontos de teste (5-shot)...
+    O LLM receberá 5 exemplos rotulados pelo perito como contexto.
+  [Fase E] Coletando decisões do LLM (4-shot) — 146 pontos [async, concurrency=10]...
+    [ 10/146] 1.3s | ETA: 18s
+    [ 20/146] 1.9s | ETA: 12s
+    [ 30/146] 2.5s | ETA: 10s
+    [ 40/146] 3.0s | ETA: 8s
+    [ 50/146] 3.5s | ETA: 7s
+    [ 60/146] 4.0s | ETA: 6s
+    [ 70/146] 5.1s | ETA: 6s
+    [ 80/146] 5.8s | ETA: 5s
+    [ 90/146] 6.7s | ETA: 4s
+    [100/146] 7.6s | ETA: 4s
+    [110/146] 8.3s | ETA: 3s
+    [120/146] 9.1s | ETA: 2s
+    [130/146] 10.0s | ETA: 1s
+    [140/146] 10.6s | ETA: <1s
+    [146/146] 17.0s | ETA: <1s
+    ✓ Concluído em 17.0s — Classe A: 69 (47.3%) | Classe B: 77 (52.7%)
+
+  ═══════════════════════════════════════════════════════════
+  RESULTADOS: FASE E (5-shot, estratégia=random)
+  ═══════════════════════════════════════════════════════════
+    Concordância LLM vs. Perito:  76.7%
+    Kappa de Cohen:               0.533
+    F1-Score:                     0.767
+    
+    Acurácia do LLM vs. GT:       82.2%
+    Acurácia do Perito vs. GT:    92.0%
+    Concordâncias: 112 | Discordâncias: 34
+    → O LLM tem ALINHAMENTO PARCIAL com o perito.
+
+[PASSO 4] Fase E — Expert: euclidean (pesos iguais (Euclidiana))
+  W = [1.00, 1.00]
+
+══════════════════════════════════════════════════════════════════════
+ BLOCO 2 — LLM como APRENDIZ | FASE E: Expert euclidean
+══════════════════════════════════════════════════════════════════════
+
+  [Fase E] Expert=euclidean, n_shot=0, strategy=easy (1/8), seed=42
+
+  ══════════════════════════════════════════════════════════════
+  FASE E: LLM COMO APRENDIZ (zero-shot, estratégia=easy)
+  Métrica do Perito W = [1.00, 1.00]
+  ══════════════════════════════════════════════════════════════
+  O perito rotula os dados com sua métrica conhecida.
+  O LLM recebe exemplos do perito e deve APRENDER o padrão de classificação.
+
+  Passo 1: Classificação pelo Perito (métrica W_expert conhecida)
+    Rótulos do perito: Classe 0=69, Classe 1=81
+    Acurácia do perito vs. ground truth: 94.7%
+
+  Passo 3: LLM classificando 150 pontos de teste (zero-shot)...
+  [Fase E] Coletando decisões do LLM (zero-shot) — 150 pontos [async, concurrency=10]...
+    [ 10/150] 1.2s | ETA: 17s
+    [ 20/150] 2.1s | ETA: 13s
+    [ 30/150] 2.8s | ETA: 11s
+    [ 40/150] 3.9s | ETA: 11s
+    [ 50/150] 4.8s | ETA: 10s
+    [ 60/150] 5.6s | ETA: 8s
+    [ 70/150] 6.1s | ETA: 7s
+    [ 80/150] 7.2s | ETA: 6s
+    [ 90/150] 8.2s | ETA: 5s
+    [100/150] 9.0s | ETA: 4s
+    [110/150] 9.9s | ETA: 4s
+    [120/150] 10.6s | ETA: 3s
+    [130/150] 11.4s | ETA: 2s
+    [140/150] 12.1s | ETA: <1s
+    [150/150] 19.4s | ETA: <1s
+    ✓ Concluído em 19.4s — Classe A: 112 (74.7%) | Classe B: 38 (25.3%)
+
+  ═══════════════════════════════════════════════════════════
+  RESULTADOS: FASE E (zero-shot, estratégia=easy)
+  ═══════════════════════════════════════════════════════════
+    Concordância LLM vs. Perito:  51.3%
+    Kappa de Cohen:               0.064
+    F1-Score:                     0.513
+    
+    Acurácia do LLM vs. GT:       50.0%
+    Acurácia do Perito vs. GT:    94.7%
+    Concordâncias: 77 | Discordâncias: 73
+    → O LLM NÃO conseguiu aprender o padrão do perito com 0 exemplos.
+  [Fase E] Expert=euclidean, n_shot=0, strategy=hard (2/8), seed=42
+  [Fase E] Expert=euclidean, n_shot=0, strategy=mixed (3/8), seed=42
+  [Fase E] Expert=euclidean, n_shot=0, strategy=random (4/8), seed=42
+  [Fase E] Expert=euclidean, n_shot=5, strategy=easy (5/8), seed=42
+
+  ══════════════════════════════════════════════════════════════
+  FASE E: LLM COMO APRENDIZ (5-shot, estratégia=easy)
+  Métrica do Perito W = [1.00, 1.00]
+  ══════════════════════════════════════════════════════════════
+  O perito rotula os dados com sua métrica conhecida.
+  O LLM recebe exemplos do perito e deve APRENDER o padrão de classificação.
+
+  Passo 1: Classificação pelo Perito (métrica W_expert conhecida)
+    Rótulos do perito: Classe 0=69, Classe 1=81
+    Acurácia do perito vs. ground truth: 94.7%
+
+  Passo 2: Selecionando 5 exemplos (estratégia=easy)...
+    Estratégia: EASY — pontos LONGE da fronteira (mais fáceis)
+      Estratégia: EASY
+      Classe 0: 2 exemplos, faixa de margem [33.708, 36.788], média=35.248
+      Classe 1: 2 exemplos, faixa de margem [29.000, 32.806], média=30.903
+
+  Passo 3: LLM classificando 146 pontos de teste (5-shot)...
+    O LLM receberá 5 exemplos rotulados pelo perito como contexto.
+  [Fase E] Coletando decisões do LLM (4-shot) — 146 pontos [async, concurrency=10]...
+    [ 10/146] 1.2s | ETA: 17s
+    [ 20/146] 1.8s | ETA: 11s
+    [ 30/146] 2.4s | ETA: 9s
+    [ 40/146] 3.0s | ETA: 8s
+    [ 50/146] 3.5s | ETA: 7s
+    [ 60/146] 4.6s | ETA: 7s
+    [ 70/146] 5.3s | ETA: 6s
+    [ 80/146] 6.3s | ETA: 5s
+    [ 90/146] 7.4s | ETA: 5s
+    [100/146] 8.4s | ETA: 4s
+    [110/146] 9.0s | ETA: 3s
+    [120/146] 9.8s | ETA: 2s
+    [130/146] 10.7s | ETA: 1s
+    [140/146] 11.4s | ETA: <1s
+    [146/146] 13.4s | ETA: <1s
+    ✓ Concluído em 13.4s — Classe A: 85 (58.2%) | Classe B: 61 (41.8%)
+
+  ═══════════════════════════════════════════════════════════
+  RESULTADOS: FASE E (5-shot, estratégia=easy)
+  ═══════════════════════════════════════════════════════════
+    Concordância LLM vs. Perito:  79.5%
+    Kappa de Cohen:               0.595
+    F1-Score:                     0.795
+    
+    Acurácia do LLM vs. GT:       78.1%
+    Acurácia do Perito vs. GT:    94.7%
+    Concordâncias: 116 | Discordâncias: 30
+    → O LLM tem ALINHAMENTO PARCIAL com o perito.
+  [Fase E] Expert=euclidean, n_shot=5, strategy=hard (6/8), seed=42
+
+  ══════════════════════════════════════════════════════════════
+  FASE E: LLM COMO APRENDIZ (5-shot, estratégia=hard)
+  Métrica do Perito W = [1.00, 1.00]
+  ══════════════════════════════════════════════════════════════
+  O perito rotula os dados com sua métrica conhecida.
+  O LLM recebe exemplos do perito e deve APRENDER o padrão de classificação.
+
+  Passo 1: Classificação pelo Perito (métrica W_expert conhecida)
+    Rótulos do perito: Classe 0=69, Classe 1=81
+    Acurácia do perito vs. ground truth: 94.7%
+
+  Passo 2: Selecionando 5 exemplos (estratégia=hard)...
+    Estratégia: HARD — pontos PRÓXIMOS à fronteira (mais difíceis)
+      Estratégia: HARD
+      Classe 0: 2 exemplos, faixa de margem [0.548, 1.464], média=1.006
+      Classe 1: 2 exemplos, faixa de margem [0.928, 0.953], média=0.941
+
+  Passo 3: LLM classificando 146 pontos de teste (5-shot)...
+    O LLM receberá 5 exemplos rotulados pelo perito como contexto.
+  [Fase E] Coletando decisões do LLM (4-shot) — 146 pontos [async, concurrency=10]...
+    [ 10/146] 1.3s | ETA: 18s
+    [ 20/146] 1.8s | ETA: 11s
+    [ 30/146] 2.4s | ETA: 9s
+    [ 40/146] 2.9s | ETA: 8s
+    [ 50/146] 3.4s | ETA: 7s
+    [ 60/146] 3.9s | ETA: 6s
+    [ 70/146] 4.4s | ETA: 5s
+    [ 80/146] 5.1s | ETA: 4s
+    [ 90/146] 5.6s | ETA: 3s
+    [100/146] 6.2s | ETA: 3s
+    [110/146] 7.0s | ETA: 2s
+    [120/146] 7.5s | ETA: 2s
+    [130/146] 8.0s | ETA: <1s
+    [140/146] 8.6s | ETA: <1s
+    [146/146] 8.9s | ETA: <1s
+    ✓ Concluído em 8.9s — Classe A: 69 (47.3%) | Classe B: 77 (52.7%)
+
+  ═══════════════════════════════════════════════════════════
+  RESULTADOS: FASE E (5-shot, estratégia=hard)
+  ═══════════════════════════════════════════════════════════
+    Concordância LLM vs. Perito:  49.3%
+    Kappa de Cohen:               -0.018
+    F1-Score:                     0.493
+    
+    Acurácia do LLM vs. GT:       52.1%
+    Acurácia do Perito vs. GT:    94.7%
+    Concordâncias: 72 | Discordâncias: 74
+    → O LLM NÃO conseguiu aprender o padrão do perito com 5 exemplos.
+  [Fase E] Expert=euclidean, n_shot=5, strategy=mixed (7/8), seed=42
+
+  ══════════════════════════════════════════════════════════════
+  FASE E: LLM COMO APRENDIZ (5-shot, estratégia=mixed)
+  Métrica do Perito W = [1.00, 1.00]
+  ══════════════════════════════════════════════════════════════
+  O perito rotula os dados com sua métrica conhecida.
+  O LLM recebe exemplos do perito e deve APRENDER o padrão de classificação.
+
+  Passo 1: Classificação pelo Perito (métrica W_expert conhecida)
+    Rótulos do perito: Classe 0=69, Classe 1=81
+    Acurácia do perito vs. ground truth: 94.7%
+
+  Passo 2: Selecionando 5 exemplos (estratégia=mixed)...
+    Estratégia: MIXED — metade fáceis + metade difíceis (balanceado)
+      Estratégia: MIXED
+      Classe 0: 2 exemplos, faixa de margem [0.548, 36.788], média=18.668
+      Classe 1: 2 exemplos, faixa de margem [0.928, 32.806], média=16.867
+
+  Passo 3: LLM classificando 146 pontos de teste (5-shot)...
+    O LLM receberá 5 exemplos rotulados pelo perito como contexto.
+  [Fase E] Coletando decisões do LLM (4-shot) — 146 pontos [async, concurrency=10]...
+    [ 10/146] 1.7s | ETA: 24s
+    [ 20/146] 2.4s | ETA: 15s
+    [ 30/146] 3.2s | ETA: 12s
+    [ 40/146] 4.0s | ETA: 11s
+    [ 50/146] 4.6s | ETA: 9s
+    [ 60/146] 5.4s | ETA: 8s
+    [ 70/146] 6.4s | ETA: 7s
+    [ 80/146] 7.2s | ETA: 6s
+    [ 90/146] 8.0s | ETA: 5s
+    [100/146] 9.2s | ETA: 4s
+    [110/146] 10.3s | ETA: 3s
+    [120/146] 11.3s | ETA: 2s
+    [130/146] 12.0s | ETA: 1s
+    [140/146] 12.7s | ETA: <1s
+    [146/146] 16.3s | ETA: <1s
+    ✓ Concluído em 16.3s — Classe A: 76 (52.1%) | Classe B: 70 (47.9%)
+
+  ═══════════════════════════════════════════════════════════
+  RESULTADOS: FASE E (5-shot, estratégia=mixed)
+  ═══════════════════════════════════════════════════════════
+    Concordância LLM vs. Perito:  92.5%
+    Kappa de Cohen:               0.850
+    F1-Score:                     0.925
+    
+    Acurácia do LLM vs. GT:       92.5%
+    Acurácia do Perito vs. GT:    94.7%
+    Concordâncias: 135 | Discordâncias: 11
+    → O LLM APRENDEU com sucesso o padrão de classificação do perito!
+  [Fase E] Expert=euclidean, n_shot=5, strategy=random (8/8), seed=42
+
+  ══════════════════════════════════════════════════════════════
+  FASE E: LLM COMO APRENDIZ (5-shot, estratégia=random)
+  Métrica do Perito W = [1.00, 1.00]
+  ══════════════════════════════════════════════════════════════
+  O perito rotula os dados com sua métrica conhecida.
+  O LLM recebe exemplos do perito e deve APRENDER o padrão de classificação.
+
+  Passo 1: Classificação pelo Perito (métrica W_expert conhecida)
+    Rótulos do perito: Classe 0=69, Classe 1=81
+    Acurácia do perito vs. ground truth: 94.7%
+
+  Passo 2: Selecionando 5 exemplos (estratégia=random)...
+    Estratégia: RANDOM — seleção aleatória (linha de base)
+      Estratégia: RANDOM
+      Classe 0: 2 exemplos, faixa de margem [16.296, 29.749], média=23.022
+      Classe 1: 2 exemplos, faixa de margem [5.891, 21.307], média=13.599
+
+  Passo 3: LLM classificando 146 pontos de teste (5-shot)...
+    O LLM receberá 5 exemplos rotulados pelo perito como contexto.
+  [Fase E] Coletando decisões do LLM (4-shot) — 146 pontos [async, concurrency=10]...
+    [ 10/146] 1.4s | ETA: 19s
+    [ 20/146] 2.0s | ETA: 13s
+    [ 30/146] 2.5s | ETA: 10s
+    [ 40/146] 3.1s | ETA: 8s
+    [ 50/146] 3.5s | ETA: 7s
+    [ 60/146] 4.1s | ETA: 6s
+    [ 70/146] 4.6s | ETA: 5s
+    [ 80/146] 5.2s | ETA: 4s
+    [ 90/146] 5.7s | ETA: 4s
+    [100/146] 6.3s | ETA: 3s
+    [110/146] 6.9s | ETA: 2s
+    [120/146] 7.4s | ETA: 2s
+    [130/146] 8.4s | ETA: 1s
+    [140/146] 9.1s | ETA: <1s
+    [146/146] 13.3s | ETA: <1s
+    ✓ Concluído em 13.3s — Classe A: 54 (37.0%) | Classe B: 92 (63.0%)
+
+  ═══════════════════════════════════════════════════════════
+  RESULTADOS: FASE E (5-shot, estratégia=random)
+  ═══════════════════════════════════════════════════════════
+    Concordância LLM vs. Perito:  89.7%
+    Kappa de Cohen:               0.790
+    F1-Score:                     0.897
+    
+    Acurácia do LLM vs. GT:       85.6%
+    Acurácia do Perito vs. GT:    94.7%
+    Concordâncias: 131 | Discordâncias: 15
+    → O LLM APRENDEU com sucesso o padrão de classificação do perito!
+  ✓ Fase E concluída para seed=42
+
+>>> Baselines clássicos na Fase E
+  [Baselines] expert=aniso_x2, n_shot=5, strategy=mixed, seed=42
+    [k-NN] k=3, treino=4 pontos
+    k-NN (k=3): acc_expert=95.9%, kappa=0.918, f1=0.959, acc_gt=87.0%
+    [Logistic Regression] treino=4 pontos, coefs=[ 0.59881484 -0.4571165 ]
+    Logistic Regression: acc_expert=83.6%, kappa=0.674, f1=0.833, acc_gt=85.6%
+    [SVM (RBF)] treino=4 pontos, support_vectors=[2 2]
+    SVM (RBF): acc_expert=90.4%, kappa=0.809, f1=0.904, acc_gt=88.4%
+  [Baselines] expert=aniso_x1, n_shot=5, strategy=mixed, seed=42
+    [k-NN] k=3, treino=4 pontos
+    k-NN (k=3): acc_expert=95.2%, kappa=0.904, f1=0.952, acc_gt=95.2%
+    [Logistic Regression] treino=4 pontos, coefs=[ 0.47328821 -0.65610996]
+    Logistic Regression: acc_expert=80.8%, kappa=0.623, f1=0.804, acc_gt=82.2%
+    [SVM (RBF)] treino=4 pontos, support_vectors=[2 2]
+    SVM (RBF): acc_expert=90.4%, kappa=0.809, f1=0.904, acc_gt=94.5%
+  [Baselines] expert=euclidean, n_shot=5, strategy=mixed, seed=42
+    [k-NN] k=3, treino=4 pontos
+    k-NN (k=3): acc_expert=99.3%, kappa=0.986, f1=0.993, acc_gt=95.2%
+    [Logistic Regression] treino=4 pontos, coefs=[0.7846005 0.2268703]
+    Logistic Regression: acc_expert=87.7%, kappa=0.754, f1=0.877, acc_gt=87.7%
+    [SVM (RBF)] treino=4 pontos, support_vectors=[2 2]
+    SVM (RBF): acc_expert=91.1%, kappa=0.822, f1=0.911, acc_gt=89.7%
+  ✓ Baselines clássicos concluídos para seed=42
+
+>>> Experimento de Diluição: 3 hard fixos + N easy progressivos
+  [Diluição] 4 hard + 0 easy = 4 total (1/6)
+      Diluição: 4 hard + 0 easy = 4 total
+  [Diluição 4ex] Coletando decisões do LLM (4-shot) — 146 pontos [async, concurrency=10]...
+    [ 10/146] 1.3s | ETA: 17s
+    [ 20/146] 2.1s | ETA: 14s
+    [ 30/146] 2.8s | ETA: 11s
+    [ 40/146] 3.7s | ETA: 10s
+    [ 50/146] 4.8s | ETA: 9s
+    [ 60/146] 5.8s | ETA: 8s
+    [ 70/146] 6.9s | ETA: 7s
+    [ 80/146] 7.5s | ETA: 6s
+    [ 90/146] 8.3s | ETA: 5s
+    [100/146] 9.0s | ETA: 4s
+    [110/146] 9.7s | ETA: 3s
+    [120/146] 10.5s | ETA: 2s
+    [130/146] 11.3s | ETA: 1s
+    [140/146] 12.3s | ETA: <1s
+    [146/146] 24.3s | ETA: <1s
+    ✓ Concluído em 24.3s — Classe A: 24 (16.4%) | Classe B: 122 (83.6%)
+  [Diluição] 4 hard + 2 easy = 6 total (2/6)
+      Diluição: 4 hard + 2 easy = 6 total
+  [Diluição 6ex] Coletando decisões do LLM (6-shot) — 144 pontos [async, concurrency=10]...
+    [ 10/144] 1.0s | ETA: 14s
+    [ 20/144] 1.5s | ETA: 10s
+    [ 30/144] 2.0s | ETA: 8s
+    [ 40/144] 2.6s | ETA: 7s
+    [ 50/144] 3.4s | ETA: 6s
+    [ 60/144] 4.0s | ETA: 6s
+    [ 70/144] 4.6s | ETA: 5s
+    [ 80/144] 5.4s | ETA: 4s
+    [ 90/144] 6.1s | ETA: 4s
+    [100/144] 7.1s | ETA: 3s
+    [110/144] 8.1s | ETA: 3s
+    [120/144] 8.8s | ETA: 2s
+    [130/144] 9.7s | ETA: 1s
+    [140/144] 10.6s | ETA: <1s
+    [144/144] 12.2s | ETA: <1s
+    ✓ Concluído em 12.2s — Classe A: 45 (31.2%) | Classe B: 99 (68.8%)
+  [Diluição] 4 hard + 4 easy = 8 total (3/6)
+      Diluição: 4 hard + 4 easy = 8 total
+  [Diluição 8ex] Coletando decisões do LLM (8-shot) — 142 pontos [async, concurrency=10]...
+    [ 10/142] 1.6s | ETA: 21s
+    [ 20/142] 2.2s | ETA: 13s
+    [ 30/142] 2.7s | ETA: 10s
+    [ 40/142] 3.3s | ETA: 8s
+    [ 50/142] 3.9s | ETA: 7s
+    [ 60/142] 4.8s | ETA: 7s
+    [ 70/142] 5.6s | ETA: 6s
+    [ 80/142] 6.2s | ETA: 5s
+    [ 90/142] 7.0s | ETA: 4s
+    [100/142] 7.8s | ETA: 3s
+    [110/142] 8.6s | ETA: 2s
+    [120/142] 9.3s | ETA: 2s
+    [130/142] 10.1s | ETA: <1s
+    [140/142] 10.7s | ETA: <1s
+    [142/142] 11.0s | ETA: <1s
+    ✓ Concluído em 11.0s — Classe A: 75 (52.8%) | Classe B: 67 (47.2%)
+  [Diluição] 4 hard + 10 easy = 14 total (4/6)
+      Diluição: 4 hard + 10 easy = 14 total
+  [Diluição 14ex] Coletando decisões do LLM (14-shot) — 136 pontos [async, concurrency=10]...
+    [ 10/136] 1.6s | ETA: 20s
+    [ 20/136] 2.1s | ETA: 12s
+    [ 30/136] 2.6s | ETA: 9s
+    [ 40/136] 3.3s | ETA: 8s
+    [ 50/136] 4.0s | ETA: 7s
+    [ 60/136] 4.7s | ETA: 6s
+    [ 70/136] 5.3s | ETA: 5s
+    [ 80/136] 5.9s | ETA: 4s
+    [ 90/136] 6.5s | ETA: 3s
+    [100/136] 7.0s | ETA: 3s
+    [110/136] 7.7s | ETA: 2s
+    [120/136] 8.3s | ETA: 1s
+    [130/136] 9.0s | ETA: <1s
+    [136/136] 10.0s | ETA: <1s
+    ✓ Concluído em 10.0s — Classe A: 76 (55.9%) | Classe B: 60 (44.1%)
+  [Diluição] 4 hard + 16 easy = 20 total (5/6)
+      Diluição: 4 hard + 16 easy = 20 total
+  [Diluição 20ex] Coletando decisões do LLM (20-shot) — 130 pontos [async, concurrency=10]...
+    [ 10/130] 1.5s | ETA: 18s
+    [ 20/130] 2.1s | ETA: 12s
+    [ 30/130] 2.7s | ETA: 9s
+    [ 40/130] 3.5s | ETA: 8s
+    [ 50/130] 4.3s | ETA: 7s
+    [ 60/130] 5.3s | ETA: 6s
+    [ 70/130] 6.0s | ETA: 5s
+    [ 80/130] 6.8s | ETA: 4s
+    [ 90/130] 7.6s | ETA: 3s
+    [100/130] 8.4s | ETA: 3s
+    [110/130] 9.3s | ETA: 2s
+    [120/130] 10.0s | ETA: <1s
+    [130/130] 10.8s | ETA: <1s
+    ✓ Concluído em 10.8s — Classe A: 75 (57.7%) | Classe B: 55 (42.3%)
+  [Diluição] 4 hard + 20 easy = 24 total (6/6)
+      Diluição: 4 hard + 20 easy = 24 total
+  [Diluição 24ex] Coletando decisões do LLM (24-shot) — 126 pontos [async, concurrency=10]...
+    [ 10/126] 1.5s | ETA: 17s
+    [ 20/126] 2.2s | ETA: 12s
+    [ 30/126] 3.2s | ETA: 10s
+    [ 40/126] 3.8s | ETA: 8s
+    [ 50/126] 4.7s | ETA: 7s
+    [ 60/126] 5.5s | ETA: 6s
+    [ 70/126] 6.2s | ETA: 5s
+    [ 80/126] 6.9s | ETA: 4s
+    [ 90/126] 7.5s | ETA: 3s
+    [100/126] 8.3s | ETA: 2s
+    [110/126] 9.2s | ETA: 1s
+    [120/126] 10.2s | ETA: <1s
+    [126/126] 14.1s | ETA: <1s
+    ✓ Concluído em 14.1s — Classe A: 70 (55.6%) | Classe B: 56 (44.4%)
+  ✓ Experimento de diluição concluído para seed=42
+
+>>> Experimento de Viés de Ordem dos Exemplos Few-Shot
+  [Ordem] n_shot=5, ordering=class0_first, seed=42
+    [Ordem class0_first] rep 1/1 (n_test=146)...
+  [Ordem class0_first] Coletando decisões do LLM (4-shot) — 146 pontos [async, concurrency=10]...
+    [ 10/146] 1.3s | ETA: 18s
+    [ 20/146] 1.7s | ETA: 11s
+    [ 30/146] 2.3s | ETA: 9s
+    [ 40/146] 3.0s | ETA: 8s
+    [ 50/146] 3.5s | ETA: 7s
+    [ 60/146] 4.1s | ETA: 6s
+    [ 70/146] 4.7s | ETA: 5s
+    [ 80/146] 5.1s | ETA: 4s
+    [ 90/146] 5.7s | ETA: 4s
+    [100/146] 6.3s | ETA: 3s
+    [110/146] 6.9s | ETA: 2s
+    [120/146] 7.7s | ETA: 2s
+    [130/146] 8.3s | ETA: 1s
+    [140/146] 8.9s | ETA: <1s
+    [146/146] 13.2s | ETA: <1s
+    ✓ Concluído em 13.2s — Classe A: 95 (65.1%) | Classe B: 51 (34.9%)
+    [Ordem class0_first] rep 1/1 concluída em 13.2s — acc=79.5%, kappa=0.592, malf=0
+  [Ordem] n_shot=5, ordering=class1_first, seed=42
+    [Ordem class1_first] rep 1/1 (n_test=146)...
+    [Ordem class1_first] rep 1/1 concluída em 9.6s — acc=84.9%, kappa=0.699, malf=0
+  [Ordem] n_shot=5, ordering=shuffled, seed=42
+    [Ordem shuffled] rep 1/1 (n_test=146)...
+    [Ordem shuffled] rep 1/1 concluída em 10.8s — acc=84.2%, kappa=0.686, malf=0
+  [Ordem] n_shot=5, ordering=alternating, seed=42
+    [Ordem alternating] rep 1/1 (n_test=146)...
+    [Ordem alternating] rep 1/1 concluída em 11.0s — acc=84.2%, kappa=0.687, malf=0
+  [Ordem] n_shot=10, ordering=class0_first, seed=42
+    [Ordem class0_first] rep 1/1 (n_test=140)...
+    [Ordem class0_first] rep 1/1 concluída em 11.8s — acc=90.0%, kappa=0.800, malf=0
+  [Ordem] n_shot=10, ordering=class1_first, seed=42
+    [Ordem class1_first] rep 1/1 (n_test=140)...
+    [Ordem class1_first] rep 1/1 concluída em 10.1s — acc=89.3%, kappa=0.786, malf=0
+  [Ordem] n_shot=10, ordering=shuffled, seed=42
+    [Ordem shuffled] rep 1/1 (n_test=140)...
+    [Ordem shuffled] rep 1/1 concluída em 10.6s — acc=89.3%, kappa=0.786, malf=0
+  [Ordem] n_shot=10, ordering=alternating, seed=42
+    [Ordem alternating] rep 1/1 (n_test=140)...
+    [Ordem alternating] rep 1/1 concluída em 11.0s — acc=87.9%, kappa=0.758, malf=0
+  [Ordem] n_shot=20, ordering=class0_first, seed=42
+    [Ordem class0_first] rep 1/1 (n_test=130)...
+    [Ordem class0_first] rep 1/1 concluída em 10.6s — acc=90.0%, kappa=0.799, malf=0
+  [Ordem] n_shot=20, ordering=class1_first, seed=42
+    [Ordem class1_first] rep 1/1 (n_test=130)...
+    [Ordem class1_first] rep 1/1 concluída em 15.1s — acc=90.8%, kappa=0.816, malf=0
+  [Ordem] n_shot=20, ordering=shuffled, seed=42
+    [Ordem shuffled] rep 1/1 (n_test=130)...
+    [Ordem shuffled] rep 1/1 concluída em 10.0s — acc=89.2%, kappa=0.785, malf=0
+  [Ordem] n_shot=20, ordering=alternating, seed=42
+    [Ordem alternating] rep 1/1 (n_test=130)...
+    [Ordem alternating] rep 1/1 concluída em 11.0s — acc=92.3%, kappa=0.847, malf=0
+  ✓ Experimento de ordem dos exemplos concluído para seed=42
+
+>>> Projeção R3: x3 = x1 * x2 (seed=42)
+  X_a original: (150, 2) → X_a_r3: (150, 3)
+  Dados R3 salvos em: execucao_2026-05-14_17-38-25/dados_sinteticos_seed42/problem_A_r3.csv
+    [iter 1] γ=0.100000 (γ_lo=0.000000, γ_hi=∞)
+    [iter 2] γ=0.050000 (γ_lo=0.000000, γ_hi=0.100000)
+    [iter 3] γ=0.025000 (γ_lo=0.000000, γ_hi=0.050000)
+      Convergiu na época 47
+    [iter 4] γ=0.075000 (γ_lo=0.025000, γ_hi=0.050000)
+      Convergiu na época 1
+    [iter 5] γ=0.125000 (γ_lo=0.075000, γ_hi=0.050000)
+      Convergiu na época 1
+    [iter 6] γ=0.175000 (γ_lo=0.125000, γ_hi=0.050000)
+    [iter 7] γ=0.150000 (γ_lo=0.125000, γ_hi=0.175000)
+    [iter 8] γ=0.137500 (γ_lo=0.125000, γ_hi=0.150000)
+      Convergiu na época 1
+    [iter 9] γ=0.187500 (γ_lo=0.137500, γ_hi=0.150000)
+    [iter 10] γ=0.162500 (γ_lo=0.137500, γ_hi=0.187500)
+    [iter 11] γ=0.150000 (γ_lo=0.137500, γ_hi=0.162500)
+    [iter 12] γ=0.143750 (γ_lo=0.137500, γ_hi=0.150000)
+    [iter 13] γ=0.140625 (γ_lo=0.137500, γ_hi=0.143750)
+      Convergiu na época 1
+    [iter 14] γ=0.190625 (γ_lo=0.140625, γ_hi=0.143750)
+    [iter 15] γ=0.165625 (γ_lo=0.140625, γ_hi=0.190625)
+    [iter 16] γ=0.153125 (γ_lo=0.140625, γ_hi=0.165625)
+    [iter 17] γ=0.146875 (γ_lo=0.140625, γ_hi=0.153125)
+    [iter 18] γ=0.143750 (γ_lo=0.140625, γ_hi=0.146875)
+    [iter 19] γ=0.142187 (γ_lo=0.140625, γ_hi=0.143750)
+      Convergiu na época 1
+    [iter 20] γ=0.192188 (γ_lo=0.142187, γ_hi=0.143750)
+    [iter 21] γ=0.167187 (γ_lo=0.142187, γ_hi=0.192188)
+    [iter 22] γ=0.154687 (γ_lo=0.142187, γ_hi=0.167187)
+    [iter 23] γ=0.148438 (γ_lo=0.142187, γ_hi=0.154687)
+    [iter 24] γ=0.145313 (γ_lo=0.142187, γ_hi=0.148438)
+    [iter 25] γ=0.143750 (γ_lo=0.142187, γ_hi=0.145313)
+    [iter 26] γ=0.142969 (γ_lo=0.142187, γ_hi=0.143750)
+      Convergiu na época 1
+    [iter 27] γ=0.192969 (γ_lo=0.142969, γ_hi=0.143750)
+      Convergiu na época 2
+    [iter 28] γ=0.242969 (γ_lo=0.192969, γ_hi=0.143750)
+      Convergiu na época 1
+    [iter 29] γ=0.292969 (γ_lo=0.242969, γ_hi=0.143750)
+      Convergiu na época 1
+    [iter 30] γ=0.342969 (γ_lo=0.292969, γ_hi=0.143750)
+      Convergiu na época 1
+    [iter 31] γ=0.392969 (γ_lo=0.342969, γ_hi=0.143750)
+      Convergiu na época 1
+    [iter 32] γ=0.442969 (γ_lo=0.392969, γ_hi=0.143750)
+      Convergiu na época 1
+    [iter 33] γ=0.492969 (γ_lo=0.442969, γ_hi=0.143750)
+      Convergiu na época 1
+    [iter 34] γ=0.542969 (γ_lo=0.492969, γ_hi=0.143750)
+    [iter 35] γ=0.517969 (γ_lo=0.492969, γ_hi=0.542969)
+      Convergiu na época 1
+    [iter 36] γ=0.567969 (γ_lo=0.517969, γ_hi=0.542969)
+    [iter 37] γ=0.542969 (γ_lo=0.517969, γ_hi=0.567969)
+    [iter 38] γ=0.530469 (γ_lo=0.517969, γ_hi=0.542969)
+      Convergiu na época 1
+    [iter 39] γ=0.580469 (γ_lo=0.530469, γ_hi=0.542969)
+    [iter 40] γ=0.555469 (γ_lo=0.530469, γ_hi=0.580469)
+    [iter 41] γ=0.542969 (γ_lo=0.530469, γ_hi=0.555469)
+    [iter 42] γ=0.536719 (γ_lo=0.530469, γ_hi=0.542969)
+    [iter 43] γ=0.533594 (γ_lo=0.530469, γ_hi=0.536719)
+    [iter 44] γ=0.532031 (γ_lo=0.530469, γ_hi=0.533594)
+      Convergiu na época 1
+    [iter 45] γ=0.582031 (γ_lo=0.532031, γ_hi=0.533594)
+    [iter 46] γ=0.557031 (γ_lo=0.532031, γ_hi=0.582031)
+    [iter 47] γ=0.544531 (γ_lo=0.532031, γ_hi=0.557031)
+    [iter 48] γ=0.538281 (γ_lo=0.532031, γ_hi=0.544531)
+    [iter 49] γ=0.535156 (γ_lo=0.532031, γ_hi=0.538281)
+    [iter 50] γ=0.533594 (γ_lo=0.532031, γ_hi=0.535156)
+    [Mínimos Quadrados] W encontrado: [0.0345, 0.1517, 0.0257]
+    Resíduo: 8.5157
+  [Perceptron] Ŵ_LLM (3 pesos): [0.0004, 0.0038, 0.0000]
+  [NNLS]       Ŵ_LLM (3 pesos): [0.0345, 0.1517, 0.0257]
+  Similaridade cosseno (Perceptron vs NNLS): 0.9789
+  --- Comparação de fidelidade (mesmos rótulos do LLM) ---
+  [Perceptron] Fidelidade R2 (2 pesos): 82.0%  →  R3 (3 pesos): 78.7%  (Δ = -3.3%)
+  [NNLS]       Fidelidade R2 (2 pesos): 82.7%  →  R3 (3 pesos): 84.0%  (Δ = +1.3%)
+  ► Sem evidência de não-linearidade: métrica R2 já é suficiente
+  [Perceptron] Ŵ_LLM (4 pesos): [0.0878, 0.5998, 0.0363, 0.4862]
+  [NNLS]       Ŵ_LLM (4 pesos): [0.0367, 0.1541, 0.0069, 0.1009]
+  [Perceptron] Fidelidade R3 (3 pesos): 78.7%  →  R4 (4 pesos): 86.0%  (Δ = +7.3%)
+  [NNLS]       Fidelidade R3 (3 pesos): 84.0%  →  R4 (4 pesos): 86.0%  (Δ = +2.0%)
+  ► R4 (elipse) supera R3 — sinal de não-linearidade quadrática isotrópica
+  ✓ Experimento R2 vs R3 vs R4 concluído (seed=42)
+
+══════════════════════════════════════════════════════════════════════
+ BLOCO 3 — ESTUDO DE CASO REAL: PESO × ALTURA (homem/mulher)
+══════════════════════════════════════════════════════════════════════
+
+  Base: shape=(100, 2) | classes={np.int64(0): np.int64(50), np.int64(1): np.int64(50)}
+  Classificador ótimo: elipse x2² - x2 + x1² - x1 + cte (e-mail orientador 19:15)
+  Gráfico salvo: 25_homem_mulher_overview.png
+
+══════════════════════════════════════════════════════════════════════
+ PIPELINE: homem_mulher
+══════════════════════════════════════════════════════════════════════
+
+  Variantes de feature: [('x1', 'x2'), ('peso', 'altura')]
+  Sementes: [42]
+  N amostras total: 100 | Split treino/teste: 70%/30%
+
+  ── Seed 42 ── n_train=70, n_test=30
+
+    Variante de feature: (x1, x2)
+    [homem_mulher seed=42 x1/x2] Coletando LLM Fase A (zero-shot, n=70)...
+    [homem_mulher seed=42 x1/x2] Fase A coletada em 5.1s (malformadas=0)
+      n_features=2: fid_perc=62.9% | acc_perc_real=10.0% | fid_nnls=64.3% | acc_nnls_real=14.3% | llm_acc_real=41.4%
+      n_features=3: fid_perc=60.0% | acc_perc_real=7.1% | fid_nnls=54.3% | acc_nnls_real=21.4% | llm_acc_real=41.4%
+      n_features=4: fid_perc=67.1% | acc_perc_real=17.1% | fid_nnls=74.3% | acc_nnls_real=44.3% | llm_acc_real=41.4%
+    Ganhos vs baseline (2 features) — seed=42 | x1/x2:
+      2→3 features: Δ fidelidade=-2.9% | Δ acurácia_real=-2.9% (✗ perda)
+      2→4 features: Δ fidelidade=+4.3% | Δ acurácia_real=+7.1% (✓ GANHO)
+    ★ Melhor: n_features=4 (acurácia vs real = 17.1%)
+    [homem_mulher D seed=42 x1/x2] n_shot=0 | best n_feat=4 | coletando LLM (n_test=30)...
+    [homem_mulher D seed=42 x1/x2] n_shot=0 coletado em 2.9s (malformadas=0)
+      D n_shot=0: LLM_vs_metric=70.0% | LLM_vs_real=63.3%
+    [homem_mulher D seed=42 x1/x2] n_shot=5 | best n_feat=4 | coletando LLM (n_test=30)...
+    [homem_mulher D seed=42 x1/x2] n_shot=5 coletado em 2.4s (malformadas=0)
+      D n_shot=5: LLM_vs_metric=96.7% | LLM_vs_real=36.7% | perc_baseline=26.7%
+
+    Variante de feature: (peso, altura)
+    [homem_mulher seed=42 peso/altura] Coletando LLM Fase A (zero-shot, n=70)...
+    [homem_mulher seed=42 peso/altura] Fase A coletada em 6.7s (malformadas=0)
+      n_features=2: fid_perc=58.6% | acc_perc_real=90.0% | fid_nnls=55.7% | acc_nnls_real=78.6% | llm_acc_real=62.9%
+      n_features=3: fid_perc=58.6% | acc_perc_real=90.0% | fid_nnls=55.7% | acc_nnls_real=78.6% | llm_acc_real=62.9%
+      n_features=4: fid_perc=58.6% | acc_perc_real=90.0% | fid_nnls=68.6% | acc_nnls_real=68.6% | llm_acc_real=62.9%
+    Ganhos vs baseline (2 features) — seed=42 | peso/altura:
+      2→3 features: Δ fidelidade=+0.0% | Δ acurácia_real=+0.0% (≈ neutro)
+      2→4 features: Δ fidelidade=+0.0% | Δ acurácia_real=+0.0% (≈ neutro)
+    ★ Melhor: n_features=2 (acurácia vs real = 90.0%)
+    [homem_mulher D seed=42 peso/altura] n_shot=0 | best n_feat=2 | coletando LLM (n_test=30)...
+    [homem_mulher D seed=42 peso/altura] n_shot=0 coletado em 4.2s (malformadas=0)
+      D n_shot=0: LLM_vs_metric=70.0% | LLM_vs_real=73.3%
+    [homem_mulher D seed=42 peso/altura] n_shot=5 | best n_feat=2 | coletando LLM (n_test=30)...
+    [homem_mulher D seed=42 peso/altura] n_shot=5 coletado em 5.0s (malformadas=0)
+      D n_shot=5: LLM_vs_metric=93.3% | LLM_vs_real=90.0% | perc_baseline=86.7%
+  ✓ Pipeline peso × altura concluído.
+
+══════════════════════════════════════════════════════════════════════
+ BLOCO 1/2 — PROBLEMA D/F: MEIA-LUA (não-linear sintético)
+══════════════════════════════════════════════════════════════════════
+
+  Meia-lua seed=42: shape=(150, 2)
+  Gráfico salvo: 26_meia_lua_seed42_overview.png
+
+══════════════════════════════════════════════════════════════════════
+ PIPELINE: meia_lua_seed42
+══════════════════════════════════════════════════════════════════════
+
+  Variantes de feature: [('x1', 'x2')]
+  Sementes: [42]
+  N amostras total: 150 | Split treino/teste: 70%/30%
+
+  ── Seed 42 ── n_train=105, n_test=45
+
+    Variante de feature: (x1, x2)
+    [meia_lua_seed42 seed=42 x1/x2] Coletando LLM Fase A (zero-shot, n=105)...
+    [meia_lua_seed42 seed=42 x1/x2] Fase A coletada em 15.3s (malformadas=0)
+      n_features=2: fid_perc=68.6% | acc_perc_real=59.0% | fid_nnls=68.6% | acc_nnls_real=57.1% | llm_acc_real=48.6%
+      n_features=3: fid_perc=74.3% | acc_perc_real=45.7% | fid_nnls=82.9% | acc_nnls_real=54.3% | llm_acc_real=48.6%
+      n_features=4: fid_perc=75.2% | acc_perc_real=60.0% | fid_nnls=76.2% | acc_nnls_real=59.0% | llm_acc_real=48.6%
+    Ganhos vs baseline (2 features) — seed=42 | x1/x2:
+      2→3 features: Δ fidelidade=+5.7% | Δ acurácia_real=-13.3% (✗ perda)
+      2→4 features: Δ fidelidade=+6.7% | Δ acurácia_real=+1.0% (≈ neutro)
+    ★ Melhor: n_features=4 (acurácia vs real = 60.0%)
+    [meia_lua_seed42 D seed=42 x1/x2] n_shot=0 | best n_feat=4 | coletando LLM (n_test=45)...
+    [meia_lua_seed42 D seed=42 x1/x2] n_shot=0 coletado em 3.7s (malformadas=0)
+      D n_shot=0: LLM_vs_metric=75.6% | LLM_vs_real=55.6%
+    [meia_lua_seed42 D seed=42 x1/x2] n_shot=5 | best n_feat=4 | coletando LLM (n_test=45)...
+    [meia_lua_seed42 D seed=42 x1/x2] n_shot=5 coletado em 3.6s (malformadas=0)
+      D n_shot=5: LLM_vs_metric=82.2% | LLM_vs_real=57.8% | perc_baseline=28.9%
+  ✓ Pipeline meia-lua concluído.
+
+[PASSO 5] Gerando visualizações finais...
+
+══════════════════════════════════════════════════════════════════════
+ BLOCO 1 — VISUALIZAÇÕES (Fases A/B/C lineares + meia-lua)
+══════════════════════════════════════════════════════════════════════
+
+  Gráfico salvo: 02_consistency_extended.png
+  Gráfico salvo: 03_class_names_effect.png
+  Gráfico salvo: 10_w_distribution.png
+  Gráfico salvo: 11_metric_errors_phase_a_seed42.png
+
+══════════════════════════════════════════════════════════════════════
+ ANÁLISE DE ERROS POR REGIÃO (DISTÂNCIA À FRONTEIRA)
+══════════════════════════════════════════════════════════════════════
+
+
+  Seed 42: 27/150 discordâncias (18.0%)
+  Margem: min=0.001, mediana=0.013, max=0.048
+
+  Região                         N pontos   Erros  Taxa erro  % dos erros
+  ──────────────────────────── ────────── ─────── ────────── ────────────
+  Baixa margem (fronteira)             50      20      40.0%        74.1%
+  Margem média                         49       6      12.2%        22.2%
+  Alta margem (longe)                  51       1       2.0%         3.7%
+
+  Correlação ponto-bisserial (acerto × margem): r=0.365, p=0.0000
+  → Confirmado: pontos com maior margem têm mais acertos (esperado)
+
+  Margem média dos acertos:  0.016 (±0.009)
+  Margem média dos erros:    0.007 (±0.005)
+  Mann-Whitney U (acertos > erros): U=2651, p=0.0000
+  → Significativo: erros têm margem menor que acertos
+
+
+══════════════════════════════════════════════════════════════════════
+ SENSIBILIDADE DOS HIPERPARÂMETROS DO PERCEPTRON
+══════════════════════════════════════════════════════════════════════
+
+
+  Re-execução do Perceptron com diferentes (eta, C) sobre os mesmos
+  dados da Fase A. Nenhuma chamada adicional à API é feita.
+  Se a direção de W (cosseno) é estável, o resultado é robusto.
+
+  Seed 42: W padrão (eta=0.001, C=1.0) = [0.0009, 0.0030]
+
+  Variando eta (C=1.0, delta_gamma=0.05):
+       eta                W bruto             W unitário   cos(default)   Fidelidade
+    ────── ────────────────────── ────────────────────── ────────────── ────────────
+      0.00 [  0.1414,   1.0441] [  0.1342,   0.9909]         0.9869        84.7%
+      0.00 [  0.0009,   0.0061] [  0.1519,   0.9884]         0.9896        84.0% ← padrão
+      0.01 [  0.0056,   0.0209] [  0.2598,   0.9657]         0.9994        82.0%
+      0.10 [  0.0205,   0.0706] [  0.2783,   0.9605]         0.9999        81.3%
+
+  Variando C (eta=0.001, delta_gamma=0.05):
+         C                W bruto             W unitário   cos(default)   Fidelidade
+    ────── ────────────────────── ────────────────────── ────────────── ────────────
+       0.1 [  0.0026,   0.0131] [  0.1966,   0.9805]         0.9951        82.7%
+       1.0 [  0.0008,   0.0033] [  0.2242,   0.9745]         0.9975        82.7% ← padrão
+      10.0 [  0.1047,   1.0312] [  0.1010,   0.9949]         0.9809        80.0%
+
+  Variando delta_gamma (eta=0.001, C=1.0):
+        δγ                W bruto             W unitário   cos(default)   Fidelidade
+    ────── ────────────────────── ────────────────────── ────────────── ────────────
+      0.01 [  0.0006,   0.0047] [  0.1327,   0.9912]         0.9866        84.7%
+      0.05 [  0.0009,   0.0065] [  0.1361,   0.9907]         0.9872        84.0% ← padrão
+      0.10 [  0.0011,   0.0046] [  0.2270,   0.9739]         0.9977        82.7%
+
+  Resumo seed 42: 10 configurações testadas
+    Cosseno mínimo com padrão: 0.9809
+    Cosseno médio com padrão:  0.9921
+    → W ROBUSTO aos hiperparâmetros (cos mín > 0.95)
+
+  Nota: apenas a DIREÇÃO de W importa (escala é arbitrária).
+  Cosseno > 0.95 entre configs = hiperparâmetros não afetam a fronteira.
+
+  Gráfico salvo: 15_class_order_bias.png
+  Gráfico salvo: 19_feature_names_effect.png
+  Gráfico salvo: 17_prompt_variant_comparison.png
+
+══════════════════════════════════════════════════════════════════════
+ BLOCO 2 — VISUALIZAÇÕES (Fase E, LLM como aprendiz)
+══════════════════════════════════════════════════════════════════════
+
+  Gráfico salvo: bloco2_04_phase_e_learning_curve.png
+  Gráfico salvo: bloco2_05_phase_e_strategy_comparison.png
+  Gráfico salvo: 18_classical_baselines.png
+  Gráfico salvo: 12_dilution_experiment.png
+  Gráfico salvo: 16_example_order_bias.png
+
+══════════════════════════════════════════════════════════════════════
+ ANÁLISE DE VIÉS DE ORDEM DOS EXEMPLOS (RECENCY BIAS)
+══════════════════════════════════════════════════════════════════════
+
+
+  Ordenação          n_shot  Acc média     ±std    Kappa    n
+  ────────────────── ────── ────────── ──────── ──────── ────
+  alternating             5      84.2%     nan%    0.687    1
+  class0_first            5      79.5%     nan%    0.592    1
+  class1_first            5      84.9%     nan%    0.699    1
+  shuffled                5      84.2%     nan%    0.686    1
+
+  alternating            10      87.9%     nan%    0.758    1
+  class0_first           10      90.0%     nan%    0.800    1
+  class1_first           10      89.3%     nan%    0.786    1
+  shuffled               10      89.3%     nan%    0.786    1
+
+  alternating            20      92.3%     nan%    0.847    1
+  class0_first           20      90.0%     nan%    0.799    1
+  class1_first           20      90.8%     nan%    0.816    1
+  shuffled               20      89.2%     nan%    0.785    1
+
+  TESTES DE SIGNIFICÂNCIA:
+  ────────────────────────────────────────────────────────────
+
+  Variação total entre ordenações: 1.8%
+  → Efeito de ordem NEGLIGÍVEL (< 3 p.p.)
+
+  Gráfico salvo: 13_r3_vs_r2.png
+  Gráfico salvo: 14_algorithm_comparison.png
+  Gráfico salvo: bloco1_03_oracle_w_recovery.png
+  Gráfico salvo: bloco1_04_oracle_transfer.png
+  Imagem salva: final_10_gamma_convergence.png
+
+  Diagnóstico da busca binária em γ:
+    Fase A — Problema A                       iters= 42  γ*=0.6102  ✓ monotônico
+    Fase A — Problema A                       iters=  3  γ*=0.1000  ✓ monotônico
+    Fase A — Problema A                       iters= 50  γ*=0.3758  ✓ monotônico
+    Fase A — Problema A                       iters= 50  γ*=0.5367  ✓ monotônico
+    Fase A — Problema A                       iters=  3  γ*=0.1000  ✓ monotônico
+    Fase A — Problema A                       iters= 50  γ*=0.0732  ✓ monotônico
+    Fase A — Problema A                       iters= 11  γ*=0.0000  ✓ monotônico
+    Fase A — Problema A                       iters= 11  γ*=0.0000  ✓ monotônico
+    Fase A — Problema A                       iters= 31  γ*=0.2953  ✓ monotônico
+    Fase A — Problema A                       iters= 50  γ*=0.4621  ✓ monotônico
+    Fase A — Problema A                       iters= 11  γ*=0.0000  ✓ monotônico
+
+══════════════════════════════════════════════════════════════════════
+ FECHAMENTO — VISUALIZAÇÕES DETALHADAS POR SEED
+══════════════════════════════════════════════════════════════════════
+
+
+  Gerando visualizações detalhadas para seed 42...
+  Gráfico salvo: 16_dataset_overview_seed42.png
+  Gráfico salvo: 17_hits_errors_seed42.png
+  Gráfico salvo: 18_w_algorithms_seed42.png
+  Gráfico salvo: 20_confusion_matrices_seed42.png
+  Gráfico salvo: 21_margin_analysis_seed42.png
+  Gráfico salvo: 19_experiment_dashboard_seed42.png
+
+══════════════════════════════════════════════════════════════════════
+ ANÁLISE FINAL: FASES A-C
+══════════════════════════════════════════════════════════════════════
+
+
+══════════════════════════════════════════════════════════════════════
+ MODELO: openai/gpt-4o-mini (temp=0.0)
+══════════════════════════════════════════════════════════════════════
+
+  1. CONSISTÊNCIA POR NÚMERO DE EXEMPLOS:
+     n_shot |  Consist B |  Consist C |  Kappa B |  Kappa C
+     -------------------------------------------------------
+          0 | 69.5%±9.6% | 82.5%±7.1% |    0.247 |    0.562
+          5 | 67.7%±nan% | 97.9%±nan% |    0.355 |    0.958
+         10 | 85.9%±13.8% | 84.4%±9.7% |    0.710 |    0.650
+
+  2. CONSISTÊNCIA POR NOMES DE CLASSE:
+     A/B                 : B=69.2%, C=84.7%
+     0/1                 : B=84.4%, C=71.1%
+     Positivo/Negativo   : B=57.8%, C=95.6%
+     Azul/Vermelho       : B=87.8%, C=87.8%
+     B/A                 : B=98.9%, C=95.6%
+     1/0                 : B=98.9%, C=83.3%
+     Negativo/Positivo   : B=86.7%, C=73.3%
+     Vermelho/Azul       : B=86.7%, C=84.4%
+┌──────────────────────────────────────────────┐
+│ RESUMO DAS FASES A-C                         │
+│                                              │
+│ Consistência Média Problema B: 77.6% ± 14.1% │
+│ Consistência Média Problema C: 84.6% ± 8.8%  │
+│                                              │
+│ ~ Consistência MODERADA entre os problemas.  │
+└──────────────────────────────────────────────┘
+
+══════════════════════════════════════════════════════════════════════
+ ANÁLISE DA FASE E: LLM COMO APRENDIZ
+══════════════════════════════════════════════════════════════════════
+
+
+══════════════════════════════════════════════════════════════════════
+ MODELO: openai/gpt-4o-mini (temp=0.0)
+══════════════════════════════════════════════════════════════════════
+
+  Métrica do Perito W = [0.30, 1.50]
+  Acurácia do Perito vs. GT: 90.7%
+
+  1. CURVA DE APRENDIZADO (Concordância LLM vs. Perito):
+  -----------------------------------------------------------------
+  n_shot |         easy |         hard |        mixed |       random
+  -----------------------------------------------------------------
+       0 | 50.7%±6.4% | 50.7%±6.4% | 50.7%±6.4% | 50.7%±6.4%
+       5 | 81.5%±8.7% | 44.5%±14.6% | 84.2%±7.1% | 84.2%±6.7%
+
+  2. MELHOR ESTRATÉGIA POR N_SHOT:
+  --------------------------------------------------
+       5-shot:    MIXED (84.2%)
+
+  3. MELHORIA DO ZERO-SHOT PARA O MELHOR FEW-SHOT:
+  --------------------------------------------------
+     Linha de base zero-shot: 50.7%
+         EASY: melhor=81.5% em 5-shot (Δ=+30.8%)
+         HARD: melhor=50.7% em 0-shot (Δ=+0.0%)
+        MIXED: melhor=84.2% em 5-shot (Δ=+33.6%)
+       RANDOM: melhor=84.2% em 5-shot (Δ=+33.6%)
+┌────────────────────────────────────────────────────────────────────────────────────────────┐
+│ CONCLUSÃO DA FASE E: LLM COMO APRENDIZ                                                     │
+│                                                                                            │
+│ Métrica do perito: W = [0.30, 1.50]                                                        │
+│ (Pondera a dimensão x2 5.0x mais do que x1)                                                │
+│                                                                                            │
+│ Linha de base zero-shot: 50.7%                                                             │
+│ Melhor resultado few-shot: 84.2% (estratégia mixed, 5-shot)                                │
+│ Melhoria geral: +33.6%                                                                     │
+│                                                                                            │
+│ ✓ O LLM CONSEGUE aprender com exemplos do perito — o desempenho melhora com mais exemplos. │
+└────────────────────────────────────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ AVALIAÇÃO DA HIPÓTESE H4: "Exemplos hard são mais informativos que easy"    │
+│                                                                             │
+│ Acurácia média por estratégia (todos os n_shot > 0):                        │
+│      MIXED: 84.2%                                                           │
+│     RANDOM: 84.2%                                                           │
+│       EASY: 81.5%                                                           │
+│       HARD: 44.5%                                                           │
+│                                                                             │
+│ RESULTADO: H4 REFUTADA.                                                     │
+│ Exemplos easy (81.5%) superam hard (44.5%) consistentemente.                │
+│ Exemplos hard (44.5%) performam abaixo de random (84.2%).                   │
+│                                                                             │
+│ Interpretação: exemplos próximos à fronteira de decisão são AMBÍGUOS para o │
+│ LLM — não fornecem padrões claros de cada classe. Exemplos fáceis funcionam │
+│ como "âncoras" que definem bem as regiões de cada classe, permitindo ao LLM │
+│ interpolar para os pontos intermediários. Este é um achado relevante sobre  │
+│ o mecanismo de aprendizado in-context dos LLMs: eles se beneficiam mais de  │
+│ exemplos prototípicos (alta margem) do que de exemplos fronteiriços.        │
+│                                                                             │
+│ Nota: esta hipótese foi formulada a priori e refutada pelos dados.          │
+│ A refutação é reportada como resultado genuíno, não como falha do método.   │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+══════════════════════════════════════════════════════════════════════
+ SUMÁRIO ESTATÍSTICO (Bootstrap 95% CI + Testes de Significância)
+══════════════════════════════════════════════════════════════════════
+
+
+  ════════════════════════════════════════════════
+  FASES A-C: INTERVALOS DE CONFIANÇA (Bootstrap)
+  ════════════════════════════════════════════════
+
+  Configuração base: classes A/B, prompt default
+  n = 4 observações (1 seeds)
+
+  Métrica                   n_shot    Média               95% CI    n
+  ───────────────────────── ────── ──────── ──────────────────── ────
+  --- Perceptron ---
+  Fidelidade A (Perc)            0    0.836       [0.820, 0.867]    3
+  Consistência B (Perc)          0    0.737       [0.650, 0.860]    3
+  Consistência C (Perc)          0    0.880       [0.820, 0.930]    3
+  Kappa B (Perc)                 0    0.410       [0.263, 0.637]    3
+  Kappa C (Perc)                 0    0.755       [0.634, 0.859]    3
+
+  --- Perceptron ---
+  Fidelidade A (Perc)            5    0.820       [0.820, 0.820]    1
+  Consistência B (Perc)          5    0.677       [0.677, 0.677]    1
+  Consistência C (Perc)          5    0.979       [0.979, 0.979]    1
+  Kappa B (Perc)                 5    0.355       [0.355, 0.355]    1
+  Kappa C (Perc)                 5    0.958       [0.958, 0.958]    1
+
+
+  TESTE: Métrica estimada vs. Euclidiana (zero-shot, Problema B)
+  ────────────────────────────────────────────────────────────
+  Δ(métrica - euclidiana) = +0.490 CI95%=[-0.040, +0.860]
+  → Diferença NÃO significativa (CI inclui zero)
+
+  ════════════════════════════════════════════════
+  ESTABILIDADE DE W ENTRE SEEDS (H5)
+  ════════════════════════════════════════════════
+
+  IMPORTANTE: Valores absolutos de W são irrelevantes para a fronteira
+  de decisão — apenas a DIREÇÃO (razão w1/w2) determina a geometria.
+  Multiplicar W por k>0 não altera classificações.
+
+  n_shot=0 (3 observações, 1 seeds):
+      Seed  Rep              W bruto           W unitário    w1/w2  cos(NNLS)
+    ────── ──── ──────────────────── ──────────────────── ──────── ──────────
+        42    0 [  0.001,   0.003] [  0.292,   0.956]    0.306     0.9987
+        42    0 [  0.025,   0.024] [  0.728,   0.686]    1.060     0.8419
+        42    0 [  0.002,   0.014] [  0.170,   0.986]    0.172     0.9969
+
+    Similaridade cosseno entre seeds (pares): média=0.8868, range=[0.7996, 0.9920]
+    → W MODERADAMENTE estável (0.80 < cos < 0.95)
+    Razão w1/w2: média=0.5128 CI95%=[0.1722, 1.0603]
+    Coeficiente de variação (CV): 76.25%
+    → Razão w1/w2 INSTÁVEL (CV > 30%) — métrica pode não ser captável
+    Cosseno Perceptron-NNLS: média=0.9458 (min=0.8419, max=0.9987)
+
+
+  ════════════════════════════════════════════════
+  FASE E: INTERVALOS DE CONFIANÇA (Bootstrap)
+  ════════════════════════════════════════════════
+
+  Expert: aniso_x2
+
+  Estratégia   n_shot  Acc Média               95% CI    n
+  ──────────── ────── ────────── ──────────────────── ────
+  easy              0      0.567       [0.567, 0.567]    1
+  easy              5      0.911       [0.911, 0.911]    1
+
+  hard              0      0.567       [0.567, 0.567]    1
+  hard              5      0.562       [0.562, 0.562]    1
+
+  mixed             0      0.567       [0.567, 0.567]    1
+  mixed             5      0.801       [0.801, 0.801]    1
+
+  random            0      0.567       [0.567, 0.567]    1
+  random            5      0.863       [0.863, 0.863]    1
+
+
+  Nota: Bootstrap com 10.000 reamostras, seed fixa=42.
+  Wilcoxon signed-rank test usado para comparações pareadas (não-paramétrico).
+  Significância estatística avaliada pelo CI 95% não incluir zero.
+
+
+[PASSO 6] Salvando resultados em CSV...
+  Resultados das Fases A-C salvos em: execucao_2026-05-14_17-38-25/bloco1_phases_abc_20260514_175854.csv
+  Resultados da Fase E salvos em: execucao_2026-05-14_17-38-25/bloco2_phase_e_20260514_175854.csv
+  Resultados comparação de algoritmos (NNLS) salvos em: execucao_2026-05-14_17-38-25/bloco1_algorithm_comparison_20260514_175854.csv
+  Resultados da Diluição salvos em: execucao_2026-05-14_17-38-25/bloco2_dilution_20260514_175854.csv
+  Resultados R2 vs R3 vs R4 salvos em: execucao_2026-05-14_17-38-25/bloco1_r3r4_comparison_20260514_175854.csv
+  Resultados do Viés de Ordem salvos em: execucao_2026-05-14_17-38-25/bloco2_example_order_20260514_175854.csv
+  Resultados dos Baselines Clássicos salvos em: execucao_2026-05-14_17-38-25/bloco2_classical_baselines_20260514_175854.csv
+  Resultados da Validação do Oráculo salvos em: execucao_2026-05-14_17-38-25/bloco1_oracle_validation_20260514_175854.csv
+  Resultados Fase A externos (peso×altura + meia-lua) salvos em: execucao_2026-05-14_17-38-25/bloco23_external_phase_a_20260514_175854.csv
+  Resultados Fase E externos salvos em: execucao_2026-05-14_17-38-25/bloco23_external_phase_e_20260514_175854.csv
+  Comparação cruzada linear×não-linear salva em: execucao_2026-05-14_17-38-25/final_cross_linearity.csv
+
+  Gerando scatter ponto-a-ponto das rotulações do LLM...
+  ✓ Scatter ponto-a-ponto gerados em execucao_2026-05-14_17-38-25/final_08_llm_labels_*.png
+  Gráfico salvo: 27_external_learning_curve.png
+  Gráfico salvo: 30_external_llm_vs_perceptron.png
+  Gráfico salvo: 28_external_features_comparison.png
+  Gráfico salvo: 29_external_decision_boundary.png
+
+══════════════════════════════════════════════════════════════════════
+ BLOCO 2/3 — RESUMO CONSOLIDADO: Pipeline externos (Fase A)
+══════════════════════════════════════════════════════════════════════
+
+
+  homem_mulher | peso/altura:
+    n_features=2: fid_perc=58.6%±nan% | acc_perc_real=90.0%±nan% | llm_real=62.9%
+    n_features=3: fid_perc=58.6%±nan% | acc_perc_real=90.0%±nan% | llm_real=62.9%
+    n_features=4: fid_perc=58.6%±nan% | acc_perc_real=90.0%±nan% | llm_real=62.9%
+
+  homem_mulher | x1/x2:
+    n_features=2: fid_perc=62.9%±nan% | acc_perc_real=10.0%±nan% | llm_real=41.4%
+    n_features=3: fid_perc=60.0%±nan% | acc_perc_real=7.1%±nan% | llm_real=41.4%
+    n_features=4: fid_perc=67.1%±nan% | acc_perc_real=17.1%±nan% | llm_real=41.4%
+
+  meia_lua_seed42 | x1/x2:
+    n_features=2: fid_perc=68.6%±nan% | acc_perc_real=59.0%±nan% | llm_real=48.6%
+    n_features=3: fid_perc=74.3%±nan% | acc_perc_real=45.7%±nan% | llm_real=48.6%
+    n_features=4: fid_perc=75.2%±nan% | acc_perc_real=60.0%±nan% | llm_real=48.6%
+
+  ★ Melhor configuração geral: homem_mulher | peso/altura | n_features=2 | acc_real=90.0%
+
+══════════════════════════════════════════════════════════════════════
+ BLOCO 2/3 — RESUMO CONSOLIDADO: Fase E externa (LLM vs Perceptron)
+══════════════════════════════════════════════════════════════════════
+
+
+  homem_mulher | peso/altura:
+    n_shot=0: llm_real=73.3%
+    n_shot=5: llm_real=90.0% | perceptron_real=86.7% | Δ=+3.3% (LLM>Perceptron)
+
+  homem_mulher | x1/x2:
+    n_shot=0: llm_real=63.3%
+    n_shot=5: llm_real=36.7% | perceptron_real=26.7% | Δ=+10.0% (LLM>Perceptron)
+
+  meia_lua_seed42 | x1/x2:
+    n_shot=0: llm_real=55.6%
+    n_shot=5: llm_real=57.8% | perceptron_real=28.9% | Δ=+28.9% (LLM>Perceptron)
+  Interações LLM salvas em: execucao_2026-05-14_17-38-25/llm_interactions.json (9947 chamadas)
+
+[PASSO 7] Salvando log completo da execução...

@@ -1,0 +1,30 @@
+\frametitle{Prompts literais (2/2) --- variantes geometric / CoT / tabular}
+\tiny
+  \textbf{Geometric:} adiciona contexto espacial ao default
+\begin{verbatim}
+You are a binary classifier for 2D points represented as (x1, x2) coordinates
+in a plane. The boundary between classes is geometric.
+Classify ... [resto igual ao default]
+\end{verbatim}
+
+  \textbf{Chain-of-thought (CoT):} pede racioc\'inio passo a passo
+\begin{verbatim}
+You are a binary classifier for 2D points.
+Think step by step about which class is closer based on the examples, then answer.
+
+Examples: ...
+Point: x1=-1.4321, x2=0.8932
+
+Reasoning (be brief), then final answer "A" or "B":
+\end{verbatim}
+
+  \textbf{Tabular:} coordenadas como tabela markdown
+\begin{verbatim}
+| x1     | x2     | class |
+|--------|--------|-------|
+| -1.5   |  1.0   | A     |
+|  1.5   | -1.0   | B     |
+| ...                     |
+
+Classify | -1.4321 | 0.8932 | ? |
+\end{verbatim}

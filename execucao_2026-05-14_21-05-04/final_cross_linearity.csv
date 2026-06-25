@@ -1,0 +1,15 @@
+problem,is_nonlinear,algorithm,n_features,fidelity_vs_llm,accuracy_vs_true,seed
+A_B_C_lineares,False,perceptron,3,0.8266666666666667,,42
+A_B_C_lineares,False,perceptron,4,0.8533333333333334,,42
+homem_mulher,True,perceptron,2,0.6285714285714286,0.08571428571428572,42
+homem_mulher,True,nnls,2,0.6428571428571429,0.12857142857142856,42
+homem_mulher,True,perceptron,3,0.6428571428571429,0.1,42
+homem_mulher,True,nnls,3,0.5428571428571428,0.17142857142857143,42
+homem_mulher,True,perceptron,4,0.6428571428571429,0.1,42
+homem_mulher,True,nnls,4,0.8571428571428571,0.34285714285714286,42
+homem_mulher,True,perceptron,2,0.5142857142857142,0.8857142857142857,42
+homem_mulher,True,nnls,2,0.5142857142857142,0.7714285714285715,42
+homem_mulher,True,perceptron,3,0.5428571428571428,0.8857142857142857,42
+homem_mulher,True,nnls,3,0.6571428571428571,0.8,42
+homem_mulher,True,perceptron,4,0.5428571428571428,0.8857142857142857,42
+homem_mulher,True,nnls,4,0.7,0.6714285714285714,42

@@ -1,0 +1,13 @@
+\frametitle{Prompts literais (2/2) --- variantes}
+\tiny
+  \textbf{Geometric:} \texttt{Voce ve dois grupos de pontos em um plano cartesiano...}\\
+  \textbf{CoT:} \texttt{Pense passo a passo: 1) Localize o ponto, 2) Compare com exemplos, 3) Decida...}\\
+  \textbf{Tabular:}
+  \begin{verbatim}
+| x1   | x2    | classe |
+|------|-------|--------|
+| -2.3 | 0.1   | A      |
+| 2.1  | -0.2  | B      |
+| 1.234| -0.567| ?      |
+  \end{verbatim}
+  Todas as variantes terminam com a mesma instru\c{c}\~ao final ("\emph{responda apenas A ou B}").

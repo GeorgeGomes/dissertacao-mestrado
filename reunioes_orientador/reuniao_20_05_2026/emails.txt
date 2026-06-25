@@ -1,0 +1,15 @@
+Oi George, 
+No experimento homens e mulheres quando se utiliza 3 features deve considerar, x,y e x.y que dá a equação de uma hipérbole. 
+Para 4 features, x,y,x^2 e y^2 que dá a equação de uma elipse. 
+Também, tenta fazer um experimento perguntando a classificação para A e B em vez de homem e mulher. 
+Os artigos são os seguintes:
+Rethinking the Role of Demonstration: What Makes In-Context Learning Work?
+Probing the Decision Boundaries of In-Context Learning in Large Language Models
+What Learning Algorithm is In-Context Learning? Investigation with Linear Models
+What Can Transformers Learn In-Context?A Case Study of Simple Function Classes
+Attention Is All You Need
+Language Models are Few-Shot Learners
+Neural Machine Translation by Jointly Learning to Align and Translate
+The illusion of Thinking ....
+Este 4 últimos são mais gerais. 
+Abraços. 

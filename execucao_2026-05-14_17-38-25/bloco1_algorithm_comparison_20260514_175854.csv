@@ -1,0 +1,2 @@
+algorithm,provider,model,temperature,random_seed,n_shot_phase_bc,class_0,class_1,repetition,fidelity_problem_a,consistency_problem_b,kappa_problem_b,f1_problem_b,consistency_problem_c,kappa_problem_c,f1_problem_c,w_0,w_1,w_ratio,w_direction_0,w_direction_1,gamma,n_disagreements_b,n_disagreements_c
+NNLS,openai,gpt-4o-mini,0.0,42,0,A,B,0,0.8266666666666667,0.68,0.27371765773944623,0.6799999999999999,0.9,0.7900041999160017,0.8999999999999999,0.03582714937787379,0.14248288662160496,0.25144878958706646,0.2438578016690996,0.9698109983729375,0.0,32,10

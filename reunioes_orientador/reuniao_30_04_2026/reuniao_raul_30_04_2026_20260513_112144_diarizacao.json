@@ -1,0 +1,1472 @@
+{
+  "audio_file": "reuniao_raul_30_04_2026.mp4",
+  "language": "pt",
+  "duration": 3243.5,
+  "num_speakers": 3,
+  "segments": [
+    {
+      "speaker": "SPEAKER_00",
+      "start": 58.93,
+      "end": 78.38,
+      "text": "para começar, retornar. Então essa primeira, deixa eu ver aqui no PDR, a primeira é com centros,"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 82.05,
+      "end": 87.67,
+      "text": "a outra você modifica o centro. Isso, e a outra modifica um pouco o centro também."
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 96.5,
+      "end": 109.6,
+      "text": "E aí você coloca, assim, B não é muito parecido com C, não?"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 110.76,
+      "end": 121.34,
+      "text": "É, o que muda um pouquinho aí, se a gente for ver bem mudou um pouquinho, mas eu posso fazer mais separado né? se quiser eu posso pegar um"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 121.34,
+      "end": 153.71,
+      "text": "pouco eu acho que podia fazer, é que você faz uma rotação acho que se você faz uma rotação no sentido horário você podia fazer um mando anti -horário tá botar o azul pra baixo e o vermelho mais pra cima pode ser é, não, é porque aqui fica muito parecido apesar da distribuição ter dado dados diferentes né? Eu acho que é mais interessante a gente fazer o terceiro com a rotação anti -horária."
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 153.95,
+      "end": 154.37,
+      "text": "Tá"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 154.76,
+      "end": 163.81,
+      "text": "bom, entendi. Pegou o anal secundário aqui, beleza. Só continuar."
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 166.93,
+      "end": 200.94,
+      "text": "Bom, então basicamente aí é só... Esse é a primeira parte, não alterou nada aí. Isso não, não alterou nada na verdade, é só que eu rodei eu rodei mais CIDs né eu tinha rodado também rodei em 3 CIDs mas não alterou nada tudo daqui é igual que a gente tinha conversado já tá eu só coloquei na tela porque o Yuri queria saber o Cento, queria as imagens então agora eu coloquei todos na tela entendeu aqui é do D por exemplo perito aí aqui meio que sim Aí"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 200.94,
+      "end": 205.82,
+      "text": "olha só, já tem a rotulação do LLM?"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 206.22,
+      "end": 269.39,
+      "text": "Não, aqui ainda não, aqui eu só gerei o dado, tá? Que eu gerei o dado sintético. Tá. Aí aqui basicamente é a forma que eu executei, né? Os field shots, tudo, beleza? Tá. Bom, aqui, aí o que que acontece? Vocês pediram para os algoritmos, aí tem aquele perceptum estruturado lá com relaxação, Aí eu escolhi outro algoritmo que foi, eu não sei se está certo se não está, foi os mínimos quadrados. Tá, que é algoritmo 2. E um outro algoritmo que seria a programação linear, o MaxMargin. Eu não sei se ele é bom ou não, mas a gente acabei usando os três para fazer as comparações, entendeu? Até pra gente ver se o meu algoritmo lá está funcionando ou não. Então eu acabei escolhendo esses dois aí. Então a gente tem três algoritmos agora, ok? Esse aqui é igualzinho ao"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 269.52,
+      "end": 274.94,
+      "text": "algoritmo do IMA. O algoritmo que eu te apresentei."
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 275.46,
+      "end": 276.9,
+      "text": "Ah, tá. Porque"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 276.9,
+      "end": 299.17,
+      "text": "a norma fica multiplicando do lado de cá. E nesse caso aqui a norma faz igual a 1. Matematicamente isso aqui é mais difícil de resolver. Entendi. é lá, tá vendo? Maximizimistamente o gama, tá vendo? Enquanto que a gente resolve utilizando o percepto estruturado e vai aumentando o gama. Essas formulações são"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 299.17,
+      "end": 301.97,
+      "text": "equivalentes. Entendi. Só que essa"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 301.97,
+      "end": 306.19,
+      "text": "aqui é mais complexa do ponto de vista matemático, né? Vai precisar de um pacote de otimização."
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 306.81,
+      "end": 310.93,
+      "text": "É, basicamente foi resolvido com o pacote do SciPy, né? É, mas é"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 310.93,
+      "end": 336.3,
+      "text": "a mesma formulação. É a mesma. É, você lembra? O W multiplicando o Ponderano, a distância, a diferença das distâncias é a mesma, o outro é um pouquinho diferente, o volta atrás, esse outro é menos quadrado, simplesmente minimiza essa,"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 340.04,
+      "end": 343.36,
+      "text": "aí tem mais um? Não, são três só, são os três."
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 343.48,
+      "end": 350.46,
+      "text": "O escudo Joaquim também é a mesma coisa, ele é igual o primeiro, que eu te apresentei. sim"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 351.39,
+      "end": 422.02,
+      "text": "aí bom basicamente aqui é uma parada de robustez na coleta como é que eu faço para depois das decisões do LLM para a gente fazer LLM às vezes retorna Jason às vezes não retorna é mais para explicar isso aí tá aí basicamente aqui mais uma vez é explicando a fase A que a gente já que a gente falou há um tempo aqui tá, que é a descrição da fase A, aí aqui é o W aprendido da fase A, que eu acho que na última conversa a gente, vocês pediram para colocar na tela, entendeu? Então basicamente aqui, imagina que o ALLM já rotulou e eu usei o Perceptum para recuperar o W, aí ele recuperou isso do W, aí depois eu usei o que é o máximo de margem para recuperar o W, entendeu? Que máximo de margem é esse? Esse é o... o terceiro algoritmo esse aqui, a programação linear Tinha que dar o mesmo valor Então, ele tinha que dar o mesmo valor que você diz, o próximo de cima?"
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 422.28,
+      "end": 426.34,
+      "text": "É, eles são muito fora, tá vendo? É, eles estão ali O"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 426.34,
+      "end": 428.8,
+      "text": "NNLS ficou perto mais ou"
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 428.8,
+      "end": 430.32,
+      "text": "menos as proporções, né?"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 433.0,
+      "end": 438.86,
+      "text": "Você tem que ver isso, tem alguma coisa estranha nele Você acha que pode ter algum erro? Pode ser, né?"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 440.12,
+      "end": 472.76,
+      "text": "Ah, sim! Essa diagonal aqui... Pegou essa aqui, ó! Ele manteve a mércia original, a proporção é 1. Assim, não manteve, né? Tinha uma divisão das companhias do Daibler. Você forneceu... Quanto que era essa divisão aqui? Do problema A? Quanto que era? Quanto que eram essas coordenadas? ele não tinha,"
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 473.56,
+      "end": 473.56,
+      "text": "né?"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 476.25,
+      "end": 488.11,
+      "text": "Ele não tinha. É, seria 1 para 1. Se eu usasse uma métrica euclidiana seria 1 para"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 488.11,
+      "end": 488.95,
+      "text": "1."
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 489.29,
+      "end": 496.0,
+      "text": "Seria 1 em 1, seria igual esse último aqui. A razão seria 1. Você"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 496.0,
+      "end": 507.76,
+      "text": "forçou a marcha aqui do perceptron? Não, então o perceptron, o que eu fiz? Lá embaixo tem uns exemplos que eu altero um pouco os parâmetros, entendeu?"
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 507.76,
+      "end": 512.04,
+      "text": "É porque você tem que forçar a marcha através daquela pesquisa binária."
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 514.2,
+      "end": 520.44,
+      "text": "Do... Basicamente aí está o código que você passou naquele outro... É,"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 520.5,
+      "end": 541.03,
+      "text": "só você ver se o gama vai aumentando, porque a tendência dele é ficar igual a esse outro aqui. Entendeu? Às vezes você não está rodando o suficiente aqui para ele aproximar. Bom, os resultados dele são mais ou menos parecidos. Esse aqui a gente tem que rever, tá? não dá pra botar num artigo"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 541.03,
+      "end": 544.49,
+      "text": "isso aqui não. Qual o Max Margin? É, é isso"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 544.49,
+      "end": 544.49,
+      "text": "aqui."
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 544.97,
+      "end": 552.22,
+      "text": "Tá esquisito, né? Tá, eu vou dar uma olhada nele. Vou dar uma olhada no que aconteceu. Eu acho"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 552.22,
+      "end": 560.88,
+      "text": "que dois são suficientes, Seu Jorge, se eu conseguir calibrar esses dois e eles derem respostas sempre semelhantes, o problema tem que dar a mesma solução."
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 561.3,
+      "end": 567.2,
+      "text": "Quando você diz semelhantes, a razão tem que dar muito próximo e a fidelidade ali, correto? Isso, não tem"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 567.2,
+      "end": 574.06,
+      "text": "problema escalar aqui, aqui é 0 .4 e 1 .6, não tem problema. A razão é que tem que dar próximo."
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 574.77,
+      "end": 592.68,
+      "text": "Entendi. Não, beleza. Então, eu acho que até pra gente deixar mais simples eu removo esse maxmargin, a gente deixa só dois, que aí fica mais fácil. Esse maxmargin é o de quem? Esse daqui, ó, é o de 2001, do"
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 592.68,
+      "end": 593.4,
+      "text": "Ajurra e"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 593.4,
+      "end": 594.34,
+      "text": "Olhinho."
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 594.92,
+      "end": 603.51,
+      "text": "Engraçado, e é por causa dessa resfrição aqui. a reação complica muito a soma do W dá 1 e não deu lá não"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 603.51,
+      "end": 604.97,
+      "text": "em,"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 604.97,
+      "end": 616.4,
+      "text": "lá deu 1, deu nada, está dando 0 .5, está dando 0 .4, está vendo? É coisa estranha aí, ou é na código, ou é na maneira de alimentar,"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 616.54,
+      "end": 616.7,
+      "text": "bom,"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 616.78,
+      "end": 618.96,
+      "text": "você dá um olhado, se você não conseguir acertar, tira fora."
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 619.28,
+      "end": 620.36,
+      "text": "Tá, beleza."
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 620.38,
+      "end": 625.0,
+      "text": "Você não está nem respeitando aquela restrição de convexidade, olha, dá a soma dá 1."
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 627.51,
+      "end": 630.65,
+      "text": "Qualquer coisa se eu não conseguir eu tiro e a gente... Tá, e"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 630.65,
+      "end": 635.25,
+      "text": "o NNLS é qual? É o do... Minimus quadrados Chutes, né?"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 636.36,
+      "end": 637.12,
+      "text": "É esse daqui, ó É o"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 637.12,
+      "end": 637.44,
+      "text": "do Chutes?"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 638.77,
+      "end": 642.83,
+      "text": "É o do Lássio Ah, é o do Minus Quadrados, tá? Minus Quadrados É, Lássio Mas"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 642.83,
+      "end": 669.82,
+      "text": "é... o Chutes, João, aqui é muito parecido, tá? Tá vendo? A razão é invariante na escala, tem que dar a mesma coisa Sim Tá escrito aqui, ó a solução do chute é muito parecida com a solução nossa do primeiro algoritmo então esses dos mesmos quadrados é um que é diferente, tá? eu acho que é por aqui"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 669.82,
+      "end": 725.69,
+      "text": "mesmo tá, beleza bom basicamente aqui é uma análise do é basicamente uma análise das quantidades de erros por região tipo onde é que estava dando mais erro ser baixa margem fronteira margem médio alta onde era que tava dando o maior erro eu fiz isso mas na fronteira aí é que basicamente é distribuição dos Ws é por seed então basicamente no com seed 7 é como que os Ws distribuem você está vendo? CID 7, CID 42 e CID 123."
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 731.05,
+      "end": 735.85,
+      "text": "Pois é, mas essa média tirada em cima de qual algoritmo e quantas vezes você rodou?"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 736.09,
+      "end": 782.54,
+      "text": "Não, então isso daqui só foi em cima de um algoritmo só do perceptron. E cada um desse é um... por exemplo, o 7 é uma vez, eu rodei uma vez, aí o 42 é o outro, aquele que ele rodou, aí 123 é o outro, são três CID diferentes. Por que cada um é um resultado diferente? Então é porque o CID é diferente, a semente é diferente na hora de gerar os dados, entendeu? Ah, na hora de gerar os dados? Isso, na hora de gerar os dados eu coloco uma semente diferente, aí ele gera dados diferentes. E LLM rotula diferente? É, são dados diferentes, LLM provavelmente. Então tem que ter essa variação realmente. É, vai rotular diferente. Tá,"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 784.32,
+      "end": 784.6,
+      "text": "beleza."
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 787.25,
+      "end": 850.32,
+      "text": "Bom, aqui basicamente a fidelidade compara os três algoritmos, tipo Perceptum, NNLS e o LP. Então a similaridade com como que ele gerou esses dados. Basicamente no gráfico, o que ele mostra? É importante notar que os três algoritmos foram escolhidos, por exemplo, o perceptum ele é interativo e depende de parâmetro, correto? Esse NNLS meio que ele é fechado para parâmetro e entre aspas esse LP aí deveria ser o ótimo global, né? Que é o que deveria ser. Aí aqui tá certo? Não,"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 851.81,
+      "end": 853.57,
+      "text": "tá, você usa o pacote de otimização."
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 854.03,
+      "end": 861.07,
+      "text": "Isso, é isso aí. Depois vou dar uma olhada"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 861.07,
+      "end": 863.71,
+      "text": "com calma nessas resfragulações."
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 864.09,
+      "end": 895.94,
+      "text": "Tá. Aí aqui, basicamente, a sensibilidade é dos hiperparâmetros lá do perceptron, tá? Então eu coloquei o padrão era 0 .5, eu coloquei outros valores para verificar a sensibilidade. se os hiperparâmetros mudava muito a resposta final. Então, meio que o critério recuperado não depende do ajuste fino dos hiperparâmetros."
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 898.96,
+      "end": 899.06,
+      "text": "O"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 899.06,
+      "end": 899.1,
+      "text": "que"
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 899.1,
+      "end": 904.03,
+      "text": "é esse último parâmetro aí? Delta de margem?"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 904.35,
+      "end": 914.66,
+      "text": "Delta de margem. Eu acho que isso daí não é o parâmetro que a gente põe lá no Perceptor. O que o padrão é 05 lá do código."
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 916.04,
+      "end": 919.0,
+      "text": "flexibilizar e esse ser, sei que é para flexibilizar."
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 920.0,
+      "end": 930.12,
+      "text": "Eu não tenho o algoritmo dele aí não. O padrão é 10, eu tenho nos códigos aqui. Ah, mas em pseudo código? Não, no pseudo código eu acho que eu tirei, eu posso pôr no próximo."
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 931.33,
+      "end": 946.9,
+      "text": "Ah, importante, para a gente ver. Isso aqui tudo bem, a taxa de aprendizado. Geralmente usa 1, tá? É 1? Essa taxa é 1, tá? Não quer ser até 1."
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 948.76,
+      "end": 949.78,
+      "text": "Vou até ter"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 949.78,
+      "end": 958.18,
+      "text": "uma olhada nos artigos do Mauricio, daquele de música, do Ângelo, mas aqui eu acho que é um."
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 959.29,
+      "end": 964.24,
+      "text": "Tá. Não, se for eu rodo de novo. Eu vou olhar lá de novo."
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 964.28,
+      "end": 1027.42,
+      "text": "Deixa eu escrever aqui as coisas que a gente está perguntando. Na próxima reunião a gente já prefina mais. Olha lá, formulação dos métodos, né? E os parâmetros do perceptro estruturado. Sim."
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 1035.6,
+      "end": 1054.62,
+      "text": "o problema ser aqui mudar o centro né? E o LP lá, verificar por que que..."
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 1055.8,
+      "end": 1099.75,
+      "text": "Ah é? Mas aí eu sempre tenho que ver, né? O código aí, a entrada de dados, né? Ah, você está marcando o que você... A acumulação lá está correta, mas você vê que para a resposta estar correta, a soma das componentes a norma do W tem que dar 1. Volta lá, deixa eu ver se dá 1. A norma é... não é a soma não, é a norma. A norma é ponto 71 ao quadrado mais ponto 71 ao quadrado, raiz quadrado é disso. Ah, vai dar 1 sim. Então por que que tá dando igual? Dá 1 sim, dá ponto 49, mas ponto 49 dá 1. Tá certo isso aqui, tá errado."
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 1100.74,
+      "end": 1102.04,
+      "text": "tá certo"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 1102.04,
+      "end": 1141.48,
+      "text": "agora o que tá esquisito é a razão é a norma de um sim eu vou olhar as formulações ou ver se elas realmente são equivalentes e o que está fazendo elas darem resultados diferentes talvez o tempo que rodou no caso do quadrado a resposta sai que influenciado aí pelo tempo é só o certo, é um algoritmo de aproximação, né? Teratinho. Os outros são pacotes, né?"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 1141.64,
+      "end": 1142.66,
+      "text": "É isso."
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 1143.9,
+      "end": 1144.6,
+      "text": "Tá, beleza,"
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 1148.14,
+      "end": 1148.14,
+      "text": "tá."
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 1148.82,
+      "end": 1171.19,
+      "text": "Beleza. Tá, e passa agora pro B e C. Isso. Aí é aquela mesma coisa, passa pro B e C. Tá? Então aqui tem um pouco da descrição, que a gente tinha falado. Aí aqui, basicamente são as consistências, em zero shot, cinco shot, 10."
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 1175.73,
+      "end": 1177.01,
+      "text": "Então ele vai melhorando"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 1177.01,
+      "end": 1186.61,
+      "text": "depois ele degrada. Isso, 40 shots ele já degrada. Na verdade a partir de 5 já não tem uma melhora muito boa, entendeu?"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 1192.85,
+      "end": 1198.33,
+      "text": "E essa informação do shot aqui é a informação da rotulação com a métrica."
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 1199.07,
+      "end": 1219.36,
+      "text": "Isso, exatamente. Aqui é os gráficos, os problemas, a consistência, em 0, 5... depois de cinco é muito ou seja cinco já"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 1219.36,
+      "end": 1246.78,
+      "text": "agora agora me explica uma coisa você você gerou os dados da gossiana gerou dados para metros duas gossianas depois você rotulou os dados no zero short"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 1250.97,
+      "end": 1261.66,
+      "text": "o LLN. Sim, rotulei os dados, exato. Depois você calculou a métrica. Isso, calculei a métrica com os modelos lá, exato."
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 1262.82,
+      "end": 1265.98,
+      "text": "O modelo LLN, a partida da rotulação LLN."
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 1266.08,
+      "end": 1270.1,
+      "text": "A partida da rotulação eu rodei o perceptor, o mínimo quadrado e o LLN. Ah, mas"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 1270.1,
+      "end": 1312.31,
+      "text": "você também calculou os... depois você calculou o ajuste da métrica. Sim. Esse é o problema direto. Ou seja, a médica prender a estratégia da Lenin. Agora nós vamos pro problema inverso. Isso. Ou seja, dado a rotulação da médica em cima do mesmo conjunto de dados."
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 1314.7,
+      "end": 1333.42,
+      "text": "Eu tran... Não é? Então... Você gerou novos conjuntos e rotulou com a médica e mandou ele. Então, o problema A, o problema A, eu tenho problema A, B e C. Problema A... Opaulou a métrica só pelo A. Exatamente. Eu transferi a métrica depois que eu aprendi... Ah tá,"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 1333.54,
+      "end": 1335.08,
+      "text": "então calcular"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 1335.08,
+      "end": 1344.3,
+      "text": "o ajuste da métrica foi no B e C. No B e C, exatamente, porque eu quero ver se ele é consistente com o que ele fez no A. Entendeu?"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 1347.02,
+      "end": 1364.04,
+      "text": "Tá, então gerou três problemas, A, B e C, opaulou um zilinho no chote no A, calculou a métrica no A, calculou o ajuste da métrica no B e C e dado a rotulação da métrica em B e C..."
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 1364.55,
+      "end": 1366.31,
+      "text": "Eu verifico a consistência."
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 1366.57,
+      "end": 1368.77,
+      "text": "Calculou o ajuste do LNM."
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 1368.83,
+      "end": 1376.08,
+      "text": "Isso. A consistência, a lucha de consistência. É, consistência, isso."
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 1385.52,
+      "end": 1389.58,
+      "text": "Tá, e aí fazendo todos, daí pra baixo os anos percebam tudo."
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 1390.25,
+      "end": 1477.77,
+      "text": "é aqui eu tenho eu tenho exemplos de outros nos outros é nos outros algoritmos também acho que eu tenho aqui embaixo é que tá tá por ordem aqui bom eu fiz alguns outros eu eu vou passando aí se se faltar eu te falo mas eu acho que aqui embaixo tem na apresentação tá nos outros algoritmos também é então aqui basicamente são é o viés de ordem Então A e B, se eu passar para o cara, olha, faça A e B ou faça B e A, o inverso, tá vendo? Então eu fiz um exemplo aí e basicamente o inverteiro à ordem das classes altera o desempenho até 25 pontos. Era muito, né? É, tipo, meio que assim, é meio que dito que o LLM ele tem viés posicional, né? um daqueles trabalhos que a gente, depois eu posso até colocar aqui, ele diz, o trabalho foi exatamente isso se o LLM tem viés posicional e realmente parece que tem porque por exemplo no orden A e B, 81 % de consistência tipo no B o outro foi para 90 e meio, 90 e meio, aumentou bastante, entendeu? alguns não muito mas por exemplo... você tem que"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 1477.77,
+      "end": 1479.03,
+      "text": "modificar o problema C"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 1479.73,
+      "end": 1487.91,
+      "text": "é, tem que modificar o problema C, mas no problema C olha isso aí B deu 67 e B e A deu 93"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 1487.91,
+      "end": 1488.99,
+      "text": "mas"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 1488.99,
+      "end": 1493.8,
+      "text": "é um problema que a rotação é bem pequena né? da B, diferença"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 1503.28,
+      "end": 1540.22,
+      "text": "essa questão aí de você alterar a simetria é interessante na verdade você está alterando a simetria, você está trocando as classes de lugar essa inversão e o fato de se chamar de A zero e azul já é um conteúdo semântico, entendeu? já é de uma denotação, se não tem uma explicação matemática nenhuma, ao inverter as classes tem uma de educação matemática. Beleza."
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 1540.78,
+      "end": 1570.82,
+      "text": "Bom, é que é o gráfico, só o gráfico para explicar isso. Aqui também uma coisa que o... Nomes. São os nomes lá que eu passava, sei lá, x1 e x2, entendeu? Aí eu comecei, eu mudei também, aí eu coloquei x1 e x2, que é o neutro, aí depois altura e peso, Feature 1, Feature 2. É, no zero shoot,"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 1571.38,
+      "end": 1580.27,
+      "text": "na verdade no zero shoot se vira o Roteirinho. É. É igual o que o Fernando fez lá no início. O de Gose da Goscena, que é o zero shoot, saiu alguma coisa."
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 1580.43,
+      "end": 1581.05,
+      "text": "Exatamente. Ele"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 1581.05,
+      "end": 1583.03,
+      "text": "não vai ter consistência em relação ao"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 1583.51,
+      "end": 1601.1,
+      "text": "zero shoot. Exatamente, a gente tem que entender que o zero shoot não tem nada. tipo, ele não sabe, o que a gente pode tentar entender é quanto que é o mínimo que seria interessante de dar de exemplos pra ele, pra ele ter uma melhora"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 1604.86,
+      "end": 1608.62,
+      "text": "tem meio que 58, 54 é quase que chutar esse daqui é"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 1608.62,
+      "end": 1657.4,
+      "text": "feature 1, feature 2? Exatamente a outra coisa aqui basicamente foi o design do prompt que foi uma outra coisa que eu alterei também uma variação de prompt, né? meio que um default que é uma coordenada numérica, faço uma pergunta direta aí o outro seria um geométrico, falando que considere cada ponto em um plano 2D aí tem uma outra instrução que é o chain of flow e o tabular que basicamente são coordenadas, entendeu? é basicamente mudando o prompt para ver se essa variação de mudança também afeta"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 1657.4,
+      "end": 1663.6,
+      "text": "com certeza o meio da melhor é assim"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 1663.88,
+      "end": 1735.06,
+      "text": "na verdade acho que o default deu um deu o melhor resultado de todos é não o geometro não o geométrico é o que estou usando o geométrico eu eu eu eu padrão assim que eu coloquei que era é classifique em duas, classifique em entre tanto e tanto, entendeu? Feature e tal, é o geométrico, é classifique em ponto 2D, tá? Aí assim, basicamente o geométrico, o default e o geométrico são equivalentes, pode ser que o geométrico eu tenha colocado bem parecido com o default, mas são os melhores mesmo. mas ou seja o prompt interfere bastante óbvio né nisso daqui bom aí aqui a fase D né que agora LLM aprendiz tá aí eu tenho perito externo que ele faz a rotulação e a LLM recebe os números aos exemplos rotulados pelo perito ela tenta aprender com critério do perito para classificar"
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 1735.06,
+      "end": 1741.78,
+      "text": "Mas peraí, antes no fio short era o que?"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 1745.3,
+      "end": 1758.12,
+      "text": "É a mesma coisa, não? Então, é porque eu tava passando, eu passava o... O fio short eu acho que é um pouco parecido. Eu acho que é um pouco parecido, mas... Eu"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 1758.12,
+      "end": 1774.8,
+      "text": "não entendi direito. Volta atrás aí. Volta atrás da frase 3. Volta atrás. Não, volta mais atrás. Mais. Tá. Esses testes aí. Então, não vai dar"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 1774.8,
+      "end": 1814.91,
+      "text": "D no seu nome? Dar D? É porque assim, eu faço aqui com zero, entendeu? E eu dou exemplos, mas eu dou os exemplos que foram rotulados pela própria LLM. Ah, eu achei que era pela métrica. Não, os exemplos são rotulados pela métrica que ele aprendeu da LLM, que não é a é a que a LLM seguiu, entendeu? Tudo bem, lá na D ou que? Na D eu sou perito, eu sei qual que é a métrica certa e eu passo pra ela a métrica correta. Eu gero o dado e"
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 1814.91,
+      "end": 1819.55,
+      "text": "eu passo pra ela... Ah, então esse caso não tem mais a ver com aprendizado em brecha."
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 1820.6,
+      "end": 1823.74,
+      "text": "Não, esse não. Não, esse caso não tem... Não"
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 1823.74,
+      "end": 1829.58,
+      "text": "seria simplesmente a LLM tentar aprender uma métrica. Exatamente, seria assim"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 1829.58,
+      "end": 1833.44,
+      "text": "ó... É, eu tenho... Você está"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 1833.44,
+      "end": 1835.92,
+      "text": "aprendendo a partir da rotulação do expert."
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 1836.64,
+      "end": 1857.22,
+      "text": "Exatamente. Foi o exemplo D aí que a gente, acho que em umas quatro reuniões atrás, a gente tinha conversado e falou, vê como funciona isso daqui. Se a gente é o expert e a gente passa pra ela, o que ela consegue aprender? Beleza?"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 1860.93,
+      "end": 1864.05,
+      "text": "Você pode criar uma não linearidade e confundir"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 1864.05,
+      "end": 1871.09,
+      "text": "a linha. Ah, porra, pode. Pode exatamente. Mas aí aqui a gente meio que criou estratégia. Mas"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 1871.09,
+      "end": 1872.89,
+      "text": "esse criou problemas fáceis?"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 1872.89,
+      "end": 1897.07,
+      "text": "Não, só foi... Criou problemas lineamente separáveis. Só foi esse problema aqui, o problema é esse aqui. Entendeu? É um problema fácil. É, o problema fácil. Lineamente separável. Exatamente. Esse é um problema fácil pra ela. Eu lembro até que a gente tinha conversado, aí eu preciso Eu vou ver com você, Raul. Você acha que eu tenho que criar um problema difícil aqui? Sim, um não linear. A"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 1897.07,
+      "end": 1897.75,
+      "text": "meia lua."
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 1898.17,
+      "end": 1934.32,
+      "text": "Tem vários problemas clássicos da literatura, tem a meia lua. Então, assim, só pra gente... Então eu vou deixar esse daqui com esse problema linear e eu ponho o não linear. Seria um problema não linear. Seria a fase E. Seria um outro problema. na fase D. Beleza. Então eu vou fazer isso. Tá? Então aqui, basicamente tem as estratégias que eu coloquei de quais são os exemplos que eu tenho que dar pra ela. Isso aqui é o ponto fácil, difícil, mixed e o aleatório. Outra"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 1934.32,
+      "end": 1938.36,
+      "text": "coisa, naqueles problemas iniciais que você gerou, existe uma non -linearidade?"
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 1939.78,
+      "end": 1940.22,
+      "text": "não"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 1941.28,
+      "end": 1941.72,
+      "text": "acho"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 1941.72,
+      "end": 1943.04,
+      "text": "que não vai adiantar nada botar"
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 1943.04,
+      "end": 1952.98,
+      "text": "mais uma mais uma componente o mais uma componente se diz o a ideia do que é a ideia do que é que vai funcionar na não linearidade"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 1952.98,
+      "end": 1967.24,
+      "text": "então a ideia do que eu vi aqui ela realmente não melhora tá lá no final não tem que ter um problema não linear para ela melhorar é então porque aqui ó basicamente os problemas que ele tem esse nenhum problema desse que é não linear, concorda?"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 1967.98,
+      "end": 1970.9,
+      "text": "É, essas galsianas estão... Eu tenho que botar umas galsianas com os dados em"
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 1970.9,
+      "end": 1971.6,
+      "text": "cima dos outros,"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 1971.96,
+      "end": 1980.82,
+      "text": "com superposição. Não, então, vamos lá. Ou seja, aqui eu também... Aí tem um pouquinho de superposição, muito pouco."
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 1980.98,
+      "end": 1987.57,
+      "text": "É, tem um pouco. Lembra aquele exemplo do NeuroSolute lá, de homem e mulher apesar de altura? Aqui ele tem um exemplo legal."
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 1989.22,
+      "end": 1989.6,
+      "text": "Tem"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 1989.6,
+      "end": 1993.2,
+      "text": "um monte de dados em cima do outro, você tem um erro em tríceco ali,"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 1993.48,
+      "end": 2003.2,
+      "text": "Pedro. Então, ou seja, a parte do kernel só ia melhorar se fosse não linear? É, ué..."
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 2003.2,
+      "end": 2011.3,
+      "text": "Não, aí eu acho até que poderia... O W tem que dar um pouquinho melhor, porque você tem um pouquinho de non -linearidade aí, mesmo mas tem."
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 2015.9,
+      "end": 2022.06,
+      "text": "Tá... Não, beleza, eu posso por um outro aqui pra gente fazer esse teste? O"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 2022.06,
+      "end": 2029.47,
+      "text": "problema lá do Deulo Solúcio de homem e mulher é interessante, eu te passo a parte dos dados dele, pô. pode ser"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 2030.14,
+      "end": 2033.64,
+      "text": "porque eu pego uma base de dados"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 2033.64,
+      "end": 2045.66,
+      "text": "até mesmo pra você ver se vier semântico peso e altura entendeu é um problema legal pra ser tratado aí como estudo de caso beleza pra fechar o arco subúndio"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 2046.3,
+      "end": 2047.78,
+      "text": "entendi entendi"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 2047.94,
+      "end": 2051.58,
+      "text": "vou te passar então homem e mulher tem mil anossas"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 2051.65,
+      "end": 2059.86,
+      "text": "ah não ótimo bom então aqui basicamente são as estratégias né"
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 2064.66,
+      "end": 2069.34,
+      "text": "aí sim vai aumentando o shot ele vai melhorando"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 2069.34,
+      "end": 2108.69,
+      "text": "exatamente mas assim é a mesma coisa com 20 shots melhorou mas depois disso 40 não melhora até pior algumas coisas em alguns no modo easy no modo hard com 40 melhora bastante mixe e o handle tá beleza E a comparação aqui tem só a comparação das estratégias, com 20 shots e tal, os mixers. Bom, aí basicamente tinha uma hipótese. Agora você"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 2108.69,
+      "end": 2116.7,
+      "text": "deveria também comparar os resultados desse exemplo seu com o aprendizado de métrica."
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 2119.4,
+      "end": 2120.04,
+      "text": "Como"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 2120.04,
+      "end": 2132.26,
+      "text": "é o padrão da apreção estruturada, entendeu? você deu seu exemplo você que rotulou o expert vai aprender uma médica e você peça a curaça da médica também"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 2132.45,
+      "end": 2133.77,
+      "text": "mas"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 2133.77,
+      "end": 2137.39,
+      "text": "não vou saber se a LNM chega um resultado"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 2138.96,
+      "end": 2139.56,
+      "text": "parecido"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 2139.56,
+      "end": 2140.16,
+      "text": "tá"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 2140.99,
+      "end": 2141.65,
+      "text": "beleza"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 2141.65,
+      "end": 2169.99,
+      "text": "e aí aí aí aí você vai fazer o mesmo esquema um problema não linear para você simular o kernel você que aquelas formulações lá simulou um kermit, entendeu? Você vai usar do P7, aí você vai ter que usar três informações. Você usa altura, peso e peso vezes altura. Como você deve ter feito?"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 2170.65,
+      "end": 2172.45,
+      "text": "É, não, foi exatamente assim."
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 2172.71,
+      "end": 2173.41,
+      "text": "Altura, peso"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 2173.41,
+      "end": 2174.51,
+      "text": "e peso vezes altura."
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 2175.39,
+      "end": 2178.79,
+      "text": "X1, X2... Só que aí vai ser um exemplo real,"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 2178.99,
+      "end": 2191.92,
+      "text": "entendeu? Então, além de fazer homem e mulher, testar testar métrica nessa fase, calcular e testar métrica"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 2194.03,
+      "end": 2195.51,
+      "text": "e"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 2195.51,
+      "end": 2207.6,
+      "text": "também introduzir uma terceira e truque. Beleza."
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 2208.54,
+      "end": 2224.73,
+      "text": "Bom, aqui eu fiz um basicamente, eu fiz testes na fase D com meio que o X2 dominante, com X1 dominante e com pesos iguais, tá? Pra ver se melhorava ou não a curácia."
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 2224.73,
+      "end": 2228.11,
+      "text": "Ah, isso aí... A mais não chama em vissa, né?"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 2228.93,
+      "end": 2303.84,
+      "text": "Exato. Aqui foi tentar um experimento de diluição. Basicamente é... Quatro exemplos difíceis, hard, e adicionar progressivamente exemplos fáceis, entendeu? Se a curácia sobe ou se os fáceis meio que resgatam o desempenho, que os difíceis estavam prejudicando. Então basicamente aqui ó, aqui é a consistência e aqui são os exemplos, quantidade de exemplos É sempre três difíceis pra X -Hard, aí ele depois de um já fica, a partir do décimo exemplo ó, fácil Com três difíceis ele já se mantém, ele não dilui os difíceis dentro é aqui basicamente é viés de ordem né se é a LLM tem alguns artigos aí também que diz que esse viés de ordem que se a classe zero é primeiro a classe... Até"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 2303.84,
+      "end": 2309.56,
+      "text": "o perceptron normal se você inverter a ordem você tem soluções diferentes,"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 2310.08,
+      "end": 2310.86,
+      "text": "a trajetória"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 2310.86,
+      "end": 2312.88,
+      "text": "de correção do lado vai ser diferente"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 2312.88,
+      "end": 2350.11,
+      "text": "né Exatamente, que é com 5, então alternativa classe 1 primeiro, classe 0 primeiro, classe 1 primeiro e invertido. Aí aqui eu não sei se isso precisa, mas basicamente seria a validação dos algoritmos, se eles estão funcionando mesmo, se eles conseguem recuperar o W, que eu sei qual é o W, entendeu? Ah, isso aí"
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 2350.11,
+      "end": 2351.03,
+      "text": "eu pedi pra você fazer."
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 2351.49,
+      "end": 2352.23,
+      "text": "É, exato."
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 2354.78,
+      "end": 2364.82,
+      "text": "Foi você ou foi o... achei que... Não, isso eu comentei agora. Pedi pra você fazer pra próxima reunião. Já fez. Ah tá, foi isso."
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 2365.22,
+      "end": 2409.01,
+      "text": "Não é, mano. Então, então, então, então, então, então tinha entendido outra coisa. Ainda bem que... Mas ó, basicamente, aqui eu tô... eu sei quais são os Ws, eu estou tentando recuperar isso em várias configurações diferentes, tá vendo? Aniso X1, Aniso X2, Euclidian e Forte Aniso e eu vejo se ele conseguiu recuperar os Ws. Com a sua rotulação? Com a minha rotulação, exatamente. Tipo o Cosseno de diferença deu mais de 98, todas as configurações. Ou seja, olhando assim, todos estão funcionando, parece. Mas como é que você sabe qual que é o W correto? Eu tenho o W correto, foi eu que gerei esse cara. Ah,"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 2413.98,
+      "end": 2420.08,
+      "text": "entendi. Você criou um vetor e fez a rotulação com isso, baseado no próximo centróleo mais próximo. Isso,"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 2420.26,
+      "end": 2422.44,
+      "text": "eu tenho qualquer UW verdadeiro. Eu entendi"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 2422.44,
+      "end": 2423.88,
+      "text": "que você fez meio a mão"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 2423.88,
+      "end": 2434.12,
+      "text": "assim, olha só. Não, não. Eu tenho qualquer UW verdadeiro, tá? Deixa eu ver aqui. Ah, aqui é a transferência. É, organizar"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 2434.12,
+      "end": 2436.76,
+      "text": "de métrica não tem eu, eu aprendi mesmo."
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 2437.56,
+      "end": 2449.76,
+      "text": "era mais para ver assim, po, será que o perceptron que eu usei lá tá certo o código? ou esse LP tá certo o código lá feito, sabe? porque se ele conseguiu recuperar quer dizer que o código tá correto sim,"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 2449.78,
+      "end": 2450.82,
+      "text": "né?"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 2450.98,
+      "end": 2469.34,
+      "text": "você sabe que o perceptron é muito bom, é o melhor de todos a ideia era mais ou menos essa, você falar assim, po, se aqui conseguir recuperar quer dizer que eu não tenho nenhum problema com o algoritmo qualquer coisa que errar é do LLM. E"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 2469.34,
+      "end": 2470.9,
+      "text": "LLM não está chegando ao nível"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 2470.9,
+      "end": 2485.65,
+      "text": "deles. Exatamente, exatamente. Aí aqui é do R3, que é a projeção R3, entendeu? Então classifica dois features e agora com três features."
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 2488.87,
+      "end": 2491.29,
+      "text": "Tá, mas pro W de 3, tá? Isso,"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 2492.1,
+      "end": 2519.14,
+      "text": "W de 3. Então basicamente, aí aqui é uma média dos três sementes que a gente rodou. mas aqui eu tenho com duas features, basicamente acho que esse daqui é uma média, eu não sei se é uma média dos algoritmos, é o Perceptor, acho que é o Perceptor, tá com a fidelidade de 84 e com três features com Perceptor, 75."
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 2521.89,
+      "end": 2525.47,
+      "text": "O que quer dizer esse LLM, três features mais pesados?"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 2526.46,
+      "end": 2537.98,
+      "text": "Não, é porque esse daqui é com x1 e x2, entendeu? E esse daqui é com os trastreios features x1, x2 e o x1..."
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 2537.98,
+      "end": 2544.26,
+      "text": "Aqui as três do Percerto, aqui as três do LMS, aqui as três do L -Pitch, tem que ficar melhor essa caminhão."
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 2549.42,
+      "end": 2551.18,
+      "text": "Basicamente nesse tipo de... Melhora"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 2551.18,
+      "end": 2555.26,
+      "text": "não melhora, em alguns casos piora, melhorou muito pouco."
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 2556.16,
+      "end": 2557.44,
+      "text": "É, é exatamente aqui né?"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 2558.11,
+      "end": 2564.11,
+      "text": "É, mas aí você vai fazer o mesmo com o problema não linear. Então dá meia"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 2564.11,
+      "end": 2568.39,
+      "text": "lua. Aí no não linear ele tende a melhorar."
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 2575.06,
+      "end": 2587.14,
+      "text": "É, na verdade, você tinha que calcular também, antes disso, a fidelidade do Bábilo. Entendeu?"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 2589.88,
+      "end": 2590.4,
+      "text": "Como"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 2590.4,
+      "end": 2610.2,
+      "text": "assim? Ah, eu não sei se você entendeu. É o seguinte, vamos lá. Você tem seu problema, seja ele das Galcianas. serianas seja ele das é de homem mulher seja da meia lua"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 2610.2,
+      "end": 2611.32,
+      "text": "a"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 2611.32,
+      "end": 2633.82,
+      "text": "llm vai rotulo que é o chame tá aí você aprende a métrica usando três fitos e ver qual a consistência dessa médrica usando dois fitos usando três se a métrica melhorou"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 2635.42,
+      "end": 2637.56,
+      "text": "mas a"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 2637.56,
+      "end": 2673.81,
+      "text": "a o poder de classificação melhorou esse é o o problema direto depois você pode fazer esse é o problema depois você pode fazer o outro problema também e aí testar LLM mas antes disso você tem que ver se a sua métrica aprimorou porque porque se o esquema de rotulação da LLM tem alguma não linearidade a métrica com mais uma componente teria que refletir e se melhorar."
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 2677.21,
+      "end": 2682.95,
+      "text": "Entendeu agora? Então vamos lá. Você vai repetir todo aquele processo que você fez lá do"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 2682.95,
+      "end": 2692.65,
+      "text": "início. Ok. Só que você vai agora inserir uma outra componente quando você calcula o W."
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 2694.76,
+      "end": 2697.8,
+      "text": "Quando eu calculo W eu... Você"
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 2697.8,
+      "end": 2704.72,
+      "text": "vai calcular com vezes componentes. Quaix com x1, x2 e x1 vezes x2."
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 2705.8,
+      "end": 2722.86,
+      "text": "E aí qual foi esse W calculado você vai ver se você consegue acertar melhor a rotulação da métrica, né? Aqueles seus dados lá das primeiras tabelas. Se"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 2722.86,
+      "end": 2728.02,
+      "text": "ele melhorou a curácia. Tá, não, então eu não tinha entendido não."
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 2728.68,
+      "end": 2733.98,
+      "text": "Não, isso aqui também que ser feito só que antes eu tenho que fazer essa outra análise."
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 2734.24,
+      "end": 2739.19,
+      "text": "Tá, tá bom, entendi. Eu marquei aqui."
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 2739.53,
+      "end": 2828.61,
+      "text": "E aí a gente vai perceber o seguinte, se ele melhora e o problema é linear, ele não vai melhorar, porque se o problema é linear, matematicamente ele não vai melhorar e eu acredito que LLM também não funciona não linearmente lá no transforme. Agora se o problema é mais difícil, de repente se com a outra componente a gente conseguir melhorar a métrica, é sinal de que ela capturou uma não linearidade na estratégia da LLM. Entendeu? Por isso que tem que ter também essas análises. depois é essa aí mesmo você vai ver se a LLM com três fitures melhor em relação a LLM com duas fituras aí vai ser eu acho que vai ser a mesma história no linear não vai alterar muito e no non -linear é capaz de um fio -shot aprender melhor, ou acertar melhor no caso, acertar melhor então você vai repetir toda a sua estratégia, as fases, não precisa da fase B e C, você vai repetir a fase A e a D considerando a introdução de mais um componente."
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 2831.08,
+      "end": 2831.26,
+      "text": "E"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 2831.26,
+      "end": 2836.44,
+      "text": "vai em todas as duas análises, você vai ter que colocar um problema não linear."
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 2838.92,
+      "end": 2842.22,
+      "text": "Para comparar o linear com o não -linear. que considera."
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 2843.1,
+      "end": 2846.24,
+      "text": "Eu acho que a gente fecha até um artigo já."
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 2851.8,
+      "end": 2852.24,
+      "text": "Boa,"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 2852.8,
+      "end": 2895.92,
+      "text": "beleza. Então é isso, depois eu vou mandar pra você essa base. A base da meia -lua você acha em qualquer lugar aí. E eu vou te mandar a base do homem -moleca, ela é interessante porque lá a gente tem um clasificador ótimo de base. Que na verdade é uma elipse. Então a componente que é introduzida, se não me engano, é x vezes x e y vezes y. É o x ao quadrado mais y ao quadrado. Tá. Porque o x vezes y vai te gerar uma hiperbole. Uhum. E deixa eu abrir aqui"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 2895.92,
+      "end": 2911.36,
+      "text": "pra você, quer ver? Esse problema eu já... Posso abrir pra você? Pode abrir, pode abrir. Deixa eu tirar aqui a tela, peraí. Tá. Eu acho que eu só vi isso dar em alguns exemplos que o Saulo passou."
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 2912.44,
+      "end": 2915.88,
+      "text": "Não! Na parte da minha disciplina eu dei isso."
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 2916.16,
+      "end": 2917.94,
+      "text": "Ah, você também passou isso? Ah,"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 2917.94,
+      "end": 2921.02,
+      "text": "eu não tenho aqui o NeuroSolut no ensinado."
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 2924.1,
+      "end": 2927.14,
+      "text": "É, mas eu... Me manda, Raul. Me manda"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 2927.14,
+      "end": 2927.94,
+      "text": "o..."
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start": 2927.94,
+      "end": 2928.48,
+      "text": "Espera"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 2928.48,
+      "end": 2946.9,
+      "text": "aí. Não, eu tenho sim. Eu tenho sim no e -mail. Espera aí. Eu tenho meu e -mail aqui. Eu mandei para a turma desse período agora. Deixa eu colocar aqui, né, com o nome mesmo, Cap2."
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 2982.45,
+      "end": 3003.79,
+      "text": "Não. Mas por quê? Você compartilhou? Sim. Não abriu não? Agora foi. Foi."
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 3011.95,
+      "end": 3144.47,
+      "text": "Pois é, foi mas aí eu to no email. Tem outro PDF não? Vou fechar o seu PDF. Tá aqui, abriu? Fascadores Vazianos? Sim, estão vendo. Tá. Aqui, tá vendo? você tem duas galcianas que tem superposição. Um classificador ótimo aqui é o baiseano, o ponto de paz. Ele é quadrático, quando há superposição, a probabilidade é posterior. Aqui está explicado os casos, está vendo? Aqui, está vendo? Aqui é homem e mulher, peso e altura. A curva, está vendo? A curva é uma elipse, está vendo? a equação da elipse ela é x ao quadrado mas isso ao quadrado vai estar só lá no nível do neurosolúcio mas ela vai dar uma quadrática enquanto cada hipérbole aí é x vezes isso entendeu sim então você pode até fazer experiências é eu vou olhar essa curva qualquer passo para você então você pode fazer experiências aí alterando até alterando essa terceira componente entendeu? bom, por enquanto faz só x vezes isso. eu acho que vai melhorar o restante. não vai confundir demais."
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 3146.25,
+      "end": 3148.01,
+      "text": "tem bastante coisa. tem"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 3148.01,
+      "end": 3148.93,
+      "text": "bastante coisa pra"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 3148.93,
+      "end": 3150.57,
+      "text": "fazer."
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 3153.72,
+      "end": 3165.01,
+      "text": "então tá, então vamos ver se você não conseguir pra semana que vem, o ideal seria a semana que vem, Já tá quinta -feira, né? Tá. É um prazo aí pra você fazer essas coisas."
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 3166.18,
+      "end": 3168.18,
+      "text": "Eu vou... Aí a gente chama o"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 3168.18,
+      "end": 3169.24,
+      "text": "Yuri e o Sol pra gente ver o meu."
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 3169.58,
+      "end": 3169.9,
+      "text": "Tá"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 3169.9,
+      "end": 3171.99,
+      "text": "bom. Beleza?"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 3172.11,
+      "end": 3234.72,
+      "text": "Beleza, beleza. Qualquer dúvida aí você me manda email, tá? Eu vou... Eu tô anotando aqui, eu vou mandar... Fazer tudo certinho, eu te mando o email no máximo amanhã de manhã pra gente falar, isso aí é isso mesmo. Tá, eu te passo essa base. Sai não, Raul. Amor, pega uma camisa pra mim. Não amor, porque a gente tem que sair daqui embora. Você tá vendo? A minha elástica. Não, eu não quero mais ninguém cansado aqui em casa. Tem minha elástica, não vai cansar. Não, eu tô aqui esperando ele voltar, acho que ele não vai voltar."
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 3235.94,
+      "end": 3237.62,
+      "text": "Ele voltar? Ele falou tchau?"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 3239.1,
+      "end": 3243.46,
+      "text": "É que eu achei que ele clicou errado, ele ia clicar em não parar de compartilhar."
+    }
+  ]
+}

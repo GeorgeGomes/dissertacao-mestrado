@@ -1,0 +1,26 @@
+\frametitle{Prompts literais (2/2) --- variantes}
+\tiny
+  \textbf{Geometric:}
+  \begin{verbatim}
+Voce ve dois grupos de pontos em um plano cartesiano.
+Os grupos estao separados por uma fronteira geometrica.
+Ponto: (x1=1.234, x2=-0.567). A qual grupo pertence? A ou B?
+  \end{verbatim}
+  \textbf{CoT:}
+  \begin{verbatim}
+Classifique o ponto (x1=1.234, x2=-0.567).
+Pense passo a passo:
+1. Localize o ponto no plano.
+2. Compare com os exemplos disponiveis.
+3. Determine o grupo mais proximo.
+No final, responda apenas: A ou B.
+  \end{verbatim}
+  \textbf{Tabular:}
+  \begin{verbatim}
+| x1   | x2    | classe |
+|------|-------|--------|
+| -2.3 | 0.1   | A      |
+| 2.1  | -0.2  | B      |
+| 1.234| -0.567| ?      |
+Responda: A ou B.
+  \end{verbatim}

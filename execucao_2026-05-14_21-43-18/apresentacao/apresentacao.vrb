@@ -1,0 +1,24 @@
+\frametitle{Bloco 1 --- Prompt few-shot (default)}
+\tiny
+  Para n\_shot $> 0$, o prompt inclui exemplos rotulados antes do ponto-alvo. Variantes (geometric, CoT, tabular) j\'a foram cobertas no slide 31.
+  \begin{verbatim}
+You are a binary classifier for 2D points.
+
+You will see 5 labeled examples and then a point to classify.
+
+Examples:
+Example 1: x1 = -2.3000, x2 =  0.1000  -> A
+Example 2: x1 =  2.1000, x2 = -0.2000  -> B
+Example 3: x1 = -1.8000, x2 =  0.4000  -> A
+Example 4: x1 =  1.7000, x2 =  0.3000  -> B
+Example 5: x1 = -2.5000, x2 = -0.1000  -> A
+
+Classify as Class A or Class B.
+Answer ONLY with "A" or "B", nothing else.
+
+Point to classify:
+x1 =  0.2340
+x2 =  0.5670
+
+Your classification:
+  \end{verbatim}
