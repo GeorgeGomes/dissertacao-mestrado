@@ -16,17 +16,59 @@ de estimação (Perceptron Estruturado, NNLS).
 - **Bloco 2 — LLM como APRENDIZ:** Problemas E (linear, perito W=[0.3,1.5]) e F (meia-lua, perito = ground truth). Fase E in-context; estratégias, refutação H4, baselines clássicos.
 - **Bloco 3 — Estudo de caso REAL:** peso × altura (base do orientador, fronteira elíptica). Fase A R2/R3/R4 + Fase E + paradoxo do overfitting.
 
+## Convenção de nomenclatura dos assets (a partir de 03/07/2026)
+
+**Assets cujos dados derivam de UM LLM específico levam o ALIAS curto do modelo antes
+da extensão**, via `llm_asset()` + `MODEL_ALIAS`: ex.
+`bloco1_06_w_distribution__gpt4mini.png`, `final_05_hits_errors_seed42__scout.png`,
+`final_cross_linearity__flashlite.csv`.
+
+| Modelo | Alias |
+|---|---|
+| `gpt-4o-mini` | `gpt4mini` |
+| `google/gemini-2.5-flash-lite` | `flashlite` |
+| `meta-llama/llama-4-scout` | `scout` |
+| `deepseek/deepseek-v4-flash` | `dsflash` |
+
+**TODOS os modelos são tratados de forma igual**: cada modelo de `MODELS_TO_TEST` gera
+o conjunto COMPLETO de gráficos por modelo (bloco1_05–09, bloco2_04–07/09, bloco23_*,
+final_02–08, final_10, cross-linearity) **na raiz da execução** — não existe mais a
+subpasta `modelos_extras/` nem o conceito de "modelo principal" para plots. Modelo fora
+do protocolo sem entrada em `MODEL_ALIAS` cai no slug longo (`_model_slug`); teste em
+`tests/test_selecao_exemplos.py` garante a cobertura dos 4.
+
+**NÃO levam sufixo de modelo:**
+- Assets sem dados de LLM: dados sintéticos (`bloco1_01`, `bloco1_02`, `bloco3_01`,
+  `dados_sinteticos_*`), oráculos (`bloco1_03/04/04b`, `bloco1_oracle_*`), perito
+  (`bloco2_01`, `bloco2_03`) e baselines clássicos (`bloco2_classical_baselines_*.csv`).
+- Assets consolidados multi-modelo, identificados pela coluna `provider`/`model` no
+  conteúdo: todos os demais CSVs, `llm_interactions*.json`, `log_execucao.txt` e
+  `final_09_model_comparison.png`.
+
+(A lista de arquivos abaixo mostra os nomes-base; aplicar mentalmente o sufixo
+`__<alias>` aos derivados de LLM — um arquivo por modelo.)
+
 ## Estrutura de Pastas
 
 ```
 mestrado/
 ├── src/
-│   ├── dissertacao_mestrado.py       # Script principal (~7500+ linhas)
+│   ├── dissertacao_mestrado.py       # Runner principal (~4700 linhas): config, fases, coleta LLM, main()
+│   ├── plots.py                      # TODAS as visualizações (plot_*/visualize_*, ~2800 linhas)
+│   ├── relatorios.py                 # Relatórios de texto: print_*, bootstrap_ci, summarize_cross_linearity
+│   ├── execucao_io.py                # Tee (log), chunking de log/JSON, checkpoint, MODEL_ALIAS/llm_asset
+│   ├── resultados.py                 # Dataclasses de resultado (ResultadoExperimento etc.)
+│   ├── protocolo.py                  # Constantes compartilhadas (EXPERT_W, EXAMPLE_STRATEGIES)
+│   ├── llm_client.py                 # Factories de cliente de API por provedor + pins OpenRouter
+│   ├── llm_parser.py                 # Parser de 8 camadas das respostas do LLM
+│   ├── metrics.py                    # d_W, centróides, augmentação R3/R4, métricas de consistência
+│   ├── data_problems.py              # Geradores dos problemas sintéticos + base real
+│   ├── audit_interactions.py         # Auditoria offline (malformadas, flip de T=0)
 │   ├── relaxed_perceptron.py         # Perceptron Estruturado com Relaxação de Margem
 │   ├── least_squares_inverse.py      # Mínimos Quadrados Não-Negativos (NNLS)
+│   ├── classical_baselines.py        # Baselines clássicos (k-NN, LR, SVM)
 │   └── arquivado/
 │       └── max_margin_lp_inverse.py  # ARQUIVADO — LP Max-Margin removido (plano_trabalho item 12)
-│   └── classical_baselines.py        # Baselines clássicos (k-NN, LR, SVM)
 ├── requirements.txt              # Dependências Python
 ├── CLAUDE.md                     # Este arquivo
 ├── .env                          # Chaves de API (carregadas via python-dotenv)
@@ -89,7 +131,7 @@ mestrado/
     ├── bloco23_external_phase_a_{timestamp}.csv
     ├── bloco23_external_phase_e_{timestamp}.csv
     ├── final_cross_linearity.csv
-    ├── llm_interactions.json      # Log completo de prompts e respostas do LLM
+    ├── llm_interactions_parte{NNN}.json  # Log de prompts/respostas do LLM (particionado ~10 MB/bloco)
     └── log_execucao.txt
 ```
 
@@ -101,6 +143,13 @@ e do que cada um deve conter. O arquivo lista, slide a slide: título, tipo de c
 (texto / tabela / gráfico / fórmula) e uma breve descrição do que deve aparecer.
 Os números concretos (métricas, tabelas de resultados) devem ser extraídos dos CSVs e do
 `log_execucao.txt` da execução mais recente.
+
+**Ordem obrigatória de edição:** Ao criar ou alterar qualquer apresentação, **sempre atualizar
+primeiro o `roteiro_apresentacao.txt`** e só depois os arquivos `.tex`
+(`apresentacao.tex` e `apresentacao_guia.tex`). O roteiro é a fonte de verdade; os `.tex`
+seguem o roteiro, nunca o contrário. Os três arquivos devem manter **a mesma quantidade e a mesma
+numeração de slides** — ao adicionar, remover ou dividir um slide, refletir a mudança no roteiro
+primeiro (renumerando as entradas "Slide N —") e então propagar para os dois `.tex`.
 
 Quando o usuário pedir para criar uma apresentação LaTeX Beamer com resultados de uma execução,
 o arquivo `.tex` deve ser criado **dentro da pasta da execução correspondente**
@@ -163,11 +212,16 @@ pip install -r requirements.txt
 
 # Configurar chaves de API em um arquivo .env (carregado via python-dotenv)
 # OPENAI_API_KEY=sk-...
+# OPENROUTER_API_KEY=sk-or-...   (necessário p/ os modelos "core": Gemini/Llama/DeepSeek via OpenRouter)
 # ANTHROPIC_API_KEY=sk-ant-...   (opcional — só se ativar Claude em MODELS_TO_TEST)
-# GOOGLE_API_KEY=...             (opcional — só se ativar Gemini)
+# GOOGLE_API_KEY=...             (opcional — só se ativar Gemini direto)
 
-# Executar o experimento completo
+# Executar o experimento completo (todos os modelos de MODELS_TO_TEST)
 python src/dissertacao_mestrado.py
+
+# Smoke test barato de UM modelo (antes de gastar na execução completa):
+python src/dissertacao_mestrado.py --rapido --modelo gemini
+python src/dissertacao_mestrado.py --rapido --modelo deepseek
 ```
 
 A execução cria automaticamente uma pasta `execucao_YYYY-MM-DD_HH-MM-SS/` com todos os outputs.
@@ -181,13 +235,15 @@ Constantes no topo de `src/dissertacao_mestrado.py`:
 | Constante | Valor padrão | Descrição |
 |---|---|---|
 | `RANDOM_SEED` | `42` | Semente padrão |
-| `RANDOM_SEEDS` | `[42, 123, 7]` | 3 seeds para robustez estatística |
+| `RANDOM_SEEDS` | `[42, 123, 7]` | 3 seeds para robustez estatística (grid completo) |
+| `EXTRA_SEEDS_CORE` | `[]` (desativado) | Seeds extras do pipeline central do modelo principal; protocolo atual = 3 seeds uniformes em tudo. Reativar com `[2025, 314, 611]` habilita Wilcoxon pareado por seed no central |
+| `BIAS_N_SHOTS` | `[0, 10]` | Âncoras dos experimentos de viés (nomes de classe, variantes de prompt) — efeitos comparáveis entre si |
 | `N_SAMPLES_PROBLEM_A` | `150` | Amostras no Problema A |
 | `N_SAMPLES_PROBLEM_B/C` | `100` | Amostras nos Problemas B e C |
 | `N_SAMPLES_PROBLEM_D` | `150` | Amostras no Problema D |
 | `FEW_SHOT_SIZES` | `[0, 5, 10, 20, 40]` | Tamanhos few-shot fases B e C |
 | `FEW_SHOT_SIZES_PHASE_E` | `[0, 5, 10, 20, 40]` | Tamanhos few-shot fase D |
-| `N_REPETICOES` | `3` | Repetições por configuração |
+| `N_REPETICOES` | `3` | Repetições ONDE HÁ SORTEIO de exemplos (regra única em `reps_para`) |
 | `MAX_CONCURRENCY` | `10` | Chamadas paralelas à API do LLM |
 | `MAX_FORMAT_RETRIES` | `5` | Reenvios para respostas malformadas |
 | `EXAMPLE_STRATEGIES` | `["easy","hard","mixed","random"]` | Estratégias fase D |
@@ -256,10 +312,33 @@ PROMPT_VARIANTS = {
 }
 ```
 
-**Modelos suportados** (alternar em `MODELS_TO_TEST`):
-- `gpt-4o-mini` (OpenAI — ativo por padrão)
-- Claude (Anthropic — SDK já integrado, chamada comentada)
-- Gemini 2.0 Flash (Google — comentado, pronto para ativar)
+**Modelos** (`MODELS_TO_TEST`, formato `(provider, model, temperature, scope)`):
+- Protocolo atual (02/07/2026): **os 4 modelos com `scope="full"`** — o grid COMPLETO de
+  experimentos roda em todos, com 3 seeds uniformes. Critério de seleção: o modelo
+  rápido/barato de cada família (mini/Lite/Scout/Flash), 4 famílias, 2 fechados + 2 abertos:
+  `gpt-4o-mini` (OpenAI, principal), `google/gemini-2.5-flash-lite`,
+  `meta-llama/llama-4-scout` e `deepseek/deepseek-v4-flash` via **OpenRouter**
+  (`OPENROUTER_API_KEY`; `extra_body` com `allow_fallbacks=False`).
+- **Pinagem de provedor de inferência POR MODELO** (`MODEL_PROVIDER_PIN` em
+  `src/llm_client.py`): fixa qual infraestrutura serve cada modelo no OpenRouter
+  (mesmo model-ID pode ser servido por empresas/quantizações distintas). Valores
+  observados no smoke de 02/07/2026: DeepSeek e Scout → `DeepInfra`; Gemini → `Google`.
+  Se o provedor pinado cair, as chamadas falham visivelmente (fallback resiliente +
+  auditoria) em vez de migrar em silêncio — comportamento desejado p/ reprodutibilidade.
+- `scope="core"` continua disponível para reduzir um modelo ao pipeline central
+  (Fases A-C + Fase E perito principal + externos, sem experimentos auxiliares).
+- CLI `--modelo <substring>` filtra `MODELS_TO_TEST` (smoke test isolado).
+- **Todos os modelos são iguais para outputs**: cada um gera o conjunto completo de
+  PNGs por modelo na raiz da execução, com seu alias (`MODEL_ALIAS`) no nome do asset.
+  CSVs consolidam todos (colunas `provider`/`model`); `final_09_model_comparison.png`
+  compara todos. Assets independentes de LLM (oráculos, perito, overviews sintéticos,
+  baselines clássicos) são gerados 1× (gate `model_idx == 0`).
+
+**Regra única de repetição** (`reps_para` em `dissertacao_mestrado.py`): repetições
+existem para variar o SORTEIO dos exemplos few-shot (Fase E e externos:
+`random_state = seed + rep`). Onde a seleção é determinística — zero-shot, seleção por
+margem nas Fases B/C, diluição, ordenações fixas — roda-se **1 coleta**; o
+não-determinismo por consulta (flip a T=0) é quantificado pela auditoria offline.
 
 ## Arquitetura do Código
 
@@ -294,7 +373,8 @@ class LearnedMetric               # Métrica Mahalanobis aprendida
 | `create_anisotropic_problem()` | Gera dados para Oracle Validation (W conhecido) |
 | `llm_classify_point()` / `async_llm_classify_point()` | Chama API do LLM (sync/async) |
 | `async_collect_llm_decisions()` | Coleta paralela com `asyncio.Semaphore` |
-| `parse_llm_response()` | Parser de 7 camadas para respostas do LLM; fallback por hash MD5 determinístico (substitui aritmética modular para evitar viés geométrico) |
+| `parse_llm_response()` | Parser de 8 camadas (0–7) para respostas do LLM; fallback por hash MD5 determinístico (substitui aritmética modular para evitar viés geométrico) |
+| `audit_interactions.audit()` | **NOVO:** Auditoria offline dos `llm_interactions_parte*.json` — taxa de malformadas (fallback) e taxa de flip de `T=0` (não-determinismo), sem chamar a API |
 | `train_relaxed_perceptron()` | Perceptron Estruturado com relaxação de margem |
 | `train_least_squares_inverse()` | NNLS via scipy (mínimos quadrados não-negativos) |
 | `create_problem_e_meia_lua()` | **NOVO:** Problema E (sklearn.make_moons) — fronteira não-linear |
@@ -361,7 +441,7 @@ para demonstrar robustez e permitir comparação de similaridade (cosseno entre 
 
 | Algoritmo | Arquivo | Formulação | Hiperparâmetros |
 |---|---|---|---|
-| **Perceptron Estruturado** | `relaxed_perceptron.py` | Relaxação de margem + busca binária em γ | eta=1 (padrão), C, delta_gamma, max_iter |
+| **Perceptron Estruturado** | `relaxed_perceptron.py` | Relaxação de margem + busca binária em γ | eta=0.001 (padrão; `PERCEPTRON_PARAMS`), C, delta_gamma, max_iterations |
 | **NNLS (Mínimos Quadrados)** | `least_squares_inverse.py` | `min ‖Aw - b‖²  s.t. w ≥ 0`, via `scipy.optimize.nnls` | nenhum |
 
 O LP Max-Margin foi **removido** do trabalho (decisão da reunião 30/04/2026 — bug
@@ -539,8 +619,34 @@ Muitos gráficos são salvos tanto como **figura combinada** quanto como **pain�
 
 ### Outros Artefatos
 - `log_execucao.txt` — Transcript completo com detalhes algorítmicos e métricas
-- `llm_interactions.json` — Log estruturado de **todas** as chamadas à API (prompt, resposta, metadata)
+- `llm_interactions_parte{NNN}.json` — Log estruturado de **todas** as chamadas à API
+  (prompt, `point`, `raw_response`, `parsed_label`, `model`, `model_resolved` — snapshot
+  datado devolvido pela API, p/ reprodutibilidade —, `inference_provider` — provedor de
+  inferência no OpenRouter —, `temperature`, `format_retries`,
+  `malformed`), **particionado** em blocos de ~10 MB (`_parte001.json`, `_parte002.json`, …)
+  para evitar um único arquivo gigante. Execuções antigas usam o arquivo único legado
+  `llm_interactions.json` — o auditor aceita ambos os esquemas.
 - `dados_sinteticos_seed{seed}/problem_{A,B,C,D,A_r3}.csv` — Datasets por seed (reprodutibilidade)
+
+### Auditoria Offline das Interações (`src/audit_interactions.py`)
+Verifica, **sem chamar a API**, duas propriedades que sustentam a credibilidade de
+κ/consistência, lendo os `llm_interactions_parte*.json` da execução:
+1. **Taxa de fallback do parser** (`malformed=True`) — se alta, os rótulos são ruído do
+   hash MD5 e as métricas ficam comprometidas.
+2. **Determinismo de `T=0`** — mede a fração de pares (prompt, ponto) idênticos cuja
+   resposta divergiu entre repetições ("taxa de flip"). `T=0` **não** é determinístico
+   (tipicamente ~5% de flip); reportar esse número é honestidade experimental.
+3. **Breakdown por (provider, modelo)** — fallback e flip por modelo, mais os snapshots
+   resolvidos (`model_resolved`) e provedores de inferência observados (OpenRouter).
+   A comparação de flip rates entre modelos é um resultado publicável por si só.
+
+```bash
+python src/audit_interactions.py                 # audita a execução COMPLETA mais recente
+python src/audit_interactions.py execucao_2026-06-30_23-46-58
+python src/audit_interactions.py --json          # saída estruturada (CI/log)
+```
+Sai com código 1 se a taxa de malformadas ultrapassar `--max-malformed` (5% padrão).
+O teste `tests/test_audit_interactions.py` roda esta auditoria na execução mais recente.
 
 ## Leitura de Resultados
 
@@ -592,7 +698,7 @@ scipy           # nnls (NNLS), stats (Wilcoxon)
 - **Nomes de classe variados:** `["A"/"B", "0"/"1", "Positivo"/"Negativo", "Azul"/"Vermelho"]` — detecta viés semântico
 - **Nomes de classe invertidos:** `["B"/"A", "1"/"0", ...]` — detecta viés de posição/ordem
 - **Nomes de features semânticos:** `["altura"/"peso", "feature_1"/"feature_2"]` — detecta viés semântico nas variáveis
-- **Parser de 7 camadas:** Estratégia robusta para lidar com respostas malformadas do LLM
+- **Parser de 8 camadas (0–7):** Estratégia robusta para lidar com respostas malformadas do LLM
 - **3 sementes aleatórias × 3 repetições:** Garante robustez estatística
 - **Análise estatística:** Bootstrap CI (10k reamostragens), Wilcoxon signed-rank, Cohen's d
 - **Projeção R3:** x3=x1*x2 simula kernel quadrático sem sair do mundo linear

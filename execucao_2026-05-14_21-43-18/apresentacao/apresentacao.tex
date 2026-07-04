@@ -541,18 +541,25 @@ retorna w, gamma=0          # NNLS nao define margem geometrica explicita
 \end{frame}
 
 % ============ 27. Problemas B/C mapa acertos/erros seed 42 ============
-\begin{frame}{Bloco 1 --- Problemas B/C --- mapa de acertos/erros (seed 42)}
+\begin{frame}{Bloco 1 --- Problema B --- mapa de acertos/erros (seed 42)}
   \scriptsize
-  M\'etrica $\hat W_A$ aprendida no Problema A aplicada \emph{ponto-a-ponto} em B (rota\c{c}\~ao hor\'aria) e C (anti-hor\'aria). Verde = concorda com o LLM; vermelho = discorda.
+  M\'etrica $\hat W_A$ aprendida no Problema A aplicada \emph{ponto-a-ponto} no Problema B (rota\c{c}\~ao HOR\'ARIA). Verde = concorda com o LLM; vermelho = discorda. Consist\^encia $\approx 68\%$, $\kappa \approx 0{,}29$.
   \begin{center}
-  \begin{tabular}{cc}
-    \includegraphics[width=0.46\linewidth,height=0.62\textheight,keepaspectratio]{final_05_hits_errors_seed42_problema_b.png} &
-    \includegraphics[width=0.46\linewidth,height=0.62\textheight,keepaspectratio]{final_05_hits_errors_seed42_problema_c.png} \\
-    Problema B (Cons.\ $\approx 68\%$, $\kappa \approx 0{,}29$) & Problema C (Cons.\ $\approx 90\%$, $\kappa \approx 0{,}79$) \\
-  \end{tabular}
+    \includegraphics[width=0.70\linewidth,height=0.74\textheight,keepaspectratio]{final_05_hits_errors_seed42_problema_b.png}
   \end{center}
   \tiny
-  \textbf{Leitura:} erros em B concentram-se na faixa central (regi\~ao de sobreposi\c{c}\~ao das gaussianas rotacionadas); em C ficam esparsos e isolados. Visualiza geometricamente por que $\kappa_C \gg \kappa_B$ --- a rota\c{c}\~ao anti-hor\'aria preserva a geometria decis\'oria do LLM melhor que a hor\'aria.
+  \textbf{Leitura:} os erros concentram-se na \textbf{faixa central} --- regi\~ao de sobreposi\c{c}\~ao das gaussianas rotacionadas. A rota\c{c}\~ao hor\'aria afasta a fronteira do LLM da fronteira de $\hat W_A$.
+\end{frame}
+
+% ============ 27b. Mapa de acertos/erros C (item 6: 1 por slide, maior) ============
+\begin{frame}{Bloco 1 --- Problema C --- mapa de acertos/erros (seed 42)}
+  \scriptsize
+  Mesma m\'etrica $\hat W_A$ aplicada \emph{ponto-a-ponto} no Problema C (rota\c{c}\~ao ANTI-HOR\'ARIA). Consist\^encia $\approx 90\%$, $\kappa \approx 0{,}79$.
+  \begin{center}
+    \includegraphics[width=0.70\linewidth,height=0.74\textheight,keepaspectratio]{final_05_hits_errors_seed42_problema_c.png}
+  \end{center}
+  \tiny
+  \textbf{Leitura:} aqui os erros ficam \textbf{esparsos e isolados}. A rota\c{c}\~ao anti-hor\'aria preserva a geometria decis\'oria do LLM melhor que a hor\'aria --- por isso $\kappa_C \gg \kappa_B$.
 \end{frame}
 
 % ============ 28. Consistencia R2/R3/R4 por problema e algoritmo ============
@@ -1152,20 +1159,20 @@ Your classification:
   \scriptsize
   \textbf{O que est\'a sendo feito:} para cada $n_{\text{feat}} \in \{2, 3, 4\}$ (R2, R3, R4), o LLM rotula os pontos em zero-shot com prompt \textbf{sem\^antico} (features ``peso'', ``altura''); estimamos $\hat W$ via otim.\ inversa. Reportam-se duas m\'etricas: (i) \textbf{fidelidade vs LLM} (NNLS reproduz r\'otulos do LLM) e (ii) \textbf{acur\'acia vs r\'otulo REAL} (homem/mulher --- ground truth humano). Exce\c{c}\~ao metodol\'ogica do Bloco 3 --- aqui medimos GT.
   \medskip
-  M\'edia 3 seeds:
+  M\'edia 3 seeds (conjunto de treino $= 70$ amostras):
   \begin{center}
-  \begin{tabular}{lccc}
+  \begin{tabular}{lcccc}
     \toprule
-    $n_{\text{feat}}$ & Fid.\ vs LLM (NNLS) & Acc.\ vs REAL (NNLS) & Observa\c{c}\~ao \\
+    $n_{\text{feat}}$ & Fid.\ vs LLM (NNLS) & Acc.\ vs REAL (NNLS) & \textbf{Erros vs REAL} & Observa\c{c}\~ao \\
     \midrule
-    2 & 0{,}561 & 0{,}833 & --- \\
-    3 & 0{,}624 & 0{,}838 & --- \\
-    4 & 0{,}723 & 0{,}752 & fid sobe, acc real cai \\
+    2 & 0{,}561 & 0{,}833 & $\approx 12/70$ & --- \\
+    3 & 0{,}624 & 0{,}838 & $\approx 11/70$ & --- \\
+    4 & 0{,}723 & 0{,}752 & $\approx 17/70$ & fid sobe, acc real cai \\
     \bottomrule
   \end{tabular}
   \end{center}
-  \medskip
-  Em prompt \textbf{neutro} ($x_1, x_2$), acur\'acia REAL despenca para 30--40\% --- LLM perdido sem prior sem\^antico.
+  \tiny
+  \textbf{Nota (reuni\~ao 20/05):} a queda em $n_{\text{feat}}=4$ aparece no \textbf{NNLS} (restri\c{c}\~ao $w \geq 0$ zera termos aumentados); o \textbf{Perceptron} \emph{n\~ao} cai (acc vs real $0{,}900 \to 0{,}914$, $\approx 6/70$ erros). Em prompt \textbf{neutro} ($x_1, x_2$), acur\'acia REAL despenca para 30--40\% --- LLM perdido sem prior sem\^antico.
 \end{frame}
 
 % ============ 61. Paradoxo overfitting ============
@@ -1187,23 +1194,23 @@ Your classification:
   \scriptsize
   \textbf{O que est\'a sendo feito:} aplica a metodologia ``LLM como aprendiz'' (mesma do Bloco 2) ao problema real peso $\times$ altura. Para cada $n_{\text{shot}} \in \{0, 5, 10, 20, 40\}$, o LLM recebe exemplos rotulados com o \textbf{ground truth real} (homem/mulher) e classifica o conjunto de teste. Comparamos com tr\^es refer\^encias: \textbf{acc\_metric} (LLM vs $\hat W$ aprendida), \textbf{acc\_real} (LLM vs GT humano), e \textbf{baseline Perceptron} treinado nos mesmos exemplos. Prompt sem\^antico (``peso'', ``altura'').
   \medskip
-  M\'edia 3 seeds:
+  M\'edia 3 seeds (conjunto de teste $= 30$ amostras):
   \begin{center}
-  \begin{tabular}{lccc}
+  \begin{tabular}{lcccc}
     \toprule
-    $n_{\text{shot}}$ & acc\_metric & acc\_real & perceptron\_baseline\_real \\
+    $n_{\text{shot}}$ & acc\_metric & acc\_real & \textbf{erros vs real} & perceptron\_baseline\_real \\
     \midrule
-    0  & 0{,}567 & 0{,}600 & --- \\
-    5  & 0{,}833 & 0{,}778 & \textbf{0{,}917} \\
-    10 & 0{,}944 & 0{,}867 & 0{,}778 \\
-    20 & 0{,}944 & 0{,}844 & 0{,}822 \\
-    40 & \textbf{0{,}989} & 0{,}889 & 0{,}878 \\
+    0  & 0{,}567 & 0{,}600 & $\approx 12/30$ & --- \\
+    5  & 0{,}833 & 0{,}778 & $\approx 7/30$ & \textbf{0{,}917} \\
+    10 & 0{,}944 & 0{,}867 & $\approx 4/30$ & 0{,}778 \\
+    20 & 0{,}944 & 0{,}844 & $\approx 5/30$ & 0{,}822 \\
+    40 & \textbf{0{,}989} & 0{,}889 & $\approx 3/30$ & 0{,}878 \\
     \bottomrule
   \end{tabular}
   \end{center}
   \textbf{Achados:}
   \begin{itemize}
-    \item LLM atinge 99\% acc\_metric com 40 exemplos.
+    \item LLM atinge 99\% acc\_metric com 40 exemplos --- s\'o $\approx 3$ amostras erradas em 30.
     \item Em \textbf{5-shot}, Perceptron baseline supera LLM (91,7\% vs 77,8\%).
     \item Em $n_{\text{shot}} \geq 10$, LLM passa o Perceptron.
   \end{itemize}

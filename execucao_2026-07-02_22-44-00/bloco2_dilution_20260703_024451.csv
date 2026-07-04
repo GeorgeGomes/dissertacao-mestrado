@@ -1,0 +1,9 @@
+provider,model,temperature,random_seed,n_shot,example_strategy,repetition,accuracy_llm_vs_expert,kappa_llm_vs_expert,f1_llm_vs_expert
+openai,gpt-4o-mini,0.0,42,4,dilution_4hard_0easy,0,0.5753424657534246,0.13576475081153327,0.5753424657534247
+openai,gpt-4o-mini,0.0,42,8,dilution_4hard_4easy,0,0.8380281690140845,0.6766976836270044,0.8380281690140845
+openrouter,google/gemini-2.5-flash-lite,0.0,42,4,dilution_4hard_0easy,0,0.5547945205479452,0.09012464046021096,0.5547945205479452
+openrouter,google/gemini-2.5-flash-lite,0.0,42,8,dilution_4hard_4easy,0,0.9225352112676056,0.8448857994041707,0.9225352112676057
+openrouter,meta-llama/llama-4-scout,0.0,42,4,dilution_4hard_0easy,0,0.4383561643835616,-0.1430208134428108,0.4383561643835616
+openrouter,meta-llama/llama-4-scout,0.0,42,8,dilution_4hard_4easy,0,0.7112676056338029,0.41907802833765717,0.7112676056338028
+openrouter,deepseek/deepseek-v4-flash,0.0,42,4,dilution_4hard_0easy,0,0.5342465753424658,0.04483355782182019,0.5342465753424657
+openrouter,deepseek/deepseek-v4-flash,0.0,42,8,dilution_4hard_4easy,0,0.704225352112676,0.3989115097762548,0.7042253521126761

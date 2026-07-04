@@ -11,6 +11,19 @@ build/
 # Environment variables
 .env
 
+# Artefatos LaTeX compilados (os .tex e PDFs finais são versionados;
+# as pastas execucao_* são commitadas por decisão do projeto)
+*.aux
+*.log
+*.nav
+*.out
+*.snm
+*.toc
+*.vrb
+*.fls
+*.fdb_latexmk
+texput.*
+
 # OS
 .DS_Store
 

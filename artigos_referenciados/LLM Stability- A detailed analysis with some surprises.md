@@ -1,0 +1,42 @@
+# LLM Stability: A detailed analysis with some surprises
+
+## Metadados
+- **Autores:** Berk Atil (Penn State University / Comcast AI Technologies), Alexa Chittams, Lisheng Fu, Ferhan Ture, Lixinyu Xu, Breck Baldwin (Comcast AI Technologies)
+- **Ano:** 2024 (arXiv:2408.04667v2, 12 de setembro de 2024)
+- **Publicação/Venue:** Pré-publicação no arXiv (cs.CL). Berk Atil realizou o trabalho durante estágio na Comcast AI Technologies.
+- **Arquivo:** LLM Stability- A detailed analysis with some surprises.pdf
+
+## Resumo completo
+O artigo investiga a **estabilidade** (reprodutibilidade dos resultados sob entradas idênticas) de grandes modelos de linguagem (LLMs) como objetivo principal de estudo — algo que, segundo os autores, ainda não havia sido avaliado de forma sistemática como foco central de um trabalho. A motivação é prática: praticantes notam que o mesmo input pode gerar saídas diferentes, mas os benchmarks tipicamente reportam um único resultado por modelo. Se há variância significativa entre execuções idênticas, a validade desses benchmarks fica comprometida, pois o número reportado pode refletir apenas o acaso.
+
+Os autores configuram 6 LLMs de forma **maximamente determinística** (temperatura = 0, top-p = 1, seed fixa) e executam cada experimento 5 vezes (e 20 vezes em casos selecionados) sobre 8 tarefas de dois benchmarks comuns: BBH (Beyond the Imitation Game Benchmark Hard) e MMLU (Massive Multitask Language Understanding). O achado central e "surpreendente" é que os modelos **não são determinísticos mesmo com temperatura 0**: observam-se variações de acurácia de até 10% entre execuções idênticas, e nenhum LLM entrega acurácia perfeitamente repetível em todas as tarefas.
+
+Para quantificar a instabilidade, propõem duas métricas de "taxa de concordância total" (Total Agreement Rate, TAR@N): **TARa@N**, que mede se a *resposta extraída/parseada* é a mesma em todas as N execuções (independente de estar correta), e **TARr@N**, que exige que a *saída bruta (string)* do modelo seja idêntica em todas as N execuções — métrica mais estrita, pois qualquer variação de caractere já caracteriza não-concordância. Também reportam acurácia mínima, mediana e máxima por configuração.
+
+Um resultado importante é que as variações de acurácia entre execuções **não seguem distribuição normal** (teste de Kolmogorov-Smirnov rejeita normalidade com p < 10⁻⁹ em college math para GPT-4o e Llama-3-70B), razão pela qual os autores evitam reportar média e desvio-padrão. A análise de correlação (Spearman) mostra correlação **negativa forte entre comprimento da saída e estabilidade** (saídas mais longas são menos estáveis) e correlação positiva moderada entre acurácia e TARa@5 (modelos mais "confiantes" são mais estáveis). Por fim, o **fine-tuning** do GPT-3.5 Turbo melhora drasticamente a estabilidade, tornando-a quase perfeita em algumas tarefas.
+
+## Principais contribuições
+- Propõe duas métricas de estabilidade: **TARa@N** (concordância da resposta parseada ao longo de N execuções) e **TARr@N** (concordância da saída bruta string, métrica mais estrita).
+- Quantifica empiricamente a variação das respostas de LLMs em 8 tarefas de dois benchmarks (BBH e MMLU), mostrando variações de acurácia de até 10% mesmo com configuração maximamente determinística.
+- Compara variabilidade em diferentes regimes: zero-shot, few-shot e fine-tuning, mostrando que o fine-tuning aumenta substancialmente a estabilidade.
+- Realiza análise de correlação entre estabilidade, acurácia, comprimento de entrada e comprimento de saída, identificando que saídas mais longas são menos estáveis.
+- Documenta que a distribuição da acurácia entre execuções idênticas **não é normal**, recomendando cautela ao usar média/desvio-padrão.
+- Disponibiliza dados e código abertos (https://github.com/Comcast/llm-stability) e sugere que métricas de estabilidade sejam incorporadas a leaderboards e relatórios de pesquisa.
+
+## Metodologia
+Foram testados 6 configurações de modelos: GPT-3.5 Turbo, GPT-4o, Llama-3-70B-Instruct, Llama-3-8B-Instruct, Mixtral-8x7B-Instruct e uma versão **fine-tuned do GPT-3.5 Turbo** (via API da OpenAI, usando subset de treino do MMLU e validação cruzada 10-fold para BBH). Todos foram configurados para máximo determinismo: **temperatura = 0, top-p = 1, seed fixa**; infraestrutura de computação, inputs e configurações mantidos fixos entre as execuções. Top-p também foi testado, sem diferença para fins de estabilidade.
+
+Cada prompt foi executado **5 vezes** com setup idêntico (e 20 vezes em college math para os testes de normalidade). Usou-se prompting **few-shot e zero-shot sem Chain-of-Thought**, nos padrões 3-shot para BBH e 5-shot para MMLU. As 8 tarefas: navigation, ruin names, geometric shapes, logical deduction (BBH); European history, college mathematics, public relations, professional accounting (MMLU) — todas de múltipla escolha com número variável de opções. As métricas registradas: spread mín-máx de acurácia, TARa@5, TARr@5, e acurácia mín/mediana/máx. A normalidade foi testada com Kolmogorov-Smirnov; as correlações entre fatores (TARa@5, TARr@5, spread, acurácia, comprimento de entrada/saída) com correlação de postos de Spearman, apresentadas em mapas de calor separados para few-shot e zero-shot.
+
+## Conclusão do artigo
+Os autores concluem, a partir de uma análise sistemática com hiperparâmetros que deveriam maximizar o determinismo, que **LLMs podem ser muito instáveis em setups padrão**. Um LLM raramente produz exatamente a mesma resposta bruta 5 vezes para o mesmo input (TARr baixo), embora a resposta parseada seja consideravelmente mais estável (TARa mais alto). A acurácia entre execuções não é normalmente distribuída. Os fatores mais relevantes para a instabilidade são a **dificuldade da tarefa** e o **comprimento da saída** do modelo. Eles discutem implicações práticas de engenharia: testes unitários determinísticos deixam de ser confiáveis, sistemas em cascata sofrem degradação multiplicativa (ex.: 4 classificadores 95% estáveis → 0,95⁴ ≈ 81%), e há risco de erros "inexplicáveis". Recomendam que métricas de estabilidade passem a integrar leaderboards e relatórios.
+
+## Relação com este trabalho
+Este artigo é diretamente relevante ao tema de **estabilidade e determinismo** que sustenta a dissertação "Explicando Decisões de LLMs via Otimização Inversa". O projeto usa explicitamente **gpt-4o-mini com temperatura 0** e registra na nota de design que "temperatura 0 não garante determinismo" — exatamente o achado central deste artigo, que demonstra empiricamente, com testes de normalidade e métricas dedicadas (TARa@N, TARr@N), que LLMs variam mesmo no regime maximamente determinístico. Isso justifica e fundamenta diretamente a **hipótese H5 (Estabilidade)** da dissertação, que afirma que o comportamento deve ser reprodutível, e o desenho experimental de **3 seeds × múltiplas repetições** adotado no projeto como forma de capturar e mitigar essa variabilidade. O artigo também oferece um vocabulário e métricas (concordância de resposta parseada vs. saída bruta) que podem enriquecer a discussão sobre por que se mede consistência LLM × métrica aprendida em vez de exigir respostas idênticas. Além disso, o achado de que o **comprimento da saída correlaciona negativamente com estabilidade** dá respaldo ao uso de prompts que solicitam respostas curtas/estruturadas e ao parser robusto de 7 camadas do projeto. Por fim, a observação de que o fine-tuning aumenta a estabilidade contextualiza limites do regime in-context (few-shot) usado no Bloco 2 (LLM como aprendiz).
+
+## Onde citar
+- **Introdução / Motivação:** ao justificar por que a estabilidade do LLM merece estudo e por que temperatura 0 não basta para garantir reprodutibilidade.
+- **Metodologia / Notas de Design:** ao explicar a escolha de temperatura 0 e, principalmente, ao reconhecer que ela não garante determinismo (ancorar a nota de design com referência empírica).
+- **Hipóteses (H5 — Estabilidade):** como suporte empírico para a necessidade de avaliar reprodutibilidade e como base para o desenho de 3 seeds × repetições.
+- **Trabalhos relacionados:** ao posicionar estudos de variabilidade/não-determinismo de LLMs (junto a Song et al. 2024 e Ouyang et al. 2023, que o próprio artigo discute).
+- **Discussão / Ameaças à validade:** ao tratar limitações decorrentes da variabilidade do LLM nas rotulações coletadas e ao discutir o impacto sobre as métricas de consistência.

@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.29 (TeX Live 2026) (preloaded format=pdflatex 2026.4.6)  20 MAY 2026 17:57
+This is pdfTeX, Version 3.141592653-2.6-1.40.29 (TeX Live 2026) (preloaded format=pdflatex 2026.4.6)  25 JUN 2026 15:48
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1478,7 +1478,7 @@ Overfull \hbox (158.91763pt too wide) has occurred while \output is active
 [26
 
 ]
-Overfull \hbox (158.91763pt too wide) in paragraph at lines 556--556
+Overfull \hbox (158.91763pt too wide) in paragraph at lines 552--552
  [][]  \T1/cmss/m/n/5 ([])  
  []
 
@@ -1487,15 +1487,8 @@ Overfull \hbox (158.91763pt too wide) in paragraph at lines 556--556
 File: ../final_05_hits_errors_seed42_problema_b.png Graphic file (type png)
 <use ../final_05_hits_errors_seed42_problema_b.png>
 Package pdftex.def Info: ../final_05_hits_errors_seed42_problema_b.png  used on
- input line 556.
-(pdftex.def)             Requested size: 200.20305pt x 55.87587pt.
-<../final_05_hits_errors_seed42_problema_c.png, id=269, 1279.179pt x 357.0138pt
->
-File: ../final_05_hits_errors_seed42_problema_c.png Graphic file (type png)
-<use ../final_05_hits_errors_seed42_problema_c.png>
-Package pdftex.def Info: ../final_05_hits_errors_seed42_problema_c.png  used on
- input line 556.
-(pdftex.def)             Requested size: 200.20305pt x 55.87587pt.
+ input line 552.
+(pdftex.def)             Requested size: 304.66699pt x 85.03134pt.
 
 Overfull \hbox (158.91763pt too wide) has occurred while \output is active
  [][]  \T1/cmss/m/n/5 ([])  
@@ -1503,12 +1496,18 @@ Overfull \hbox (158.91763pt too wide) has occurred while \output is active
 
 [27
 
- <../final_05_hits_errors_seed42_problema_b.png> <../final_05_hits_errors_seed4
-2_problema_c.png>]
-Overfull \hbox (158.91763pt too wide) in paragraph at lines 587--587
+ <../final_05_hits_errors_seed42_problema_b.png>]
+Overfull \hbox (158.91763pt too wide) in paragraph at lines 563--563
  [][]  \T1/cmss/m/n/5 ([])  
  []
 
+<../final_05_hits_errors_seed42_problema_c.png, id=277, 1279.179pt x 357.0138pt
+>
+File: ../final_05_hits_errors_seed42_problema_c.png Graphic file (type png)
+<use ../final_05_hits_errors_seed42_problema_c.png>
+Package pdftex.def Info: ../final_05_hits_errors_seed42_problema_c.png  used on
+ input line 563.
+(pdftex.def)             Requested size: 304.66699pt x 85.03134pt.
 
 Overfull \hbox (158.91763pt too wide) has occurred while \output is active
  [][]  \T1/cmss/m/n/5 ([])  
@@ -1516,8 +1515,8 @@ Overfull \hbox (158.91763pt too wide) has occurred while \output is active
 
 [28
 
-]
-Overfull \hbox (158.91763pt too wide) in paragraph at lines 614--614
+ <../final_05_hits_errors_seed42_problema_c.png>]
+Overfull \hbox (158.91763pt too wide) in paragraph at lines 594--594
  [][]  \T1/cmss/m/n/5 ([])  
  []
 
@@ -1529,16 +1528,10 @@ Overfull \hbox (158.91763pt too wide) has occurred while \output is active
 [29
 
 ]
-Overfull \hbox (158.91763pt too wide) in paragraph at lines 622--622
+Overfull \hbox (158.91763pt too wide) in paragraph at lines 621--621
  [][]  \T1/cmss/m/n/5 ([])  
  []
 
-<../bloco1_12_class_order_bias.png, id=294, 1004.0712pt x 427.8384pt>
-File: ../bloco1_12_class_order_bias.png Graphic file (type png)
-<use ../bloco1_12_class_order_bias.png>
-Package pdftex.def Info: ../bloco1_12_class_order_bias.png  used on input line 
-622.
-(pdftex.def)             Requested size: 348.19748pt x 148.36821pt.
 
 Overfull \hbox (158.91763pt too wide) has occurred while \output is active
  [][]  \T1/cmss/m/n/5 ([])  
@@ -1546,31 +1539,37 @@ Overfull \hbox (158.91763pt too wide) has occurred while \output is active
 
 [30
 
- <../bloco1_12_class_order_bias.png>]
-Overfull \hbox (158.91763pt too wide) in paragraph at lines 625--625
+]
+Overfull \hbox (158.91763pt too wide) in paragraph at lines 629--629
  [][]  \T1/cmss/m/n/5 ([])  
  []
 
-\openout4 = `apresentacao.vrb'.
+<../bloco1_12_class_order_bias.png, id=301, 1004.0712pt x 427.8384pt>
+File: ../bloco1_12_class_order_bias.png Graphic file (type png)
+<use ../bloco1_12_class_order_bias.png>
+Package pdftex.def Info: ../bloco1_12_class_order_bias.png  used on input line 
+629.
+(pdftex.def)             Requested size: 348.19748pt x 148.36821pt.
 
-
-Overfull \hbox (158.91763pt too wide) in paragraph at lines 685--685
- [][]  \T1/cmss/m/n/5 ([])  
- []
-
-(./apresentacao.vrb)
 Overfull \hbox (158.91763pt too wide) has occurred while \output is active
  [][]  \T1/cmss/m/n/5 ([])  
  []
 
 [31
 
-]
-Overfull \hbox (158.91763pt too wide) in paragraph at lines 713--713
+ <../bloco1_12_class_order_bias.png>]
+Overfull \hbox (158.91763pt too wide) in paragraph at lines 632--632
  [][]  \T1/cmss/m/n/5 ([])  
  []
 
+\openout4 = `apresentacao.vrb'.
 
+
+Overfull \hbox (158.91763pt too wide) in paragraph at lines 692--692
+ [][]  \T1/cmss/m/n/5 ([])  
+ []
+
+(./apresentacao.vrb)
 Overfull \hbox (158.91763pt too wide) has occurred while \output is active
  [][]  \T1/cmss/m/n/5 ([])  
  []
@@ -1578,16 +1577,10 @@ Overfull \hbox (158.91763pt too wide) has occurred while \output is active
 [32
 
 ]
-Overfull \hbox (158.91763pt too wide) in paragraph at lines 721--721
+Overfull \hbox (158.91763pt too wide) in paragraph at lines 720--720
  [][]  \T1/cmss/m/n/5 ([])  
  []
 
-<../bloco1_13_prompt_variants.png, id=320, 1435.2822pt x 427.8384pt>
-File: ../bloco1_13_prompt_variants.png Graphic file (type png)
-<use ../bloco1_13_prompt_variants.png>
-Package pdftex.def Info: ../bloco1_13_prompt_variants.png  used on input line 7
-21.
-(pdftex.def)             Requested size: 369.96709pt x 110.28223pt.
 
 Overfull \hbox (158.91763pt too wide) has occurred while \output is active
  [][]  \T1/cmss/m/n/5 ([])  
@@ -1595,11 +1588,17 @@ Overfull \hbox (158.91763pt too wide) has occurred while \output is active
 
 [33
 
- <../bloco1_13_prompt_variants.png>]
-Overfull \hbox (158.91763pt too wide) in paragraph at lines 758--758
+]
+Overfull \hbox (158.91763pt too wide) in paragraph at lines 728--728
  [][]  \T1/cmss/m/n/5 ([])  
  []
 
+<../bloco1_13_prompt_variants.png, id=327, 1435.2822pt x 427.8384pt>
+File: ../bloco1_13_prompt_variants.png Graphic file (type png)
+<use ../bloco1_13_prompt_variants.png>
+Package pdftex.def Info: ../bloco1_13_prompt_variants.png  used on input line 7
+28.
+(pdftex.def)             Requested size: 369.96709pt x 110.28223pt.
 
 Overfull \hbox (158.91763pt too wide) has occurred while \output is active
  [][]  \T1/cmss/m/n/5 ([])  
@@ -1607,23 +1606,11 @@ Overfull \hbox (158.91763pt too wide) has occurred while \output is active
 
 [34
 
-]
-Overfull \hbox (158.91763pt too wide) in paragraph at lines 775--775
+ <../bloco1_13_prompt_variants.png>]
+Overfull \hbox (158.91763pt too wide) in paragraph at lines 765--765
  [][]  \T1/cmss/m/n/5 ([])  
  []
 
-<../bloco1_14a_class_names_effect.png, id=336, 859.5312pt x 352.6776pt>
-File: ../bloco1_14a_class_names_effect.png Graphic file (type png)
-<use ../bloco1_14a_class_names_effect.png>
-Package pdftex.def Info: ../bloco1_14a_class_names_effect.png  used on input li
-ne 775.
-(pdftex.def)             Requested size: 217.62338pt x 89.29388pt.
-<../bloco1_14b_feature_names_effect.png, id=337, 1293.1512pt x 428.3202pt>
-File: ../bloco1_14b_feature_names_effect.png Graphic file (type png)
-<use ../bloco1_14b_feature_names_effect.png>
-Package pdftex.def Info: ../bloco1_14b_feature_names_effect.png  used on input 
-line 775.
-(pdftex.def)             Requested size: 217.62282pt x 72.08147pt.
 
 Overfull \hbox (158.91763pt too wide) has occurred while \output is active
  [][]  \T1/cmss/m/n/5 ([])  
@@ -1631,16 +1618,40 @@ Overfull \hbox (158.91763pt too wide) has occurred while \output is active
 
 [35
 
+]
+Overfull \hbox (158.91763pt too wide) in paragraph at lines 782--782
+ [][]  \T1/cmss/m/n/5 ([])  
+ []
+
+<../bloco1_14a_class_names_effect.png, id=343, 859.5312pt x 352.6776pt>
+File: ../bloco1_14a_class_names_effect.png Graphic file (type png)
+<use ../bloco1_14a_class_names_effect.png>
+Package pdftex.def Info: ../bloco1_14a_class_names_effect.png  used on input li
+ne 782.
+(pdftex.def)             Requested size: 217.62338pt x 89.29388pt.
+<../bloco1_14b_feature_names_effect.png, id=344, 1293.1512pt x 428.3202pt>
+File: ../bloco1_14b_feature_names_effect.png Graphic file (type png)
+<use ../bloco1_14b_feature_names_effect.png>
+Package pdftex.def Info: ../bloco1_14b_feature_names_effect.png  used on input 
+line 782.
+(pdftex.def)             Requested size: 217.62282pt x 72.08147pt.
+
+Overfull \hbox (158.91763pt too wide) has occurred while \output is active
+ [][]  \T1/cmss/m/n/5 ([])  
+ []
+
+[36
+
  <../bloco1_14a_class_names_effect.png> <../bloco1_14b_feature_names_effect.png
 >]
-Overfull \hbox (158.91763pt too wide) in paragraph at lines 778--778
+Overfull \hbox (158.91763pt too wide) in paragraph at lines 785--785
  [][]  \T1/cmss/m/n/5 ([])  
  []
 
 \openout4 = `apresentacao.vrb'.
 
 
-Overfull \hbox (158.91763pt too wide) in paragraph at lines 802--802
+Overfull \hbox (158.91763pt too wide) in paragraph at lines 809--809
  [][]  \T1/cmss/m/n/5 ([])  
  []
 
@@ -1649,22 +1660,10 @@ Overfull \hbox (158.91763pt too wide) has occurred while \output is active
  [][]  \T1/cmss/m/n/5 ([])  
  []
 
-[36
-
-]
-Overfull \hbox (158.91763pt too wide) in paragraph at lines 814--814
- [][]  \T1/cmss/m/n/5 ([])  
- []
-
-
-Overfull \hbox (158.91763pt too wide) has occurred while \output is active
- [][]  \T1/cmss/m/n/5 ([])  
- []
-
 [37
 
 ]
-Overfull \hbox (158.91763pt too wide) in paragraph at lines 832--832
+Overfull \hbox (158.91763pt too wide) in paragraph at lines 821--821
  [][]  \T1/cmss/m/n/5 ([])  
  []
 
@@ -1676,16 +1675,10 @@ Overfull \hbox (158.91763pt too wide) has occurred while \output is active
 [38
 
 ]
-Overfull \hbox (158.91763pt too wide) in paragraph at lines 840--840
+Overfull \hbox (158.91763pt too wide) in paragraph at lines 839--839
  [][]  \T1/cmss/m/n/5 ([])  
  []
 
-<../bloco2_01_problema_e_expert.png, id=370, 1280.6244pt x 352.1958pt>
-File: ../bloco2_01_problema_e_expert.png Graphic file (type png)
-<use ../bloco2_01_problema_e_expert.png>
-Package pdftex.def Info: ../bloco2_01_problema_e_expert.png  used on input line
- 840.
-(pdftex.def)             Requested size: 304.67906pt x 83.79247pt.
 
 Overfull \hbox (158.91763pt too wide) has occurred while \output is active
  [][]  \T1/cmss/m/n/5 ([])  
@@ -1693,19 +1686,17 @@ Overfull \hbox (158.91763pt too wide) has occurred while \output is active
 
 [39
 
- <../bloco2_01_problema_e_expert.png>]
-Overfull \hbox (158.91763pt too wide) in paragraph at lines 857--857
+]
+Overfull \hbox (158.91763pt too wide) in paragraph at lines 847--847
  [][]  \T1/cmss/m/n/5 ([])  
  []
 
-<../bloco2_01_problema_e_expert_fronteira_perito.png, id=380, 497.6994pt x 351.
-714pt>
-File: ../bloco2_01_problema_e_expert_fronteira_perito.png Graphic file (type pn
-g)
-<use ../bloco2_01_problema_e_expert_fronteira_perito.png>
-Package pdftex.def Info: ../bloco2_01_problema_e_expert_fronteira_perito.png  u
-sed on input line 857.
-(pdftex.def)             Requested size: 195.86385pt x 138.41298pt.
+<../bloco2_01_problema_e_expert.png, id=378, 1280.6244pt x 352.1958pt>
+File: ../bloco2_01_problema_e_expert.png Graphic file (type png)
+<use ../bloco2_01_problema_e_expert.png>
+Package pdftex.def Info: ../bloco2_01_problema_e_expert.png  used on input line
+ 847.
+(pdftex.def)             Requested size: 304.67906pt x 83.79247pt.
 
 Overfull \hbox (158.91763pt too wide) has occurred while \output is active
  [][]  \T1/cmss/m/n/5 ([])  
@@ -1713,17 +1704,19 @@ Overfull \hbox (158.91763pt too wide) has occurred while \output is active
 
 [40
 
- <../bloco2_01_problema_e_expert_fronteira_perito.png>]
-Overfull \hbox (158.91763pt too wide) in paragraph at lines 870--870
+ <../bloco2_01_problema_e_expert.png>]
+Overfull \hbox (158.91763pt too wide) in paragraph at lines 864--864
  [][]  \T1/cmss/m/n/5 ([])  
  []
 
-File: ../bloco1_02_problema_d_meialua_seed42_overview.png Graphic file (type pn
+<../bloco2_01_problema_e_expert_fronteira_perito.png, id=387, 497.6994pt x 351.
+714pt>
+File: ../bloco2_01_problema_e_expert_fronteira_perito.png Graphic file (type pn
 g)
-<use ../bloco1_02_problema_d_meialua_seed42_overview.png>
-Package pdftex.def Info: ../bloco1_02_problema_d_meialua_seed42_overview.png  u
-sed on input line 870.
-(pdftex.def)             Requested size: 195.85748pt x 167.037pt.
+<use ../bloco2_01_problema_e_expert_fronteira_perito.png>
+Package pdftex.def Info: ../bloco2_01_problema_e_expert_fronteira_perito.png  u
+sed on input line 864.
+(pdftex.def)             Requested size: 195.86385pt x 138.41298pt.
 
 Overfull \hbox (158.91763pt too wide) has occurred while \output is active
  [][]  \T1/cmss/m/n/5 ([])  
@@ -1731,11 +1724,17 @@ Overfull \hbox (158.91763pt too wide) has occurred while \output is active
 
 [41
 
-]
-Overfull \hbox (158.91763pt too wide) in paragraph at lines 882--882
+ <../bloco2_01_problema_e_expert_fronteira_perito.png>]
+Overfull \hbox (158.91763pt too wide) in paragraph at lines 877--877
  [][]  \T1/cmss/m/n/5 ([])  
  []
 
+File: ../bloco1_02_problema_d_meialua_seed42_overview.png Graphic file (type pn
+g)
+<use ../bloco1_02_problema_d_meialua_seed42_overview.png>
+Package pdftex.def Info: ../bloco1_02_problema_d_meialua_seed42_overview.png  u
+sed on input line 877.
+(pdftex.def)             Requested size: 195.85748pt x 167.037pt.
 
 Overfull \hbox (158.91763pt too wide) has occurred while \output is active
  [][]  \T1/cmss/m/n/5 ([])  
@@ -1744,7 +1743,7 @@ Overfull \hbox (158.91763pt too wide) has occurred while \output is active
 [42
 
 ]
-Overfull \hbox (158.91763pt too wide) in paragraph at lines 905--905
+Overfull \hbox (158.91763pt too wide) in paragraph at lines 889--889
  [][]  \T1/cmss/m/n/5 ([])  
  []
 
@@ -1756,16 +1755,10 @@ Overfull \hbox (158.91763pt too wide) has occurred while \output is active
 [43
 
 ]
-Overfull \hbox (158.91763pt too wide) in paragraph at lines 919--919
+Overfull \hbox (158.91763pt too wide) in paragraph at lines 912--912
  [][]  \T1/cmss/m/n/5 ([])  
  []
 
-<../bloco2_03_phase_e_strategies.png, id=411, 859.0494pt x 710.1732pt>
-File: ../bloco2_03_phase_e_strategies.png Graphic file (type png)
-<use ../bloco2_03_phase_e_strategies.png>
-Package pdftex.def Info: ../bloco2_03_phase_e_strategies.png  used on input lin
-e 919.
-(pdftex.def)             Requested size: 162.88026pt x 134.65256pt.
 
 Overfull \hbox (158.91763pt too wide) has occurred while \output is active
  [][]  \T1/cmss/m/n/5 ([])  
@@ -1773,17 +1766,17 @@ Overfull \hbox (158.91763pt too wide) has occurred while \output is active
 
 [44
 
- <../bloco2_03_phase_e_strategies.png>]
-Overfull \hbox (158.91763pt too wide) in paragraph at lines 928--928
+]
+Overfull \hbox (158.91763pt too wide) in paragraph at lines 926--926
  [][]  \T1/cmss/m/n/5 ([])  
  []
 
-<../bloco2_04_phase_e_learning_curve.png, id=420, 1293.633pt x 353.1594pt>
-File: ../bloco2_04_phase_e_learning_curve.png Graphic file (type png)
-<use ../bloco2_04_phase_e_learning_curve.png>
-Package pdftex.def Info: ../bloco2_04_phase_e_learning_curve.png  used on input
- line 928.
-(pdftex.def)             Requested size: 339.47517pt x 92.67609pt.
+<../bloco2_03_phase_e_strategies.png, id=418, 859.0494pt x 710.1732pt>
+File: ../bloco2_03_phase_e_strategies.png Graphic file (type png)
+<use ../bloco2_03_phase_e_strategies.png>
+Package pdftex.def Info: ../bloco2_03_phase_e_strategies.png  used on input lin
+e 926.
+(pdftex.def)             Requested size: 162.88026pt x 134.65256pt.
 
 Overfull \hbox (158.91763pt too wide) has occurred while \output is active
  [][]  \T1/cmss/m/n/5 ([])  
@@ -1791,11 +1784,17 @@ Overfull \hbox (158.91763pt too wide) has occurred while \output is active
 
 [45
 
- <../bloco2_04_phase_e_learning_curve.png>]
-Overfull \hbox (158.91763pt too wide) in paragraph at lines 942--942
+ <../bloco2_03_phase_e_strategies.png>]
+Overfull \hbox (158.91763pt too wide) in paragraph at lines 935--935
  [][]  \T1/cmss/m/n/5 ([])  
  []
 
+<../bloco2_04_phase_e_learning_curve.png, id=427, 1293.633pt x 353.1594pt>
+File: ../bloco2_04_phase_e_learning_curve.png Graphic file (type png)
+<use ../bloco2_04_phase_e_learning_curve.png>
+Package pdftex.def Info: ../bloco2_04_phase_e_learning_curve.png  used on input
+ line 935.
+(pdftex.def)             Requested size: 339.47517pt x 92.67609pt.
 
 Overfull \hbox (158.91763pt too wide) has occurred while \output is active
  [][]  \T1/cmss/m/n/5 ([])  
@@ -1803,32 +1802,27 @@ Overfull \hbox (158.91763pt too wide) has occurred while \output is active
 
 [46
 
-]
-Overfull \hbox (158.91763pt too wide) in paragraph at lines 965--965
+ <../bloco2_04_phase_e_learning_curve.png>]
+Overfull \hbox (158.91763pt too wide) in paragraph at lines 949--949
  [][]  \T1/cmss/m/n/5 ([])  
  []
 
 
-LaTeX Font Warning: Font shape `T1/cmss/b/n' undefined
-(Font)              using `T1/cmss/m/n' instead on input line 965.
-
-
 Overfull \hbox (158.91763pt too wide) has occurred while \output is active
- [][]  \T1/cmss/b/n/5 ([])  
+ [][]  \T1/cmss/m/n/5 ([])  
  []
 
 [47
 
 ]
-Overfull \hbox (158.91763pt too wide) in paragraph at lines 980--980
- [][]  \T1/cmss/b/n/5 ([])  
+Overfull \hbox (158.91763pt too wide) in paragraph at lines 972--972
+ [][]  \T1/cmss/m/n/5 ([])  
  []
 
-<../bloco2_06_dilution.png, id=443, 1004.0712pt x 356.532pt>
-File: ../bloco2_06_dilution.png Graphic file (type png)
-<use ../bloco2_06_dilution.png>
-Package pdftex.def Info: ../bloco2_06_dilution.png  used on input line 980.
-(pdftex.def)             Requested size: 239.38864pt x 85.00363pt.
+
+LaTeX Font Warning: Font shape `T1/cmss/b/n' undefined
+(Font)              using `T1/cmss/m/n' instead on input line 972.
+
 
 Overfull \hbox (158.91763pt too wide) has occurred while \output is active
  [][]  \T1/cmss/b/n/5 ([])  
@@ -1836,11 +1830,16 @@ Overfull \hbox (158.91763pt too wide) has occurred while \output is active
 
 [48
 
- <../bloco2_06_dilution.png>]
-Overfull \hbox (158.91763pt too wide) in paragraph at lines 1012--1012
+]
+Overfull \hbox (158.91763pt too wide) in paragraph at lines 987--987
  [][]  \T1/cmss/b/n/5 ([])  
  []
 
+<../bloco2_06_dilution.png, id=450, 1004.0712pt x 356.532pt>
+File: ../bloco2_06_dilution.png Graphic file (type png)
+<use ../bloco2_06_dilution.png>
+Package pdftex.def Info: ../bloco2_06_dilution.png  used on input line 987.
+(pdftex.def)             Requested size: 239.38864pt x 85.00363pt.
 
 Overfull \hbox (158.91763pt too wide) has occurred while \output is active
  [][]  \T1/cmss/b/n/5 ([])  
@@ -1848,17 +1847,11 @@ Overfull \hbox (158.91763pt too wide) has occurred while \output is active
 
 [49
 
-]
-Overfull \hbox (158.91763pt too wide) in paragraph at lines 1020--1020
+ <../bloco2_06_dilution.png>]
+Overfull \hbox (158.91763pt too wide) in paragraph at lines 1019--1019
  [][]  \T1/cmss/b/n/5 ([])  
  []
 
-<../bloco2_07_example_order.png, id=460, 1293.1512pt x 427.8384pt>
-File: ../bloco2_07_example_order.png Graphic file (type png)
-<use ../bloco2_07_example_order.png>
-Package pdftex.def Info: ../bloco2_07_example_order.png  used on input line 102
-0.
-(pdftex.def)             Requested size: 339.48688pt x 112.31905pt.
 
 Overfull \hbox (158.91763pt too wide) has occurred while \output is active
  [][]  \T1/cmss/b/n/5 ([])  
@@ -1866,11 +1859,17 @@ Overfull \hbox (158.91763pt too wide) has occurred while \output is active
 
 [50
 
- <../bloco2_07_example_order.png>]
-Overfull \hbox (158.91763pt too wide) in paragraph at lines 1049--1049
+]
+Overfull \hbox (158.91763pt too wide) in paragraph at lines 1027--1027
  [][]  \T1/cmss/b/n/5 ([])  
  []
 
+<../bloco2_07_example_order.png, id=467, 1293.1512pt x 427.8384pt>
+File: ../bloco2_07_example_order.png Graphic file (type png)
+<use ../bloco2_07_example_order.png>
+Package pdftex.def Info: ../bloco2_07_example_order.png  used on input line 102
+7.
+(pdftex.def)             Requested size: 339.48688pt x 112.31905pt.
 
 Overfull \hbox (158.91763pt too wide) has occurred while \output is active
  [][]  \T1/cmss/b/n/5 ([])  
@@ -1878,8 +1877,8 @@ Overfull \hbox (158.91763pt too wide) has occurred while \output is active
 
 [51
 
-]
-Overfull \hbox (158.91763pt too wide) in paragraph at lines 1064--1064
+ <../bloco2_07_example_order.png>]
+Overfull \hbox (158.91763pt too wide) in paragraph at lines 1056--1056
  [][]  \T1/cmss/b/n/5 ([])  
  []
 
@@ -1891,16 +1890,10 @@ Overfull \hbox (158.91763pt too wide) has occurred while \output is active
 [52
 
 ]
-Overfull \hbox (158.91763pt too wide) in paragraph at lines 1072--1072
+Overfull \hbox (158.91763pt too wide) in paragraph at lines 1071--1071
  [][]  \T1/cmss/b/n/5 ([])  
  []
 
-<../bloco2_09_classical_baselines.png, id=483, 1438.173pt x 427.8384pt>
-File: ../bloco2_09_classical_baselines.png Graphic file (type png)
-<use ../bloco2_09_classical_baselines.png>
-Package pdftex.def Info: ../bloco2_09_classical_baselines.png  used on input li
-ne 1072.
-(pdftex.def)             Requested size: 369.96611pt x 110.06026pt.
 
 Overfull \hbox (158.91763pt too wide) has occurred while \output is active
  [][]  \T1/cmss/b/n/5 ([])  
@@ -1908,17 +1901,17 @@ Overfull \hbox (158.91763pt too wide) has occurred while \output is active
 
 [53
 
- <../bloco2_09_classical_baselines.png>]
-Overfull \hbox (158.91763pt too wide) in paragraph at lines 1080--1080
+]
+Overfull \hbox (158.91763pt too wide) in paragraph at lines 1079--1079
  [][]  \T1/cmss/b/n/5 ([])  
  []
 
-<../bloco23_external_llm_vs_perceptron.png, id=492, 1076.3068pt x 357.22029pt>
-File: ../bloco23_external_llm_vs_perceptron.png Graphic file (type png)
-<use ../bloco23_external_llm_vs_perceptron.png>
-Package pdftex.def Info: ../bloco23_external_llm_vs_perceptron.png  used on inp
-ut line 1080.
-(pdftex.def)             Requested size: 369.96313pt x 122.78871pt.
+<../bloco2_09_classical_baselines.png, id=490, 1438.173pt x 427.8384pt>
+File: ../bloco2_09_classical_baselines.png Graphic file (type png)
+<use ../bloco2_09_classical_baselines.png>
+Package pdftex.def Info: ../bloco2_09_classical_baselines.png  used on input li
+ne 1079.
+(pdftex.def)             Requested size: 369.96611pt x 110.06026pt.
 
 Overfull \hbox (158.91763pt too wide) has occurred while \output is active
  [][]  \T1/cmss/b/n/5 ([])  
@@ -1926,11 +1919,17 @@ Overfull \hbox (158.91763pt too wide) has occurred while \output is active
 
 [54
 
- <../bloco23_external_llm_vs_perceptron.png>]
-Overfull \hbox (158.91763pt too wide) in paragraph at lines 1095--1095
+ <../bloco2_09_classical_baselines.png>]
+Overfull \hbox (158.91763pt too wide) in paragraph at lines 1087--1087
  [][]  \T1/cmss/b/n/5 ([])  
  []
 
+<../bloco23_external_llm_vs_perceptron.png, id=499, 1076.3068pt x 357.22029pt>
+File: ../bloco23_external_llm_vs_perceptron.png Graphic file (type png)
+<use ../bloco23_external_llm_vs_perceptron.png>
+Package pdftex.def Info: ../bloco23_external_llm_vs_perceptron.png  used on inp
+ut line 1087.
+(pdftex.def)             Requested size: 369.96313pt x 122.78871pt.
 
 Overfull \hbox (158.91763pt too wide) has occurred while \output is active
  [][]  \T1/cmss/b/n/5 ([])  
@@ -1938,8 +1937,8 @@ Overfull \hbox (158.91763pt too wide) has occurred while \output is active
 
 [55
 
-]
-Overfull \hbox (158.91763pt too wide) in paragraph at lines 1113--1113
+ <../bloco23_external_llm_vs_perceptron.png>]
+Overfull \hbox (158.91763pt too wide) in paragraph at lines 1102--1102
  [][]  \T1/cmss/b/n/5 ([])  
  []
 
@@ -1951,16 +1950,10 @@ Overfull \hbox (158.91763pt too wide) has occurred while \output is active
 [56
 
 ]
-Overfull \hbox (158.91763pt too wide) in paragraph at lines 1128--1128
+Overfull \hbox (158.91763pt too wide) in paragraph at lines 1120--1120
  [][]  \T1/cmss/b/n/5 ([])  
  []
 
-<../bloco3_01_peso_altura_overview.png, id=518, 498.14679pt x 424.84436pt>
-File: ../bloco3_01_peso_altura_overview.png Graphic file (type png)
-<use ../bloco3_01_peso_altura_overview.png>
-Package pdftex.def Info: ../bloco3_01_peso_altura_overview.png  used on input l
-ine 1128.
-(pdftex.def)             Requested size: 195.85748pt x 167.037pt.
 
 Overfull \hbox (158.91763pt too wide) has occurred while \output is active
  [][]  \T1/cmss/b/n/5 ([])  
@@ -1968,11 +1961,17 @@ Overfull \hbox (158.91763pt too wide) has occurred while \output is active
 
 [57
 
- <../bloco3_01_peso_altura_overview.png>]
-Overfull \hbox (158.91763pt too wide) in paragraph at lines 1140--1140
+]
+Overfull \hbox (158.91763pt too wide) in paragraph at lines 1135--1135
  [][]  \T1/cmss/b/n/5 ([])  
  []
 
+<../bloco3_01_peso_altura_overview.png, id=525, 498.14679pt x 424.84436pt>
+File: ../bloco3_01_peso_altura_overview.png Graphic file (type png)
+<use ../bloco3_01_peso_altura_overview.png>
+Package pdftex.def Info: ../bloco3_01_peso_altura_overview.png  used on input l
+ine 1135.
+(pdftex.def)             Requested size: 195.85748pt x 167.037pt.
 
 Overfull \hbox (158.91763pt too wide) has occurred while \output is active
  [][]  \T1/cmss/b/n/5 ([])  
@@ -1980,18 +1979,11 @@ Overfull \hbox (158.91763pt too wide) has occurred while \output is active
 
 [58
 
-]
-Overfull \hbox (158.91763pt too wide) in paragraph at lines 1148--1148
+ <../bloco3_01_peso_altura_overview.png>]
+Overfull \hbox (158.91763pt too wide) in paragraph at lines 1147--1147
  [][]  \T1/cmss/b/n/5 ([])  
  []
 
-<../bloco23_external_features_comparison.png, id=535, 1068.04736pt x 711.8595pt
->
-File: ../bloco23_external_features_comparison.png Graphic file (type png)
-<use ../bloco23_external_features_comparison.png>
-Package pdftex.def Info: ../bloco23_external_features_comparison.png  used on i
-nput line 1148.
-(pdftex.def)             Requested size: 257.13516pt x 171.382pt.
 
 Overfull \hbox (158.91763pt too wide) has occurred while \output is active
  [][]  \T1/cmss/b/n/5 ([])  
@@ -1999,11 +1991,18 @@ Overfull \hbox (158.91763pt too wide) has occurred while \output is active
 
 [59
 
- <../bloco23_external_features_comparison.png>]
-Overfull \hbox (158.91763pt too wide) in paragraph at lines 1169--1169
+]
+Overfull \hbox (158.91763pt too wide) in paragraph at lines 1155--1155
  [][]  \T1/cmss/b/n/5 ([])  
  []
 
+<../bloco23_external_features_comparison.png, id=542, 1068.04736pt x 711.8595pt
+>
+File: ../bloco23_external_features_comparison.png Graphic file (type png)
+<use ../bloco23_external_features_comparison.png>
+Package pdftex.def Info: ../bloco23_external_features_comparison.png  used on i
+nput line 1155.
+(pdftex.def)             Requested size: 257.13516pt x 171.382pt.
 
 Overfull \hbox (158.91763pt too wide) has occurred while \output is active
  [][]  \T1/cmss/b/n/5 ([])  
@@ -2011,8 +2010,8 @@ Overfull \hbox (158.91763pt too wide) has occurred while \output is active
 
 [60
 
-]
-Overfull \hbox (158.91763pt too wide) in paragraph at lines 1183--1183
+ <../bloco23_external_features_comparison.png>]
+Overfull \hbox (158.91763pt too wide) in paragraph at lines 1176--1176
  [][]  \T1/cmss/b/n/5 ([])  
  []
 
@@ -2024,7 +2023,7 @@ Overfull \hbox (158.91763pt too wide) has occurred while \output is active
 [61
 
 ]
-Overfull \hbox (158.91763pt too wide) in paragraph at lines 1210--1210
+Overfull \hbox (158.91763pt too wide) in paragraph at lines 1190--1190
  [][]  \T1/cmss/b/n/5 ([])  
  []
 
@@ -2036,16 +2035,10 @@ Overfull \hbox (158.91763pt too wide) has occurred while \output is active
 [62
 
 ]
-Overfull \hbox (158.91763pt too wide) in paragraph at lines 1218--1218
+Overfull \hbox (158.91763pt too wide) in paragraph at lines 1217--1217
  [][]  \T1/cmss/b/n/5 ([])  
  []
 
-<../bloco23_external_learning_curve.png, id=566, 931.76678pt x 357.22029pt>
-File: ../bloco23_external_learning_curve.png Graphic file (type png)
-<use ../bloco23_external_learning_curve.png>
-Package pdftex.def Info: ../bloco23_external_learning_curve.png  used on input 
-line 1218.
-(pdftex.def)             Requested size: 348.20319pt x 133.49396pt.
 
 Overfull \hbox (158.91763pt too wide) has occurred while \output is active
  [][]  \T1/cmss/b/n/5 ([])  
@@ -2053,16 +2046,17 @@ Overfull \hbox (158.91763pt too wide) has occurred while \output is active
 
 [63
 
- <../bloco23_external_learning_curve.png>]
-Overfull \hbox (158.91763pt too wide) in paragraph at lines 1226--1226
+]
+Overfull \hbox (158.91763pt too wide) in paragraph at lines 1225--1225
  [][]  \T1/cmss/b/n/5 ([])  
  []
 
-File: ../bloco23_external_llm_vs_perceptron.png Graphic file (type png)
-<use ../bloco23_external_llm_vs_perceptron.png>
-Package pdftex.def Info: ../bloco23_external_llm_vs_perceptron.png  used on inp
-ut line 1226.
-(pdftex.def)             Requested size: 369.96313pt x 122.78871pt.
+<../bloco23_external_learning_curve.png, id=573, 931.76678pt x 357.22029pt>
+File: ../bloco23_external_learning_curve.png Graphic file (type png)
+<use ../bloco23_external_learning_curve.png>
+Package pdftex.def Info: ../bloco23_external_learning_curve.png  used on input 
+line 1225.
+(pdftex.def)             Requested size: 348.20319pt x 133.49396pt.
 
 Overfull \hbox (158.91763pt too wide) has occurred while \output is active
  [][]  \T1/cmss/b/n/5 ([])  
@@ -2070,11 +2064,16 @@ Overfull \hbox (158.91763pt too wide) has occurred while \output is active
 
 [64
 
-]
-Overfull \hbox (158.91763pt too wide) in paragraph at lines 1252--1252
+ <../bloco23_external_learning_curve.png>]
+Overfull \hbox (158.91763pt too wide) in paragraph at lines 1233--1233
  [][]  \T1/cmss/b/n/5 ([])  
  []
 
+File: ../bloco23_external_llm_vs_perceptron.png Graphic file (type png)
+<use ../bloco23_external_llm_vs_perceptron.png>
+Package pdftex.def Info: ../bloco23_external_llm_vs_perceptron.png  used on inp
+ut line 1233.
+(pdftex.def)             Requested size: 369.96313pt x 122.78871pt.
 
 Overfull \hbox (158.91763pt too wide) has occurred while \output is active
  [][]  \T1/cmss/b/n/5 ([])  
@@ -2083,23 +2082,10 @@ Overfull \hbox (158.91763pt too wide) has occurred while \output is active
 [65
 
 ]
-Overfull \hbox (158.91763pt too wide) in paragraph at lines 1263--1263
+Overfull \hbox (158.91763pt too wide) in paragraph at lines 1259--1259
  [][]  \T1/cmss/b/n/5 ([])  
  []
 
-<../final_08_llm_labels_seed42_peso_altura_5.png, id=589, 1293.11679pt x 356.70
-407pt>
-File: ../final_08_llm_labels_seed42_peso_altura_5.png Graphic file (type png)
-<use ../final_08_llm_labels_seed42_peso_altura_5.png>
-Package pdftex.def Info: ../final_08_llm_labels_seed42_peso_altura_5.png  used 
-on input line 1263.
-(pdftex.def)             Requested size: 195.8607pt x 54.0258pt.
-<../final_08_llm_labels_seed42_x1_x2_5.png, id=590, 1293.633pt x 356.70407pt>
-File: ../final_08_llm_labels_seed42_x1_x2_5.png Graphic file (type png)
-<use ../final_08_llm_labels_seed42_x1_x2_5.png>
-Package pdftex.def Info: ../final_08_llm_labels_seed42_x1_x2_5.png  used on inp
-ut line 1263.
-(pdftex.def)             Requested size: 195.8607pt x 54.00404pt.
 
 Overfull \hbox (158.91763pt too wide) has occurred while \output is active
  [][]  \T1/cmss/b/n/5 ([])  
@@ -2107,12 +2093,24 @@ Overfull \hbox (158.91763pt too wide) has occurred while \output is active
 
 [66
 
- <../final_08_llm_labels_seed42_peso_altura_5.png> <../final_08_llm_labels_seed
-42_x1_x2_5.png>]
-Overfull \hbox (158.91763pt too wide) in paragraph at lines 1274--1274
+]
+Overfull \hbox (158.91763pt too wide) in paragraph at lines 1270--1270
  [][]  \T1/cmss/b/n/5 ([])  
  []
 
+<../final_08_llm_labels_seed42_peso_altura_5.png, id=596, 1293.11679pt x 356.70
+407pt>
+File: ../final_08_llm_labels_seed42_peso_altura_5.png Graphic file (type png)
+<use ../final_08_llm_labels_seed42_peso_altura_5.png>
+Package pdftex.def Info: ../final_08_llm_labels_seed42_peso_altura_5.png  used 
+on input line 1270.
+(pdftex.def)             Requested size: 195.8607pt x 54.0258pt.
+<../final_08_llm_labels_seed42_x1_x2_5.png, id=597, 1293.633pt x 356.70407pt>
+File: ../final_08_llm_labels_seed42_x1_x2_5.png Graphic file (type png)
+<use ../final_08_llm_labels_seed42_x1_x2_5.png>
+Package pdftex.def Info: ../final_08_llm_labels_seed42_x1_x2_5.png  used on inp
+ut line 1270.
+(pdftex.def)             Requested size: 195.8607pt x 54.00404pt.
 
 Overfull \hbox (158.91763pt too wide) has occurred while \output is active
  [][]  \T1/cmss/b/n/5 ([])  
@@ -2120,8 +2118,9 @@ Overfull \hbox (158.91763pt too wide) has occurred while \output is active
 
 [67
 
-]
-Overfull \hbox (158.91763pt too wide) in paragraph at lines 1295--1295
+ <../final_08_llm_labels_seed42_peso_altura_5.png> <../final_08_llm_labels_seed
+42_x1_x2_5.png>]
+Overfull \hbox (158.91763pt too wide) in paragraph at lines 1281--1281
  [][]  \T1/cmss/b/n/5 ([])  
  []
 
@@ -2133,7 +2132,7 @@ Overfull \hbox (158.91763pt too wide) has occurred while \output is active
 [68
 
 ]
-Overfull \hbox (158.91763pt too wide) in paragraph at lines 1315--1315
+Overfull \hbox (158.91763pt too wide) in paragraph at lines 1302--1302
  [][]  \T1/cmss/b/n/5 ([])  
  []
 
@@ -2145,7 +2144,7 @@ Overfull \hbox (158.91763pt too wide) has occurred while \output is active
 [69
 
 ]
-Overfull \hbox (158.91763pt too wide) in paragraph at lines 1335--1335
+Overfull \hbox (158.91763pt too wide) in paragraph at lines 1322--1322
  [][]  \T1/cmss/b/n/5 ([])  
  []
 
@@ -2157,7 +2156,7 @@ Overfull \hbox (158.91763pt too wide) has occurred while \output is active
 [70
 
 ]
-Overfull \hbox (158.91763pt too wide) in paragraph at lines 1345--1345
+Overfull \hbox (158.91763pt too wide) in paragraph at lines 1342--1342
  [][]  \T1/cmss/b/n/5 ([])  
  []
 
@@ -2169,13 +2168,8 @@ Overfull \hbox (158.91763pt too wide) has occurred while \output is active
 [71
 
 ]
-Overfull \hbox (158.91763pt too wide) in paragraph at lines 1363--1363
+Overfull \hbox (158.91763pt too wide) in paragraph at lines 1352--1352
  [][]  \T1/cmss/b/n/5 ([])  
- []
-
-
-Underfull \hbox (badness 4144) in paragraph at lines 1363--1363
-[]|\T1/cmss/b/n/8 Sustentada par-cial (Kappa C 0,49;
  []
 
 
@@ -2186,8 +2180,13 @@ Overfull \hbox (158.91763pt too wide) has occurred while \output is active
 [72
 
 ]
-Overfull \hbox (158.91763pt too wide) in paragraph at lines 1376--1376
+Overfull \hbox (158.91763pt too wide) in paragraph at lines 1370--1370
  [][]  \T1/cmss/b/n/5 ([])  
+ []
+
+
+Underfull \hbox (badness 4144) in paragraph at lines 1370--1370
+[]|\T1/cmss/b/n/8 Sustentada par-cial (Kappa C 0,49;
  []
 
 
@@ -2198,7 +2197,7 @@ Overfull \hbox (158.91763pt too wide) has occurred while \output is active
 [73
 
 ]
-Overfull \hbox (158.91763pt too wide) in paragraph at lines 1388--1388
+Overfull \hbox (158.91763pt too wide) in paragraph at lines 1383--1383
  [][]  \T1/cmss/b/n/5 ([])  
  []
 
@@ -2210,7 +2209,7 @@ Overfull \hbox (158.91763pt too wide) has occurred while \output is active
 [74
 
 ]
-Overfull \hbox (158.91763pt too wide) in paragraph at lines 1404--1404
+Overfull \hbox (158.91763pt too wide) in paragraph at lines 1395--1395
  [][]  \T1/cmss/b/n/5 ([])  
  []
 
@@ -2222,7 +2221,7 @@ Overfull \hbox (158.91763pt too wide) has occurred while \output is active
 [75
 
 ]
-Overfull \hbox (158.91763pt too wide) in paragraph at lines 1419--1419
+Overfull \hbox (158.91763pt too wide) in paragraph at lines 1411--1411
  [][]  \T1/cmss/b/n/5 ([])  
  []
 
@@ -2246,7 +2245,7 @@ Overfull \hbox (158.91763pt too wide) has occurred while \output is active
 [77
 
 ]
-Overfull \hbox (158.91763pt too wide) in paragraph at lines 1444--1444
+Overfull \hbox (158.91763pt too wide) in paragraph at lines 1433--1433
  [][]  \T1/cmss/b/n/5 ([])  
  []
 
@@ -2258,7 +2257,7 @@ Overfull \hbox (158.91763pt too wide) has occurred while \output is active
 [78
 
 ]
-Overfull \hbox (158.91763pt too wide) in paragraph at lines 1456--1456
+Overfull \hbox (158.91763pt too wide) in paragraph at lines 1451--1451
  [][]  \T1/cmss/b/n/5 ([])  
  []
 
@@ -2270,7 +2269,7 @@ Overfull \hbox (158.91763pt too wide) has occurred while \output is active
 [79
 
 ]
-Overfull \hbox (158.91763pt too wide) in paragraph at lines 1467--1467
+Overfull \hbox (158.91763pt too wide) in paragraph at lines 1463--1463
  [][]  \T1/cmss/b/n/5 ([])  
  []
 
@@ -2282,7 +2281,7 @@ Overfull \hbox (158.91763pt too wide) has occurred while \output is active
 [80
 
 ]
-Overfull \hbox (158.91763pt too wide) in paragraph at lines 1478--1478
+Overfull \hbox (158.91763pt too wide) in paragraph at lines 1474--1474
  [][]  \T1/cmss/b/n/5 ([])  
  []
 
@@ -2294,7 +2293,7 @@ Overfull \hbox (158.91763pt too wide) has occurred while \output is active
 [81
 
 ]
-Overfull \hbox (158.91763pt too wide) in paragraph at lines 1489--1489
+Overfull \hbox (158.91763pt too wide) in paragraph at lines 1485--1485
  [][]  \T1/cmss/b/n/5 ([])  
  []
 
@@ -2306,16 +2305,10 @@ Overfull \hbox (158.91763pt too wide) has occurred while \output is active
 [82
 
 ]
-Overfull \hbox (158.91763pt too wide) in paragraph at lines 1500--1500
+Overfull \hbox (158.91763pt too wide) in paragraph at lines 1496--1496
  [][]  \T1/cmss/b/n/5 ([])  
  []
 
-<../final_10_gamma_convergence.png, id=718, 931.8012pt x 427.8384pt>
-File: ../final_10_gamma_convergence.png Graphic file (type png)
-<use ../final_10_gamma_convergence.png>
-Package pdftex.def Info: ../final_10_gamma_convergence.png  used on input line 
-1500.
-(pdftex.def)             Requested size: 293.27722pt x 134.65881pt.
 
 Overfull \hbox (158.91763pt too wide) has occurred while \output is active
  [][]  \T1/cmss/b/n/5 ([])  
@@ -2323,8 +2316,26 @@ Overfull \hbox (158.91763pt too wide) has occurred while \output is active
 
 [83
 
+]
+Overfull \hbox (158.91763pt too wide) in paragraph at lines 1507--1507
+ [][]  \T1/cmss/b/n/5 ([])  
+ []
+
+<../final_10_gamma_convergence.png, id=725, 931.8012pt x 427.8384pt>
+File: ../final_10_gamma_convergence.png Graphic file (type png)
+<use ../final_10_gamma_convergence.png>
+Package pdftex.def Info: ../final_10_gamma_convergence.png  used on input line 
+1507.
+(pdftex.def)             Requested size: 293.27722pt x 134.65881pt.
+
+Overfull \hbox (158.91763pt too wide) has occurred while \output is active
+ [][]  \T1/cmss/b/n/5 ([])  
+ []
+
+[84
+
  <../final_10_gamma_convergence.png>]
-Overfull \hbox (158.91763pt too wide) in paragraph at lines 1511--1511
+Overfull \hbox (158.91763pt too wide) in paragraph at lines 1518--1518
  [][]  \T1/cmss/b/n/5 ([])  
  []
 
@@ -2333,7 +2344,7 @@ Overfull \hbox (158.91763pt too wide) has occurred while \output is active
  [][]  \T1/cmss/b/n/5 ([])  
  []
 
-[84
+[85
 
 ]
 \tf@nav=\write6
@@ -2358,8 +2369,8 @@ Package rerunfilecheck Info: File `apresentacao.out' has not changed.
 (rerunfilecheck)             Checksum: D41D8CD98F00B204E9800998ECF8427E;0.
  ) 
 Here is how much of TeX's memory you used:
- 30891 strings out of 467525
- 662057 string characters out of 5418983
+ 30893 strings out of 467525
+ 662076 string characters out of 5418983
  1002623 words of memory out of 5000000
  59075 multiletter control sequences out of 15000+600000
  651849 words of font info for 94 fonts, out of 8000000 for 9000
@@ -2397,10 +2408,10 @@ f-dist/fonts/type1/public/cm-super/sfsx0800.pfb></usr/local/texlive/2026/texmf-
 dist/fonts/type1/public/cm-super/sfsx1200.pfb></usr/local/texlive/2026/texmf-di
 st/fonts/type1/public/cm-super/sfsx1440.pfb></usr/local/texlive/2026/texmf-dist
 /fonts/type1/public/cm-super/sftt0800.pfb>
-Output written on apresentacao.pdf (84 pages, 4115378 bytes).
+Output written on apresentacao.pdf (85 pages, 4119266 bytes).
 PDF statistics:
- 907 PDF objects out of 1000 (max. 8388607)
- 589 compressed objects within 6 object streams
- 169 named destinations out of 1000 (max. 500000)
+ 915 PDF objects out of 1000 (max. 8388607)
+ 595 compressed objects within 6 object streams
+ 171 named destinations out of 1000 (max. 500000)
  236 words of extra memory for PDF output out of 10000 (max. 10000000)
 

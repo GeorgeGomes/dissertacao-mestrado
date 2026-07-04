@@ -20,6 +20,8 @@ Referências:
         → Formulação original de aprendizado de métrica de Mahalanobis com w ≥ 0.
 """
 
+import warnings
+
 import numpy as np
 from typing import Tuple
 
@@ -101,6 +103,18 @@ class LeastSquaresInverse:
         # não é necessário clamping post-hoc, que violaria a solução ótima.
         w_learned, residual = nnls(A, b)
 
+        # Solução degenerada não pode passar em silêncio: W nulo (nenhuma
+        # componente positiva) ou resíduo não-finito significam que a métrica
+        # é inutilizável (dados possivelmente não separáveis por centróides —
+        # ex.: centróides sobrepostos). O caller segue recebendo o resultado,
+        # mas o warning aparece no log_execucao.txt.
+        if not np.any(w_learned > 0) or not np.isfinite(residual):
+            warnings.warn(
+                f"NNLS degenerado: W={w_learned.tolist()}, residual={residual} — "
+                "métrica não confiável (dados possivelmente não separáveis pelos centróides).",
+                RuntimeWarning,
+            )
+
         if self.verbose:
             print(f"    [Mínimos Quadrados] W encontrado: [{', '.join(f'{wi:.4f}' for wi in w_learned)}]")
             print(f"    Resíduo: {residual:.4f}")
@@ -111,3 +125,18 @@ class LeastSquaresInverse:
         self.w_ = w_learned
         self.residual_ = residual
         return w_learned, 0.0  # gamma=0 (sem margem explícita garantida)
+
+
+def train_least_squares_inverse(
+    X: np.ndarray,
+    y: np.ndarray,
+    centroids: np.ndarray,
+    verbose: bool = False
+) -> Tuple[np.ndarray, float]:
+    """Função de conveniência: instancia `LeastSquaresInverse` e roda o `fit`.
+
+    Espelha `train_relaxed_perceptron` (em relaxed_perceptron.py): dá ao runner um
+    ponto de entrada uniforme `train_*(X, y, centroids)` para cada estimador de W.
+    """
+    model = LeastSquaresInverse(verbose=verbose)
+    return model.fit(X, y, centroids)

@@ -76,6 +76,7 @@ class RelaxedPerceptron:
         use_best_effort: bool = False,
         max_iterations: int = 50,
         verbose: bool = False,
+        random_state: int = 42,
     ):
         # Taxa de aprendizado (comprimento do passo), cf. CILAMCE 2017 Seção 6:
         # "η = 0.001 e a constante de penalização C variou de 1 até 0.1"
@@ -88,6 +89,10 @@ class RelaxedPerceptron:
         # Margem inicial para o loop externo de busca binária (CILAMCE 2017, Eq. 31)
         self.gamma_init = gamma_init
         # Incremento de gamma quando solução viável é encontrada (CILAMCE 2017, Eq. 31: γ(t+1) = γ(t) + δ)
+        # δ ≤ 0 faria a busca em γ nunca progredir (loop até max_iterations sem
+        # sentido) — falha imediata é mais barata que diagnosticar depois.
+        if delta_gamma <= 0:
+            raise ValueError(f"delta_gamma deve ser > 0 (recebido: {delta_gamma})")
         self.delta_gamma = delta_gamma
         # Máximo de épocas do perceptron interno para cada gamma candidato
         self.max_epochs = max_epochs
@@ -98,6 +103,12 @@ class RelaxedPerceptron:
         # Máximo de iterações do loop externo (busca binária em gamma)
         self.max_iterations = max_iterations
         self.verbose = verbose
+        # RNG LOCAL semeado: o embaralhamento da ordem dos pontos a cada época NÃO deve
+        # depender do estado global do NumPy (senão o W* aprendido muda conforme quantas
+        # operações aleatórias ocorreram antes desta chamada no run). Com um RNG próprio,
+        # o mesmo (X, y, centroids) sempre produz o mesmo W* — reprodutível isoladamente.
+        self.random_state = random_state
+        self._rng = np.random.RandomState(random_state)
 
         # Resultados após fit()
         self.w_ = None
@@ -175,6 +186,9 @@ class RelaxedPerceptron:
         iteration = 0
         # Limpa histórico de chamadas anteriores (caso fit() seja chamado múltiplas vezes)
         self.gamma_history = []
+        # Reinicia o RNG local para que fit() seja idempotente: mesma entrada → mesmo W*,
+        # mesmo que a instância seja reutilizada em várias chamadas.
+        self._rng = np.random.RandomState(self.random_state)
 
         # --- Loop externo: busca binária em gamma ---
         # Estratégia (CILAMCE 2017, Seção 5.2):
@@ -197,7 +211,7 @@ class RelaxedPerceptron:
                 violations = 0
                 # Permutação aleatória dos índices (processamento online/estocástico,
                 # análogo ao K-means online, CILAMCE 2017, Seção 4.1)
-                indices = np.random.permutation(m)
+                indices = self._rng.permutation(m)
 
                 for i in indices:
                     xi, yi = X[i], int(y[i])
@@ -300,7 +314,15 @@ class RelaxedPerceptron:
                 gamma_lo = gamma
                 w_star = w.copy()
                 alpha_star = alpha.copy()
-                gamma = gamma + self.delta_gamma
+                # Próximo candidato: incremento fixo enquanto o teto é desconhecido;
+                # com γ_hi conhecido, nunca além do ponto médio do bracket — senão o
+                # candidato pode ultrapassar um γ_hi já provado inviável e, ao falhar,
+                # AFROUXAR o teto (bracket não-monótono), desperdiçando iterações e
+                # impedindo o critério |γ_hi − γ_lo| ≤ tol de fechar.
+                if np.isinf(gamma_hi):
+                    gamma = gamma + self.delta_gamma
+                else:
+                    gamma = min(gamma + self.delta_gamma, (gamma_lo + gamma_hi) / 2)
             else:
                 # Gamma inviável: marca como limite superior e faz bisseção
                 gamma_hi = gamma
@@ -318,6 +340,22 @@ class RelaxedPerceptron:
             # Critério de parada da busca binária
             if abs(gamma_hi - gamma_lo) <= self.tol:
                 break
+
+        # Saída pelo teto de iterações sem fechar o bracket a `tol` não pode ser
+        # silenciosa (o caso "nenhuma solução viável" já tem warning abaixo): o γ
+        # retornado é a melhor margem VIÁVEL encontrada, mas a busca não provou que
+        # é a máxima. `gamma_history` guarda a trajetória para diagnóstico fino.
+        if found_feasible_solution and abs(gamma_hi - gamma_lo) > self.tol:
+            hi_str = f"{gamma_hi:.6f}" if not np.isinf(gamma_hi) else "∞"
+            msg = (
+                f"Perceptron: busca binária em γ parou por max_iterations={self.max_iterations} "
+                f"sem convergir (γ_lo={gamma_lo:.6f}, γ_hi={hi_str}, tol={self.tol}). "
+                f"Retornando melhor γ viável encontrado."
+            )
+            if self.verbose:
+                print(f"    ⚠️ {msg}")
+            else:
+                warnings.warn(f"\n  ⚠️ {msg}")
 
         # --- Retorno dos resultados ---
         if found_feasible_solution:
@@ -348,3 +386,43 @@ class RelaxedPerceptron:
             self.w_ = w_star
             self.gamma_ = 0.0
             return w_star, 0.0
+
+
+def train_relaxed_perceptron(
+    X: np.ndarray,
+    y: np.ndarray,
+    centroids: np.ndarray,
+    eta: float = 0.001,
+    C: float = 1.0,
+    gamma_init: float = 0.1,
+    delta_gamma: float = 0.1,
+    max_epochs: int = 100,
+    tol: float = 1e-5,
+    verbose: bool = False,
+    use_best_effort: bool = False,
+    return_history: bool = False,
+    random_state: int = 42,
+):
+    """Função de conveniência: instancia `RelaxedPerceptron` e roda o `fit`.
+
+    Fixa os hiperparâmetros default de Coelho, Borges & Fonseca Neto (CILAMCE 2017,
+    Seção 6, p. 16): "a taxa de aprendizado η = 0.001 e a constante C variou de 1 até 0.1".
+    Assim o runner chama `train_relaxed_perceptron(X, y, centroids)` sem repetir a
+    configuração do algoritmo em cada fase.
+
+    `random_state` semeia o RNG LOCAL do embaralhamento (default 42): garante que o mesmo
+    (X, y, centroids) produza sempre o mesmo W*, independente do estado global do NumPy.
+
+    Se return_history=True, retorna (w, gamma, gamma_history) onde gamma_history é a
+    lista de dicts capturada durante a busca binária em γ (item b da reunião 30/04/2026).
+    Caso contrário, retorna apenas (w, gamma) — compatível com as chamadas existentes.
+    """
+    model = RelaxedPerceptron(
+        eta=eta, C=C, gamma_init=gamma_init, delta_gamma=delta_gamma,
+        max_epochs=max_epochs, tol=tol, use_best_effort=use_best_effort,
+        verbose=verbose, random_state=random_state,
+    )
+    w, gamma = model.fit(X, y, centroids)
+    if return_history:
+        return w, gamma, model.gamma_history
+    return w, gamma

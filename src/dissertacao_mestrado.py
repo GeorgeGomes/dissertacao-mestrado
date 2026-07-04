@@ -136,61 +136,80 @@ RECURSOS PRINCIPAIS (mapeados aos blocos)
 PROVEDORES: OpenAI (ativo), Claude/Anthropic (SDK integrado).
 """
 
-import os
 import sys
-import re
+import argparse
+import random
 import numpy as np
 import pandas as pd
-import matplotlib
-matplotlib.use('Agg')  # backend não-interativo: salva em arquivo, não abre janela
-import matplotlib.pyplot as plt
 from datetime import datetime
-from typing import Tuple, List, Optional, Dict, Union
-from dataclasses import dataclass, field
+from typing import Tuple, List, Optional, Dict
 import warnings
-import json
+
+# matplotlib/seaborn agora vivem em plots.py (que fixa o backend 'Agg');
+# json/re/dataclasses migraram junto com execucao_io.py e resultados.py.
 
 
-# =============================================================================
-# CAPTURA DE LOG (TEE): EXIBE NO TERMINAL E ARMAZENA EM BUFFER PARA O TXT
-# =============================================================================
-
-class Tee:
-    """Duplica o output: exibe no terminal E armazena em buffer para salvar no log TXT."""
-    def __init__(self):
-        self._stdout = sys.stdout
-        self._buffer = []
-
-    def write(self, msg):
-        self._stdout.write(msg)
-        self._buffer.append(msg)
-
-    def flush(self):
-        self._stdout.flush()
-
-    def getvalue(self):
-        return ''.join(self._buffer)
-
-from sklearn.datasets import make_blobs, make_moons
-from sklearn.metrics import (
-    accuracy_score, confusion_matrix, cohen_kappa_score,
-    f1_score, precision_score, recall_score
-)
+from sklearn.metrics import accuracy_score, cohen_kappa_score, f1_score
 from classical_baselines import ClassicalBaselineRunner
-import seaborn as sns
 
-from openai import OpenAI, AsyncOpenAI
 import anthropic
 import time
 import asyncio
 import traceback
 
-from relaxed_perceptron import RelaxedPerceptron
-from least_squares_inverse import LeastSquaresInverse
+from relaxed_perceptron import train_relaxed_perceptron
+from least_squares_inverse import train_least_squares_inverse
+from llm_parser import parse_llm_response
+from metrics import (
+    ConsistencyMetrics, compute_consistency_metrics,
+    d_W, compute_centroids, augment_to_r3, augment_to_r4, augment_features,
+    predict_with_metric, compute_metric_confidence,
+)
+from llm_client import PROVIDER_CONFIG, get_client, get_async_client, get_extra_body
+from data_problems import (
+    PROBLEM_A_CENTERS, PROBLEM_B_CENTERS, PROBLEM_C_CENTERS,
+    create_problem_a, create_problem_b, create_problem_c, create_problem_e_expert,
+    create_problem_d_meialua, create_problem_homem_mulher, create_anisotropic_problem,
+)
+from plots import (  # reexport: extraído na Fase 1 da modularização
+    _save_panels_individually, plot_algorithm_comparison, plot_class_names_effect, plot_class_order_bias,
+    plot_classical_baselines_comparison, plot_confusion_matrices_detailed, plot_consistency_comparison_extended, plot_dataset_overview,
+    plot_dilution_experiment, plot_example_order_bias, plot_experiment_summary_dashboard, plot_external_decision_boundary,
+    plot_external_features_comparison, plot_external_learning_curve, plot_feature_names_effect, plot_gamma_convergence,
+    plot_hits_and_errors, plot_llm_labels_per_problem, plot_margin_analysis_detailed, plot_meialua_svm_vs_llm,
+    plot_metric_errors_phase_a, plot_model_comparison, plot_oracle_meialua, plot_oracle_transfer,
+    plot_oracle_w_recovery, plot_phase_e_example_locations, plot_phase_e_learning_curve, plot_phase_e_llm_vs_perceptron,
+    plot_phase_e_strategy_comparison, plot_problem_overview, plot_prompt_variant_comparison, plot_r3_comparison,
+    plot_seed_comparison, plot_w_comparison_algorithms, plot_w_distribution, visualize_all_problems,
+    visualize_problem_e_with_expert,
+)
+from relatorios import (  # reexport: extraído na Fase 1 da modularização
+    bootstrap_ci, print_box, print_error_analysis_by_region, print_example_order_analysis,
+    print_final_analysis, print_hyperparameter_sensitivity, print_phase_e_analysis, print_section,
+    print_statistical_summary, summarize_cross_linearity,
+)
+from execucao_io import (  # reexport: extraído na Fase 1 da modularização
+    LLM_INTERACTIONS, LOG_CHUNK_LIMIT_BYTES, MODEL_ALIAS, Tee,
+    _agrupar_por_tamanho, _model_alias, _model_slug, checkpoint_interactions,
+    llm_asset, salvar_json_em_chunks, salvar_log_em_chunks,
+)
+from resultados import (  # reexport: extraído na Fase 1 da modularização
+    LearnedMetric, ResultadoExperimento, ResultadoPhaseEExperimento,
+)
+from protocolo import (  # reexport: extraído na Fase 1 da modularização
+    EXAMPLE_STRATEGIES, EXPERT_CENTROIDS, EXPERT_W,
+)
 
 # =============================================================================
 # CONFIGURAÇÃO
 # =============================================================================
+
+# Raiz do projeto (pasta acima de src/). Ancora dados reais e pastas de execução
+# ao repositório, e NÃO ao diretório de trabalho — assim o script produz os mesmos
+# caminhos independentemente de onde é invocado (evita FileNotFoundError no dataset
+# real e outputs espalhados quando rodado de dentro de src/).
+from pathlib import Path
+BASE_DIR = Path(__file__).resolve().parent.parent
 
 RANDOM_SEED = 42
 np.random.seed(RANDOM_SEED)
@@ -199,70 +218,28 @@ np.random.seed(RANDOM_SEED)
 # SELEÇÃO DE MODELOS - ADICIONE OS MODELOS QUE DESEJA COMPARAR
 # ═══════════════════════════════════════════════════════════════════════════
 
+# Formato: (provider, model, temperature, scope)
+#   scope "full" — grid completo (vieses, variantes, diluição, ordem, múltiplos peritos)
+#                  + seeds extras do pipeline central (EXTRA_SEEDS_CORE).
+#   scope "core" — apenas o pipeline central: Fases A-C + Fase E (perito principal)
+#                  + pipelines externos (peso×altura e meia-lua). Comparação entre
+#                  modelos sem multiplicar o custo do grid auxiliar.
 MODELS_TO_TEST = [
-    ("openai", "gpt-4o-mini", 0.0),                  # OpenAI GPT-4o-mini
-    # ("anthropic", "claude-sonnet-4-5", 0.0),           # Claude Sonnet 4.5
-    # ("gemini", "gemini-2.0-flash", 0.0),             # Google Gemini
+    # Critério de seleção: o modelo rápido/barato de cada família (mini/Lite/Scout/
+    # Flash) — mesmo tier comercial, 4 famílias, 2 fechados + 2 abertos.
+    # TODOS com scope="full": o grid COMPLETO de experimentos roda nos 4 modelos
+    # (decisão 02/07/2026). Todos os modelos são tratados de forma IGUAL: cada um
+    # gera o conjunto completo de gráficos na raiz da execução, com seu alias
+    # (MODEL_ALIAS) no nome do asset. CSVs consolidam todos (colunas provider/model).
+    ("openai", "gpt-4o-mini", 0.0, "full"),
+    ("openrouter", "google/gemini-2.5-flash-lite", 0.0, "full"),   # Google (fechado)
+    # ("openrouter", "meta-llama/llama-4-scout", 0.0, "full"),       # Meta (aberto)
+    # ("openrouter", "deepseek/deepseek-v4-flash", 0.0, "full"),     # DeepSeek (aberto)
+    # ("anthropic", "claude-sonnet-4-5", 0.0, "core"),             # Claude (aceita temperature)
 ]
 
-# URLs base e variáveis de ambiente com chaves de API por provedor
-PROVIDER_CONFIG = {
-    "openai": {
-        "base_url": None,
-        "api_key_env": "OPENAI_API_KEY",
-        "client_type": "openai",
-    },
-    "gemini": {
-        "base_url": "https://generativelanguage.googleapis.com/v1beta/openai/",
-        "api_key_env": "GEMINI_API_KEY",
-        "client_type": "openai",
-    },
-    "anthropic": {
-        "base_url": None,
-        "api_key_env": "ANTHROPIC_API_KEY",
-        "client_type": "anthropic",
-    },
-}
-
-
-def get_client(provider: str) -> Union[OpenAI, anthropic.Anthropic]:
-    """Cria o cliente de API para o provedor especificado (OpenAI, Anthropic ou Gemini)."""
-    config = PROVIDER_CONFIG[provider]
-
-    if config["client_type"] == "anthropic":
-        return anthropic.Anthropic(api_key=os.getenv(config["api_key_env"]))
-    else:
-        if config["base_url"]:
-            return OpenAI(
-                api_key=os.getenv(config["api_key_env"]),
-                base_url=config["base_url"]
-            )
-        else:
-            return OpenAI(api_key=os.getenv(config["api_key_env"]))
-
-
-def get_async_client(provider: str) -> Optional[AsyncOpenAI]:
-    """Cria o cliente assíncrono para chamadas concorrentes (apenas OpenAI/Gemini).
-
-    Timeout de 60s previne que uma única requisição travada bloqueie o semaphore
-    indefinidamente (causa observada: terminal parou silenciosamente em run anterior).
-    """
-    config = PROVIDER_CONFIG[provider]
-    if config["client_type"] == "anthropic":
-        return None
-    if config["base_url"]:
-        return AsyncOpenAI(
-            api_key=os.getenv(config["api_key_env"]),
-            base_url=config["base_url"],
-            timeout=60.0,
-            max_retries=2,
-        )
-    else:
-        return AsyncOpenAI(
-            api_key=os.getenv(config["api_key_env"]),
-            timeout=60.0,
-            max_retries=2,
-        )
+# PROVIDER_CONFIG, get_client e get_async_client → llm_client.py (importados no topo).
+# Ver tests/test_llm_client.py.
 
 
 # Cliente global — será definido para cada modelo durante os experimentos
@@ -277,8 +254,6 @@ CURRENT_PROVIDER = None
 # Por isso o experimento usa múltiplas seeds (RANDOM_SEEDS) e repetições (N_REPETICOES).
 CURRENT_TEMPERATURE = 0.0
 
-# Log de todas as interações com a LLM (prompt, resposta bruta, parsing)
-LLM_INTERACTIONS = []
 
 # Bloco 1 (A) e Bloco 2 (E) usam mais amostras — envolvem aprendizado.
 # Problemas B e C (testes de consistência) precisam só de 100 pontos para Kappa/F1 confiáveis.
@@ -286,18 +261,54 @@ N_SAMPLES_PROBLEM_A = 150  # Bloco 1: treino da métrica via otim. inversa
 N_SAMPLES_PROBLEM_B = 100  # Bloco 1: teste de consistência (rotação horária ±1.5)
 N_SAMPLES_PROBLEM_C = 100  # Bloco 1: teste de consistência (rotação anti-horária ±1.5)
 N_SAMPLES_PROBLEM_E = 150  # Bloco 2: perito linear (Fase E)
+
+
 # Meia-lua (Bloco 1 = Problema D; Bloco 2 = Problema F) usa N_SAMPLES_PROBLEM_A=150 também
-# FEW_SHOT_SIZES = [0, 5]  # Tamanhos few-shot para Fases B e C
 FEW_SHOT_SIZES = [0, 5, 10, 20, 40]  # Tamanhos few-shot para Fases B e C
-# FEW_SHOT_SIZES_PHASE_E = [0, 5]  # versão curta (smoke-test, alinhada com FEW_SHOT_SIZES)
 FEW_SHOT_SIZES_PHASE_E = [0, 5, 10, 20, 40]  # versão completa
-# N_REPETICOES = 1
 N_REPETICOES = 3
 
+# Pontos de ancoragem dos experimentos de viés (inversão de nomes de classe e
+# variantes de prompt): mesmos n_shot para que os efeitos sejam comparáveis entre si.
+BIAS_N_SHOTS = [0, 10]
+
+# Grades dos experimentos auxiliares (reduzidas no --rapido):
+DILUTION_EASY_ADDITIONS = [0, 2, 4, 10, 16, 20]  # N easy adicionados na diluição
+EXAMPLE_ORDER_N_SHOTS = [5, 10, 20]              # n_shots do viés de ordem
+
 # Múltiplas sementes aleatórias para garantir robustez dos resultados
-# RANDOM_SEEDS = [42]
 RANDOM_SEEDS = [42, 123, 7]
-# RANDOM_SEEDS = [42, 123, 7, 256, 999]
+
+# Sementes EXTRAS do pipeline central (apenas o modelo principal): elevariam o n de
+# bases distintas para 6 nas Fases A-C e na Fase E (perito principal), habilitando
+# testes pareados por seed (Wilcoxon exige n>=5-6 para p<0,05).
+# DESATIVADAS (decisão 02/07/2026): protocolo uniforme de 3 seeds para tudo, em
+# todos os modelos. Para reativar as 6 seeds no central: [2025, 314, 611].
+EXTRA_SEEDS_CORE = []
+
+
+def reps_para(n_shot: int, sorteio_estocastico: bool = True) -> int:
+    """Regra única de repetição do protocolo.
+
+    Repetições existem para variar o SORTEIO dos exemplos few-shot (variância de
+    amostragem). Onde não há sorteio — zero-shot, ou seleção determinística por
+    margem (Fases B/C, diluição) — roda-se 1 coleta; o não-determinismo por consulta
+    do LLM (flip a T=0) é quantificado pela auditoria offline
+    (src/audit_interactions.py), com n ordens de magnitude maior que N_REPETICOES.
+    """
+    if n_shot == 0 or not sorteio_estocastico:
+        return 1
+    return N_REPETICOES
+
+
+
+
+
+
+
+
+
+
 
 # Controle de limite de requisições (rate limit)
 MAX_RETRIES = 5
@@ -305,38 +316,29 @@ INITIAL_BACKOFF = 10
 
 # Concorrência máxima para chamadas async à API (ajustar conforme tier do OpenAI)
 # Tier 1: ~8, Tier 2+: 15-20
-MAX_CONCURRENCY = 10
+MAX_CONCURRENCY = 6
 
 # Máximo de retentativas para respostas malformadas do LLM
 MAX_FORMAT_RETRIES = 5
 
-# Parâmetros do Problema A (linha de base, isotrópico — classes bem separadas horizontalmente)
-PROBLEM_A_CENTERS = [(-2.0, 0.0), (2.0, 0.0)]
-PROBLEM_A_STD = 1.2
+# A geometria dos problemas (PROBLEM_*_CENTERS / PROBLEM_*_STD) e os geradores
+# create_problem_* foram extraídos para data_problems.py (importados no topo).
+# Ver tests/test_data_problems.py.
 
-# Parâmetros do Problema B (rotação HORÁRIA AGRESSIVA — centróides deslocados em ±1.5)
-# Simétrico ao Problema C (anti-horária) e proposital para evitar transferência trivial.
-PROBLEM_B_CENTERS = [(-2.0, 1.5), (2.0, -1.5)]
-PROBLEM_B_STD = 1.2
 
-# Parâmetros do Problema C (rotação ANTI-HORÁRIA AGRESSIVA em relação ao A:
-# classe 0 desce, classe 1 sobe — orientação oposta ao Problema B, mesma magnitude)
-PROBLEM_C_CENTERS = [(-2.0, -1.5), (2.0, 1.5)]
-PROBLEM_C_STD = 1.2
 
-# Parâmetros do Problema E (Bloco 2 — perito linear, antigo "Problema D" Fase D antiga)
-# Geometria propositalmente distinta para que a métrica do perito não seja trivial.
-PROBLEM_E_CENTERS = [(-1.5, 1.0), (1.5, -1.0)]
-PROBLEM_E_STD = 1.3
-
-# Métrica do perito para o Bloco 2 / Fase E
-# O perito usa uma métrica ANISOTRÓPICA que pondera x2 muito mais do que x1.
-# Isso torna a classificação não trivial: o LLM não pode se basear apenas em x1.
-EXPERT_W = np.array([0.3, 1.5])  # Weights x2 heavily
-EXPERT_CENTROIDS = np.array([[-1.5, 1.0], [1.5, -1.0]])
-
-# Estratégias de dificuldade de exemplos para a Fase E
-EXAMPLE_STRATEGIES = ["easy", "hard", "mixed", "random"]
+# Hiperparâmetros do Perceptron Estruturado usados em TODAS as estimações de W do
+# protocolo (Coelho, Borges & Fonseca Neto, CILAMCE 2017, p. 16: η=0.001, C∈[0.1, 1]).
+# Ponto ÚNICO de configuração — mudar aqui alcança os 8 call sites de uma vez.
+# A sensibilidade a eta/C/delta_gamma é explorada à parte em
+# print_hyperparameter_sensitivity, que varia os valores localmente de propósito.
+PERCEPTRON_PARAMS = {
+    "eta": 0.001,
+    "C": 1.0,
+    "delta_gamma": 0.05,
+    "max_epochs": 50,
+    "tol": 1e-4,
+}
 
 # Coletor global para diagnóstico da busca binária em γ no Perceptron Estruturado
 # (item b da reunião 30/04/2026, ~520s — orientador pediu para verificar se gamma
@@ -407,6 +409,16 @@ RUN_PROMPT_VARIANTS = True         # Teste de múltiplas variantes de prompt
 RUN_CLASSICAL_BASELINES = True     # Comparação com baselines clássicos (k-NN, LR, SVM)
 RUN_PROBLEM_MEIALUA = True               # Meia-lua: Problema D (Bloco 1) e Problema F (Bloco 2) — não-linearidade explícita p/ R3/R4
 RUN_HOMEM_MULHER = True            # Estudo de caso real: peso × altura (homem/mulher), elipse
+RUN_HM_CLASS_NAMES_AB = True       # Item 17 (reunião 20/05): repetir peso×altura com classes "A"/"B" (sem prior semântico)
+
+# Item 17 (reunião 20/05 + e-mail): nomes de classe testados no peso×altura.
+# Isola o prior semântico nos NOMES DAS CLASSES — "Homem"/"Mulher" carregam
+# significado; "A"/"B" são neutros. Complementa o teste de nomes de FEATURE
+# (x1/x2 vs peso/altura). Cada par extra multiplica o custo de API do bloco.
+HM_CLASS_NAME_VARIANTS = [
+    ("Homem", "Mulher", "homem_mulher"),      # semântico (original)
+    ("A", "B", "homem_mulher_classesAB"),     # neutro (item 17)
+]
 
 # Estratégias de ordenação dos exemplos few-shot
 EXAMPLE_ORDERINGS = ["class0_first", "class1_first", "shuffled", "alternating"]
@@ -436,477 +448,34 @@ PROMPT_VARIANTS = {
 }
 
 # =============================================================================
-# ESTRUTURAS DE DADOS
+# ESTRUTURAS DE DADOS — extraídas para `resultados.py` (importadas no topo).
+# `ConsistencyMetrics` e `compute_consistency_metrics` vivem em `metrics.py`.
 # =============================================================================
-
-@dataclass
-class LearnedMetric:
-    """Armazena a métrica estimada/inferida no Problema A via otimização inversa.
-
-    Nota terminológica: usamos 'estimada' ou 'inferida' (não 'aprendida') porque
-    a métrica é obtida por otimização inversa a partir de decisões observadas,
-    não por aprendizado supervisionado direto. O campo w_aprendido mantém o nome
-    por compatibilidade com CSVs existentes.
-    """
-    w: np.ndarray
-    centroids: np.ndarray
-    gamma: float
-    source_problem: str
-
-
-@dataclass
-class ConsistencyMetrics:
-    """Armazena métricas detalhadas de consistência entre predições do LLM e da métrica estimada."""
-    accuracy: float
-    cohen_kappa: float
-    f1_score: float
-    precision: float
-    recall: float
-    confusion_matrix: np.ndarray
-    n_agreements: int
-    n_disagreements: int
-    disagreement_indices: np.ndarray
-
-    def summary(self) -> str:
-        return (
-            f"Accuracy: {self.accuracy:.1%} | "
-            f"Kappa: {self.cohen_kappa:.3f} | "
-            f"F1: {self.f1_score:.3f}"
-        )
-
-
-@dataclass
-class ResultadoExperimento:
-    """Armazena os resultados de um experimento completo (Fase A + Fase B + Fase C)."""
-    provider: str
-    model_name: str
-    temperature: float
-    random_seed: int
-    n_shot: int
-    nomes_classes: Tuple[str, str]
-    repeticao: int
-    # Métricas da Fase A
-    fidelidade_problema_a: float
-    acuracia_llm_vs_gt_problema_a: float
-    # Métricas da Fase B
-    consistencia_problema_b: float
-    kappa_problema_b: float
-    f1_problema_b: float
-    acuracia_llm_vs_gt_problema_b: float
-    acuracia_metrica_vs_gt_problema_b: float
-    # Métricas da Fase C
-    consistencia_problema_c: float
-    kappa_problema_c: float
-    f1_problema_c: float
-    acuracia_llm_vs_gt_problema_c: float
-    acuracia_metrica_vs_gt_problema_c: float
-    # Parâmetros aprendidos pela métrica
-    w_aprendido: np.ndarray
-    gamma_otimo: float
-    # Distribuição das classes (número de pontos por classe)
-    n_classe_0_problema_a: int
-    n_classe_1_problema_a: int
-    n_classe_0_problema_b: int
-    n_classe_1_problema_b: int
-    n_classe_0_problema_c: int
-    n_classe_1_problema_c: int
-    # Informações detalhadas sobre discordâncias LLM vs. métrica
-    n_disagreements_b: int = 0
-    n_disagreements_c: int = 0
-    # Rastreamento de respostas malformadas do LLM
-    n_malformed_responses: int = 0
-    # Consistência da linha de base euclidiana (para verificação de limitação da métrica diagonal)
-    consistencia_euclidiana_problema_b: float = 0.0
-    consistencia_euclidiana_problema_c: float = 0.0
-    diagonal_limitation_flag: int = 0
-    w_ratio: float = 0.0
-    # Direção de W (vetor unitário) — invariante à escala, captura a geometria real
-    w_direction: np.ndarray = None
-    # Similaridade cosseno entre W do Perceptron e do NNLS (robustez ao método)
-    w_cosine_sim_nnls: float = 0.0
-    feature_names: Tuple[str, str] = ("x1", "x2")
-    prompt_variant: str = "default"
-
-
-@dataclass
-class ResultadoPhaseEExperimento:
-    """
-    Armazena os resultados do experimento da Fase E (LLM como Aprendiz).
-    """
-    provider: str
-    model_name: str
-    temperature: float
-    random_seed: int
-    n_shot: int
-    example_strategy: str  # estratégia de seleção: "easy", "hard", "mixed" ou "random"
-    nomes_classes: Tuple[str, str]
-    repeticao: int
-    # Métricas principais: LLM vs. Perito
-    accuracy_llm_vs_expert: float
-    kappa_llm_vs_expert: float
-    f1_llm_vs_expert: float
-    # Métricas adicionais
-    accuracy_expert_vs_gt: float  # Quão boa é a própria classificação do perito?
-    accuracy_llm_vs_gt: float  # Acurácia do LLM vs. rótulos verdadeiros
-    # Distribuição das classes (número de pontos por classe)
-    n_classe_0_expert: int
-    n_classe_1_expert: int
-    n_classe_0_llm: int
-    n_classe_1_llm: int
-    # Informações de discordância
-    n_disagreements: int
-    n_total_test: int
-    # Respostas malformadas
-    n_malformed_responses: int = 0
-    # Informações da métrica do perito (para referência nos resultados)
-    expert_w: np.ndarray = field(default_factory=lambda: EXPERT_W.copy())
-    expert_name: str = "aniso_x2"
 
 
 # =============================================================================
 # FUNÇÕES UTILITÁRIAS
 # =============================================================================
 
-def print_section(title: str, char: str = "="):
-    """Imprime um cabeçalho de seção formatado."""
-    line = char * 70
-    print(f"\n{line}")
-    print(f" {title}")
-    print(f"{line}\n")
 
 
-def print_box(text: str):
-    """Imprime texto em uma caixa formatada."""
-    lines = text.strip().split('\n')
-    max_len = min(max(len(line) for line in lines), 90)
-    print("┌" + "─" * (max_len + 2) + "┐")
-    for line in lines:
-        if len(line) > max_len:
-            line = line[:max_len-3] + "..."
-        print(f"│ {line:<{max_len}} │")
-    print("└" + "─" * (max_len + 2) + "┘")
 
 
-def compute_consistency_metrics(
-    y_llm: np.ndarray,
-    y_metric: np.ndarray
-) -> ConsistencyMetrics:
-    """Calcula métricas detalhadas de consistência entre predições do LLM e da métrica estimada.
-
-    Nota sobre concordância simétrica:
-    - accuracy e kappa são métricas SIMÉTRICAS — o resultado é idêntico independentemente
-      de qual vetor é tratado como "referência". Kappa é a métrica principal para H1.
-    - F1, precision e recall NÃO são simétricas por construção; para preservar a simetria,
-      calcula-se a média das duas direções (LLM→métrica e métrica→LLM), evitando que uma
-      das partes seja arbitrariamente elevada a "ground truth".
-    - confusion_matrix usa y_metric como referência (linhas = rótulos da métrica).
-    """
-    accuracy = accuracy_score(y_metric, y_llm)
-    kappa = cohen_kappa_score(y_metric, y_llm)
-
-    # F1/precision/recall simétricos: média das duas direções possíveis
-    f1 = (
-        f1_score(y_metric, y_llm, average='weighted', zero_division=0) +
-        f1_score(y_llm, y_metric, average='weighted', zero_division=0)
-    ) / 2
-    precision = (
-        precision_score(y_metric, y_llm, average='weighted', zero_division=0) +
-        precision_score(y_llm, y_metric, average='weighted', zero_division=0)
-    ) / 2
-    recall = (
-        recall_score(y_metric, y_llm, average='weighted', zero_division=0) +
-        recall_score(y_llm, y_metric, average='weighted', zero_division=0)
-    ) / 2
-    cm = confusion_matrix(y_metric, y_llm)
-
-    disagreements = y_llm != y_metric
-    n_disagreements = np.sum(disagreements)
-    n_agreements = len(y_llm) - n_disagreements
-    disagreement_indices = np.where(disagreements)[0]
-
-    return ConsistencyMetrics(
-        accuracy=accuracy,
-        cohen_kappa=kappa,
-        f1_score=f1,
-        precision=precision,
-        recall=recall,
-        confusion_matrix=cm,
-        n_agreements=n_agreements,
-        n_disagreements=n_disagreements,
-        disagreement_indices=disagreement_indices
-    )
+# compute_consistency_metrics → metrics.py (importado no topo).
 
 
 # =============================================================================
 # GERAÇÃO DE CONJUNTOS DE DADOS
 # =============================================================================
 
-def create_problem_a(n_samples: int = 150, random_state: int = 42) -> Tuple[np.ndarray, np.ndarray]:
-    """Gera o conjunto de dados do Problema A para aprendizado da métrica.
-
-    Problema A serve como base de treino: o LLM classifica estes pontos em zero-shot
-    e a métrica W é estimada a partir dessas decisões.
-    """
-    X, y = make_blobs(
-        n_samples=n_samples,
-        centers=PROBLEM_A_CENTERS,
-        cluster_std=PROBLEM_A_STD,
-        random_state=random_state
-    )
-    return X, y
+# create_problem_a/b/c/e_expert/d_meialua/homem_mulher e create_anisotropic_problem
+# → data_problems.py (importados no topo). Ver tests/test_data_problems.py.
 
 
-def create_problem_b(n_samples: int = 100, random_state: int = 43) -> Tuple[np.ndarray, np.ndarray]:
-    """Gera o conjunto de dados do Problema B (Bloco 1 — rotação HORÁRIA AGRESSIVA).
-
-    Centróides em (-2, +1.5) e (2, -1.5), pareados simetricamente com C (±1.5,
-    direção oposta). Decisão 14/05/2026: magnitude ±1.5 testa transferência de W
-    em condições severas, mais agressiva que a versão anterior ±0.8.
-    """
-    X, y = make_blobs(
-        n_samples=n_samples,
-        centers=PROBLEM_B_CENTERS,
-        cluster_std=PROBLEM_B_STD,
-        random_state=random_state
-    )
-    return X, y
 
 
-def create_problem_c(n_samples: int = 100, random_state: int = 44) -> Tuple[np.ndarray, np.ndarray]:
-    """Gera o conjunto de dados do Problema C para teste de consistência adicional.
-
-    Problema C aplica rotação anti-horária dos centróides (classe 0 para baixo,
-    classe 1 para cima), de orientação oposta ao Problema B (que é horária).
-    Garante que B e C sejam visualmente distintos para testar a generalização da
-    métrica em duas direções geométricas diferentes.
-    """
-    X, y = make_blobs(
-        n_samples=n_samples,
-        centers=PROBLEM_C_CENTERS,
-        cluster_std=PROBLEM_C_STD,
-        random_state=random_state
-    )
-    return X, y
 
 
-def create_problem_e_expert(n_samples: int = 150, random_state: int = 45) -> Tuple[np.ndarray, np.ndarray]:
-    """
-    Gera o conjunto de dados do Problema E (Bloco 2 — perito linear, antigo "Problema D"
-    da Fase D antiga; agora Fase E quando o LLM atua como aprendiz via in-context learning).
-    Usa geometria propositalmente distinta para que o LLM não possa aprender a métrica do
-    perito por intuição simples — é necessário capturar o peso anisotrópico w2 >> w1.
-    """
-    X, y = make_blobs(
-        n_samples=n_samples,
-        centers=PROBLEM_E_CENTERS,
-        cluster_std=PROBLEM_E_STD,
-        random_state=random_state
-    )
-    return X, y
-
-
-def create_problem_d_meialua(n_samples: int = 150, random_state: int = 46) -> Tuple[np.ndarray, np.ndarray]:
-    """Gera o Problema E — meia-lua (não-linear).
-
-    Caso canônico de fronteira não-linear, gerado por ``sklearn.datasets.make_moons``.
-    Justificativa (reunião 30/04/2026, ~2558s): o R3 atual sobre A/B/C lineares
-    não melhora ao adicionar x3=x1·x2. Aqui sim — em problema genuinamente
-    não-linear espera-se que features quadráticas tragam ganho mensurável.
-    """
-    X, y = make_moons(n_samples=n_samples, noise=0.15, random_state=random_state)
-    return X, y
-
-
-def create_problem_homem_mulher(csv_path: str = "dados_reais/homem_mulher/peso_altura.csv") -> Tuple[np.ndarray, np.ndarray]:
-    """Carrega a base real peso × altura (homem/mulher) enviada pelo orientador.
-
-    Dataset com 100 amostras normalizadas (~[-1, 1]), balanceado 50/50.
-    Classificador ótimo bayesiano é uma elipse (fronteira quadrática):
-        f(x1, x2) = x2^2 - x2 + x1^2 - x1 + cte
-    Por isso a Fase A com 4 features (x1, x2, x1², x2²) deve recuperar melhor
-    o critério do que a versão linear de 2 features.
-
-    Args:
-        csv_path: caminho relativo ao diretório de trabalho para o CSV consolidado.
-
-    Returns:
-        (X, y) onde X tem shape (n, 2) com colunas (peso, altura) e y em {0, 1}.
-    """
-    df = pd.read_csv(csv_path)
-    X = df[["peso", "altura"]].values.astype(float)
-    y = df["classe"].values.astype(int)
-    return X, y
-
-
-def create_anisotropic_problem(
-    n_samples: int,
-    centers: List[Tuple[float, float]],
-    std_per_dim: List[float],
-    random_state: int = 42,
-) -> Tuple[np.ndarray, np.ndarray]:
-    """Gera dados com variância diferente por dimensão (anisotrópico).
-
-    Gera clusters isotrópicos unitários centrados na origem e depois escala
-    cada dimensão pelo desvio padrão desejado e translada para os centróides.
-    """
-    centers_arr = np.array(centers)
-    X, y = make_blobs(
-        n_samples=n_samples,
-        centers=[[0, 0]] * len(centers),
-        cluster_std=1.0,
-        random_state=random_state,
-    )
-    for c in range(len(centers)):
-        mask = y == c
-        X[mask, 0] = X[mask, 0] * std_per_dim[0] + centers_arr[c, 0]
-        X[mask, 1] = X[mask, 1] * std_per_dim[1] + centers_arr[c, 1]
-    return X, y
-
-
-def _save_panels_individually(panels, combined_filename, dpi=150):
-    """Salva cada painel de uma figura composta como imagem individual.
-
-    Args:
-        panels: lista de (sufixo, draw_func, figsize) onde:
-            - sufixo: string adicionada ao nome do arquivo (ex: "problema_a")
-            - draw_func: callable(ax) que desenha em um único eixo
-            - figsize: (largura, altura) da figura individual
-        combined_filename: caminho completo do arquivo combinado (ex: "pasta/01_all.png")
-        dpi: resolução das imagens individuais
-    """
-    if not combined_filename:
-        return
-    base, ext = os.path.splitext(combined_filename)
-    for suffix, draw_func, figsize in panels:
-        fig_ind, ax_ind = plt.subplots(1, 1, figsize=figsize)
-        draw_func(ax_ind)
-        fig_ind.tight_layout()
-        fig_ind.savefig(f"{base}_{suffix}{ext}", dpi=dpi, bbox_inches='tight')
-        plt.close(fig_ind)
-
-
-def visualize_all_problems(
-    X_a: np.ndarray, y_a: np.ndarray,
-    X_b: np.ndarray, y_b: np.ndarray,
-    X_c: np.ndarray, y_c: np.ndarray,
-    filename: str = None
-):
-    """Visualiza os três problemas sintéticos lado a lado para inspeção visual da geometria."""
-    problems = [
-        (X_a, y_a, PROBLEM_A_CENTERS, PROBLEM_A_STD, "PROBLEMA A\n(Aprendizado da Métrica)"),
-        (X_b, y_b, PROBLEM_B_CENTERS, PROBLEM_B_STD, "PROBLEMA B\n(Teste de Consistência 1)"),
-        (X_c, y_c, PROBLEM_C_CENTERS, PROBLEM_C_STD, "PROBLEMA C\n(Teste de Consistência 2)")
-    ]
-
-    def _draw_problem(ax, X, y, centers, std, title):
-        ax.scatter(X[:, 0], X[:, 1], c=y, cmap="coolwarm",
-                   alpha=0.7, edgecolor="k", s=60)
-        ax.scatter(*centers[0], marker='*', s=300, c='blue',
-                   edgecolor='black', linewidth=2, label='Centro 0', zorder=5)
-        ax.scatter(*centers[1], marker='*', s=300, c='red',
-                   edgecolor='black', linewidth=2, label='Centro 1', zorder=5)
-        ax.set_title(f"{title}\nCentros: {centers}, σ={std}",
-                     fontsize=11, fontweight='bold')
-        ax.set_xlabel("$x_1$")
-        ax.set_ylabel("$x_2$")
-        ax.legend(loc='upper right')
-        ax.grid(True, alpha=0.3)
-        ax.set_xlim(-6, 6)
-        ax.set_ylim(-5, 5)
-
-    # Figura combinada
-    fig, axes = plt.subplots(1, 3, figsize=(18, 5))
-    for ax, (X, y, centers, std, title) in zip(axes, problems):
-        _draw_problem(ax, X, y, centers, std, title)
-    plt.tight_layout()
-    if filename:
-        plt.savefig(filename, dpi=150, bbox_inches='tight')
-    plt.close()
-
-    # Figuras individuais
-    suffixes = ["problema_a", "problema_b", "problema_c"]
-    panels = [
-        (suffixes[i], lambda ax, p=problems[i]: _draw_problem(ax, *p), (7, 5))
-        for i in range(3)
-    ]
-    _save_panels_individually(panels, filename)
-
-
-def visualize_problem_e_with_expert(
-    X_e: np.ndarray, y_gt_e: np.ndarray,
-    y_expert_e: np.ndarray,
-    expert_w: np.ndarray,
-    expert_centroids: np.ndarray,
-    filename: str = None
-):
-    """
-    Visualiza o Problema E (perito linear do Bloco 2) com a fronteira de decisão do perito.
-    Compara os rótulos verdadeiros (ground truth) com os rótulos do perito lado a lado.
-    """
-    # Precomputa grid para reutilizar nos painéis
-    x_min, x_max = -6, 6
-    y_min, y_max = -5, 5
-    xx, yy = np.meshgrid(np.linspace(x_min, x_max, 200), np.linspace(y_min, y_max, 200))
-    grid_points = np.c_[xx.ravel(), yy.ravel()]
-    Z = predict_with_metric(grid_points, expert_centroids, expert_w)
-    Z = Z.reshape(xx.shape)
-    confidences, _ = compute_metric_confidence(grid_points, expert_centroids, expert_w)
-    conf_grid = confidences.reshape(xx.shape)
-
-    def _draw_ground_truth(ax):
-        ax.scatter(X_e[:, 0], X_e[:, 1], c=y_gt_e, cmap="coolwarm",
-                   alpha=0.7, edgecolor="k", s=60)
-        ax.scatter(*PROBLEM_E_CENTERS[0], marker='*', s=300, c='blue',
-                   edgecolor='black', linewidth=2, label='Centro Verdadeiro 0', zorder=5)
-        ax.scatter(*PROBLEM_E_CENTERS[1], marker='*', s=300, c='red',
-                   edgecolor='black', linewidth=2, label='Centro Verdadeiro 1', zorder=5)
-        ax.set_title("Problema E: Rótulos Verdadeiros (Ground Truth)", fontsize=11, fontweight='bold')
-        ax.set_xlabel("$x_1$"); ax.set_ylabel("$x_2$")
-        ax.legend(loc='upper right'); ax.grid(True, alpha=0.3)
-        ax.set_xlim(x_min, x_max); ax.set_ylim(y_min, y_max)
-
-    def _draw_expert_boundary(ax):
-        ax.contourf(xx, yy, Z, alpha=0.3, cmap="coolwarm", levels=[-0.5, 0.5, 1.5])
-        ax.contour(xx, yy, Z, colors='k', linewidths=2, levels=[0.5])
-        ax.scatter(X_e[:, 0], X_e[:, 1], c=y_expert_e, cmap="coolwarm",
-                   alpha=0.7, edgecolor="k", s=60)
-        ax.scatter(*expert_centroids[0], marker='X', s=300, c='blue',
-                   edgecolor='k', linewidth=2, label='Centróide do Perito 0', zorder=5)
-        ax.scatter(*expert_centroids[1], marker='X', s=300, c='red',
-                   edgecolor='k', linewidth=2, label='Centróide do Perito 1', zorder=5)
-        ax.set_title(f"Rótulos do Perito (W=[{expert_w[0]:.1f}, {expert_w[1]:.1f}])",
-                     fontsize=11, fontweight='bold')
-        ax.set_xlabel("$x_1$"); ax.set_ylabel("$x_2$")
-        ax.legend(loc='upper right', fontsize=8); ax.grid(True, alpha=0.3)
-        ax.set_xlim(x_min, x_max); ax.set_ylim(y_min, y_max)
-
-    def _draw_margin_heatmap(ax):
-        im = ax.contourf(xx, yy, conf_grid, levels=20, cmap="RdYlGn")
-        ax.contour(xx, yy, Z, colors='k', linewidths=2, levels=[0.5])
-        plt.colorbar(im, ax=ax, label="Margem (confiança)")
-        ax.scatter(X_e[:, 0], X_e[:, 1], c='black', alpha=0.3, s=20)
-        ax.set_title("Margem do Perito (Distância à Fronteira)", fontsize=11, fontweight='bold')
-        ax.set_xlabel("$x_1$"); ax.set_ylabel("$x_2$")
-        ax.grid(True, alpha=0.3)
-        ax.set_xlim(x_min, x_max); ax.set_ylim(y_min, y_max)
-
-    # Figura combinada
-    fig, axes = plt.subplots(1, 3, figsize=(18, 5))
-    _draw_ground_truth(axes[0])
-    _draw_expert_boundary(axes[1])
-    _draw_margin_heatmap(axes[2])
-    plt.tight_layout()
-    if filename:
-        plt.savefig(filename, dpi=150, bbox_inches='tight')
-    plt.close()
-
-    # Figuras individuais
-    panels = [
-        ("ground_truth", _draw_ground_truth, (7, 5)),
-        ("fronteira_perito", _draw_expert_boundary, (7, 5)),
-        ("margem_perito", _draw_margin_heatmap, (7, 5)),
-    ]
-    _save_panels_individually(panels, filename)
 
 
 # =============================================================================
@@ -1163,21 +732,6 @@ Your classification:"""
         raise ValueError(f"Variante de prompt desconhecida: {variant}")
 
 
-def llm_classify_point_openai(client: OpenAI, model_name: str, prompt: str,
-                               temperature: float,
-                               system_message: str = "You are a classifier. Respond only with the class label.") -> str:
-    """Classifica um ponto usando API compatível com OpenAI (OpenAI ou Gemini)."""
-    response = client.chat.completions.create(
-        model=model_name,
-        temperature=temperature,
-        messages=[
-            {"role": "system", "content": system_message},
-            {"role": "user", "content": prompt}
-        ]
-    )
-    return response.choices[0].message.content.strip()
-
-
 def llm_classify_point_anthropic(client: anthropic.Anthropic, model_name: str,
                                   prompt: str, temperature: float,
                                   system_message: str = "You are a classifier. Respond only with the class label.",
@@ -1192,17 +746,25 @@ def llm_classify_point_anthropic(client: anthropic.Anthropic, model_name: str,
             {"role": "user", "content": prompt}
         ]
     )
-    return response.content[0].text.strip()
+    # Guarda contra resposta sem blocos de conteúdo (ou texto None): devolve
+    # string vazia (tratada como malformada, com retry) em vez de estourar.
+    if not getattr(response, "content", None):
+        return ""
+    return (getattr(response.content[0], "text", None) or "").strip()
 
 
 async def async_llm_classify_point_openai(async_client, model_name: str, prompt: str,
                                            temperature: float,
-                                           system_message: str = "You are a classifier. Respond only with the class label.") -> str:
-    """Versão assíncrona de llm_classify_point_openai para chamadas concorrentes.
+                                           system_message: str = "You are a classifier. Respond only with the class label.") -> Tuple[str, dict]:
+    """Chama a API compatível com OpenAI (OpenAI, Gemini ou OpenRouter) de forma assíncrona.
 
     Envolve a chamada em asyncio.wait_for(timeout=90s) como segunda barreira contra
     travamentos: se a requisição não responder em 90s mesmo após retries do SDK,
     levanta TimeoutError em vez de bloquear o semaphore indefinidamente.
+
+    Retorna (texto, meta): meta traz o modelo RESOLVIDO pela API (``response.model``,
+    o snapshot datado — reprodutibilidade) e, no OpenRouter, o provedor de inferência
+    que serviu a requisição (``response.provider``).
     """
     async def _do_call():
         response = await async_client.chat.completions.create(
@@ -1211,249 +773,63 @@ async def async_llm_classify_point_openai(async_client, model_name: str, prompt:
             messages=[
                 {"role": "system", "content": system_message},
                 {"role": "user", "content": prompt}
-            ]
+            ],
+            extra_body=get_extra_body(CURRENT_PROVIDER, model_name),
         )
-        return response.choices[0].message.content.strip()
+        meta = {
+            "model_resolved": getattr(response, "model", None),
+            "inference_provider": getattr(response, "provider", None),
+        }
+        # OpenRouter pode devolver HTTP 200 com choices vazio/None (erro embutido
+        # no corpo) — devolve string vazia (tratada como malformada, com retry)
+        # em vez de estourar 'NoneType' object is not subscriptable.
+        if not getattr(response, "choices", None):
+            return "", meta
+        content = response.choices[0].message.content
+        return (content or "").strip(), meta
 
     try:
         return await asyncio.wait_for(_do_call(), timeout=90.0)
     except asyncio.TimeoutError:
         # Devolve string vazia — será tratada como malformada e cai no fallback MD5
-        return ""
+        return "", {}
 
 
-def parse_llm_response(
-    label: str,
-    nome_classe_0: str,
-    nome_classe_1: str
-) -> Tuple[Optional[str], bool]:
-    """Interpreta a resposta do LLM e verifica se é válida (corresponde a uma das classes).
+# `parse_llm_response` foi extraído para o módulo `llm_parser.py` (importado no topo).
+# A lógica é idêntica; isolá-la permite testes de unidade independentes (tests/test_parser.py).
 
-    Tentativas em ordem crescente de permissividade:
-      0. Extração da última linha e marcadores CoT ("Final answer:", etc.)
-      1. Match exato (case-insensitive)
-      2. Match exato após remoção de aspas e pontuação marginal
-      3. Classe numérica: "0"/"1" quando os nomes são dígitos
-      4. Word-boundary regex (evita falsos positivos em substrings)
-      5. Contains exclusivo (apenas uma das classes aparece no texto)
-      6. Padrões comuns de resposta ("Class X", "Answer is X", ...)
-      7. Starts-with (a resposta começa com o nome da classe)
+
+# ── Freio GLOBAL de rate limit ────────────────────────────────────────────────
+# O backoff por chamada não basta: com MAX_CONCURRENCY workers, o que recebe 429
+# dorme, mas os demais continuam disparando e realimentam o rate limit do
+# provedor pinado (allow_fallbacks=False impede o OpenRouter de desviar — por
+# design, para reprodutibilidade). O freio faz TODOS os workers segurarem as
+# próximas chamadas até a janela de cooldown passar. Timestamps em
+# time.monotonic() (independe do event loop; testável fora de asyncio).
+_RATE_LIMIT_GATE = {"until": 0.0}
+# Sinais de CAPACIDADE do provedor acionam o freio global; timeouts/5xx avulsos
+# continuam sendo tratados só pelo backoff da própria chamada.
+_TOKENS_CAPACIDADE = ("429", "rate_limit", "overloaded", "temporarily")
+
+
+def _acionar_rate_limit_global(segundos: float) -> None:
+    """Estende a janela global de cooldown (nunca a encurta)."""
+    ate = time.monotonic() + segundos
+    if ate > _RATE_LIMIT_GATE["until"]:
+        _RATE_LIMIT_GATE["until"] = ate
+
+
+async def _respeitar_rate_limit_global() -> None:
+    """Aguarda a janela global de cooldown antes de emitir uma chamada.
+
+    Loop (e não um sleep único) porque outro worker pode ESTENDER a janela
+    enquanto este dorme.
     """
-    label_clean = label.strip()
-    label_upper = label_clean.upper()
-    nome_0_upper = nome_classe_0.upper()
-    nome_1_upper = nome_classe_1.upper()
-
-    # 0. Extração CoT: tenta marcadores de resposta final e última linha
-    # Necessário para variante chain-of-thought que produz raciocínio antes da resposta
-    if '\n' in label_clean:
-        # Tenta extrair após marcadores comuns de resposta final
-        cot_markers = [
-            r'(?:final\s+answer|final\s+classification|my\s+(?:final\s+)?answer|therefore|classification)\s*[:=]\s*',
-        ]
-        for marker_pattern in cot_markers:
-            match = re.search(marker_pattern + r'(.+)', label_clean, re.IGNORECASE)
-            if match:
-                extracted = match.group(1).strip().strip('"\'.,!? ')
-                extracted_upper = extracted.upper()
-                if extracted_upper == nome_0_upper:
-                    return nome_classe_0, True
-                if extracted_upper == nome_1_upper:
-                    return nome_classe_1, True
-
-        # Tenta a última linha não-vazia como resposta
-        last_line = [l.strip() for l in label_clean.split('\n') if l.strip()][-1]
-        last_line_clean = re.sub(r'^[\s\'\"]+|[\s\'\".,!?]+$', '', last_line)
-        last_upper = last_line_clean.upper()
-        if last_upper == nome_0_upper:
-            return nome_classe_0, True
-        if last_upper == nome_1_upper:
-            return nome_classe_1, True
-
-    # 1. Match exato
-    if label_upper == nome_0_upper:
-        return nome_classe_0, True
-    if label_upper == nome_1_upper:
-        return nome_classe_1, True
-
-    # 2. Remove aspas/pontuação marginal e tenta novamente
-    stripped = re.sub(r'^[\s\'\"]+|[\s\'\".,!?]+$', '', label_clean)
-    stripped_upper = stripped.upper()
-    if stripped_upper == nome_0_upper:
-        return nome_classe_0, True
-    if stripped_upper == nome_1_upper:
-        return nome_classe_1, True
-
-    # 3. Classes numéricas: se o nome for "0"/"1", aceita variações como " 0 " ou "Class 0"
-    if nome_0_upper.isdigit() and nome_1_upper.isdigit():
-        nums_found = re.findall(r'\b\d+\b', label_upper)
-        hits_0 = nums_found.count(nome_0_upper)
-        hits_1 = nums_found.count(nome_1_upper)
-        if hits_0 > hits_1:
-            return nome_classe_0, True
-        if hits_1 > hits_0:
-            return nome_classe_1, True
-
-    # 4. Word-boundary regex (mais preciso que contains para nomes curtos como "A"/"B")
-    pat_0 = re.compile(r'\b' + re.escape(nome_0_upper) + r'\b')
-    pat_1 = re.compile(r'\b' + re.escape(nome_1_upper) + r'\b')
-    wb_0 = bool(pat_0.search(label_upper))
-    wb_1 = bool(pat_1.search(label_upper))
-    if wb_0 and not wb_1:
-        return nome_classe_0, True
-    if wb_1 and not wb_0:
-        return nome_classe_1, True
-
-    # 5. Contains exclusivo (apenas uma das classes aparece em qualquer posição)
-    contains_0 = nome_0_upper in label_upper
-    contains_1 = nome_1_upper in label_upper
-    if contains_0 and not contains_1:
-        return nome_classe_0, True
-    if contains_1 and not contains_0:
-        return nome_classe_1, True
-
-    # 6. Padrões comuns de resposta em linguagem natural
-    common_patterns = [
-        f"CLASS {nome_0_upper}", f"CLASS {nome_1_upper}",
-        f"CLASSE {nome_0_upper}", f"CLASSE {nome_1_upper}",
-        f"ANSWER IS {nome_0_upper}", f"ANSWER IS {nome_1_upper}",
-        f"ANSWER: {nome_0_upper}", f"ANSWER: {nome_1_upper}",
-        f"CLASSIFICATION: {nome_0_upper}", f"CLASSIFICATION: {nome_1_upper}",
-        f"CLASSIFIED AS {nome_0_upper}", f"CLASSIFIED AS {nome_1_upper}",
-        f"BELONGS TO {nome_0_upper}", f"BELONGS TO {nome_1_upper}",
-        f"IS {nome_0_upper}", f"IS {nome_1_upper}",
-    ]
-    for pattern in common_patterns:
-        if pattern in label_upper:
-            return (nome_classe_0 if nome_0_upper in pattern else nome_classe_1), True
-
-    # 7. Starts-with (a resposta começa diretamente com o nome da classe)
-    if label_upper.startswith(nome_0_upper):
-        return nome_classe_0, True
-    if label_upper.startswith(nome_1_upper):
-        return nome_classe_1, True
-
-    return None, False
-
-
-def llm_classify_point(
-    x1: float, x2: float,
-    nome_classe_0: str, nome_classe_1: str,
-    examples: Optional[List] = None,
-    malformed_counter: Optional[List] = None,
-    raw_out: Optional[List] = None,
-    nome_feature_0: str = "x1", nome_feature_1: str = "x2",
-    extra_features: Optional[List[Tuple[str, float]]] = None
-) -> str:
-    """Classifica um único ponto usando o LLM, com lógica de retentativa para respostas malformadas.
-
-    raw_out: lista de 1 elemento passada por referência; ao retornar, raw_out[0] conterá
-             a resposta bruta original do LLM (antes do parsing), útil para logging.
-    extra_features: lista de (nome, valor) para features adicionais.
-    """
-    global client, MODEL_NAME, CURRENT_PROVIDER, CURRENT_TEMPERATURE
-
-    if examples is None or len(examples) == 0:
-        prompt = build_prompt_zero_shot(x1, x2, nome_classe_0, nome_classe_1,
-                                        nome_feature_0, nome_feature_1, extra_features)
-    else:
-        prompt = build_prompt_few_shot(x1, x2, examples, nome_classe_0, nome_classe_1,
-                                       nome_feature_0, nome_feature_1, extra_features)
-
-    all_responses = []
-
-    for format_attempt in range(MAX_FORMAT_RETRIES):
-        for rate_attempt in range(MAX_RETRIES):
-            try:
-                config = PROVIDER_CONFIG[CURRENT_PROVIDER]
-
-                if config["client_type"] == "anthropic":
-                    label = llm_classify_point_anthropic(client, MODEL_NAME, prompt, CURRENT_TEMPERATURE)
-                else:
-                    label = llm_classify_point_openai(client, MODEL_NAME, prompt, CURRENT_TEMPERATURE)
-
-                break
-            except Exception as e:
-                error_str = str(e)
-                if "429" in error_str or "rate_limit" in error_str.lower() or "overloaded" in error_str.lower():
-                    wait_time = INITIAL_BACKOFF * (2 ** rate_attempt)
-                    print(f"  ⏳ Limite de requisições atingido. Aguardando {wait_time}s (tentativa {rate_attempt + 1}/{MAX_RETRIES})...")
-                    time.sleep(wait_time)
-                else:
-                    raise e
-        else:
-            raise Exception(f"Máximo de tentativas ({MAX_RETRIES}) excedido por limite de requisições")
-
-        all_responses.append(label)
-        # Salva a primeira resposta bruta para quem chamar com raw_out
-        if raw_out is not None and len(raw_out) == 0:
-            raw_out.append(label)
-
-        parsed_label, is_valid = parse_llm_response(label, nome_classe_0, nome_classe_1)
-
-        if is_valid:
-            return parsed_label
-
-        if format_attempt < MAX_FORMAT_RETRIES - 1:
-            if examples is None or len(examples) == 0:
-                prompt = f"""You are a binary classifier for 2D points.
-
-Classify the given point as EXACTLY one of these two classes: "{nome_classe_0}" or "{nome_classe_1}".
-
-IMPORTANT: Your response must be EXACTLY "{nome_classe_0}" or "{nome_classe_1}" with no other text.
-
-Point to classify:
-x1 = {x1:.4f}
-x2 = {x2:.4f}
-
-Your classification (respond with ONLY the class name):"""
-            else:
-                examples_text = "\n".join([
-                    f"  x1 = {ex[0]:.4f}, x2 = {ex[1]:.4f} -> {ex[2]}"
-                    for ex in examples
-                ])
-                prompt = f"""You are a binary classifier for 2D points.
-
-Learn the classification pattern from the examples below, then classify the new point.
-
-Examples:
-{examples_text}
-
-IMPORTANT: Your response must be EXACTLY "{nome_classe_0}" or "{nome_classe_1}" with no other text.
-
-Point to classify:
-x1 = {x1:.4f}
-x2 = {x2:.4f}
-
-Your classification (respond with ONLY the class name):"""
-
-    if malformed_counter is not None:
-        malformed_counter[0] += 1
-    if raw_out is not None and len(raw_out) == 0:
-        raw_out.append(all_responses[0] if all_responses else "")
-
-    # Fallback para respostas malformadas: atribui classe aleatória uniforme (50/50),
-    # usando hash das coordenadas como seed para reprodutibilidade entre execuções.
-    #
-    # NOTA IMPORTANTE: o método anterior (coord_bits % 2) introduzia viés geométrico
-    # sistemático — a paridade da soma de coordenadas correlaciona com a posição espacial,
-    # contaminando a métrica estimada. O hash distribui uniformemente sem padrão espacial.
-    #
-    # Se a taxa de fallback for significativa (>5%), os resultados desta seed/config
-    # devem ser interpretados com cautela — o ruído do fallback pode dominar.
-    import hashlib
-    hash_seed = hashlib.md5(f"{x1:.6f}_{x2:.6f}".encode()).hexdigest()
-    fallback_bit = int(hash_seed, 16) % 2
-    fallback = nome_classe_0 if fallback_bit == 0 else nome_classe_1
-
-    warnings.warn(
-        f"\n  ⚠️ RESPOSTA MALFORMADA após {MAX_FORMAT_RETRIES} tentativas para o ponto ({x1:.4f}, {x2:.4f}).\n"
-        f"     Respostas recebidas: {all_responses}\n"
-        f"     Esperado: '{nome_classe_0}' ou '{nome_classe_1}'\n"
-        f"     Fallback aleatório (hash-based): '{fallback}'\n"
-    )
-
-    return fallback
+    while True:
+        falta = _RATE_LIMIT_GATE["until"] - time.monotonic()
+        if falta <= 0:
+            return
+        await asyncio.sleep(falta)
 
 
 async def async_llm_classify_point(
@@ -1464,7 +840,7 @@ async def async_llm_classify_point(
     extra_features: Optional[List[Tuple[str, float]]] = None,
     prompt_variant: str = "default"
 ) -> Tuple[str, str, bool]:
-    """Versão assíncrona de llm_classify_point. Retorna (label_parsed, raw_response, was_malformed)."""
+    """Classifica um ponto via LLM (retries + fallback MD5). Retorna (label_parsed, raw_response, was_malformed)."""
     global async_client, MODEL_NAME, CURRENT_PROVIDER, CURRENT_TEMPERATURE
 
     # Seleciona builder de prompt conforme a variante
@@ -1482,9 +858,11 @@ async def async_llm_classify_point(
 
     all_responses = []
     all_prompts = []
+    all_metas = []
 
     for format_attempt in range(MAX_FORMAT_RETRIES):
         for rate_attempt in range(MAX_RETRIES):
+            await _respeitar_rate_limit_global()
             try:
                 config = PROVIDER_CONFIG[CURRENT_PROVIDER]
 
@@ -1494,16 +872,32 @@ async def async_llm_classify_point(
                         None, llm_classify_point_anthropic, client, MODEL_NAME, prompt,
                         CURRENT_TEMPERATURE, system_msg, max_tok
                     )
+                    call_meta = {}
                 else:
-                    label = await async_llm_classify_point_openai(async_client, MODEL_NAME, prompt,
-                                                                   CURRENT_TEMPERATURE, system_msg)
+                    label, call_meta = await async_llm_classify_point_openai(async_client, MODEL_NAME, prompt,
+                                                                             CURRENT_TEMPERATURE, system_msg)
 
                 break
             except Exception as e:
-                error_str = str(e)
-                if "429" in error_str or "rate_limit" in error_str.lower() or "overloaded" in error_str.lower() or "400" in error_str or "could not parse" in error_str.lower():
-                    wait_time = INITIAL_BACKOFF * (2 ** rate_attempt)
-                    print(f"  ⏳ Erro retentável ({error_str[:80]}). Aguardando {wait_time}s (tentativa {rate_attempt + 1}/{MAX_RETRIES})...")
+                error_str = str(e).lower()
+                # Retentáveis: rate limit, 400 transitório do endpoint compatível,
+                # E transientes de infraestrutura (5xx, timeout, conexão) —
+                # relevantes com provedores via OpenRouter.
+                retentavel = any(tok in error_str for tok in (
+                    "429", "rate_limit", "overloaded", "400", "could not parse",
+                    "500", "502", "503", "timeout", "connection", "temporarily",
+                ))
+                if retentavel:
+                    # Jitter de ±25%: sem ele, todos os workers que receberam 429
+                    # no mesmo instante acordam juntos e re-disparam em rajada,
+                    # re-acionando o rate limit. Só afeta TIMING de retry, nunca
+                    # os dados — não compromete a reprodutibilidade do experimento.
+                    wait_time = INITIAL_BACKOFF * (2 ** rate_attempt) * (0.75 + 0.5 * random.random())
+                    if any(tok in error_str for tok in _TOKENS_CAPACIDADE):
+                        # Sinal de capacidade do provedor: TODOS os workers seguram
+                        # as próximas chamadas até a janela passar (freio global).
+                        _acionar_rate_limit_global(wait_time)
+                    print(f"  ⏳ Erro retentável ({str(e)[:80]}). Aguardando {wait_time:.0f}s (tentativa {rate_attempt + 1}/{MAX_RETRIES})...")
                     await asyncio.sleep(wait_time)
                 else:
                     raise e
@@ -1512,6 +906,7 @@ async def async_llm_classify_point(
 
         all_responses.append(label)
         all_prompts.append(prompt)
+        all_metas.append(call_meta)
         parsed_label, is_valid = parse_llm_response(label, nome_classe_0, nome_classe_1)
 
         if is_valid:
@@ -1522,6 +917,8 @@ async def async_llm_classify_point(
                 "raw_response": raw,
                 "parsed_label": parsed_label,
                 "model": MODEL_NAME,
+                "model_resolved": call_meta.get("model_resolved"),
+                "inference_provider": call_meta.get("inference_provider"),
                 "provider": CURRENT_PROVIDER,
                 "temperature": CURRENT_TEMPERATURE,
                 "format_retries": format_attempt,
@@ -1569,6 +966,7 @@ Your classification (respond with ONLY the class name):"""
     fallback = nome_classe_0 if fallback_bit == 0 else nome_classe_1
     raw = all_responses[0] if all_responses else ""
 
+    first_meta = all_metas[0] if all_metas else {}
     LLM_INTERACTIONS.append({
         "point": {"x1": x1, "x2": x2},
         "prompt": all_prompts[0] if all_prompts else "",
@@ -1576,6 +974,8 @@ Your classification (respond with ONLY the class name):"""
         "all_responses": all_responses,
         "parsed_label": fallback,
         "model": MODEL_NAME,
+        "model_resolved": first_meta.get("model_resolved"),
+        "inference_provider": first_meta.get("inference_provider"),
         "provider": CURRENT_PROVIDER,
         "temperature": CURRENT_TEMPERATURE,
         "format_retries": MAX_FORMAT_RETRIES,
@@ -1627,12 +1027,37 @@ async def async_collect_llm_decisions(
         if extra_features_matrix is not None and extra_feature_names is not None:
             extra_feats = list(zip(extra_feature_names, extra_features_matrix[i]))
 
-        async with semaphore:
-            label, raw, was_malformed = await async_llm_classify_point(
-                x1, x2, nome_classe_0, nome_classe_1,
-                examples, nome_feature_0, nome_feature_1, extra_feats,
-                prompt_variant=prompt_variant
-            )
+        try:
+            async with semaphore:
+                label, raw, was_malformed = await async_llm_classify_point(
+                    x1, x2, nome_classe_0, nome_classe_1,
+                    examples, nome_feature_0, nome_feature_1, extra_feats,
+                    prompt_variant=prompt_variant
+                )
+        except Exception as exc:
+            # Falha DEFINITIVA (esgotou retries ou erro não-retentável): não
+            # derruba a execução inteira (gather é fail-fast) — registra como
+            # malformada com o fallback MD5 e segue; a auditoria offline acusa.
+            import hashlib
+            hs = hashlib.md5(f"{x1:.6f}_{x2:.6f}".encode()).hexdigest()
+            label = nome_classe_0 if int(hs, 16) % 2 == 0 else nome_classe_1
+            raw, was_malformed = "", True
+            LLM_INTERACTIONS.append({
+                "point": {"x1": x1, "x2": x2},
+                "prompt": "",
+                "raw_response": "",
+                "parsed_label": label,
+                "model": MODEL_NAME,
+                "model_resolved": None,
+                "inference_provider": None,
+                "provider": CURRENT_PROVIDER,
+                "temperature": CURRENT_TEMPERATURE,
+                "format_retries": MAX_FORMAT_RETRIES,
+                "malformed": True,
+                "error": str(exc)[:300],
+            })
+            print(f"    ⚠ Falha definitiva no ponto ({x1:.3f}, {x2:.3f}): "
+                  f"{str(exc)[:120]} — fallback aplicado, execução continua.")
 
         results[i] = (label, raw, was_malformed)
         if was_malformed:
@@ -1706,175 +1131,15 @@ def collect_llm_decisions(
 # Inclui também augment_to_r3/r4 e augment_features p/ R2/R3/R4
 # =============================================================================
 
-def d_W(x: np.ndarray, c: np.ndarray, w: np.ndarray) -> float:
-    """Distância de Mahalanobis com matriz diagonal W.
-
-    Justificativa: a restrição diagonal reduz a complexidade de O(d²) para O(d),
-    tornando o aprendizado tratável sem perda crítica de poder discriminativo em 2D.
-    """
-    return np.sum(w * (x - c)**2)
+# d_W e compute_centroids → metrics.py (importados no topo).
 
 
-def compute_centroids(X: np.ndarray, y: np.ndarray) -> np.ndarray:
-    """Calcula os centróides de cada classe a partir dos rótulos do LLM.
-
-    Os centróides são usados como âncoras para a métrica de Mahalanobis:
-    um ponto é classificado na classe cujo centróide está mais próximo sob d_W.
-    """
-    classes = np.unique(y)
-    centroids = np.array([X[y == c].mean(axis=0) for c in classes])
-    return centroids
+# train_relaxed_perceptron → relaxed_perceptron.py e train_least_squares_inverse →
+# least_squares_inverse.py (funções de conveniência junto de suas classes; importadas no topo).
 
 
-def train_relaxed_perceptron(
-    X: np.ndarray,
-    y: np.ndarray,
-    centroids: np.ndarray,
-    eta: float = 0.001,
-    C: float = 1.0,
-    gamma_init: float = 0.1,
-    delta_gamma: float = 0.1,
-    max_epochs: int = 100,
-    tol: float = 1e-5,
-    verbose: bool = False,
-    use_best_effort: bool = False,
-    return_history: bool = False,
-):
-    """Wrapper que delega para RelaxedPerceptron.
-
-    Defaults seguem Coelho, Borges & Fonseca Neto (CILAMCE 2017, Seção 6, p. 16):
-    "a taxa de aprendizado η = 0.001 e a constante C variou de 1 até 0.1".
-
-    Se return_history=True, retorna (w, gamma, gamma_history) onde gamma_history
-    é a lista de dicts capturada durante a busca binária em γ (item b da reunião
-    30/04/2026). Caso contrário, retorna apenas (w, gamma) — compat. com chamadas existentes.
-    """
-    model = RelaxedPerceptron(
-        eta=eta, C=C, gamma_init=gamma_init, delta_gamma=delta_gamma,
-        max_epochs=max_epochs, tol=tol, use_best_effort=use_best_effort,
-        verbose=verbose,
-    )
-    w, gamma = model.fit(X, y, centroids)
-    if return_history:
-        return w, gamma, model.gamma_history
-    return w, gamma
-
-
-def train_least_squares_inverse(
-    X: np.ndarray,
-    y: np.ndarray,
-    centroids: np.ndarray,
-    verbose: bool = False
-) -> Tuple[np.ndarray, float]:
-    """Wrapper que delega para LeastSquaresInverse."""
-    model = LeastSquaresInverse(verbose=verbose)
-    return model.fit(X, y, centroids)
-
-
-def augment_to_r3(X: np.ndarray) -> np.ndarray:
-    """Adiciona feature de interação x3 = x1 * x2, projetando dados de R2 para R3.
-
-    Usada no experimento de não-linearidade implícita: o LLM classifica apenas
-    com (x1, x2), mas nos bastidores adicionamos x3 = x1·x2 e tentamos aprender
-    uma métrica diagonal com 3 pesos. Se a fidelidade com 3 pesos superar a de
-    2 pesos, há evidência de que o LLM adota implicitamente um critério não-linear.
-    O vetor W terá 3 componentes; projetado de volta para R2, a fronteira de
-    decisão corresponde a uma hipérbole.
-    """
-    x3 = (X[:, 0] * X[:, 1]).reshape(-1, 1)
-    return np.hstack([X, x3])
-
-
-def augment_to_r4(X: np.ndarray) -> np.ndarray:
-    """Adiciona features quadráticas x1², x2² para projetar dados em R4.
-
-    Justificativa (e-mail orientador 19:15): para o estudo de caso peso×altura,
-    o classificador ótimo bayesiano é
-        f(x1, x2) = x2² - x2 + x1² - x1 + cte
-    — fronteira elíptica. Com 4 features (x1, x2, x1², x2²), a métrica diagonal
-    consegue representar exatamente essa fronteira como combinação linear,
-    enquanto com 3 features (x1·x2) só representa hipérbole.
-    """
-    x_sq = X ** 2
-    return np.hstack([X, x_sq])
-
-
-def augment_features(X: np.ndarray, n_features: int) -> np.ndarray:
-    """Aumenta X para o número de features pedido (2, 3 ou 4).
-
-    - 2: (x1, x2) — original
-    - 3: (x1, x2, x1·x2) — hipérbole (augment_to_r3)
-    - 4: (x1, x2, x1², x2²) — elipse (augment_to_r4)
-    """
-    if X.ndim == 1:
-        X = X.reshape(1, -1)
-    if X.shape[1] < 2:
-        raise ValueError(f"X precisa ter ao menos 2 colunas; tem {X.shape[1]}")
-
-    X2 = X[:, :2]
-    if n_features == 2:
-        return X2
-    if n_features == 3:
-        return augment_to_r3(X2)
-    if n_features == 4:
-        return augment_to_r4(X2)
-    raise ValueError(f"n_features deve ser 2, 3 ou 4 — recebido {n_features}")
-
-
-def predict_with_metric(X: np.ndarray, centroids: np.ndarray, w: np.ndarray) -> np.ndarray:
-    """Prediz a classe de cada ponto usando a métrica estimada (vizinho mais próximo sob d_W)."""
-    predictions = []
-    for xi in X:
-        distances = [d_W(xi, c, w) for c in centroids]
-        predictions.append(np.argmin(distances))
-    return np.array(predictions)
-
-
-def compute_metric_confidence(
-    X: np.ndarray,
-    centroids: np.ndarray,
-    w: np.ndarray,
-    y_pred: Optional[np.ndarray] = None
-) -> Tuple[np.ndarray, np.ndarray]:
-    """Calcula pontuações de confiança baseadas em margem usando a fórmula do orientador.
-
-    Definição de margem (orientador): margem = d_W(x, centróide_errado) - d_W(x, centróide_previsto)
-
-    No caso de 2 classes (centróides[0] e centróides[1]):
-        - Se classe predita == 0: d_pred = d0, d_errado = d1, logo margem = d1 - d0
-        - Se classe predita == 1: d_pred = d1, d_errado = d0, logo margem = d0 - d1
-        - Isso sempre equivale a |d1 - d0|, confirmando equivalência com a diferença absoluta de distâncias.
-
-    margem >= 0 é garantida por construção: a classe predita sempre tem a menor
-    (ou igual) distância ao seu centróide, logo d_errado >= d_pred por definição.
-    """
-    n_samples = X.shape[0]
-    confidences = np.zeros(n_samples)
-    predictions = np.zeros(n_samples, dtype=int)
-
-    for i, xi in enumerate(X):
-        d0 = d_W(xi, centroids[0], w)
-        d1 = d_W(xi, centroids[1], w)
-
-        if d0 <= d1:
-            predictions[i] = 0
-            d_pred = d0
-            d_wrong = d1
-        else:
-            predictions[i] = 1
-            d_pred = d1
-            d_wrong = d0
-        # Fórmula do orientador: margem = d_W(x, centróide_errado) - d_W(x, centróide_previsto)
-        # No caso de 2 classes, isso sempre equivale a |d1 - d0|: uma distância é d_pred e a outra d_wrong.
-        # margem >= 0 é garantida: a classe predita sempre tem a menor (ou igual) distância.
-        margin = d_wrong - d_pred
-        assert margin >= 0, "Margem deve ser não-negativa por construção"
-        confidences[i] = margin
-
-    if y_pred is not None:
-        assert np.array_equal(predictions, y_pred), "Discordância de predição no cálculo de confiança"
-
-    return confidences, predictions
+# augment_to_r3, augment_to_r4, augment_features, predict_with_metric e
+# compute_metric_confidence → metrics.py (importados no topo). Ver tests/test_metrics.py.
 
 
 # =============================================================================
@@ -1939,14 +1204,16 @@ def phase_a_learn_metric(
 
     w_learned, gamma_optimal, _gamma_hist = train_relaxed_perceptron(
         X_train_a, y_llm_train_a, centroids_a,
-        eta=0.001, C=1.0, delta_gamma=0.05,  # Coelho et al. CILAMCE 2017, p. 16
-        max_epochs=50, tol=1e-4, verbose=verbose,
+        **PERCEPTRON_PARAMS,
+        verbose=verbose,
         use_best_effort=True,  # retorna melhor W parcial quando separação perfeita é impossível
         return_history=True,   # captura evolução de γ para diagnóstico (item b reunião 30/04)
     )
-    # Anota diagnóstico de γ para esta chamada (Fase A no Problema A)
+    # Anota diagnóstico de γ para esta chamada (Fase A no Problema A);
+    # "model" permite filtrar o final_10 por modelo na seção de visualizações.
     PERCEPTRON_GAMMA_DIAGNOSTICS.append({
         "label": "Fase A — Problema A",
+        "model": MODEL_NAME,
         "gamma_final": float(gamma_optimal),
         "history": _gamma_hist,
     })
@@ -2336,8 +1603,6 @@ def run_oracle_validation(
     if verbose:
         print(f"\n  ═══ Parte 2: Problema E com experts (centroides do expert) ═══")
 
-    true_centroids_d = np.array(PROBLEM_E_CENTERS)
-
     for expert_cfg in expert_configs:
         expert_w = expert_cfg["w"]
         expert_name = expert_cfg["name"]
@@ -2396,12 +1661,75 @@ def run_oracle_validation(
     return results
 
 
+def run_oracle_meialua(
+    X_ml: np.ndarray,
+    y_ml: np.ndarray,
+    random_seed: int,
+    n_features_list: Tuple[int, ...] = (2, 3, 4),
+    verbose: bool = True,
+) -> List[dict]:
+    """Oracle de APROXIMAÇÃO para a meia-lua (item 5, reunião 20/05).
+
+    A meia-lua é genuinamente não-linear: **não existe** um W diagonal que a
+    *gere* (por isso não faz sentido gerar a meia-lua a partir de um W). Mas o
+    orientador observou que pode existir uma **mudança de métrica que a aproxima**
+    (~391-502s: "você pode ter um W que aproxima... uma mudança de métrica que
+    aproxima um pouco da meia-lua").
+
+    Aqui partimos dos rótulos VERDADEIROS (ground truth da meia-lua) e aprendemos
+    W em espaço aumentado (2, 3, 4 features) via Perceptron e NNLS, medindo a
+    fidelidade da métrica resultante vs ground truth. Espera-se que a fidelidade
+    **cresça** ao adicionar x1²/x2² (R4), confirmando que uma métrica diagonal em
+    espaço aumentado aproxima a fronteira não-linear — análogo ao Oracle linear,
+    mas para o caso não-linear.
+    """
+    results = []
+    if len(np.unique(y_ml)) < 2:
+        return results
+
+    for n_feat in n_features_list:
+        X_aug = augment_features(X_ml, n_feat)
+        centroids = compute_centroids(X_aug, y_ml)
+
+        w_perc, gamma_perc = train_relaxed_perceptron(
+            X_aug, y_ml, centroids,
+            **PERCEPTRON_PARAMS,
+            verbose=False,
+            use_best_effort=True,
+        )
+        w_nnls, _ = train_least_squares_inverse(X_aug, y_ml, centroids, verbose=False)
+
+        for algo_name, w_rec in (("perceptron", w_perc), ("nnls", w_nnls)):
+            y_pred = predict_with_metric(X_aug, centroids, w_rec)
+            fidelity = accuracy_score(y_ml, y_pred)
+            n_err = int(np.sum(y_pred != y_ml))
+            results.append({
+                'random_seed': random_seed,
+                'n_features': n_feat,
+                'algorithm': algo_name,
+                'fidelity_vs_true': fidelity,
+                'n_errors': n_err,
+                'n_samples': len(y_ml),
+                'w_recovered_0': float(w_rec[0]),
+                'w_recovered_1': float(w_rec[1]),
+            })
+            if verbose:
+                print(
+                    f"    [meia-lua oracle n_feat={n_feat} {algo_name.upper():10s}] "
+                    f"fidelidade vs GT={fidelity:.1%} ({n_err}/{len(y_ml)} erros) | "
+                    f"W=[{', '.join(f'{wi:.3f}' for wi in w_rec)}]"
+                )
+    return results
+
+
+
+
 def _oracle_algorithms(X, y, centroids):
     """Retorna iterador de (nome, funcao_treino) para os algoritmos de otimização inversa."""
     yield "perceptron", lambda: train_relaxed_perceptron(
         X, y, centroids,
-        eta=0.001, C=1.0, delta_gamma=0.05,  # Coelho et al. CILAMCE 2017, p. 16
-        max_epochs=50, tol=1e-4, verbose=False,
+        **PERCEPTRON_PARAMS,
+        verbose=False,
         use_best_effort=True,
     )
     yield "nnls", lambda: train_least_squares_inverse(
@@ -2421,7 +1749,6 @@ def _append_oracle_result(
     # Normalizar para comparação de razões
     w_sum = np.sum(w_recovered)
     w_norm_recovered = w_recovered / w_sum if w_sum > 0 else w_recovered
-    w_norm_true = true_w / np.sum(true_w)
 
     # Similaridade de cosseno
     norm_t = np.linalg.norm(true_w)
@@ -3070,2941 +2397,6 @@ def run_complete_experiment(
 
 
 # =============================================================================
-# VISUALIZAÇÕES (FASES A-C)
-# =============================================================================
-
-def plot_consistency_comparison_extended(resultados: List[ResultadoExperimento], filename: str = None):
-    """Gráfico comparativo estendido incluindo Problema C e métricas adicionais (Kappa, F1)."""
-    df = pd.DataFrame([
-        {
-            'model': f"{r.provider}/{r.model_name} (t={r.temperature})",
-            'n_shot': r.n_shot,
-            'nomes': f"{r.nomes_classes[0]}/{r.nomes_classes[1]}",
-            'consistencia_b': r.consistencia_problema_b,
-            'consistencia_c': r.consistencia_problema_c,
-            'kappa_b': r.kappa_problema_b,
-            'kappa_c': r.kappa_problema_c,
-            'f1_b': r.f1_problema_b,
-            'f1_c': r.f1_problema_c,
-            'fidelidade': r.fidelidade_problema_a,
-        }
-        for r in resultados
-    ])
-
-    df_cons = df.groupby('n_shot').agg({
-        'consistencia_b': ['mean', 'std'], 'consistencia_c': ['mean', 'std'],
-    }).reset_index()
-    df_cons.columns = ['n_shot', 'b_mean', 'b_std', 'c_mean', 'c_std']
-    x = np.arange(len(df_cons))
-    width = 0.35
-
-    df_kappa = df.groupby('n_shot').agg({'kappa_b': ['mean', 'std'], 'kappa_c': ['mean', 'std']}).reset_index()
-    df_kappa.columns = ['n_shot', 'b_mean', 'b_std', 'c_mean', 'c_std']
-
-    df_f1 = df.groupby('n_shot').agg({'f1_b': ['mean', 'std'], 'f1_c': ['mean', 'std']}).reset_index()
-    df_f1.columns = ['n_shot', 'b_mean', 'b_std', 'c_mean', 'c_std']
-
-    def _draw_consistency(ax):
-        ax.bar(x - width/2, df_cons['b_mean'], width, yerr=df_cons['b_std'],
-               label='Problema B', color='steelblue', capsize=3)
-        ax.bar(x + width/2, df_cons['c_mean'], width, yerr=df_cons['c_std'],
-               label='Problema C', color='coral', capsize=3)
-        ax.axhline(y=1.0, color='green', linestyle='--', alpha=0.7)
-        ax.axhline(y=0.5, color='red', linestyle='--', alpha=0.7)
-        ax.set_xticks(x)
-        ax.set_xticklabels([f'{int(n)}-shot' for n in df_cons['n_shot']])
-        ax.set_ylabel('Consistência')
-        ax.set_title('Consistência: Problema B vs C', fontweight='bold')
-        ax.legend(); ax.set_ylim(0, 1.1)
-
-    def _draw_kappa(ax):
-        ax.bar(x - width/2, df_kappa['b_mean'], width, yerr=df_kappa['b_std'],
-               label='Problema B', color='steelblue', capsize=3)
-        ax.bar(x + width/2, df_kappa['c_mean'], width, yerr=df_kappa['c_std'],
-               label='Problema C', color='coral', capsize=3)
-        ax.set_xticks(x)
-        ax.set_xticklabels([f'{int(n)}-shot' for n in df_kappa['n_shot']])
-        ax.set_ylabel("Kappa de Cohen")
-        ax.set_title("Kappa de Cohen: B vs C", fontweight='bold')
-        ax.legend(); ax.set_ylim(-0.1, 1.1)
-
-    def _draw_f1(ax):
-        ax.bar(x - width/2, df_f1['b_mean'], width, yerr=df_f1['b_std'],
-               label='Problema B', color='steelblue', capsize=3)
-        ax.bar(x + width/2, df_f1['c_mean'], width, yerr=df_f1['c_std'],
-               label='Problema C', color='coral', capsize=3)
-        ax.set_xticks(x)
-        ax.set_xticklabels([f'{int(n)}-shot' for n in df_f1['n_shot']])
-        ax.set_ylabel('F1-Score')
-        ax.set_title('F1-Score: B vs C', fontweight='bold')
-        ax.legend(); ax.set_ylim(0, 1.1)
-
-    def _draw_boxplot(ax):
-        from matplotlib.patches import Patch
-        metrics_data = []
-        for col, label in [('consistencia_b', 'Acu B'), ('consistencia_c', 'Acu C'),
-                           ('kappa_b', 'Kappa B'), ('kappa_c', 'Kappa C'),
-                           ('f1_b', 'F1 B'), ('f1_c', 'F1 C')]:
-            for val in df[col]:
-                metrics_data.append({'Metric': label, 'Value': val})
-        df_metrics = pd.DataFrame(metrics_data)
-        colors_bp = ['steelblue', 'coral'] * 3
-        positions = [0, 0.6, 1.5, 2.1, 3.0, 3.6]
-        for i, (metric, color) in enumerate(zip(['Acu B', 'Acu C', 'Kappa B', 'Kappa C', 'F1 B', 'F1 C'], colors_bp)):
-            data = df_metrics[df_metrics['Metric'] == metric]['Value']
-            bp = ax.boxplot([data], positions=[positions[i]], widths=0.4, patch_artist=True)
-            bp['boxes'][0].set_facecolor(color)
-            bp['boxes'][0].set_alpha(0.7)
-        ax.set_xticks([0.3, 1.8, 3.3])
-        ax.set_xticklabels(['Acurácia', "Kappa de Cohen", 'F1-Score'])
-        ax.set_ylabel('Pontuação')
-        ax.set_title('Distribuição de Todas as Métricas', fontweight='bold')
-        legend_elements = [Patch(facecolor='steelblue', alpha=0.7, label='Problema B'),
-                           Patch(facecolor='coral', alpha=0.7, label='Problema C')]
-        ax.legend(handles=legend_elements, loc='lower right')
-
-    # Figura combinada
-    fig, axes = plt.subplots(2, 2, figsize=(14, 10))
-    _draw_consistency(axes[0, 0])
-    _draw_kappa(axes[0, 1])
-    _draw_f1(axes[1, 0])
-    _draw_boxplot(axes[1, 1])
-    plt.tight_layout()
-    if filename:
-        plt.savefig(filename, dpi=150, bbox_inches='tight')
-    plt.close()
-
-    # Figuras individuais
-    panels = [
-        ("consistencia", _draw_consistency, (7, 5)),
-        ("kappa", _draw_kappa, (7, 5)),
-        ("f1", _draw_f1, (7, 5)),
-        ("distribuicao", _draw_boxplot, (7, 5)),
-    ]
-    _save_panels_individually(panels, filename)
-
-
-def plot_class_names_effect(resultados: List[ResultadoExperimento], filename: str = None):
-    """Analisa o efeito dos nomes das classes na consistência do LLM com a métrica."""
-    df = pd.DataFrame([
-        {
-            'nomes': f"{r.nomes_classes[0]}/{r.nomes_classes[1]}",
-            'consistencia_b': r.consistencia_problema_b,
-            'consistencia_c': r.consistencia_problema_c,
-        }
-        for r in resultados
-    ])
-
-    df_names = df.groupby('nomes').agg({
-        'consistencia_b': ['mean', 'std'],
-        'consistencia_c': ['mean', 'std']
-    }).reset_index()
-    df_names.columns = ['nomes', 'b_mean', 'b_std', 'c_mean', 'c_std']
-
-    fig, ax = plt.subplots(figsize=(12, 5))
-    x = np.arange(len(df_names))
-    width = 0.35
-
-    ax.bar(x - width/2, df_names['b_mean'], width, yerr=df_names['b_std'],
-           label='Problema B', color='steelblue', capsize=3, edgecolor='black')
-    ax.bar(x + width/2, df_names['c_mean'], width, yerr=df_names['c_std'],
-           label='Problema C', color='coral', capsize=3, edgecolor='black')
-    ax.set_xticks(x)
-    ax.set_xticklabels(df_names['nomes'], rotation=45, ha='right')
-    ax.set_ylabel('Consistência Média')
-    ax.set_title('Efeito dos Nomes das Classes na Consistência', fontsize=12, fontweight='bold')
-    ax.axhline(y=1.0, color='green', linestyle='--', alpha=0.7)
-    ax.axhline(y=0.5, color='red', linestyle='--', alpha=0.7)
-    ax.set_ylim(0, 1.1)
-    ax.legend()
-    plt.tight_layout()
-    if filename:
-        plt.savefig(filename, dpi=150, bbox_inches='tight')
-    plt.close()
-
-
-def plot_model_comparison(resultados: List[ResultadoExperimento], filename: str = None):
-    """Compara modelos se múltiplos foram testados no experimento."""
-    df = pd.DataFrame([
-        {
-            'model': f"{r.provider}/{r.model_name} (t={r.temperature})",
-            'consistencia_b': r.consistencia_problema_b,
-            'consistencia_c': r.consistencia_problema_c,
-            'kappa_b': r.kappa_problema_b,
-            'kappa_c': r.kappa_problema_c,
-            'fidelidade': r.fidelidade_problema_a,
-        }
-        for r in resultados
-    ])
-    models = df['model'].unique()
-    if len(models) < 2:
-        print("  Pulando comparação entre modelos (apenas 1 modelo testado)")
-        return
-
-    df_models = df.groupby('model').agg({
-        'consistencia_b': 'mean', 'consistencia_c': 'mean',
-        'kappa_b': 'mean', 'kappa_c': 'mean', 'fidelidade': 'mean',
-    }).reset_index().sort_values('consistencia_b', ascending=False)
-
-    fig, axes = plt.subplots(1, 2, figsize=(14, 5))
-    colors = plt.cm.tab10(np.linspace(0, 1, len(models)))
-    width = 0.35
-
-    ax = axes[0]
-    for i, (_, row) in enumerate(df_models.iterrows()):
-        ax.bar(i - width/2, row['consistencia_b'], width, color=colors[i], edgecolor='black', alpha=0.8)
-        ax.bar(i + width/2, row['consistencia_c'], width, color=colors[i], edgecolor='black', alpha=0.5, hatch='//')
-    ax.set_xticks(range(len(df_models)))
-    ax.set_xticklabels([m.split('/')[-1] for m in df_models['model']], rotation=45, ha='right')
-    ax.set_ylabel('Consistência')
-    ax.set_title('COMPARAÇÃO DE MODELOS: Consistência', fontweight='bold')
-    ax.set_ylim(0, 1.1)
-
-    ax = axes[1]
-    metrics = ['consistencia_b', 'consistencia_c', 'kappa_b', 'kappa_c', 'fidelidade']
-    labels = ['Consist. B', 'Consist. C', 'Kappa B', 'Kappa C', 'Fidelidade']
-    x_metrics = np.arange(len(metrics))
-    w = 0.8 / len(models)
-    for i, (_, row) in enumerate(df_models.iterrows()):
-        values = [row[m] for m in metrics]
-        x_pos = x_metrics + i * w - (len(models) - 1) * w / 2
-        ax.bar(x_pos, values, w * 0.9, color=colors[i], edgecolor='black', alpha=0.8,
-               label=row['model'].split('/')[-1])
-    ax.set_xticks(x_metrics)
-    ax.set_xticklabels(labels, fontsize=9)
-    ax.set_ylabel('Pontuação')
-    ax.set_title('COMPARAÇÃO DE MODELOS: Todas as Métricas', fontweight='bold')
-    ax.set_ylim(0, 1.1)
-    ax.legend(loc='lower right', fontsize=9)
-
-    plt.tight_layout()
-    if filename:
-        plt.savefig(filename, dpi=150, bbox_inches='tight')
-    plt.close()
-
-
-def plot_seed_comparison(resultados: List[ResultadoExperimento], filename: str = None):
-    """Compara os resultados entre diferentes sementes aleatórias para avaliar robustez."""
-    df = pd.DataFrame([
-        {
-            'seed': r.random_seed,
-            'consistencia_b': r.consistencia_problema_b,
-            'consistencia_c': r.consistencia_problema_c,
-        }
-        for r in resultados
-    ])
-    seeds = sorted(df['seed'].unique())
-    if len(seeds) < 2:
-        print("  Pulando comparação entre sementes (apenas 1 semente testada)")
-        return
-
-    df_seeds = df.groupby('seed').agg({
-        'consistencia_b': ['mean', 'std'],
-        'consistencia_c': ['mean', 'std'],
-    }).reset_index()
-    df_seeds.columns = ['seed', 'b_mean', 'b_std', 'c_mean', 'c_std']
-
-    fig, ax = plt.subplots(figsize=(10, 5))
-    x = np.arange(len(seeds))
-    width = 0.35
-    ax.bar(x - width/2, df_seeds['b_mean'], width, yerr=df_seeds['b_std'],
-           label='Problema B', color='steelblue', capsize=5, edgecolor='black')
-    ax.bar(x + width/2, df_seeds['c_mean'], width, yerr=df_seeds['c_std'],
-           label='Problema C', color='coral', capsize=5, edgecolor='black')
-    ax.set_xticks(x)
-    ax.set_xticklabels([f'Semente {s}' for s in seeds])
-    ax.set_ylabel('Consistência')
-    ax.set_title('CONSISTÊNCIA POR SEMENTE ALEATÓRIA', fontweight='bold')
-    ax.set_ylim(0, 1.1)
-    ax.legend()
-    plt.tight_layout()
-    if filename:
-        plt.savefig(filename, dpi=150, bbox_inches='tight')
-    plt.close()
-
-
-# =============================================================================
-# VISUALIZAÇÕES DA FASE E (LLM como aprendiz)
-# =============================================================================
-
-def plot_phase_e_learning_curve(
-    results_e: List[ResultadoPhaseEExperimento],
-    filename: str = None
-):
-    """
-    Curva de aprendizado mostrando como o LLM melhora com mais exemplos,
-    discriminada por estratégia de seleção de exemplos.
-
-    Esta é a VISUALIZAÇÃO PRINCIPAL da Fase E:
-    - Eixo X: número de exemplos few-shot
-    - Eixo Y: concordância LLM vs. Perito
-    - Linhas: uma por estratégia (easy, hard, mixed, random)
-    """
-    df = pd.DataFrame([
-        {
-            'model': f"{r.provider}/{r.model_name}",
-            'n_shot': r.n_shot,
-            'strategy': r.example_strategy,
-            'accuracy': r.accuracy_llm_vs_expert,
-            'kappa': r.kappa_llm_vs_expert,
-            'f1': r.f1_llm_vs_expert,
-        }
-        for r in results_e
-    ])
-
-    fig, axes = plt.subplots(1, 3, figsize=(18, 5))
-
-    strategy_colors = {
-        'easy': '#2ecc71',    # Green
-        'hard': '#e74c3c',    # Red
-        'mixed': '#3498db',   # Blue
-        'random': '#95a5a6',  # Gray
-    }
-    strategy_markers = {
-        'easy': 'o',
-        'hard': 's',
-        'mixed': 'D',
-        'random': '^',
-    }
-
-    metrics_config = [
-        ('accuracy', 'Concordância LLM vs. Perito (Acurácia)'),
-        ('kappa', "Kappa de Cohen"),
-        ('f1', 'F1-Score'),
-    ]
-
-    def _draw_metric(ax, metric_col, metric_name):
-        for strategy in EXAMPLE_STRATEGIES:
-            df_strat = df[df['strategy'] == strategy]
-            if len(df_strat) == 0:
-                continue
-            df_grouped = df_strat.groupby('n_shot').agg({
-                metric_col: ['mean', 'std']
-            }).reset_index()
-            df_grouped.columns = ['n_shot', 'mean', 'std']
-            df_grouped = df_grouped.sort_values('n_shot')
-            ax.errorbar(
-                df_grouped['n_shot'], df_grouped['mean'],
-                yerr=df_grouped['std'],
-                marker=strategy_markers[strategy],
-                color=strategy_colors[strategy],
-                label=f'{strategy.capitalize()}',
-                linewidth=2, markersize=8, capsize=4
-            )
-        ax.axhline(y=0.5, color='red', linestyle='--', alpha=0.5, label='Chance aleatória')
-        ax.set_xlabel('Número de Exemplos Few-Shot', fontsize=11)
-        ax.set_ylabel(metric_name, fontsize=11)
-        ax.set_title(f'Fase E: {metric_name}\nvs Número de Exemplos', fontsize=11, fontweight='bold')
-        ax.legend(loc='lower right')
-        ax.grid(True, alpha=0.3)
-        ax.set_ylim(-0.1, 1.05)
-
-    # Figura combinada
-    fig, axes = plt.subplots(1, 3, figsize=(18, 5))
-    for i, (metric_col, metric_name) in enumerate(metrics_config):
-        _draw_metric(axes[i], metric_col, metric_name)
-    plt.tight_layout()
-    if filename:
-        plt.savefig(filename, dpi=150, bbox_inches='tight')
-    plt.close()
-
-    # Figuras individuais
-    suffixes = ["accuracy", "kappa", "f1"]
-    panels = [
-        (suffixes[i], lambda ax, mc=metrics_config[i]: _draw_metric(ax, mc[0], mc[1]), (7, 5))
-        for i in range(3)
-    ]
-    _save_panels_individually(panels, filename)
-
-
-def plot_phase_e_strategy_comparison(
-    results_e: List[ResultadoPhaseEExperimento],
-    filename: str = None
-):
-    """
-    Compara estratégias em cada nível de n_shot usando gráficos de barras agrupadas.
-    Permite verificar qual estratégia de seleção de exemplos é mais eficaz para cada quantidade de shots.
-    """
-    df = pd.DataFrame([
-        {
-            'n_shot': r.n_shot,
-            'strategy': r.example_strategy,
-            'accuracy': r.accuracy_llm_vs_expert,
-            'kappa': r.kappa_llm_vs_expert,
-        }
-        for r in results_e
-    ])
-
-    # Filtra apenas os resultados few-shot (exclui zero-shot, que é igual para todas as estratégias)
-    df_fs = df[df['n_shot'] > 0]
-
-    if len(df_fs) == 0:
-        print("  Sem resultados few-shot para comparar estratégias.")
-        return
-
-    n_shots = sorted(df_fs['n_shot'].unique())
-
-    strategy_colors = {
-        'easy': '#2ecc71',
-        'hard': '#e74c3c',
-        'mixed': '#3498db',
-        'random': '#95a5a6',
-    }
-
-    def _draw_n_shot(ax, n):
-        df_n = df_fs[df_fs['n_shot'] == n]
-        df_strat = df_n.groupby('strategy').agg({
-            'accuracy': ['mean', 'std']
-        }).reset_index()
-        df_strat.columns = ['strategy', 'mean', 'std']
-        bars = ax.bar(
-            range(len(df_strat)), df_strat['mean'], yerr=df_strat['std'],
-            color=[strategy_colors.get(s, 'gray') for s in df_strat['strategy']],
-            edgecolor='black', capsize=5
-        )
-        ax.set_xticks(range(len(df_strat)))
-        ax.set_xticklabels([s.capitalize() for s in df_strat['strategy']], fontsize=10)
-        ax.set_ylabel('Concordância LLM vs. Perito')
-        ax.set_title(f'{n} Exemplos Few-Shot', fontsize=12, fontweight='bold')
-        ax.set_ylim(0, 1.1)
-        ax.axhline(y=0.5, color='red', linestyle='--', alpha=0.5)
-        for bar, mean_val in zip(bars, df_strat['mean']):
-            ax.text(bar.get_x() + bar.get_width()/2., bar.get_height() + 0.02,
-                    f'{mean_val:.1%}', ha='center', va='bottom', fontsize=9, fontweight='bold')
-
-    # Figura combinada
-    fig, axes = plt.subplots(1, len(n_shots), figsize=(5 * len(n_shots), 5), squeeze=False)
-    axes = axes[0]
-    for ax_idx, n in enumerate(n_shots):
-        _draw_n_shot(axes[ax_idx], n)
-    plt.suptitle('Fase E: Comparação de Estratégias por Número de Exemplos',
-                 fontsize=13, fontweight='bold')
-    plt.tight_layout()
-    if filename:
-        plt.savefig(filename, dpi=150, bbox_inches='tight')
-    plt.close()
-
-    # Figuras individuais
-    panels = [
-        (f"{n}shot", lambda ax, n_val=n: _draw_n_shot(ax, n_val), (6, 5))
-        for n in n_shots
-    ]
-    _save_panels_individually(panels, filename)
-
-
-def plot_phase_e_example_locations(
-    X_e: np.ndarray,
-    y_expert: np.ndarray,
-    expert_w: np.ndarray,
-    expert_centroids: np.ndarray,
-    n_examples: int = 10,
-    random_state: int = 42,
-    filename: str = None
-):
-    """
-    Visualiza ONDE cada estratégia seleciona os exemplos.
-    Exibe seleções easy/hard/mixed/random sobre a fronteira de decisão do perito.
-    Fundamental para entender intuitivamente o que cada estratégia oferece ao LLM.
-    """
-    strategies = ["easy", "hard", "mixed", "random"]
-
-    x_min, x_max = -6, 6
-    y_min, y_max = -5, 5
-    xx, yy = np.meshgrid(np.linspace(x_min, x_max, 200), np.linspace(y_min, y_max, 200))
-    grid_points = np.c_[xx.ravel(), yy.ravel()]
-    Z = predict_with_metric(grid_points, expert_centroids, expert_w)
-    Z = Z.reshape(xx.shape)
-    confidences_all, _ = compute_metric_confidence(X_e, expert_centroids, expert_w)
-
-    def _draw_strategy(ax, strategy):
-        ax.contourf(xx, yy, Z, alpha=0.2, cmap="coolwarm", levels=[-0.5, 0.5, 1.5])
-        ax.contour(xx, yy, Z, colors='k', linewidths=1.5, levels=[0.5])
-        ax.scatter(X_e[:, 0], X_e[:, 1], c=y_expert, cmap="coolwarm",
-                   alpha=0.2, edgecolor="gray", s=30)
-        _, selected_indices = select_examples_by_strategy(
-            X_e, y_expert, expert_w, expert_centroids,
-            n_examples=n_examples, strategy=strategy,
-            nome_classe_0="A", nome_classe_1="B",
-            random_state=random_state, verbose=False
-        )
-        ax.scatter(X_e[selected_indices, 0], X_e[selected_indices, 1],
-                   c=y_expert[selected_indices], cmap="coolwarm",
-                   edgecolor="black", s=200, linewidth=2, marker='*',
-                   zorder=5, label=f'Selecionados ({len(selected_indices)})')
-        sel_margins = confidences_all[selected_indices]
-        ax.set_title(f'Estratégia: {strategy.upper()}\n'
-                     f'Margem média: {sel_margins.mean():.3f} '
-                     f'[{sel_margins.min():.3f}, {sel_margins.max():.3f}]',
-                     fontsize=11, fontweight='bold')
-        ax.set_xlabel("$x_1$"); ax.set_ylabel("$x_2$")
-        ax.legend(loc='upper right'); ax.grid(True, alpha=0.3)
-        ax.set_xlim(x_min, x_max); ax.set_ylim(y_min, y_max)
-
-    # Figura combinada
-    fig, axes = plt.subplots(2, 2, figsize=(12, 10))
-    for ax, strategy in zip(axes.flatten(), strategies):
-        _draw_strategy(ax, strategy)
-    plt.suptitle(f'Fase E: Estratégias de Seleção de Exemplos ({n_examples} exemplos)',
-                 fontsize=13, fontweight='bold')
-    plt.tight_layout()
-    if filename:
-        plt.savefig(filename, dpi=150, bbox_inches='tight')
-    plt.close()
-
-    # Figuras individuais
-    panels = [
-        (s, lambda ax, strat=s: _draw_strategy(ax, strat), (7, 5))
-        for s in strategies
-    ]
-    _save_panels_individually(panels, filename)
-
-
-# =============================================================================
-# GRÁFICOS DE ANÁLISE ESTENDIDA
-# =============================================================================
-
-def plot_w_distribution(resultados: List[ResultadoExperimento], filename: str = None):
-    """Distribuição do vetor W estimado entre sementes e repetições (pedido do orientador)."""
-    data = []
-    for r in resultados:
-        if r.n_shot == 0:  # W é aprendido apenas no zero-shot (Fase A)
-            data.append({
-                'seed': r.random_seed,
-                'w0': r.w_aprendido[0],
-                'w1': r.w_aprendido[1],
-                'ratio': r.w_aprendido[0] / r.w_aprendido[1] if r.w_aprendido[1] != 0 else float('inf'),
-                'nomes': f"{r.nomes_classes[0]}/{r.nomes_classes[1]}",
-                'rep': r.repeticao,
-            })
-
-    if not data:
-        print("  Sem dados de W para plotar distribuição.")
-        return
-
-    df = pd.DataFrame(data)
-    seeds = sorted(df['seed'].unique())
-    colors_seed = plt.cm.tab10(np.linspace(0, 1, len(seeds)))
-    seeds_str = [str(s) for s in seeds]
-    w0_by_seed = [df[df['seed'] == s]['w0'].values for s in seeds]
-    w1_by_seed = [df[df['seed'] == s]['w1'].values for s in seeds]
-    x_seeds = np.arange(len(seeds))
-    width = 0.35
-    df_ratio = df.groupby('seed').agg({'ratio': ['mean', 'std']}).reset_index()
-    df_ratio.columns = ['seed', 'mean', 'std']
-
-    def _draw_w_scatter(ax):
-        for i, seed in enumerate(seeds):
-            subset = df[df['seed'] == seed]
-            ax.scatter(subset['w0'], subset['w1'], c=[colors_seed[i]], s=100,
-                       edgecolor='black', label=f'Semente {seed}', zorder=3)
-        ax.set_xlabel('$w_1$ (peso da dimensão $x_1$)')
-        ax.set_ylabel('$w_2$ (peso da dimensão $x_2$)')
-        ax.set_title('Ŵ_LLM Estimado por Semente', fontweight='bold')
-        ax.legend(fontsize=8); ax.grid(True, alpha=0.3)
-
-    def _draw_w_boxplot(ax):
-        from matplotlib.patches import Patch
-        bp1 = ax.boxplot(w0_by_seed, positions=x_seeds - width/2, widths=width*0.8, patch_artist=True)
-        bp2 = ax.boxplot(w1_by_seed, positions=x_seeds + width/2, widths=width*0.8, patch_artist=True)
-        for patch in bp1['boxes']:
-            patch.set_facecolor('steelblue'); patch.set_alpha(0.7)
-        for patch in bp2['boxes']:
-            patch.set_facecolor('coral'); patch.set_alpha(0.7)
-        ax.set_xticks(x_seeds); ax.set_xticklabels(seeds_str)
-        ax.set_xlabel('Semente Aleatória'); ax.set_ylabel('Valor do Peso')
-        ax.set_title('Distribuição de $w_1$ e $w_2$ por Semente', fontweight='bold')
-        ax.legend(handles=[Patch(facecolor='steelblue', alpha=0.7, label='$w_1$'),
-                           Patch(facecolor='coral', alpha=0.7, label='$w_2$')])
-
-    def _draw_w_ratio(ax):
-        ax.bar(range(len(df_ratio)), df_ratio['mean'], yerr=df_ratio['std'],
-               color='mediumpurple', edgecolor='black', capsize=5, alpha=0.8)
-        ax.set_xticks(range(len(df_ratio)))
-        ax.set_xticklabels([str(int(s)) for s in df_ratio['seed']])
-        ax.set_xlabel('Semente Aleatória'); ax.set_ylabel('Razão $w_1/w_2$')
-        ax.set_title('Razão $w_1/w_2$ por Semente', fontweight='bold')
-        ax.axhline(y=1.0, color='gray', linestyle='--', alpha=0.5, label='Euclidiana (razão=1)')
-        ax.legend()
-
-    # Figura combinada
-    fig, axes = plt.subplots(1, 3, figsize=(18, 5))
-    _draw_w_scatter(axes[0])
-    _draw_w_boxplot(axes[1])
-    _draw_w_ratio(axes[2])
-    plt.suptitle('Distribuição do Vetor Ŵ_LLM Estimado entre Sementes e Repetições',
-                 fontsize=13, fontweight='bold')
-    plt.tight_layout()
-    if filename:
-        plt.savefig(filename, dpi=150, bbox_inches='tight')
-    plt.close()
-
-    # Figuras individuais
-    panels = [
-        ("scatter", _draw_w_scatter, (7, 5)),
-        ("boxplot", _draw_w_boxplot, (7, 5)),
-        ("ratio", _draw_w_ratio, (7, 5)),
-    ]
-    _save_panels_individually(panels, filename)
-
-
-def plot_metric_errors_phase_a(
-    X: np.ndarray, y_llm: np.ndarray, y_metric: np.ndarray,
-    w: np.ndarray, centroids: np.ndarray, filename: str = None
-):
-    """Visualiza onde a métrica erra vs. a rotulação do LLM na Fase A (pedido do orientador)."""
-    agreements = y_llm == y_metric
-    disagreements = ~agreements
-    fidelity = np.mean(agreements)
-
-    x_min, x_max = X[:, 0].min() - 1.5, X[:, 0].max() + 1.5
-    y_min, y_max = X[:, 1].min() - 1.5, X[:, 1].max() + 1.5
-    xx, yy = np.meshgrid(np.linspace(x_min, x_max, 200), np.linspace(y_min, y_max, 200))
-    grid_points = np.c_[xx.ravel(), yy.ravel()]
-    Z = predict_with_metric(grid_points, centroids, w)
-    Z = Z.reshape(xx.shape)
-
-    confidences, _ = compute_metric_confidence(X, centroids, w)
-    bins = np.linspace(0, confidences.max(), 10)
-    bin_centers = (bins[:-1] + bins[1:]) / 2
-    error_rates = []
-    for i in range(len(bins) - 1):
-        mask = (confidences >= bins[i]) & (confidences < bins[i+1])
-        error_rates.append(np.mean(disagreements[mask]) if np.sum(mask) > 0 else 0)
-
-    def _draw_error_map(ax):
-        ax.contourf(xx, yy, Z, alpha=0.15, cmap="coolwarm", levels=[-0.5, 0.5, 1.5])
-        ax.contour(xx, yy, Z, colors='k', linewidths=2, levels=[0.5])
-        ax.scatter(X[agreements, 0], X[agreements, 1], c=y_llm[agreements],
-                   cmap="coolwarm", alpha=0.5, edgecolor="gray", s=40, label=f'Concordam ({np.sum(agreements)})')
-        ax.scatter(X[disagreements, 0], X[disagreements, 1],
-                   c='yellow', edgecolor="red", s=150, linewidth=2, marker='X',
-                   label=f'Discordam ({np.sum(disagreements)})', zorder=5)
-        ax.scatter(*centroids[0], marker='D', s=200, c='blue', edgecolor='k', linewidth=2, zorder=6)
-        ax.scatter(*centroids[1], marker='D', s=200, c='red', edgecolor='k', linewidth=2, zorder=6)
-        ax.set_title(f'Fase A: Ŵ_LLM vs. Rotulação do LLM\nFidelidade: {fidelity:.1%}', fontweight='bold')
-        ax.set_xlabel('$x_1$'); ax.set_ylabel('$x_2$')
-        ax.legend(loc='upper right'); ax.grid(True, alpha=0.3)
-
-    def _draw_error_by_margin(ax):
-        colors_bar = ['#e74c3c' if r > 0.3 else '#f39c12' if r > 0.1 else '#2ecc71' for r in error_rates]
-        ax.bar(range(len(error_rates)), error_rates, color=colors_bar, edgecolor='black', alpha=0.8)
-        ax.set_xticks(range(len(error_rates)))
-        ax.set_xticklabels([f'{b:.1f}' for b in bin_centers], rotation=45)
-        ax.set_xlabel('Margem (distância à fronteira)')
-        ax.set_ylabel('Taxa de Erro')
-        ax.set_title('Taxa de Discordância por Faixa de Margem', fontweight='bold')
-        ax.axhline(y=0.5, color='red', linestyle='--', alpha=0.5)
-        ax.grid(True, alpha=0.3, axis='y')
-
-    # Figura combinada
-    fig, axes = plt.subplots(1, 2, figsize=(14, 6))
-    _draw_error_map(axes[0])
-    _draw_error_by_margin(axes[1])
-    plt.suptitle('Análise de Erros da Métrica Ŵ_LLM na Fase A', fontsize=13, fontweight='bold')
-    plt.tight_layout()
-    if filename:
-        plt.savefig(filename, dpi=150, bbox_inches='tight')
-    plt.close()
-
-    # Figuras individuais
-    panels = [
-        ("mapa_erros", _draw_error_map, (7, 6)),
-        ("erros_por_margem", _draw_error_by_margin, (7, 6)),
-    ]
-    _save_panels_individually(panels, filename)
-
-
-def plot_class_order_bias(resultados: List[ResultadoExperimento], filename: str = None):
-    """Compara resultados entre classes originais e invertidas para detectar viés de posição."""
-    data = []
-    for r in resultados:
-        nome_pair = f"{r.nomes_classes[0]}/{r.nomes_classes[1]}"
-        data.append({
-            'pair': nome_pair,
-            'consistencia_b': r.consistencia_problema_b,
-            'consistencia_c': r.consistencia_problema_c,
-            'fidelidade': r.fidelidade_problema_a,
-        })
-
-    if not data:
-        return
-
-    df = pd.DataFrame(data)
-    df_grouped = df.groupby('pair').agg({
-        'consistencia_b': ['mean', 'std'],
-        'consistencia_c': ['mean', 'std'],
-        'fidelidade': ['mean', 'std'],
-    }).reset_index()
-    df_grouped.columns = ['pair', 'b_mean', 'b_std', 'c_mean', 'c_std', 'fid_mean', 'fid_std']
-
-    x = np.arange(len(df_grouped))
-    width = 0.35
-
-    def _draw_consistency_bias(ax):
-        ax.bar(x - width/2, df_grouped['b_mean'], width, yerr=df_grouped['b_std'],
-               label='Problema B', color='steelblue', capsize=3, edgecolor='black')
-        ax.bar(x + width/2, df_grouped['c_mean'], width, yerr=df_grouped['c_std'],
-               label='Problema C', color='coral', capsize=3, edgecolor='black')
-        ax.set_xticks(x); ax.set_xticklabels(df_grouped['pair'], rotation=45, ha='right')
-        ax.set_ylabel('Consistência')
-        ax.set_title('Consistência por Par de Classes\n(inclui pares invertidos)', fontweight='bold')
-        ax.legend(); ax.set_ylim(0, 1.1)
-
-    def _draw_fidelity_bias(ax):
-        ax.bar(x, df_grouped['fid_mean'], yerr=df_grouped['fid_std'],
-               color='mediumpurple', capsize=3, edgecolor='black', alpha=0.8)
-        ax.set_xticks(x); ax.set_xticklabels(df_grouped['pair'], rotation=45, ha='right')
-        ax.set_ylabel('Fidelidade Fase A')
-        ax.set_title('Fidelidade da Métrica por Par de Classes', fontweight='bold')
-        ax.set_ylim(0, 1.1)
-
-    # Figura combinada
-    fig, axes = plt.subplots(1, 2, figsize=(14, 6))
-    _draw_consistency_bias(axes[0])
-    _draw_fidelity_bias(axes[1])
-    plt.suptitle('Análise de Viés de Ordem/Posição das Classes', fontsize=13, fontweight='bold')
-    plt.tight_layout()
-    if filename:
-        plt.savefig(filename, dpi=150, bbox_inches='tight')
-    plt.close()
-
-    # Figuras individuais
-    panels = [
-        ("consistencia", _draw_consistency_bias, (7, 6)),
-        ("fidelidade", _draw_fidelity_bias, (7, 6)),
-    ]
-    _save_panels_individually(panels, filename)
-
-
-def plot_feature_names_effect(resultados: List[ResultadoExperimento], filename: str = None):
-    """Compara métricas e pesos aprendidos entre diferentes nomes de features."""
-    # Filtra resultados que têm feature_names não-padrão ou padrão para comparação
-    feat_results = [r for r in resultados if r.feature_names != ("x1", "x2")
-                    or (r.n_shot == 0 and r.nomes_classes == ("A", "B") and r.prompt_variant == "default")]
-
-    if len(feat_results) < 2:
-        return
-
-    data = []
-    for r in feat_results:
-        label = f"{r.feature_names[0]}/{r.feature_names[1]}"
-        data.append({
-            'features': label,
-            'consistencia_b': r.consistencia_problema_b,
-            'consistencia_c': r.consistencia_problema_c,
-            'fidelidade': r.fidelidade_problema_a,
-            'w0': r.w_aprendido[0] if r.w_aprendido is not None else np.nan,
-            'w1': r.w_aprendido[1] if r.w_aprendido is not None else np.nan,
-        })
-
-    if not data:
-        return
-
-    df = pd.DataFrame(data)
-    df_grouped = df.groupby('features').agg({
-        'consistencia_b': ['mean', 'std'],
-        'consistencia_c': ['mean', 'std'],
-        'fidelidade': ['mean', 'std'],
-        'w0': ['mean', 'std'],
-        'w1': ['mean', 'std'],
-    }).reset_index()
-    df_grouped.columns = ['features', 'b_mean', 'b_std', 'c_mean', 'c_std',
-                          'fid_mean', 'fid_std', 'w0_mean', 'w0_std', 'w1_mean', 'w1_std']
-
-    x = np.arange(len(df_grouped))
-    width = 0.35
-
-    def _draw_feat_consistency(ax):
-        ax.bar(x - width/2, df_grouped['b_mean'], width, yerr=df_grouped['b_std'],
-               label='Problema B', color='steelblue', capsize=3, edgecolor='black')
-        ax.bar(x + width/2, df_grouped['c_mean'], width, yerr=df_grouped['c_std'],
-               label='Problema C', color='coral', capsize=3, edgecolor='black')
-        ax.set_xticks(x); ax.set_xticklabels(df_grouped['features'], rotation=30, ha='right')
-        ax.set_ylabel('Consistência')
-        ax.set_title('Consistência por Nome de Feature', fontweight='bold')
-        ax.legend(); ax.set_ylim(0, 1.1)
-
-    def _draw_feat_fidelity(ax):
-        ax.bar(x, df_grouped['fid_mean'], yerr=df_grouped['fid_std'],
-               color='mediumpurple', capsize=3, edgecolor='black', alpha=0.8)
-        ax.set_xticks(x); ax.set_xticklabels(df_grouped['features'], rotation=30, ha='right')
-        ax.set_ylabel('Fidelidade Fase A')
-        ax.set_title('Fidelidade da Métrica por Nome de Feature', fontweight='bold')
-        ax.set_ylim(0, 1.1)
-
-    def _draw_feat_weights(ax):
-        ax.bar(x - width/2, df_grouped['w0_mean'], width, yerr=df_grouped['w0_std'],
-               label='w[0]', color='forestgreen', capsize=3, edgecolor='black')
-        ax.bar(x + width/2, df_grouped['w1_mean'], width, yerr=df_grouped['w1_std'],
-               label='w[1]', color='darkorange', capsize=3, edgecolor='black')
-        ax.set_xticks(x); ax.set_xticklabels(df_grouped['features'], rotation=30, ha='right')
-        ax.set_ylabel('Peso W')
-        ax.set_title('Pesos Aprendidos por Nome de Feature', fontweight='bold')
-        ax.legend()
-
-    # Figura combinada
-    fig, axes = plt.subplots(1, 3, figsize=(18, 6))
-    _draw_feat_consistency(axes[0])
-    _draw_feat_fidelity(axes[1])
-    _draw_feat_weights(axes[2])
-    plt.suptitle('Efeito dos Nomes Semânticos de Features na Métrica Estimada',
-                 fontsize=13, fontweight='bold')
-    plt.tight_layout()
-    if filename:
-        plt.savefig(filename, dpi=150, bbox_inches='tight')
-    plt.close()
-
-    # Figuras individuais
-    panels = [
-        ("consistencia", _draw_feat_consistency, (7, 6)),
-        ("fidelidade", _draw_feat_fidelity, (7, 6)),
-        ("pesos", _draw_feat_weights, (7, 6)),
-    ]
-    _save_panels_individually(panels, filename)
-
-
-def plot_classical_baselines_comparison(
-    results_e: List[ResultadoPhaseEExperimento],
-    results_baselines: List[Dict],
-    filename: str = None
-):
-    """Compara LLM vs. baselines clássicos (k-NN, LR, SVM) na Fase E.
-
-    Mostra curvas de aprendizado do LLM (mixed strategy) junto com os baselines treinados
-    nos mesmos exemplos, respondendo: o LLM faz algo que um classificador trivial não faz?
-    """
-    if not results_e or not results_baselines:
-        return
-
-    # Filtra LLM: apenas estratégia mixed (a mais balanceada) para comparação justa
-    df_llm = pd.DataFrame([{
-        'n_shot': r.n_shot,
-        'accuracy': r.accuracy_llm_vs_expert,
-        'kappa': r.kappa_llm_vs_expert,
-        'f1': r.f1_llm_vs_expert,
-        'source': 'LLM (few-shot)',
-    } for r in results_e if r.example_strategy == 'mixed'])
-
-    df_bl = pd.DataFrame(results_baselines)
-    df_bl = df_bl[df_bl['example_strategy'] == 'mixed']
-
-    if df_llm.empty or df_bl.empty:
-        return
-
-    clf_colors = {
-        'LLM (few-shot)': '#3498db',
-        'k-NN': '#e74c3c',
-        'Logistic Regression': '#2ecc71',
-        'SVM (RBF)': '#9b59b6',
-    }
-    clf_markers = {
-        'LLM (few-shot)': 'D',
-        'k-NN': 'o',
-        'Logistic Regression': 's',
-        'SVM (RBF)': '^',
-    }
-    clf_names = df_bl['model'].unique()
-
-    metrics_config = [
-        ('accuracy', 'accuracy_vs_expert', 'Concordância vs. Perito'),
-        ('kappa', 'kappa_vs_expert', 'Kappa de Cohen'),
-        ('f1', 'f1_vs_expert', 'F1-Score'),
-    ]
-
-    def _draw_baseline_metric(ax, llm_col, bl_col, title):
-        df_llm_grouped = df_llm.groupby('n_shot').agg({
-            llm_col: ['mean', 'std']
-        }).reset_index()
-        df_llm_grouped.columns = ['n_shot', 'mean', 'std']
-        df_llm_grouped = df_llm_grouped.sort_values('n_shot')
-        ax.errorbar(
-            df_llm_grouped['n_shot'], df_llm_grouped['mean'],
-            yerr=df_llm_grouped['std'],
-            marker=clf_markers['LLM (few-shot)'],
-            color=clf_colors['LLM (few-shot)'],
-            label='LLM (few-shot)',
-            linewidth=2.5, markersize=9, capsize=4
-        )
-        for clf_name in clf_names:
-            df_clf = df_bl[df_bl['model'] == clf_name]
-            df_clf_grouped = df_clf.groupby('n_shot').agg({
-                bl_col: ['mean', 'std']
-            }).reset_index()
-            df_clf_grouped.columns = ['n_shot', 'mean', 'std']
-            df_clf_grouped = df_clf_grouped.sort_values('n_shot')
-            color_key = clf_name
-            for k in clf_colors:
-                if k in clf_name or clf_name.startswith(k.split(' ')[0]):
-                    color_key = k
-                    break
-            ax.errorbar(
-                df_clf_grouped['n_shot'], df_clf_grouped['mean'],
-                yerr=df_clf_grouped['std'],
-                marker=clf_markers.get(color_key, 'x'),
-                color=clf_colors.get(color_key, 'gray'),
-                label=clf_name,
-                linewidth=1.5, markersize=7, capsize=3,
-                linestyle='--', alpha=0.8
-            )
-        ax.axhline(y=0.5, color='red', linestyle=':', alpha=0.4, label='Chance')
-        ax.set_xlabel('Número de Exemplos', fontsize=11)
-        ax.set_ylabel(title, fontsize=11)
-        ax.set_title(title, fontweight='bold')
-        ax.legend(fontsize=8, loc='lower right')
-        ax.grid(True, alpha=0.3)
-        ax.set_ylim(-0.1, 1.05)
-
-    # Figura combinada
-    fig, axes = plt.subplots(1, 3, figsize=(20, 6))
-    for i, (llm_col, bl_col, title) in enumerate(metrics_config):
-        _draw_baseline_metric(axes[i], llm_col, bl_col, title)
-    plt.suptitle('LLM vs. Baselines Clássicos (mesmos exemplos few-shot, estratégia mixed)\n'
-                 'O LLM faz algo diferente de um classificador trivial?',
-                 fontsize=13, fontweight='bold')
-    plt.tight_layout()
-    if filename:
-        plt.savefig(filename, dpi=150, bbox_inches='tight')
-    plt.close()
-
-    # Figuras individuais
-    suffixes = ["accuracy", "kappa", "f1"]
-    panels = [
-        (suffixes[i], lambda ax, mc=metrics_config[i]: _draw_baseline_metric(ax, *mc), (7, 6))
-        for i in range(3)
-    ]
-    _save_panels_individually(panels, filename)
-
-
-def plot_prompt_variant_comparison(resultados: List[ResultadoExperimento], filename: str = None):
-    """Compara métricas e W aprendidos entre diferentes variantes de prompt.
-
-    Testa se o prompt confunde a medição de consistência do LLM.
-    """
-    # Filtra resultados relevantes: classes A/B, n_shot=0, com variantes
-    relevant = [r for r in resultados
-                if r.nomes_classes == ("A", "B") and r.n_shot == 0]
-    if not relevant:
-        return
-
-    df = pd.DataFrame([{
-        'variant': r.prompt_variant,
-        'fidelidade': r.fidelidade_problema_a,
-        'consistencia_b': r.consistencia_problema_b,
-        'consistencia_c': r.consistencia_problema_c,
-        'kappa_b': r.kappa_problema_b,
-        'kappa_c': r.kappa_problema_c,
-        'w_0': r.w_aprendido[0],
-        'w_1': r.w_aprendido[1],
-    } for r in relevant])
-
-    variants = sorted(df['variant'].unique())
-    if len(variants) < 2:
-        return
-
-    colors = {
-        'default': '#3498db',
-        'geometric': '#2ecc71',
-        'cot': '#e74c3c',
-        'tabular': '#9b59b6',
-    }
-    labels_map = {
-        'default': 'Default',
-        'geometric': 'Geométrico',
-        'cot': 'Chain-of-Thought',
-        'tabular': 'Tabular',
-    }
-
-    x = np.arange(len(variants))
-    width = 0.35
-    df_grouped_pv = df.groupby('variant').agg({
-        'consistencia_b': ['mean', 'std'], 'consistencia_c': ['mean', 'std'],
-    }).reset_index()
-    df_grouped_pv.columns = ['variant', 'b_mean', 'b_std', 'c_mean', 'c_std']
-    df_grouped_pv = df_grouped_pv.set_index('variant').loc[variants].reset_index()
-
-    df_fid = df.groupby('variant').agg({'fidelidade': ['mean', 'std']}).reset_index()
-    df_fid.columns = ['variant', 'fid_mean', 'fid_std']
-    df_fid = df_fid.set_index('variant').loc[variants].reset_index()
-    bar_colors = [colors.get(v, 'gray') for v in variants]
-
-    def _draw_pv_consistency(ax):
-        ax.bar(x - width/2, df_grouped_pv['b_mean'], width, yerr=df_grouped_pv['b_std'],
-               label='Problema B', color='steelblue', capsize=3, edgecolor='black')
-        ax.bar(x + width/2, df_grouped_pv['c_mean'], width, yerr=df_grouped_pv['c_std'],
-               label='Problema C', color='coral', capsize=3, edgecolor='black')
-        ax.set_xticks(x); ax.set_xticklabels([labels_map.get(v, v) for v in variants], rotation=30, ha='right')
-        ax.set_ylabel('Consistência')
-        ax.set_title('Consistência por Variante de Prompt', fontweight='bold')
-        ax.legend(); ax.set_ylim(0, 1.1)
-
-    def _draw_pv_fidelity(ax):
-        ax.bar(x, df_fid['fid_mean'], yerr=df_fid['fid_std'],
-               color=bar_colors, capsize=3, edgecolor='black', alpha=0.85)
-        ax.set_xticks(x); ax.set_xticklabels([labels_map.get(v, v) for v in variants], rotation=30, ha='right')
-        ax.set_ylabel('Fidelidade Fase A')
-        ax.set_title('Fidelidade da Métrica por Variante', fontweight='bold')
-        ax.set_ylim(0, 1.1)
-
-    def _draw_pv_w_scatter(ax):
-        for variant in variants:
-            df_v = df[df['variant'] == variant]
-            ax.scatter(df_v['w_0'], df_v['w_1'], c=colors.get(variant, 'gray'),
-                       label=labels_map.get(variant, variant),
-                       s=80, edgecolors='black', linewidths=0.5, alpha=0.8)
-        ax.set_xlabel('w[0] (peso x1)'); ax.set_ylabel('w[1] (peso x2)')
-        ax.set_title('Métrica W Estimada por Variante\n(estabilidade entre prompts)', fontweight='bold')
-        ax.legend(fontsize=8); ax.set_aspect('equal', adjustable='datalim'); ax.grid(True, alpha=0.3)
-
-    # Figura combinada
-    fig, axes = plt.subplots(1, 3, figsize=(20, 6))
-    _draw_pv_consistency(axes[0])
-    _draw_pv_fidelity(axes[1])
-    _draw_pv_w_scatter(axes[2])
-    plt.suptitle('Sensibilidade ao Prompt: Mesmos dados, diferentes templates\n'
-                 '(Se W muda, o prompt confunde a medição)',
-                 fontsize=13, fontweight='bold')
-    plt.tight_layout()
-    if filename:
-        plt.savefig(filename, dpi=150, bbox_inches='tight')
-    plt.close()
-
-    # Figuras individuais
-    panels = [
-        ("consistencia", _draw_pv_consistency, (7, 6)),
-        ("fidelidade", _draw_pv_fidelity, (7, 6)),
-        ("w_scatter", _draw_pv_w_scatter, (7, 6)),
-    ]
-    _save_panels_individually(panels, filename)
-
-
-def plot_example_order_bias(results_order: List[ResultadoPhaseEExperimento], filename: str = None):
-    """Compara métricas entre diferentes ordenações dos exemplos few-shot.
-
-    Detecta viés de recência: se a ordem dos exemplos afeta a performance do LLM.
-    """
-    if not results_order:
-        return
-
-    df = pd.DataFrame([{
-        'n_shot': r.n_shot,
-        'ordering': r.example_strategy.replace("mixed_order_", ""),
-        'accuracy': r.accuracy_llm_vs_expert,
-        'kappa': r.kappa_llm_vs_expert,
-        'f1': r.f1_llm_vs_expert,
-    } for r in results_order])
-
-    n_shots = sorted(df['n_shot'].unique())
-    orderings = df['ordering'].unique()
-
-    order_colors = {
-        'class0_first': '#3498db',
-        'class1_first': '#e74c3c',
-        'shuffled': '#2ecc71',
-        'alternating': '#9b59b6',
-    }
-    order_labels = {
-        'class0_first': 'Classe 0 primeiro',
-        'class1_first': 'Classe 1 primeiro',
-        'shuffled': 'Aleatório',
-        'alternating': 'Alternado',
-    }
-
-    metrics_order = [
-        ('accuracy', 'Concordância LLM vs. Perito'),
-        ('kappa', 'Kappa de Cohen'),
-        ('f1', 'F1-Score'),
-    ]
-
-    def _draw_order_metric(ax, metric, metric_name, show_legend=False):
-        x = np.arange(len(n_shots))
-        width = 0.18
-        n_orderings = len(orderings)
-        for i, ordering in enumerate(orderings):
-            df_ord = df[df['ordering'] == ordering]
-            means, stds = [], []
-            for ns in n_shots:
-                vals = df_ord[df_ord['n_shot'] == ns][metric]
-                means.append(vals.mean()); stds.append(vals.std())
-            offset = (i - n_orderings / 2 + 0.5) * width
-            ax.bar(x + offset, means, width, yerr=stds,
-                   label=order_labels.get(ordering, ordering),
-                   color=order_colors.get(ordering, f'C{i}'),
-                   capsize=3, edgecolor='black', alpha=0.85)
-        ax.set_xticks(x); ax.set_xticklabels([f'{ns}-shot' for ns in n_shots])
-        ax.set_ylabel(metric_name); ax.set_title(metric_name, fontweight='bold')
-        if metric in ('accuracy', 'f1'):
-            ax.set_ylim(0, 1.1)
-        elif metric == 'kappa':
-            ax.set_ylim(-0.1, 1.1)
-        if show_legend:
-            ax.legend(fontsize=8)
-
-    # Figura combinada
-    fig, axes = plt.subplots(1, 3, figsize=(18, 6))
-    for ax_idx, (metric, metric_name) in enumerate(metrics_order):
-        _draw_order_metric(axes[ax_idx], metric, metric_name, show_legend=(ax_idx == 0))
-    plt.suptitle('Viés de Ordem dos Exemplos Few-Shot (Recency Bias)\n'
-                 'Mesmos exemplos (mixed), diferentes ordenações',
-                 fontsize=13, fontweight='bold')
-    plt.tight_layout()
-    if filename:
-        plt.savefig(filename, dpi=150, bbox_inches='tight')
-    plt.close()
-
-    # Figuras individuais
-    suffixes = ["accuracy", "kappa", "f1"]
-    panels = [
-        (suffixes[i], lambda ax, m=metrics_order[i]: _draw_order_metric(ax, m[0], m[1], show_legend=True), (7, 6))
-        for i in range(3)
-    ]
-    _save_panels_individually(panels, filename)
-
-
-def plot_dilution_experiment(results_dilution: List[ResultadoPhaseEExperimento], filename: str = None):
-    """Gráfico do experimento de diluição: 3 hard fixos + N easy progressivos."""
-    if not results_dilution:
-        return
-
-    df = pd.DataFrame([{
-        'n_shot': r.n_shot,
-        'accuracy': r.accuracy_llm_vs_expert,
-        'kappa': r.kappa_llm_vs_expert,
-        'strategy': r.example_strategy,
-    } for r in results_dilution])
-
-    df_acc = df.groupby('n_shot').agg({'accuracy': ['mean', 'std']}).reset_index()
-    df_acc.columns = ['n_shot', 'mean', 'std']
-    df_acc = df_acc.sort_values('n_shot')
-    ref_3hard = df[df['n_shot'] == 3]
-
-    df_kappa = df.groupby('n_shot').agg({'kappa': ['mean', 'std']}).reset_index()
-    df_kappa.columns = ['n_shot', 'mean', 'std']
-    df_kappa = df_kappa.sort_values('n_shot')
-
-    def _draw_dilution_accuracy(ax):
-        ax.errorbar(df_acc['n_shot'], df_acc['mean'], yerr=df_acc['std'],
-                    marker='o', linewidth=2, markersize=8, capsize=4, color='#e74c3c')
-        if len(ref_3hard) > 0:
-            ax.axhline(y=ref_3hard['accuracy'].mean(), color='gray', linestyle='--',
-                       alpha=0.7, label=f'3 hard puros ({ref_3hard["accuracy"].mean():.1%})')
-        ax.set_xlabel('Total de Exemplos (3 hard + N easy)')
-        ax.set_ylabel('Concordância LLM vs. Perito')
-        ax.set_title('Experimento de Diluição: Acurácia', fontweight='bold')
-        ax.legend(); ax.grid(True, alpha=0.3); ax.set_ylim(0, 1.05)
-
-    def _draw_dilution_kappa(ax):
-        ax.errorbar(df_kappa['n_shot'], df_kappa['mean'], yerr=df_kappa['std'],
-                    marker='s', linewidth=2, markersize=8, capsize=4, color='#3498db')
-        ax.set_xlabel('Total de Exemplos (3 hard + N easy)')
-        ax.set_ylabel('Kappa de Cohen')
-        ax.set_title('Experimento de Diluição: Kappa', fontweight='bold')
-        ax.grid(True, alpha=0.3); ax.set_ylim(-0.1, 1.05)
-
-    # Figura combinada
-    fig, axes = plt.subplots(1, 2, figsize=(14, 5))
-    _draw_dilution_accuracy(axes[0])
-    _draw_dilution_kappa(axes[1])
-    plt.suptitle('Experimento de Diluição: Hard Fixos + Easy Progressivos', fontsize=13, fontweight='bold')
-    plt.tight_layout()
-    if filename:
-        plt.savefig(filename, dpi=150, bbox_inches='tight')
-    plt.close()
-
-    # Figuras individuais
-    panels = [
-        ("accuracy", _draw_dilution_accuracy, (7, 5)),
-        ("kappa", _draw_dilution_kappa, (7, 5)),
-    ]
-    _save_panels_individually(panels, filename)
-
-
-def plot_r3_comparison(results_r2: List, results_r3: List, filename: str = None):
-    """Compara fidelidade com 2 pesos vs 3 pesos (projeção R3) usando as mesmas
-    classificações do LLM (que viu apenas x1, x2). Se a fidelidade R3 > R2,
-    há evidência de não-linearidade implícita no processo decisório do LLM."""
-    if not results_r2 or not results_r3:
-        return
-
-    r2_means = np.mean([r['accuracy'] for r in results_r2])
-    r2_stds = np.std([r['accuracy'] for r in results_r2])
-    r3_means = np.mean([r['accuracy'] for r in results_r3])
-    r3_stds = np.std([r['accuracy'] for r in results_r3])
-    has_nnls = any('accuracy_nnls' in r for r in results_r3)
-
-    algo_data = [('Perceptron', [r['accuracy'] for r in results_r3], 'steelblue')]
-    if has_nnls:
-        algo_data.append(('NNLS', [r.get('accuracy_nnls', np.nan) for r in results_r3], 'coral'))
-
-    def _draw_r3_comparison(ax):
-        labels_r3 = ['2 pesos\n($w_1$, $w_2$)', '3 pesos\n($w_1$, $w_2$, $w_3$)\n$x_3 = x_1 \\cdot x_2$']
-        means = [r2_means, r3_means]
-        stds = [r2_stds, r3_stds]
-        bars = ax.bar(labels_r3, means, yerr=stds, color=['steelblue', 'coral'],
-                      edgecolor='black', capsize=5, alpha=0.8)
-        ax.set_ylabel('Fidelidade (métrica vs. LLM)')
-        ax.set_title('Perceptron: Métrica Linear vs. Quadrática', fontweight='bold')
-        ax.set_ylim(0, 1.1)
-        ax.axhline(y=0.5, color='red', linestyle='--', alpha=0.5)
-        for bar, mean in zip(bars, means):
-            ax.text(bar.get_x() + bar.get_width()/2., bar.get_height() + 0.02,
-                    f'{mean:.1%}', ha='center', va='bottom', fontsize=11, fontweight='bold')
-        delta = means[1] - means[0]
-        ax.text(0.5, 0.05, f'$\\Delta$ = {delta:+.1%}', ha='center', va='bottom',
-                transform=ax.transAxes, fontsize=10, style='italic',
-                color='green' if delta > 0 else 'gray')
-
-    def _draw_r3_algo(ax):
-        x_pos = np.arange(len(algo_data))
-        for i, (name, accs, color) in enumerate(algo_data):
-            accs_clean = [a for a in accs if not np.isnan(a)]
-            m = np.mean(accs_clean) if accs_clean else 0
-            s = np.std(accs_clean) if len(accs_clean) > 1 else 0
-            ax.bar(i, m, yerr=s, color=color, edgecolor='black', capsize=5, alpha=0.8)
-            ax.text(i, m + 0.02, f'{m:.1%}', ha='center', va='bottom', fontsize=11, fontweight='bold')
-        ax.set_xticks(x_pos); ax.set_xticklabels([d[0] for d in algo_data])
-        ax.set_ylabel('Fidelidade R3 (3 pesos)')
-        ax.set_title('R3: Fidelidade por Algoritmo', fontweight='bold')
-        ax.set_ylim(0, 1.1)
-        ax.axhline(y=0.5, color='red', linestyle='--', alpha=0.5)
-        ax.grid(True, alpha=0.3, axis='y')
-
-    # Figura combinada
-    fig, axes = plt.subplots(1, 2, figsize=(14, 5))
-    _draw_r3_comparison(axes[0])
-    _draw_r3_algo(axes[1])
-    plt.suptitle('Não-linearidade Implícita: Fidelidade com 2 vs 3 pesos\n'
-                 '(LLM viu apenas $x_1$, $x_2$ — $x_3 = x_1 \\cdot x_2$ adicionado nos bastidores)',
-                 fontsize=12, fontweight='bold')
-    plt.tight_layout()
-    if filename:
-        plt.savefig(filename, dpi=150, bbox_inches='tight')
-    plt.close()
-
-    # Figuras individuais
-    panels = [
-        ("linear_vs_quadratica", _draw_r3_comparison, (7, 5)),
-        ("algoritmos_r3", _draw_r3_algo, (7, 5)),
-    ]
-    _save_panels_individually(panels, filename)
-
-
-def plot_algorithm_comparison(results_perceptron: List, results_alternative: List,
-                              filename: str = None):
-    """Compara W aprendido por Perceptron vs NNLS em todas as fases (A, B, C)."""
-    if not results_perceptron or not results_alternative:
-        return
-
-    bar_width = 0.25
-    w_perc = np.array([[r.w_aprendido[0], r.w_aprendido[1]] for r in results_perceptron])
-    w_alt = np.array([[r.w_aprendido[0], r.w_aprendido[1]] for r in results_alternative])
-    fid_perc = [r.fidelidade_problema_a for r in results_perceptron]
-    fid_alt = [r.fidelidade_problema_a for r in results_alternative]
-
-    algo_list = [
-        ('Perceptron', results_perceptron, 'steelblue'),
-        ('NNLS', results_alternative, 'coral'),
-    ]
-
-    def _draw_algo_w_scatter(ax):
-        ax.scatter(w_perc[:, 0], w_perc[:, 1], c='steelblue', s=100, edgecolor='k', label='Perceptron', zorder=3)
-        ax.scatter(w_alt[:, 0], w_alt[:, 1], c='coral', s=100, edgecolor='k', label='NNLS', zorder=3)
-        ax.set_xlabel('$w_1$'); ax.set_ylabel('$w_2$')
-        ax.set_title('Ŵ_LLM: Perceptron vs. NNLS', fontweight='bold')
-        ax.legend(); ax.grid(True, alpha=0.3)
-
-    def _draw_algo_fidelity(ax):
-        box_data = [fid_perc, fid_alt]
-        box_labels = ['Perceptron', 'NNLS']
-        box_colors = ['steelblue', 'coral']
-        bp = ax.boxplot(box_data, labels=box_labels, patch_artist=True)
-        for i, color in enumerate(box_colors):
-            bp['boxes'][i].set_facecolor(color); bp['boxes'][i].set_alpha(0.7)
-        ax.set_ylabel('Fidelidade')
-        ax.set_title('Fase A: Fidelidade (Métrica vs. LLM)', fontweight='bold')
-        ax.set_ylim(0, 1.1); ax.grid(True, alpha=0.3, axis='y')
-
-    def _draw_algo_phase(ax, phase_letter, cons_attr, kappa_attr):
-        x_pos = np.array([0, 1])
-        n_algos_local = len(algo_list)
-        for j, (name, res, color) in enumerate(algo_list):
-            cons_vals = [getattr(r, cons_attr) for r in res]
-            kappa_vals = [getattr(r, kappa_attr) for r in res]
-            means = [np.mean(cons_vals), np.mean(kappa_vals)]
-            stds = [np.std(cons_vals) if len(cons_vals) > 1 else 0,
-                    np.std(kappa_vals) if len(kappa_vals) > 1 else 0]
-            offset = (j - (n_algos_local - 1) / 2) * bar_width
-            ax.bar(x_pos + offset, means, bar_width, yerr=stds,
-                   color=color, alpha=0.7, edgecolor='k', capsize=4, label=name)
-        ax.set_xticks(x_pos); ax.set_xticklabels(['Consistência', 'Kappa'])
-        ax.set_title(f'Fase {phase_letter}: Consistência no Problema {phase_letter}', fontweight='bold')
-        ax.set_ylim(-0.1, 1.1); ax.grid(True, alpha=0.3, axis='y'); ax.legend(fontsize=8)
-
-    # Figura combinada
-    fig, axes = plt.subplots(2, 2, figsize=(14, 10))
-    _draw_algo_w_scatter(axes[0, 0])
-    _draw_algo_fidelity(axes[0, 1])
-    _draw_algo_phase(axes[1, 0], 'B', 'consistencia_problema_b', 'kappa_problema_b')
-    _draw_algo_phase(axes[1, 1], 'C', 'consistencia_problema_c', 'kappa_problema_c')
-    plt.suptitle('Comparação de Algoritmos de Otimização Inversa\n(Fases A, B e C)', fontsize=13, fontweight='bold')
-    plt.tight_layout()
-    if filename:
-        plt.savefig(filename, dpi=150, bbox_inches='tight')
-    plt.close()
-
-    # Figuras individuais
-    panels = [
-        ("w_scatter", _draw_algo_w_scatter, (7, 6)),
-        ("fidelidade", _draw_algo_fidelity, (7, 6)),
-        ("fase_b", lambda ax: _draw_algo_phase(ax, 'B', 'consistencia_problema_b', 'kappa_problema_b'), (7, 6)),
-        ("fase_c", lambda ax: _draw_algo_phase(ax, 'C', 'consistencia_problema_c', 'kappa_problema_c'), (7, 6)),
-    ]
-    _save_panels_individually(panels, filename)
-
-
-def plot_gamma_convergence(diagnostics: List[dict], filename: str = None):
-    """Diagnóstico da busca binária em γ no Perceptron Estruturado.
-
-    Item b da reunião 30/04/2026 (~520s): orientador pediu para verificar se
-    γ converge crescentemente entre execuções (não fica estagnado). Cada entrada
-    de `diagnostics` é {"label": str, "gamma_final": float, "history": [dicts]}.
-    Cada dict do history: {iter, gamma, gamma_lo, gamma_hi, violations, viable}.
-
-    Painel 1: evolução de γ por iteração (curva por execução).
-    Painel 2: γ_lo (limite inferior viável) por iteração — deve ser monotônico.
-    """
-    if not diagnostics:
-        print("  ⚠ Sem histórico de γ para plotar (nenhuma chamada com return_history=True).")
-        return
-
-    fig, axes = plt.subplots(1, 2, figsize=(13, 5))
-    cmap = plt.get_cmap("tab10")
-
-    for idx, entry in enumerate(diagnostics):
-        hist = entry.get("history") or []
-        if not hist:
-            continue
-        iters = [h["iter"] for h in hist]
-        gammas = [h["gamma"] for h in hist]
-        gamma_los = [h["gamma_lo"] for h in hist]
-        viable = [h["viable"] for h in hist]
-
-        color = cmap(idx % 10)
-        label = f"{entry.get('label', f'exec_{idx}')} (γ*={entry.get('gamma_final', float('nan')):.3f})"
-
-        # Painel 1: γ testado por iteração — marcadores diferentes para viable/inviable
-        axes[0].plot(iters, gammas, "-", color=color, alpha=0.5, linewidth=1.0)
-        v_iters = [i for i, v in zip(iters, viable) if v]
-        v_gammas = [g for g, v in zip(gammas, viable) if v]
-        nv_iters = [i for i, v in zip(iters, viable) if not v]
-        nv_gammas = [g for g, v in zip(gammas, viable) if not v]
-        axes[0].scatter(v_iters, v_gammas, s=40, marker="o", color=color, label=label,
-                        edgecolor="black", linewidth=0.4)
-        axes[0].scatter(nv_iters, nv_gammas, s=40, marker="x", color=color)
-
-        # Painel 2: γ_lo (melhor margem viável até o momento) — DEVE ser monotônico crescente
-        axes[1].plot(iters, gamma_los, "-o", color=color, alpha=0.8, markersize=4,
-                     label=label)
-
-    axes[0].set_xlabel("Iteração da busca binária")
-    axes[0].set_ylabel("γ testado")
-    axes[0].set_title("γ candidato por iteração\n(○ = viável, × = inviável)", fontsize=10, fontweight="bold")
-    axes[0].grid(True, alpha=0.3)
-    axes[0].legend(fontsize=7, loc="best")
-
-    axes[1].set_xlabel("Iteração da busca binária")
-    axes[1].set_ylabel("γ_lo (melhor margem viável)")
-    axes[1].set_title("γ_lo monotônico (orientador, item b ~520s)", fontsize=10, fontweight="bold")
-    axes[1].grid(True, alpha=0.3)
-    axes[1].legend(fontsize=7, loc="best")
-
-    plt.suptitle("Convergência da busca binária em γ — Perceptron Estruturado (CILAMCE 2017, Eq. 31)",
-                 fontsize=12, fontweight="bold")
-    plt.tight_layout()
-
-    if filename:
-        plt.savefig(filename, dpi=150, bbox_inches="tight")
-        print(f"  Imagem salva: {os.path.basename(filename)}")
-    plt.close(fig)
-
-    # Verificação textual: γ_lo deve ser monotônico não-decrescente em cada execução
-    print("\n  Diagnóstico da busca binária em γ:")
-    for entry in diagnostics:
-        hist = entry.get("history") or []
-        if not hist:
-            continue
-        gamma_los = [h["gamma_lo"] for h in hist]
-        monotone = all(gamma_los[i] <= gamma_los[i + 1] for i in range(len(gamma_los) - 1))
-        status = "✓ monotônico" if monotone else "⚠ NÃO monotônico"
-        print(f"    {entry.get('label', '?'):40s}  iters={len(hist):3d}  γ*={entry.get('gamma_final', float('nan')):.4f}  {status}")
-
-
-def plot_oracle_w_recovery(oracle_results: List[dict], filename: str = None):
-    """Visualiza a recuperação de W conhecido pelos algoritmos (validação do oráculo)."""
-    if not oracle_results:
-        return
-
-    from matplotlib.lines import Line2D
-
-    colors_algo = {'perceptron': 'steelblue', 'nnls': 'coral'}
-    labels = list(dict.fromkeys(f"{r['problem']}\n{r['expert_name']}" for r in oracle_results))
-    label_results = {}
-    for r in oracle_results:
-        key = f"{r['problem']}\n{r['expert_name']}"
-        algo = r['algorithm']
-        label_results.setdefault(key, {})[algo] = r
-    n_labels = len(labels)
-    x_base = np.arange(n_labels)
-
-    def _draw_w_scatter(ax):
-        for r in oracle_results:
-            cl = colors_algo[r['algorithm']]
-            true_norm = np.array([r['true_w_0'], r['true_w_1']])
-            true_norm = true_norm / np.sum(true_norm)
-            ax.scatter(true_norm[0], r['recovered_w_norm_0'], c=cl, s=80,
-                       edgecolor='k', linewidth=0.5, zorder=3, alpha=0.7)
-            ax.scatter(true_norm[1], r['recovered_w_norm_1'], c=cl, s=80,
-                       edgecolor='k', linewidth=0.5, zorder=3, alpha=0.7)
-        ax.plot([0, 1], [0, 1], 'k--', alpha=0.4, label='Recuperação perfeita')
-        ax.set_xlabel('$w$ verdadeiro (normalizado)')
-        ax.set_ylabel('$w$ recuperado (normalizado)')
-        ax.set_title('W Normalizado: Verdadeiro vs Recuperado', fontweight='bold')
-        ax.set_xlim(-0.05, 1.05)
-        ax.set_ylim(-0.05, 1.05)
-        ax.set_aspect('equal')
-        ax.grid(True, alpha=0.3)
-        legend_elements = [
-            Line2D([0], [0], marker='o', color='w', markerfacecolor='steelblue', markersize=8, label='PERCEPTRON'),
-            Line2D([0], [0], marker='o', color='w', markerfacecolor='coral', markersize=8, label='NNLS'),
-        ]
-        ax.legend(handles=legend_elements, fontsize=8, loc='upper left')
-
-    def _draw_ratio(ax):
-        bar_width = 0.2
-        max_ratio_for_plot = 10.0
-        for i, label in enumerate(labels):
-            algos = label_results[label]
-            first = list(algos.values())[0]
-            true_ratio = min(first['true_w_ratio'], max_ratio_for_plot)
-            ax.bar(x_base[i] - bar_width, true_ratio, bar_width, color='gray',
-                   edgecolor='k', alpha=0.7, label='Verdadeiro' if i == 0 else '')
-            for j, algo in enumerate(['perceptron', 'nnls']):
-                if algo in algos:
-                    ratio = algos[algo]['recovered_w_ratio']
-                    if ratio != float('inf'):
-                        ratio_plot = min(ratio, max_ratio_for_plot)
-                        ax.bar(x_base[i] + bar_width * j, ratio_plot, bar_width,
-                               color=colors_algo[algo], edgecolor='k', alpha=0.7,
-                               label=algo.upper() if i == 0 else '')
-        ax.set_xticks(x_base)
-        ax.set_xticklabels(labels, fontsize=6, rotation=45, ha='right')
-        ax.set_ylabel('Razão $w_1 / w_2$')
-        ax.set_title('Razão $w_1/w_2$: Verdadeira vs Recuperada', fontweight='bold')
-        ax.legend(fontsize=8)
-        ax.grid(True, alpha=0.3, axis='y')
-
-    def _draw_cosine(ax):
-        bar_width = 0.3
-        for i, label in enumerate(labels):
-            algos = label_results[label]
-            for j, algo in enumerate(['perceptron', 'nnls']):
-                if algo in algos:
-                    ax.bar(x_base[i] + bar_width * (j - 0.5), algos[algo]['cosine_similarity'],
-                           bar_width, color=colors_algo[algo], edgecolor='k', alpha=0.7,
-                           label=algo.upper() if i == 0 else '')
-        ax.axhline(y=1.0, color='green', linestyle='--', alpha=0.5, label='Perfeito (1.0)')
-        ax.set_xticks(x_base)
-        ax.set_xticklabels(labels, fontsize=6, rotation=45, ha='right')
-        ax.set_ylabel('Similaridade de Cosseno')
-        ax.set_title('Cosseno entre W Verdadeiro e Recuperado', fontweight='bold')
-        ax.set_ylim(0, 1.15)
-        ax.legend(fontsize=8)
-        ax.grid(True, alpha=0.3, axis='y')
-
-    def _draw_fidelity(ax):
-        bar_width = 0.3
-        for i, label in enumerate(labels):
-            algos = label_results[label]
-            for j, algo in enumerate(['perceptron', 'nnls']):
-                if algo in algos:
-                    ax.bar(x_base[i] + bar_width * (j - 0.5), algos[algo]['fidelity'] * 100,
-                           bar_width, color=colors_algo[algo], edgecolor='k', alpha=0.7,
-                           label=algo.upper() if i == 0 else '')
-        ax.axhline(y=95, color='green', linestyle='--', alpha=0.5, label='Meta 95%')
-        ax.set_xticks(x_base)
-        ax.set_xticklabels(labels, fontsize=6, rotation=45, ha='right')
-        ax.set_ylabel('Fidelidade (%)')
-        ax.set_title('Fidelidade: Rótulos Verdadeiros vs Métrica Recuperada', fontweight='bold')
-        ax.set_ylim(0, 105)
-        ax.legend(fontsize=8)
-        ax.grid(True, alpha=0.3, axis='y')
-
-    # Figura combinada
-    fig, axes = plt.subplots(2, 2, figsize=(14, 10))
-    _draw_w_scatter(axes[0, 0])
-    _draw_ratio(axes[0, 1])
-    _draw_cosine(axes[1, 0])
-    _draw_fidelity(axes[1, 1])
-    plt.suptitle('Validação do Oráculo: Recuperação de W Conhecido\n(Centroides verdadeiros, sem LLM)',
-                 fontsize=13, fontweight='bold')
-    plt.tight_layout()
-    if filename:
-        plt.savefig(filename, dpi=150, bbox_inches='tight')
-    plt.close()
-
-    # Figuras individuais
-    panels = [
-        ("w_scatter", _draw_w_scatter, (7, 7)),
-        ("ratio", _draw_ratio, (8, 6)),
-        ("cosseno", _draw_cosine, (8, 6)),
-        ("fidelidade", _draw_fidelity, (8, 6)),
-    ]
-    _save_panels_individually(panels, filename)
-
-
-def plot_oracle_transfer(oracle_results: List[dict], filename: str = None):
-    """Visualiza a fidelidade por problema e algoritmo (todos os problemas lado a lado)."""
-    if not oracle_results:
-        return
-
-    colors_algo = {'perceptron': 'steelblue', 'nnls': 'coral'}
-    expert_names = list(dict.fromkeys(r['expert_name'] for r in oracle_results))
-
-    def _draw_expert(ax, ename):
-        subset = [r for r in oracle_results if r['expert_name'] == ename]
-        probs_for_expert = list(dict.fromkeys(r['problem'] for r in subset))
-        true_w_str = f"[{subset[0]['true_w_0']}, {subset[0]['true_w_1']}]"
-        bar_width = 0.25
-        x_pos = np.arange(len(probs_for_expert))
-        for j, algo in enumerate(['perceptron', 'nnls']):
-            values = []
-            for prob in probs_for_expert:
-                r_match = [r for r in subset if r['algorithm'] == algo and r['problem'] == prob]
-                values.append(r_match[0]['fidelity'] * 100 if r_match else 0)
-            bars = ax.bar(x_pos + bar_width * (j - 1), values, bar_width,
-                          color=colors_algo[algo], edgecolor='k', alpha=0.7,
-                          label=algo.upper())
-            for k, v in enumerate(values):
-                ax.text(x_pos[k] + bar_width * (j - 1), v + 1, f'{v:.1f}%',
-                        ha='center', va='bottom', fontsize=7)
-        ax.axhline(y=90, color='green', linestyle='--', alpha=0.5, label='90%')
-        ax.set_xticks(x_pos)
-        ax.set_xticklabels([p.replace('Problema ', '') for p in probs_for_expert], fontsize=9)
-        ax.set_xlabel('Problema')
-        ax.set_ylabel('Fidelidade (%)')
-        ax.set_title(f'{ename}\nW = {true_w_str}', fontweight='bold')
-        ax.set_ylim(0, 110)
-        ax.legend(fontsize=8)
-        ax.grid(True, alpha=0.3, axis='y')
-
-    # Figura combinada
-    fig, axes = plt.subplots(1, len(expert_names), figsize=(5 * len(expert_names), 5), squeeze=False)
-    for idx, ename in enumerate(expert_names):
-        _draw_expert(axes[0, idx], ename)
-    plt.suptitle('Validação do Oráculo: Fidelidade por Problema\n(Centroides verdadeiros, sem LLM)',
-                 fontsize=13, fontweight='bold')
-    plt.tight_layout()
-    if filename:
-        plt.savefig(filename, dpi=150, bbox_inches='tight')
-    plt.close()
-
-    # Figuras individuais por expert
-    if filename:
-        base, ext = os.path.splitext(filename)
-        for ename in expert_names:
-            fig_ind, ax_ind = plt.subplots(1, 1, figsize=(6, 5))
-            _draw_expert(ax_ind, ename)
-            fig_ind.tight_layout()
-            fig_ind.savefig(f"{base}_{ename}{ext}", dpi=150, bbox_inches='tight')
-            plt.close(fig_ind)
-
-
-def plot_dataset_overview(data: dict, seed: int, filename: str = None):
-    """Visão completa dos 4 datasets: ground truth vs classificação LLM."""
-    colors_gt = {0: '#3498db', 1: '#e74c3c'}
-    colors_llm = {0: '#2980b9', 1: '#c0392b'}
-
-    problems = [
-        ('A', data['X_a'], data['y_gt_a'], data.get('y_llm_a')),
-        ('B', data['X_b'], data['y_gt_b'], data.get('y_llm_b')),
-        ('C', data['X_c'], data['y_gt_c'], data.get('y_llm_c')),
-        ('D', data['X_e'], data['y_gt_e'], None),
-    ]
-
-    def _draw_problem(axes_pair, name, X, y_gt, y_llm):
-        ax_gt, ax_llm = axes_pair
-        for c in [0, 1]:
-            mask = y_gt == c
-            ax_gt.scatter(X[mask, 0], X[mask, 1], c=colors_gt[c], s=15, alpha=0.6, label=f'Classe {c}')
-        centroid_0 = X[y_gt == 0].mean(axis=0)
-        centroid_1 = X[y_gt == 1].mean(axis=0)
-        ax_gt.scatter(*centroid_0, c='black', marker='X', s=120, zorder=5, edgecolors='white', linewidths=1)
-        ax_gt.scatter(*centroid_1, c='black', marker='X', s=120, zorder=5, edgecolors='white', linewidths=1)
-        ax_gt.set_title(f'Problema {name} — Ground Truth (n={len(X)})', fontweight='bold', fontsize=10)
-        ax_gt.legend(fontsize=8)
-        ax_gt.grid(True, alpha=0.3)
-
-        if y_llm is not None:
-            for c in [0, 1]:
-                mask = y_llm == c
-                ax_llm.scatter(X[mask, 0], X[mask, 1], c=colors_llm[c], s=15, alpha=0.6, label=f'Classe {c}')
-            c0_llm = X[y_llm == 0].mean(axis=0) if np.any(y_llm == 0) else centroid_0
-            c1_llm = X[y_llm == 1].mean(axis=0) if np.any(y_llm == 1) else centroid_1
-            ax_llm.scatter(*c0_llm, c='black', marker='X', s=120, zorder=5, edgecolors='white', linewidths=1)
-            ax_llm.scatter(*c1_llm, c='black', marker='X', s=120, zorder=5, edgecolors='white', linewidths=1)
-            n0, n1 = np.sum(y_llm == 0), np.sum(y_llm == 1)
-            ax_llm.set_title(f'Problema {name} — LLM (C0={n0}, C1={n1})', fontweight='bold', fontsize=10)
-            ax_llm.legend(fontsize=8)
-        else:
-            ax_llm.text(0.5, 0.5, 'Sem dados LLM', ha='center', va='center', transform=ax_llm.transAxes, fontsize=12, color='gray')
-            ax_llm.set_title(f'Problema {name} — LLM', fontweight='bold', fontsize=10)
-        ax_llm.grid(True, alpha=0.3)
-
-    # Figura combinada
-    fig, axes = plt.subplots(2, 4, figsize=(20, 10))
-    for col, (name, X, y_gt, y_llm) in enumerate(problems):
-        _draw_problem((axes[0, col], axes[1, col]), name, X, y_gt, y_llm)
-    fig.suptitle(f'Visão Geral dos Datasets — Seed {seed}', fontsize=14, fontweight='bold')
-    plt.tight_layout()
-    if filename:
-        plt.savefig(filename, dpi=150, bbox_inches='tight')
-    plt.close()
-
-    # Figuras individuais por problema (GT + LLM)
-    if filename:
-        base, ext = os.path.splitext(filename)
-        for name, X, y_gt, y_llm in problems:
-            fig_ind, axes_ind = plt.subplots(2, 1, figsize=(6, 10))
-            _draw_problem((axes_ind[0], axes_ind[1]), name, X, y_gt, y_llm)
-            fig_ind.suptitle(f'Problema {name} — Seed {seed}', fontsize=13, fontweight='bold')
-            fig_ind.tight_layout()
-            fig_ind.savefig(f"{base}_problema_{name.lower()}{ext}", dpi=150, bbox_inches='tight')
-            plt.close(fig_ind)
-
-
-def plot_hits_and_errors(data: dict, seed: int, filename: str = None):
-    """Acertos e erros da métrica vs LLM para Problemas A, B, C."""
-    problems = [
-        ('A', data['X_a'], data.get('y_llm_a'), data.get('y_metric_a')),
-        ('B', data['X_b'], data.get('y_llm_b'), data.get('y_metric_b')),
-        ('C', data['X_c'], data.get('y_llm_c'), data.get('y_metric_c')),
-    ]
-    learned_metric = data.get('learned_metric')
-
-    def _draw_problem_row(axes_row, name, X, y_llm, y_metric):
-        if y_llm is None or y_metric is None:
-            for col in range(3):
-                axes_row[col].text(0.5, 0.5, 'Sem dados', ha='center', va='center',
-                                   transform=axes_row[col].transAxes, fontsize=12, color='gray')
-                axes_row[col].set_title(f'Problema {name}')
-            return
-
-        n_min = min(len(y_llm), len(y_metric), len(X))
-        X_plot = X[:n_min]
-        y_llm_plot = y_llm[:n_min]
-        y_metric_plot = y_metric[:n_min]
-        hits = y_llm_plot == y_metric_plot
-        errors = ~hits
-
-        ax1 = axes_row[0]
-        ax1.scatter(X_plot[hits, 0], X_plot[hits, 1], c='#27ae60', s=15, alpha=0.5, label=f'Acerto ({hits.sum()})')
-        ax1.scatter(X_plot[errors, 0], X_plot[errors, 1], c='#e74c3c', s=30, alpha=0.8, marker='x', label=f'Erro ({errors.sum()})')
-        acc = hits.sum() / len(hits) * 100
-        ax1.set_title(f'Problema {name}: Acertos/Erros ({acc:.1f}%)', fontweight='bold', fontsize=10)
-        ax1.legend(fontsize=8)
-        ax1.grid(True, alpha=0.3)
-
-        ax2 = axes_row[1]
-        if learned_metric is not None:
-            x_min, x_max = X_plot[:, 0].min() - 1, X_plot[:, 0].max() + 1
-            y_min, y_max = X_plot[:, 1].min() - 1, X_plot[:, 1].max() + 1
-            xx, yy = np.meshgrid(np.linspace(x_min, x_max, 200), np.linspace(y_min, y_max, 200))
-            grid_points = np.c_[xx.ravel(), yy.ravel()]
-            Z = predict_with_metric(grid_points, learned_metric.centroids, learned_metric.w)
-            Z = Z.reshape(xx.shape)
-            ax2.contourf(xx, yy, Z, alpha=0.2, cmap='RdBu')
-            ax2.contour(xx, yy, Z, levels=[0.5], colors='black', linewidths=2)
-        for c in [0, 1]:
-            mask = y_llm_plot == c
-            ax2.scatter(X_plot[mask, 0], X_plot[mask, 1], s=15, alpha=0.5, label=f'LLM Classe {c}')
-        ax2.set_title(f'Problema {name}: Fronteira W_A', fontweight='bold', fontsize=10)
-        ax2.legend(fontsize=8)
-        ax2.grid(True, alpha=0.3)
-
-        ax3 = axes_row[2]
-        if learned_metric is not None:
-            confidences, _ = compute_metric_confidence(X_plot, learned_metric.centroids, learned_metric.w)
-            sc = ax3.scatter(X_plot[:, 0], X_plot[:, 1], c=confidences, cmap='viridis', s=15, alpha=0.6)
-            ax3.scatter(X_plot[errors, 0], X_plot[errors, 1], c='red', s=50, marker='x', linewidths=2, label=f'Erros ({errors.sum()})')
-            plt.colorbar(sc, ax=ax3, label='Margem')
-        ax3.set_title(f'Problema {name}: Confiança + Erros', fontweight='bold', fontsize=10)
-        ax3.legend(fontsize=8)
-        ax3.grid(True, alpha=0.3)
-
-    # Figura combinada
-    fig, axes = plt.subplots(3, 3, figsize=(18, 16))
-    for row, (name, X, y_llm, y_metric) in enumerate(problems):
-        _draw_problem_row(axes[row], name, X, y_llm, y_metric)
-    fig.suptitle(f'Acertos e Erros: Métrica vs LLM — Seed {seed}', fontsize=14, fontweight='bold')
-    plt.tight_layout()
-    if filename:
-        plt.savefig(filename, dpi=150, bbox_inches='tight')
-    plt.close()
-
-    # Figuras individuais por problema (1×3: acertos, fronteira, confiança)
-    if filename:
-        base, ext = os.path.splitext(filename)
-        for name, X, y_llm, y_metric in problems:
-            fig_ind, axes_ind = plt.subplots(1, 3, figsize=(18, 5))
-            _draw_problem_row(axes_ind, name, X, y_llm, y_metric)
-            fig_ind.suptitle(f'Acertos e Erros: Problema {name} — Seed {seed}', fontsize=13, fontweight='bold')
-            fig_ind.tight_layout()
-            fig_ind.savefig(f"{base}_problema_{name.lower()}{ext}", dpi=150, bbox_inches='tight')
-            plt.close(fig_ind)
-
-
-def plot_w_comparison_algorithms(data: dict, seed: int, filename: str = None):
-    """Comparação visual dos W aprendidos: Perceptron vs NNLS."""
-    learned_metric = data.get('learned_metric')
-    w_nnls = data.get('w_nnls')
-    X = data['X_a']
-    y_llm = data.get('y_llm_a')
-
-    if learned_metric is None or y_llm is None:
-        return
-
-    w_perc = learned_metric.w
-    centroids_perc = learned_metric.centroids
-    centroids_nnls = data.get('centroids_nnls', centroids_perc)
-
-    has_nnls = w_nnls is not None
-
-    # Helper para plotar fronteira
-    def plot_boundary(ax, X, y, w, centroids, title):
-        x_min, x_max = X[:, 0].min() - 1, X[:, 0].max() + 1
-        y_min, y_max = X[:, 1].min() - 1, X[:, 1].max() + 1
-        xx, yy = np.meshgrid(np.linspace(x_min, x_max, 200), np.linspace(y_min, y_max, 200))
-        grid_points = np.c_[xx.ravel(), yy.ravel()]
-        Z = predict_with_metric(grid_points, centroids, w)
-        Z = Z.reshape(xx.shape)
-        ax.contourf(xx, yy, Z, alpha=0.15, cmap='RdBu')
-        ax.contour(xx, yy, Z, levels=[0.5], colors='black', linewidths=2)
-        for c in [0, 1]:
-            mask = y == c
-            ax.scatter(X[mask, 0], X[mask, 1], s=15, alpha=0.5, label=f'Classe {c}')
-        ax.scatter(*centroids[0], c='black', marker='X', s=150, zorder=5, edgecolors='white', linewidths=1.5)
-        ax.scatter(*centroids[1], c='black', marker='X', s=150, zorder=5, edgecolors='white', linewidths=1.5)
-        w_norm = w / np.sum(w) if np.sum(w) > 0 else w
-        ax.set_title(f'{title}\nW=[{w[0]:.3f}, {w[1]:.3f}] norm=[{w_norm[0]:.2f}, {w_norm[1]:.2f}]',
-                     fontweight='bold', fontsize=10)
-        ax.legend(fontsize=8)
-        ax.grid(True, alpha=0.3)
-
-    def _draw_bar_chart(ax_bar):
-        x_pos = np.arange(2)
-        algos = [('Perceptron', w_perc, 'steelblue')]
-        if has_nnls:
-            algos.append(('NNLS', w_nnls, 'coral'))
-        n_algos = len(algos)
-        width = 0.8 / n_algos
-        for j, (name, w, color) in enumerate(algos):
-            offset = (j - (n_algos - 1) / 2) * width
-            bars = ax_bar.bar(x_pos + offset, w, width, label=name, color=color, alpha=0.8, edgecolor='k')
-            for bar in bars:
-                ax_bar.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.02,
-                            f'{bar.get_height():.3f}', ha='center', va='bottom', fontsize=8)
-        ax_bar.set_xticks(x_pos)
-        ax_bar.set_xticklabels(['w1 (x1)', 'w2 (x2)'])
-        ax_bar.set_ylabel('Peso')
-        ratio_strs = []
-        for name, w, _ in algos:
-            ratio = w[0] / w[1] if w[1] > 0 else float('inf')
-            ratio_strs.append(f'{name}={ratio:.2f}')
-        ax_bar.set_title(f'Comparação de Pesos\nRatio w1/w2: {", ".join(ratio_strs)}',
-                         fontweight='bold', fontsize=10)
-        ax_bar.legend(fontsize=8)
-        ax_bar.grid(True, alpha=0.3, axis='y')
-
-    # Figura combinada: boundary plots + bar chart
-    idx = 0
-    n_boundary = 1 + int(has_nnls)
-    n_cols = n_boundary + 1
-    fig, axes = plt.subplots(1, n_cols, figsize=(6 * n_cols, 6))
-    if n_cols == 1:
-        axes = [axes]
-
-    plot_boundary(axes[idx], X, y_llm, w_perc, centroids_perc, 'Perceptron Estruturado')
-    idx += 1
-    if has_nnls:
-        plot_boundary(axes[idx], X, y_llm, w_nnls, centroids_nnls, 'NNLS (Mín. Quadrados)')
-        idx += 1
-    _draw_bar_chart(axes[idx])
-
-    fig.suptitle(f'Comparação de Algoritmos de Otimização Inversa — Seed {seed}', fontsize=14, fontweight='bold')
-    plt.tight_layout()
-    if filename:
-        plt.savefig(filename, dpi=150, bbox_inches='tight')
-    plt.close()
-
-    # Figuras individuais
-    if filename:
-        base, ext = os.path.splitext(filename)
-        # Fronteira Perceptron
-        fig_ind, ax_ind = plt.subplots(1, 1, figsize=(7, 6))
-        plot_boundary(ax_ind, X, y_llm, w_perc, centroids_perc, 'Perceptron Estruturado')
-        fig_ind.tight_layout()
-        fig_ind.savefig(f"{base}_perceptron{ext}", dpi=150, bbox_inches='tight')
-        plt.close(fig_ind)
-        if has_nnls:
-            fig_ind, ax_ind = plt.subplots(1, 1, figsize=(7, 6))
-            plot_boundary(ax_ind, X, y_llm, w_nnls, centroids_nnls, 'NNLS (Mín. Quadrados)')
-            fig_ind.tight_layout()
-            fig_ind.savefig(f"{base}_nnls{ext}", dpi=150, bbox_inches='tight')
-            plt.close(fig_ind)
-        # Bar chart
-        fig_ind, ax_ind = plt.subplots(1, 1, figsize=(7, 6))
-        _draw_bar_chart(ax_ind)
-        fig_ind.tight_layout()
-        fig_ind.savefig(f"{base}_barras{ext}", dpi=150, bbox_inches='tight')
-        plt.close(fig_ind)
-
-
-def plot_confusion_matrices_detailed(data: dict, seed: int, filename: str = None):
-    """Matrizes de confusão: LLM vs Métrica e LLM vs Ground Truth para cada problema."""
-    problems = [
-        ('A', data.get('y_llm_a'), data.get('y_metric_a'), data['y_gt_a']),
-        ('B', data.get('y_llm_b'), data.get('y_metric_b'), data['y_gt_b']),
-        ('C', data.get('y_llm_c'), data.get('y_metric_c'), data['y_gt_c']),
-    ]
-
-    def _draw_problem_col(axes_col, name, y_llm, y_metric, y_gt):
-        ax1, ax2 = axes_col
-        if y_llm is not None and y_metric is not None:
-            n_min = min(len(y_llm), len(y_metric))
-            cm = np.zeros((2, 2), dtype=int)
-            for i in range(n_min):
-                cm[int(y_metric[i]), int(y_llm[i])] += 1
-            sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', ax=ax1,
-                        xticklabels=['C0', 'C1'], yticklabels=['C0', 'C1'])
-            ax1.set_xlabel('LLM')
-            ax1.set_ylabel('Métrica')
-            acc = np.trace(cm) / cm.sum() * 100
-            ax1.set_title(f'Problema {name}: LLM vs Métrica\n({acc:.1f}% concordância)', fontweight='bold', fontsize=10)
-        else:
-            ax1.text(0.5, 0.5, 'Sem dados', ha='center', va='center', transform=ax1.transAxes, color='gray')
-            ax1.set_title(f'Problema {name}: LLM vs Métrica')
-
-        if y_llm is not None:
-            n_min = min(len(y_llm), len(y_gt))
-            cm2 = np.zeros((2, 2), dtype=int)
-            for i in range(n_min):
-                cm2[int(y_gt[i]), int(y_llm[i])] += 1
-            sns.heatmap(cm2, annot=True, fmt='d', cmap='Oranges', ax=ax2,
-                        xticklabels=['C0', 'C1'], yticklabels=['C0', 'C1'])
-            ax2.set_xlabel('LLM')
-            ax2.set_ylabel('Ground Truth')
-            acc2 = np.trace(cm2) / cm2.sum() * 100
-            ax2.set_title(f'Problema {name}: LLM vs GT\n({acc2:.1f}% acurácia)', fontweight='bold', fontsize=10)
-        else:
-            ax2.text(0.5, 0.5, 'Sem dados', ha='center', va='center', transform=ax2.transAxes, color='gray')
-            ax2.set_title(f'Problema {name}: LLM vs GT')
-
-    # Figura combinada
-    fig, axes = plt.subplots(2, 3, figsize=(15, 10))
-    for col, (name, y_llm, y_metric, y_gt) in enumerate(problems):
-        _draw_problem_col((axes[0, col], axes[1, col]), name, y_llm, y_metric, y_gt)
-    fig.suptitle(f'Matrizes de Confusão — Seed {seed}', fontsize=14, fontweight='bold')
-    plt.tight_layout()
-    if filename:
-        plt.savefig(filename, dpi=150, bbox_inches='tight')
-    plt.close()
-
-    # Figuras individuais por problema (2×1: LLM vs Métrica + LLM vs GT)
-    if filename:
-        base, ext = os.path.splitext(filename)
-        for name, y_llm, y_metric, y_gt in problems:
-            fig_ind, axes_ind = plt.subplots(2, 1, figsize=(6, 10))
-            _draw_problem_col((axes_ind[0], axes_ind[1]), name, y_llm, y_metric, y_gt)
-            fig_ind.suptitle(f'Matrizes de Confusão: Problema {name} — Seed {seed}', fontsize=13, fontweight='bold')
-            fig_ind.tight_layout()
-            fig_ind.savefig(f"{base}_problema_{name.lower()}{ext}", dpi=150, bbox_inches='tight')
-            plt.close(fig_ind)
-
-
-def plot_margin_analysis_detailed(data: dict, seed: int, filename: str = None):
-    """Análise detalhada de margens/confiança da métrica estimada."""
-    learned_metric = data.get('learned_metric')
-    if learned_metric is None:
-        return
-
-    X_a = data['X_a']
-    y_llm_a = data.get('y_llm_a')
-    y_metric_a = data.get('y_metric_a')
-    conf_a, _ = compute_metric_confidence(X_a, learned_metric.centroids, learned_metric.w)
-
-    def _draw_histograma(ax):
-        ax.hist(conf_a, bins=30, color='#3498db', alpha=0.7, edgecolor='black', linewidth=0.5)
-        ax.axvline(np.median(conf_a), color='red', linestyle='--', label=f'Mediana: {np.median(conf_a):.2f}')
-        ax.axvline(np.mean(conf_a), color='orange', linestyle='--', label=f'Média: {np.mean(conf_a):.2f}')
-        ax.set_xlabel('Margem')
-        ax.set_ylabel('Frequência')
-        ax.set_title('Distribuição de Margens — Problema A', fontweight='bold')
-        ax.legend(fontsize=9)
-        ax.grid(True, alpha=0.3)
-
-    def _draw_taxa_erro(ax):
-        if y_llm_a is not None and y_metric_a is not None:
-            n_min = min(len(y_llm_a), len(y_metric_a), len(conf_a))
-            errors = y_llm_a[:n_min] != y_metric_a[:n_min]
-            conf_plot = conf_a[:n_min]
-            bins = np.linspace(0, conf_plot.max(), 8)
-            bin_indices = np.digitize(conf_plot, bins)
-            error_rates = []
-            bin_centers = []
-            bin_counts = []
-            for b in range(1, len(bins)):
-                mask = bin_indices == b
-                if mask.sum() > 0:
-                    error_rates.append(errors[mask].mean() * 100)
-                    bin_centers.append((bins[b-1] + bins[b]) / 2)
-                    bin_counts.append(mask.sum())
-            bars = ax.bar(bin_centers, error_rates, width=(bins[1]-bins[0])*0.8, color='#e74c3c', alpha=0.7, edgecolor='black', linewidth=0.5)
-            for bar, count in zip(bars, bin_counts):
-                ax.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.5,
-                        f'n={count}', ha='center', va='bottom', fontsize=8)
-        ax.set_xlabel('Margem')
-        ax.set_ylabel('Taxa de Erro (%)')
-        ax.set_title('Taxa de Erro por Faixa de Margem', fontweight='bold')
-        ax.grid(True, alpha=0.3)
-
-    def _draw_mapa_confianca(ax):
-        sc = ax.scatter(X_a[:, 0], X_a[:, 1], c=conf_a, cmap='viridis', s=20, alpha=0.7)
-        ax.scatter(*learned_metric.centroids[0], c='red', marker='X', s=200, zorder=5, edgecolors='white', linewidths=2)
-        ax.scatter(*learned_metric.centroids[1], c='red', marker='X', s=200, zorder=5, edgecolors='white', linewidths=2)
-        plt.colorbar(sc, ax=ax, label='Margem')
-        ax.set_title('Mapa de Confiança — Problema A', fontweight='bold')
-        ax.grid(True, alpha=0.3)
-
-    def _draw_violin(ax):
-        all_margins = [conf_a]
-        labels = ['A']
-        for pname, X_p in [('B', data['X_b']), ('C', data['X_c'])]:
-            conf_p, _ = compute_metric_confidence(X_p, learned_metric.centroids, learned_metric.w)
-            all_margins.append(conf_p)
-            labels.append(pname)
-        parts = ax.violinplot(all_margins, showmeans=True, showmedians=True)
-        for pc in parts['bodies']:
-            pc.set_facecolor('#3498db')
-            pc.set_alpha(0.5)
-        ax.set_xticks([1, 2, 3])
-        ax.set_xticklabels([f'Problema {l}' for l in labels])
-        ax.set_ylabel('Margem')
-        ax.set_title('Distribuição de Margens por Problema', fontweight='bold')
-        ax.grid(True, alpha=0.3)
-
-    # Figura combinada
-    fig, axes = plt.subplots(2, 2, figsize=(14, 12))
-    _draw_histograma(axes[0, 0])
-    _draw_taxa_erro(axes[0, 1])
-    _draw_mapa_confianca(axes[1, 0])
-    _draw_violin(axes[1, 1])
-    fig.suptitle(f'Análise de Margens — Seed {seed}', fontsize=14, fontweight='bold')
-    plt.tight_layout()
-    if filename:
-        plt.savefig(filename, dpi=150, bbox_inches='tight')
-    plt.close()
-
-    # Figuras individuais
-    panels = [
-        ("histograma", _draw_histograma, (7, 6)),
-        ("taxa_erro", _draw_taxa_erro, (7, 6)),
-        ("mapa_confianca", _draw_mapa_confianca, (7, 6)),
-        ("violin", _draw_violin, (7, 6)),
-    ]
-    _save_panels_individually(panels, filename)
-
-
-def plot_experiment_summary_dashboard(data: dict, seed: int,
-                                      results_abc: list, results_e: list,
-                                      filename: str = None):
-    """Dashboard completo do experimento para uma seed."""
-    fig = plt.figure(figsize=(24, 20))
-    gs = fig.add_gridspec(4, 4, hspace=0.35, wspace=0.3)
-
-    learned_metric = data.get('learned_metric')
-    colors = {0: '#3498db', 1: '#e74c3c'}
-
-    # ─── BLOCO 1 (topo): 4 datasets com ground truth ───
-    for col, (name, X, y_gt) in enumerate([
-        ('A', data['X_a'], data['y_gt_a']),
-        ('B', data['X_b'], data['y_gt_b']),
-        ('C', data['X_c'], data['y_gt_c']),
-        ('D', data['X_e'], data['y_gt_e']),
-    ]):
-        ax = fig.add_subplot(gs[0, col])
-        for c in [0, 1]:
-            mask = y_gt == c
-            ax.scatter(X[mask, 0], X[mask, 1], c=colors[c], s=10, alpha=0.5)
-        ax.set_title(f'Prob. {name} (n={len(X)})', fontweight='bold', fontsize=9)
-        ax.grid(True, alpha=0.2)
-        ax.tick_params(labelsize=7)
-
-    # ─── BLOCO 2: Fase A — acertos/erros + fronteira ───
-    y_llm_a = data.get('y_llm_a')
-    y_metric_a = data.get('y_metric_a')
-    X_a = data['X_a']
-
-    ax_a1 = fig.add_subplot(gs[1, 0])
-    if y_llm_a is not None and y_metric_a is not None:
-        hits = y_llm_a == y_metric_a
-        ax_a1.scatter(X_a[hits, 0], X_a[hits, 1], c='#27ae60', s=10, alpha=0.5, label=f'OK ({hits.sum()})')
-        ax_a1.scatter(X_a[~hits, 0], X_a[~hits, 1], c='#e74c3c', s=25, marker='x', label=f'Erro ({(~hits).sum()})')
-        ax_a1.set_title(f'Fase A: Fidelidade {hits.mean():.1%}', fontweight='bold', fontsize=9)
-        ax_a1.legend(fontsize=7)
-    ax_a1.grid(True, alpha=0.2)
-
-    ax_a2 = fig.add_subplot(gs[1, 1])
-    if learned_metric is not None:
-        x_min, x_max = X_a[:, 0].min() - 1, X_a[:, 0].max() + 1
-        y_min, y_max = X_a[:, 1].min() - 1, X_a[:, 1].max() + 1
-        xx, yy = np.meshgrid(np.linspace(x_min, x_max, 150), np.linspace(y_min, y_max, 150))
-        Z = predict_with_metric(np.c_[xx.ravel(), yy.ravel()], learned_metric.centroids, learned_metric.w).reshape(xx.shape)
-        ax_a2.contourf(xx, yy, Z, alpha=0.15, cmap='RdBu')
-        ax_a2.contour(xx, yy, Z, levels=[0.5], colors='black', linewidths=1.5)
-    if y_llm_a is not None:
-        for c in [0, 1]:
-            ax_a2.scatter(X_a[y_llm_a == c, 0], X_a[y_llm_a == c, 1], c=colors[c], s=10, alpha=0.4)
-    w_str = f'W=[{learned_metric.w[0]:.3f}, {learned_metric.w[1]:.3f}]' if learned_metric else ''
-    ax_a2.set_title(f'Fase A: Fronteira {w_str}', fontweight='bold', fontsize=9)
-    ax_a2.grid(True, alpha=0.2)
-
-    # Margens Fase A
-    ax_a3 = fig.add_subplot(gs[1, 2])
-    if learned_metric is not None:
-        conf_a, _ = compute_metric_confidence(X_a, learned_metric.centroids, learned_metric.w)
-        ax_a3.hist(conf_a, bins=25, color='#3498db', alpha=0.7, edgecolor='black', linewidth=0.3)
-        ax_a3.axvline(np.median(conf_a), color='red', linestyle='--', linewidth=1, label=f'Med={np.median(conf_a):.2f}')
-        ax_a3.set_title('Margens Problema A', fontweight='bold', fontsize=9)
-        ax_a3.legend(fontsize=7)
-    ax_a3.grid(True, alpha=0.2)
-
-    # W dos algoritmos
-    ax_w = fig.add_subplot(gs[1, 3])
-    if learned_metric is not None:
-        algs = ['Perceptron']
-        w_vals = [learned_metric.w]
-        if data.get('w_nnls') is not None:
-            algs.append('NNLS')
-            w_vals.append(data['w_nnls'])
-        x_pos = np.arange(2)
-        width = 0.8 / len(algs)
-        for i, (alg, w) in enumerate(zip(algs, w_vals)):
-            offset = (i - (len(algs)-1)/2) * width
-            ax_w.bar(x_pos + offset, w, width * 0.9, label=f'{alg}', alpha=0.8)
-        ax_w.set_xticks(x_pos)
-        ax_w.set_xticklabels(['w₁', 'w₂'])
-        ax_w.set_title('Pesos W', fontweight='bold', fontsize=9)
-        ax_w.legend(fontsize=7)
-    ax_w.grid(True, alpha=0.2, axis='y')
-
-    # ─── BLOCO 3: Fases B/C ───
-    for col_offset, (name, X, y_llm, y_metric) in enumerate([
-        ('B', data['X_b'], data.get('y_llm_b'), data.get('y_metric_b')),
-        ('C', data['X_c'], data.get('y_llm_c'), data.get('y_metric_c')),
-    ]):
-        ax = fig.add_subplot(gs[2, col_offset])
-        if y_llm is not None and y_metric is not None:
-            n_min = min(len(y_llm), len(y_metric), len(X))
-            hits = y_llm[:n_min] == y_metric[:n_min]
-            ax.scatter(X[:n_min][hits, 0], X[:n_min][hits, 1], c='#27ae60', s=10, alpha=0.5)
-            ax.scatter(X[:n_min][~hits, 0], X[:n_min][~hits, 1], c='#e74c3c', s=25, marker='x')
-            ax.set_title(f'Fase {name}: Consistência {hits.mean():.1%}', fontweight='bold', fontsize=9)
-        else:
-            ax.set_title(f'Fase {name}: Sem dados', fontsize=9)
-        ax.grid(True, alpha=0.2)
-
-    # Barras de métricas B/C
-    ax_bars = fig.add_subplot(gs[2, 2])
-    seed_results = [r for r in results_abc if r.random_seed == seed and r.n_shot == 0
-                    and r.nomes_classes == ("A", "B") and r.repeticao == 0]
-    if seed_results:
-        r = seed_results[0]
-        metrics = ['Consist. B', 'Kappa B', 'F1 B', 'Consist. C', 'Kappa C', 'F1 C']
-        values = [r.consistencia_problema_b, r.kappa_problema_b, r.f1_problema_b,
-                  r.consistencia_problema_c, r.kappa_problema_c, r.f1_problema_c]
-        bar_colors = ['#3498db']*3 + ['#e67e22']*3
-        ax_bars.barh(metrics, values, color=bar_colors, alpha=0.8)
-        for i, v in enumerate(values):
-            ax_bars.text(v + 0.01, i, f'{v:.2f}', va='center', fontsize=8)
-        ax_bars.set_xlim(0, 1.15)
-        ax_bars.set_title('Métricas Zero-Shot', fontweight='bold', fontsize=9)
-    ax_bars.grid(True, alpha=0.2, axis='x')
-
-    # Fidelidade por n_shot
-    ax_fid = fig.add_subplot(gs[2, 3])
-    seed_abc = [r for r in results_abc if r.random_seed == seed and r.nomes_classes == ("A", "B")]
-    if seed_abc:
-        for metric_name, getter, color in [
-            ('Consist. B', lambda r: r.consistencia_problema_b, '#3498db'),
-            ('Consist. C', lambda r: r.consistencia_problema_c, '#e67e22'),
-        ]:
-            by_nshot = {}
-            for r in seed_abc:
-                by_nshot.setdefault(r.n_shot, []).append(getter(r))
-            nshots = sorted(by_nshot.keys())
-            means = [np.mean(by_nshot[n]) for n in nshots]
-            ax_fid.plot(nshots, means, 'o-', label=metric_name, color=color)
-        ax_fid.set_xlabel('n_shot')
-        ax_fid.set_title('Consistência vs n_shot', fontweight='bold', fontsize=9)
-        ax_fid.legend(fontsize=7)
-    ax_fid.grid(True, alpha=0.2)
-
-    # ─── BLOCO 4: Fase E ───
-    seed_d = [r for r in results_e if r.random_seed == seed]
-    ax_d1 = fig.add_subplot(gs[3, 0:2])
-    if seed_d:
-        for strategy in ['easy', 'hard', 'mixed', 'random']:
-            strat_results = [r for r in seed_d if r.example_strategy == strategy]
-            if strat_results:
-                by_nshot = {}
-                for r in strat_results:
-                    by_nshot.setdefault(r.n_shot, []).append(r.accuracy_llm_vs_expert)
-                nshots = sorted(by_nshot.keys())
-                means = [np.mean(by_nshot[n]) for n in nshots]
-                ax_d1.plot(nshots, means, 'o-', label=strategy)
-        ax_d1.set_xlabel('n_shot')
-        ax_d1.set_ylabel('Acurácia LLM vs Expert')
-        ax_d1.set_title('Fase E: Learning Curve por Estratégia', fontweight='bold', fontsize=9)
-        ax_d1.legend(fontsize=8)
-    else:
-        ax_d1.text(0.5, 0.5, 'Fase E não executada', ha='center', va='center', transform=ax_d1.transAxes, color='gray')
-    ax_d1.grid(True, alpha=0.2)
-
-    # Confusion matrix A (LLM vs Métrica)
-    ax_cm = fig.add_subplot(gs[3, 2])
-    if y_llm_a is not None and y_metric_a is not None:
-        cm = np.zeros((2, 2), dtype=int)
-        for i in range(len(y_llm_a)):
-            cm[int(y_metric_a[i]), int(y_llm_a[i])] += 1
-        sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', ax=ax_cm,
-                    xticklabels=['C0', 'C1'], yticklabels=['C0', 'C1'])
-        ax_cm.set_xlabel('LLM')
-        ax_cm.set_ylabel('Métrica')
-        ax_cm.set_title('Conf. Matrix A: LLM vs Métrica', fontweight='bold', fontsize=9)
-
-    # Info textual
-    ax_info = fig.add_subplot(gs[3, 3])
-    ax_info.axis('off')
-    info_lines = [f'Seed: {seed}']
-    if learned_metric:
-        w = learned_metric.w
-        w_norm = w / np.sum(w) if np.sum(w) > 0 else w
-        info_lines.extend([
-            f'W Perceptron: [{w[0]:.4f}, {w[1]:.4f}]',
-            f'W norm: [{w_norm[0]:.3f}, {w_norm[1]:.3f}]',
-            f'Gamma: {learned_metric.gamma:.4f}',
-        ])
-    if data.get('w_nnls') is not None:
-        wn = data['w_nnls']
-        info_lines.append(f'W NNLS: [{wn[0]:.4f}, {wn[1]:.4f}]')
-    if seed_results:
-        r = seed_results[0]
-        info_lines.extend([
-            f'',
-            f'Fidelidade A: {r.fidelidade_problema_a:.1%}',
-            f'Consistência B: {r.consistencia_problema_b:.1%}',
-            f'Consistência C: {r.consistencia_problema_c:.1%}',
-            f'Kappa B: {r.kappa_problema_b:.3f}',
-            f'Kappa C: {r.kappa_problema_c:.3f}',
-        ])
-    ax_info.text(0.05, 0.95, '\n'.join(info_lines), transform=ax_info.transAxes,
-                 fontsize=9, verticalalignment='top', fontfamily='monospace',
-                 bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.5))
-    ax_info.set_title('Resumo', fontweight='bold', fontsize=9)
-
-    fig.suptitle(f'Dashboard Completo do Experimento — Seed {seed}', fontsize=16, fontweight='bold')
-    if filename:
-        plt.savefig(filename, dpi=150, bbox_inches='tight')
-    plt.close()
-
-
-def print_error_analysis_by_region(phase_a_data: dict):
-    """Análise quantitativa de erros por região (distância à fronteira).
-
-    Responde: onde o LLM erra? Perto da fronteira (margem baixa) ou longe?
-    Complementa o gráfico 11 com métricas numéricas no log.
-    """
-    print_section("ANÁLISE DE ERROS POR REGIÃO (DISTÂNCIA À FRONTEIRA)", "═")
-
-    for seed_key, data in sorted(phase_a_data.items()):
-        X = data['X']
-        y_llm = data['y_llm']
-        y_metric = data['y_metric']
-        w = data['w']
-        centroids = data['centroids']
-
-        agreements = y_llm == y_metric
-        disagreements = ~agreements
-        n_total = len(X)
-        n_errors = np.sum(disagreements)
-
-        if n_errors == 0:
-            print(f"\n  Seed {seed_key}: Fidelidade perfeita (0 discordâncias)")
-            continue
-
-        confidences, _ = compute_metric_confidence(X, centroids, w)
-
-        # Dividir em 3 regiões: baixa margem (< p33), média, alta (> p66)
-        p33 = np.percentile(confidences, 33)
-        p66 = np.percentile(confidences, 66)
-
-        regions = {
-            'Baixa margem (fronteira)': confidences < p33,
-            'Margem média': (confidences >= p33) & (confidences < p66),
-            'Alta margem (longe)': confidences >= p66,
-        }
-
-        print(f"\n  Seed {seed_key}: {n_errors}/{n_total} discordâncias ({n_errors/n_total:.1%})")
-        print(f"  Margem: min={confidences.min():.3f}, mediana={np.median(confidences):.3f}, "
-              f"max={confidences.max():.3f}")
-        print(f"\n  {'Região':<28} {'N pontos':>10} {'Erros':>7} {'Taxa erro':>10} {'% dos erros':>12}")
-        print(f"  {'─'*28} {'─'*10} {'─'*7} {'─'*10} {'─'*12}")
-
-        for region_name, mask in regions.items():
-            n_region = np.sum(mask)
-            n_err_region = np.sum(disagreements[mask])
-            rate = n_err_region / n_region if n_region > 0 else 0
-            pct_errors = n_err_region / n_errors if n_errors > 0 else 0
-            print(f"  {region_name:<28} {n_region:>10} {n_err_region:>7} {rate:>10.1%} {pct_errors:>12.1%}")
-
-        # Correlação margem × acerto
-        from scipy import stats as sp_stats
-        corr, p_val = sp_stats.pointbiserialr(agreements.astype(int), confidences)
-        print(f"\n  Correlação ponto-bisserial (acerto × margem): r={corr:.3f}, p={p_val:.4f}")
-        if corr > 0 and p_val < 0.05:
-            print(f"  → Confirmado: pontos com maior margem têm mais acertos (esperado)")
-        elif p_val >= 0.05:
-            print(f"  → Correlação NÃO significativa — erros não se concentram na fronteira")
-
-        # Margem média dos pontos corretos vs errados
-        margin_correct = confidences[agreements]
-        margin_errors = confidences[disagreements]
-        print(f"\n  Margem média dos acertos:  {np.mean(margin_correct):.3f} (±{np.std(margin_correct):.3f})")
-        print(f"  Margem média dos erros:    {np.mean(margin_errors):.3f} (±{np.std(margin_errors):.3f})")
-
-        if len(margin_errors) >= 2 and len(margin_correct) >= 2:
-            stat, p_mw = sp_stats.mannwhitneyu(margin_correct, margin_errors, alternative='greater')
-            print(f"  Mann-Whitney U (acertos > erros): U={stat:.0f}, p={p_mw:.4f}")
-            if p_mw < 0.05:
-                print(f"  → Significativo: erros têm margem menor que acertos")
-            else:
-                print(f"  → NÃO significativo: erros não se concentram em margens baixas")
-
-    print()
-
-
-def print_hyperparameter_sensitivity(phase_a_data: dict):
-    """Análise de sensibilidade dos hiperparâmetros do Perceptron Estruturado.
-
-    Re-executa o Perceptron com diferentes combinações de (eta, C) sobre os
-    mesmos dados da Fase A (sem chamadas adicionais à API). Reporta se a
-    direção de W é estável, o que indicaria robustez à escolha de hiperparâmetros.
-
-    Custo computacional: ~O(n_configs × n_seeds × custo_perceptron), sem API calls.
-    """
-    print_section("SENSIBILIDADE DOS HIPERPARÂMETROS DO PERCEPTRON", "═")
-    print(f"\n  Re-execução do Perceptron com diferentes (eta, C) sobre os mesmos")
-    print(f"  dados da Fase A. Nenhuma chamada adicional à API é feita.")
-    print(f"  Se a direção de W (cosseno) é estável, o resultado é robusto.\n")
-
-    # Configurações a testar (inclui a configuração padrão para referência)
-    # Faixa de C inclui [0.1, 1.0] conforme Coelho et al. CILAMCE 2017, p. 16
-    ETA_VALUES = [0.0001, 0.001, 0.01, 0.1]
-    C_VALUES = [0.1, 1.0, 10.0]
-    DELTA_GAMMA_VALUES = [0.01, 0.05, 0.1]
-
-    # Configuração padrão usada no experimento (Coelho et al. CILAMCE 2017)
-    DEFAULT_ETA = 0.001
-    DEFAULT_C = 1.0
-    DEFAULT_DELTA = 0.05
-
-    for seed_key, data in sorted(phase_a_data.items()):
-        X = data['X']
-        y_llm = data['y_llm']
-        centroids = data['centroids']
-        w_default = data['w']
-        w_default_norm = np.linalg.norm(w_default)
-        w_default_dir = w_default / w_default_norm if w_default_norm > 0 else w_default
-
-        print(f"  Seed {seed_key}: W padrão (eta={DEFAULT_ETA}, C={DEFAULT_C}) = "
-              f"[{w_default[0]:.4f}, {w_default[1]:.4f}]")
-
-        # --- Sensibilidade a eta (C fixo) ---
-        print(f"\n  Variando eta (C={DEFAULT_C}, delta_gamma={DEFAULT_DELTA}):")
-        print(f"    {'eta':>6} {'W bruto':>22} {'W unitário':>22} {'cos(default)':>14} {'Fidelidade':>12}")
-        print(f"    {'─'*6} {'─'*22} {'─'*22} {'─'*14} {'─'*12}")
-
-        cos_sims_eta = []
-        for eta in ETA_VALUES:
-            w_test, _ = train_relaxed_perceptron(
-                X, y_llm, centroids,
-                eta=eta, C=DEFAULT_C, delta_gamma=DEFAULT_DELTA,
-                max_epochs=50, tol=1e-4, verbose=False, use_best_effort=True
-            )
-            w_norm = np.linalg.norm(w_test)
-            w_dir = w_test / w_norm if w_norm > 0 else w_test
-            cos_sim = float(np.dot(w_default_dir, w_dir)) if w_norm > 0 else 0.0
-            cos_sims_eta.append(cos_sim)
-            y_pred = predict_with_metric(X, centroids, w_test)
-            fid = np.mean(y_pred == y_llm)
-            marker = " ← padrão" if eta == DEFAULT_ETA else ""
-            print(f"    {eta:>6.2f} [{w_test[0]:>8.4f}, {w_test[1]:>8.4f}] "
-                  f"[{w_dir[0]:>8.4f}, {w_dir[1]:>8.4f}] "
-                  f"{cos_sim:>14.4f} {fid:>12.1%}{marker}")
-
-        # --- Sensibilidade a C (eta fixo) ---
-        print(f"\n  Variando C (eta={DEFAULT_ETA}, delta_gamma={DEFAULT_DELTA}):")
-        print(f"    {'C':>6} {'W bruto':>22} {'W unitário':>22} {'cos(default)':>14} {'Fidelidade':>12}")
-        print(f"    {'─'*6} {'─'*22} {'─'*22} {'─'*14} {'─'*12}")
-
-        cos_sims_c = []
-        for C in C_VALUES:
-            w_test, _ = train_relaxed_perceptron(
-                X, y_llm, centroids,
-                eta=DEFAULT_ETA, C=C, delta_gamma=DEFAULT_DELTA,
-                max_epochs=50, tol=1e-4, verbose=False, use_best_effort=True
-            )
-            w_norm = np.linalg.norm(w_test)
-            w_dir = w_test / w_norm if w_norm > 0 else w_test
-            cos_sim = float(np.dot(w_default_dir, w_dir)) if w_norm > 0 else 0.0
-            cos_sims_c.append(cos_sim)
-            y_pred = predict_with_metric(X, centroids, w_test)
-            fid = np.mean(y_pred == y_llm)
-            marker = " ← padrão" if C == DEFAULT_C else ""
-            print(f"    {C:>6.1f} [{w_test[0]:>8.4f}, {w_test[1]:>8.4f}] "
-                  f"[{w_dir[0]:>8.4f}, {w_dir[1]:>8.4f}] "
-                  f"{cos_sim:>14.4f} {fid:>12.1%}{marker}")
-
-        # --- Sensibilidade a delta_gamma (eta, C fixos) ---
-        print(f"\n  Variando delta_gamma (eta={DEFAULT_ETA}, C={DEFAULT_C}):")
-        print(f"    {'δγ':>6} {'W bruto':>22} {'W unitário':>22} {'cos(default)':>14} {'Fidelidade':>12}")
-        print(f"    {'─'*6} {'─'*22} {'─'*22} {'─'*14} {'─'*12}")
-
-        cos_sims_dg = []
-        for dg in DELTA_GAMMA_VALUES:
-            w_test, _ = train_relaxed_perceptron(
-                X, y_llm, centroids,
-                eta=DEFAULT_ETA, C=DEFAULT_C, delta_gamma=dg,
-                max_epochs=50, tol=1e-4, verbose=False, use_best_effort=True
-            )
-            w_norm = np.linalg.norm(w_test)
-            w_dir = w_test / w_norm if w_norm > 0 else w_test
-            cos_sim = float(np.dot(w_default_dir, w_dir)) if w_norm > 0 else 0.0
-            cos_sims_dg.append(cos_sim)
-            y_pred = predict_with_metric(X, centroids, w_test)
-            fid = np.mean(y_pred == y_llm)
-            marker = " ← padrão" if dg == DEFAULT_DELTA else ""
-            print(f"    {dg:>6.2f} [{w_test[0]:>8.4f}, {w_test[1]:>8.4f}] "
-                  f"[{w_dir[0]:>8.4f}, {w_dir[1]:>8.4f}] "
-                  f"{cos_sim:>14.4f} {fid:>12.1%}{marker}")
-
-        # --- Veredicto ---
-        all_cos = cos_sims_eta + cos_sims_c + cos_sims_dg
-        min_cos = min(all_cos) if all_cos else 0
-        mean_cos = np.mean(all_cos) if all_cos else 0
-        n_configs = len(all_cos)
-
-        print(f"\n  Resumo seed {seed_key}: {n_configs} configurações testadas")
-        print(f"    Cosseno mínimo com padrão: {min_cos:.4f}")
-        print(f"    Cosseno médio com padrão:  {mean_cos:.4f}")
-
-        if min_cos > 0.95:
-            print(f"    → W ROBUSTO aos hiperparâmetros (cos mín > 0.95)")
-        elif min_cos > 0.80:
-            print(f"    → W MODERADAMENTE sensível (0.80 < cos mín < 0.95)")
-        else:
-            print(f"    → W SENSÍVEL aos hiperparâmetros (cos mín < 0.80) — cautela nas conclusões")
-
-        print()
-
-    print(f"  Nota: apenas a DIREÇÃO de W importa (escala é arbitrária).")
-    print(f"  Cosseno > 0.95 entre configs = hiperparâmetros não afetam a fronteira.\n")
-
-
-def print_example_order_analysis(results_order: List[ResultadoPhaseEExperimento]):
-    """Análise quantitativa do viés de ordem dos exemplos few-shot (recency bias).
-
-    Testa se a ordenação dos exemplos afeta significativamente a performance do LLM.
-    Recency bias: LLMs tendem a dar mais peso aos últimos exemplos do prompt.
-    """
-    from scipy import stats as sp_stats
-
-    print_section("ANÁLISE DE VIÉS DE ORDEM DOS EXEMPLOS (RECENCY BIAS)", "═")
-
-    df = pd.DataFrame([{
-        'seed': r.random_seed, 'rep': r.repeticao,
-        'n_shot': r.n_shot,
-        'ordering': r.example_strategy.replace("mixed_order_", ""),
-        'accuracy': r.accuracy_llm_vs_expert,
-        'kappa': r.kappa_llm_vs_expert,
-        'f1': r.f1_llm_vs_expert,
-    } for r in results_order])
-
-    orderings = sorted(df['ordering'].unique())
-    n_shots = sorted(df['n_shot'].unique())
-
-    # Tabela resumo
-    print(f"\n  {'Ordenação':<18} {'n_shot':>6} {'Acc média':>10} {'±std':>8} {'Kappa':>8} {'n':>4}")
-    print(f"  {'─'*18} {'─'*6} {'─'*10} {'─'*8} {'─'*8} {'─'*4}")
-
-    for ns in n_shots:
-        for ordering in orderings:
-            subset = df[(df['ordering'] == ordering) & (df['n_shot'] == ns)]
-            if len(subset) > 0:
-                print(f"  {ordering:<18} {ns:>6} {subset['accuracy'].mean():>10.1%} "
-                      f"{subset['accuracy'].std():>8.1%} {subset['kappa'].mean():>8.3f} "
-                      f"{len(subset):>4}")
-        print()
-
-    # Teste estatístico por n_shot: Kruskal-Wallis (não-paramétrico, >2 grupos)
-    print(f"  TESTES DE SIGNIFICÂNCIA:")
-    print(f"  {'─'*60}")
-
-    for ns in n_shots:
-        groups = []
-        group_names = []
-        for ordering in orderings:
-            vals = df[(df['ordering'] == ordering) & (df['n_shot'] == ns)]['accuracy'].values
-            if len(vals) >= 2:
-                groups.append(vals)
-                group_names.append(ordering)
-
-        if len(groups) >= 2:
-            # Kruskal-Wallis: H0 = todas as ordenações têm mesma distribuição
-            stat, p_val = sp_stats.kruskal(*groups)
-            print(f"\n  {ns}-shot: Kruskal-Wallis H={stat:.3f}, p={p_val:.4f}")
-
-            if p_val < 0.05:
-                print(f"  → SIGNIFICATIVO: a ordem dos exemplos AFETA a performance")
-                # Identificar qual ordenação é melhor/pior
-                means = {name: np.mean(g) for name, g in zip(group_names, groups)}
-                best = max(means, key=means.get)
-                worst = min(means, key=means.get)
-                diff = means[best] - means[worst]
-                print(f"    Melhor: {best} ({means[best]:.1%}), Pior: {worst} ({means[worst]:.1%}), Δ={diff:+.1%}")
-
-                # Teste pareado: class0_first vs class1_first (recency bias direto)
-                if 'class0_first' in group_names and 'class1_first' in group_names:
-                    c0 = df[(df['ordering'] == 'class0_first') & (df['n_shot'] == ns)]
-                    c1 = df[(df['ordering'] == 'class1_first') & (df['n_shot'] == ns)]
-                    # Parear por seed
-                    c0_by_seed = c0.groupby('seed')['accuracy'].mean()
-                    c1_by_seed = c1.groupby('seed')['accuracy'].mean()
-                    common = c0_by_seed.index.intersection(c1_by_seed.index)
-                    if len(common) >= 3:
-                        diff_paired = c0_by_seed.loc[common].values - c1_by_seed.loc[common].values
-                        mean_d, lo_d, hi_d = bootstrap_ci(diff_paired)
-                        print(f"    Classe0_first - Classe1_first: Δ={mean_d:+.3f} "
-                              f"CI95%=[{lo_d:+.3f}, {hi_d:+.3f}]")
-                        if lo_d > 0:
-                            print(f"    → Recency bias: última classe vista (classe 1) é FAVORECIDA")
-                        elif hi_d < 0:
-                            print(f"    → Recency bias: última classe vista (classe 0) é FAVORECIDA")
-            else:
-                print(f"  → NÃO significativo: a ordem dos exemplos NÃO afeta a performance")
-
-    # Variabilidade geral por ordering (colapsando n_shots)
-    overall = df.groupby('ordering')['accuracy'].agg(['mean', 'std'])
-    max_range = overall['mean'].max() - overall['mean'].min()
-    print(f"\n  Variação total entre ordenações: {max_range:.1%}")
-    if max_range < 0.03:
-        print(f"  → Efeito de ordem NEGLIGÍVEL (< 3 p.p.)")
-    elif max_range < 0.10:
-        print(f"  → Efeito de ordem MODERADO (3-10 p.p.) — reportar como limitação")
-    else:
-        print(f"  → Efeito de ordem GRANDE (> 10 p.p.) — recency bias significativo")
-
-    print()
-
-
-def print_phase_e_analysis(results_e: List[ResultadoPhaseEExperimento]):
-    """Imprime análise detalhada dos resultados da Fase E."""
-    print_section("ANÁLISE DA FASE E: LLM COMO APRENDIZ", "═")
-
-    df = pd.DataFrame([
-        {
-            'model': f"{r.provider}/{r.model_name} (temp={r.temperature})",
-            'n_shot': r.n_shot,
-            'strategy': r.example_strategy,
-            'accuracy': r.accuracy_llm_vs_expert,
-            'kappa': r.kappa_llm_vs_expert,
-            'f1': r.f1_llm_vs_expert,
-            'acc_vs_gt': r.accuracy_llm_vs_gt,
-            'expert_vs_gt': r.accuracy_expert_vs_gt,
-            'n_disagreements': r.n_disagreements,
-            'n_malformed': r.n_malformed_responses,
-        }
-        for r in results_e
-    ])
-
-    models = df['model'].unique()
-
-    for model in models:
-        model_df = df[df['model'] == model]
-        print(f"\n{'═' * 70}")
-        print(f" MODELO: {model}")
-        print(f"{'═' * 70}")
-
-        print(f"\n  Métrica do Perito W = [{EXPERT_W[0]:.2f}, {EXPERT_W[1]:.2f}]")
-        print(f"  Acurácia do Perito vs. GT: {model_df['expert_vs_gt'].mean():.1%}")
-
-        # 1. Curva de aprendizado por estratégia
-        print(f"\n  1. CURVA DE APRENDIZADO (Concordância LLM vs. Perito):")
-        print("  " + "-" * 65)
-        header = f"  {'n_shot':>6}"
-        for strat in EXAMPLE_STRATEGIES:
-            header += f" | {strat:>12}"
-        print(header)
-        print("  " + "-" * 65)
-
-        for n in sorted(model_df['n_shot'].unique()):
-            line = f"  {n:>6}"
-            for strat in EXAMPLE_STRATEGIES:
-                subset = model_df[(model_df['n_shot'] == n) & (model_df['strategy'] == strat)]
-                if len(subset) > 0:
-                    mean = subset['accuracy'].mean()
-                    std = subset['accuracy'].std()
-                    line += f" | {mean:.1%}±{std:.1%}"
-                else:
-                    line += f" | {'N/D':>12}"
-            print(line)
-
-        # 2. Melhor estratégia por n_shot
-        print(f"\n  2. MELHOR ESTRATÉGIA POR N_SHOT:")
-        print("  " + "-" * 50)
-        for n in sorted(model_df['n_shot'].unique()):
-            if n == 0:
-                continue
-            subset = model_df[model_df['n_shot'] == n]
-            best = subset.groupby('strategy')['accuracy'].mean().idxmax()
-            best_val = subset.groupby('strategy')['accuracy'].mean().max()
-            print(f"     {n:>3}-shot: {best.upper():>8} ({best_val:.1%})")
-
-        # 3. Melhoria do zero-shot para o melhor few-shot
-        print(f"\n  3. MELHORIA DO ZERO-SHOT PARA O MELHOR FEW-SHOT:")
-        print("  " + "-" * 50)
-        zero_shot_acc = model_df[model_df['n_shot'] == 0]['accuracy'].mean()
-        print(f"     Linha de base zero-shot: {zero_shot_acc:.1%}")
-
-        for strat in EXAMPLE_STRATEGIES:
-            strat_df = model_df[model_df['strategy'] == strat]
-            if len(strat_df) == 0:
-                continue
-            best_n = strat_df.groupby('n_shot')['accuracy'].mean().idxmax()
-            best_acc = strat_df.groupby('n_shot')['accuracy'].mean().max()
-            improvement = best_acc - zero_shot_acc
-            print(f"     {strat.upper():>8}: melhor={best_acc:.1%} em {best_n}-shot "
-                  f"(Δ={improvement:+.1%})")
-
-        # 4. Respostas malformadas
-        total_malformed = model_df['n_malformed'].sum()
-        if total_malformed > 0:
-            print(f"\n  ⚠️ Total de respostas malformadas: {total_malformed}")
-
-    # Conclusão geral do experimento
-    overall_zero = df[df['n_shot'] == 0]['accuracy'].mean()
-    overall_best = df.groupby(['n_shot', 'strategy'])['accuracy'].mean().max()
-    best_config = df.groupby(['n_shot', 'strategy'])['accuracy'].mean().idxmax()
-
-    print_box(f"""
-CONCLUSÃO DA FASE E: LLM COMO APRENDIZ
-
-Métrica do perito: W = [{EXPERT_W[0]:.2f}, {EXPERT_W[1]:.2f}]
-(Pondera a dimensão x2 {EXPERT_W[1]/EXPERT_W[0]:.1f}x mais do que x1)
-
-Linha de base zero-shot: {overall_zero:.1%}
-Melhor resultado few-shot: {overall_best:.1%} (estratégia {best_config[1]}, {best_config[0]}-shot)
-Melhoria geral: {overall_best - overall_zero:+.1%}
-
-{'✓ O LLM CONSEGUE aprender com exemplos do perito — o desempenho melhora com mais exemplos.' if overall_best - overall_zero > 0.1 else
- '~ O LLM mostra aprendizado MODERADO com exemplos do perito.' if overall_best - overall_zero > 0.05 else
- '✗ O LLM NÃO melhora significativamente com os exemplos do perito.'}
-"""
-    )
-
-    # --- Análise data-driven de H4 (easy vs hard) ---
-    # Compara acurácia média de cada estratégia (exceto zero-shot)
-    df_fewshot = df[df['n_shot'] > 0]
-    if len(df_fewshot) > 0:
-        strat_means = df_fewshot.groupby('strategy')['accuracy'].mean()
-        easy_mean = strat_means.get('easy', None)
-        hard_mean = strat_means.get('hard', None)
-        random_mean = strat_means.get('random', None)
-
-        print_box(f"""
-AVALIAÇÃO DA HIPÓTESE H4: "Exemplos hard são mais informativos que easy"
-
-Acurácia média por estratégia (todos os n_shot > 0):
-{chr(10).join(f'  {s.upper():>8}: {v:.1%}' for s, v in sorted(strat_means.items(), key=lambda x: -x[1]))}
-
-{'RESULTADO: H4 REFUTADA.' if easy_mean is not None and hard_mean is not None and easy_mean > hard_mean else 'RESULTADO: H4 sustentável.' if easy_mean is not None and hard_mean is not None and hard_mean > easy_mean else 'RESULTADO: Dados insuficientes para avaliar H4.'}
-{f'Exemplos easy ({easy_mean:.1%}) superam hard ({hard_mean:.1%}) consistentemente.' if easy_mean is not None and hard_mean is not None and easy_mean > hard_mean else ''}
-{f'Exemplos hard ({hard_mean:.1%}) performam abaixo de random ({random_mean:.1%}).' if hard_mean is not None and random_mean is not None and hard_mean < random_mean else ''}
-
-Interpretação: exemplos próximos à fronteira de decisão são AMBÍGUOS para o
-LLM — não fornecem padrões claros de cada classe. Exemplos fáceis funcionam
-como "âncoras" que definem bem as regiões de cada classe, permitindo ao LLM
-interpolar para os pontos intermediários. Este é um achado relevante sobre
-o mecanismo de aprendizado in-context dos LLMs: eles se beneficiam mais de
-exemplos prototípicos (alta margem) do que de exemplos fronteiriços.
-
-Nota: esta hipótese foi formulada a priori e refutada pelos dados.
-A refutação é reportada como resultado genuíno, não como falha do método.
-"""
-        )
-
-
-def print_final_analysis(resultados: List[ResultadoExperimento]):
-    """Imprime a análise final dos resultados das Fases A-C."""
-    print_section("ANÁLISE FINAL: FASES A-C", "═")
-
-    df = pd.DataFrame([
-        {
-            'model': f"{r.provider}/{r.model_name} (temp={r.temperature})",
-            'seed': r.random_seed,
-            'n_shot': r.n_shot,
-            'nomes': f"{r.nomes_classes[0]}/{r.nomes_classes[1]}",
-            'consistencia_b': r.consistencia_problema_b,
-            'consistencia_c': r.consistencia_problema_c,
-            'kappa_b': r.kappa_problema_b,
-            'kappa_c': r.kappa_problema_c,
-            'f1_b': r.f1_problema_b,
-            'f1_c': r.f1_problema_c,
-            'fidelidade': r.fidelidade_problema_a,
-            'n_disagreements_b': r.n_disagreements_b,
-            'n_disagreements_c': r.n_disagreements_c,
-            'n_malformed': r.n_malformed_responses,
-        }
-        for r in resultados
-    ])
-
-    models = df['model'].unique()
-    seeds = sorted(df['seed'].unique())
-
-    for model in models:
-        model_df = df[df['model'] == model]
-        print(f"\n{'═' * 70}")
-        print(f" MODELO: {model}")
-        print(f"{'═' * 70}")
-
-        print("\n  1. CONSISTÊNCIA POR NÚMERO DE EXEMPLOS:")
-        print(f"     {'n_shot':>6} | {'Consist B':>10} | {'Consist C':>10} | {'Kappa B':>8} | {'Kappa C':>8}")
-        print("     " + "-" * 55)
-        for n in sorted(model_df['n_shot'].unique()):
-            subset = model_df[model_df['n_shot'] == n]
-            c_b = f"{subset['consistencia_b'].mean():.1%}±{subset['consistencia_b'].std():.1%}"
-            c_c = f"{subset['consistencia_c'].mean():.1%}±{subset['consistencia_c'].std():.1%}"
-            k_b = f"{subset['kappa_b'].mean():.3f}"
-            k_c = f"{subset['kappa_c'].mean():.3f}"
-            print(f"     {n:>6} | {c_b:>10} | {c_c:>10} | {k_b:>8} | {k_c:>8}")
-
-        print("\n  2. CONSISTÊNCIA POR NOMES DE CLASSE:")
-        for nome in model_df['nomes'].unique():
-            subset = model_df[model_df['nomes'] == nome]
-            print(f"     {nome:20s}: B={subset['consistencia_b'].mean():.1%}, C={subset['consistencia_c'].mean():.1%}")
-
-    mean_b = df['consistencia_b'].mean()
-    mean_c = df['consistencia_c'].mean()
-
-    print_box(f"""
-RESUMO DAS FASES A-C
-
-Consistência Média Problema B: {mean_b:.1%} ± {df['consistencia_b'].std():.1%}
-Consistência Média Problema C: {mean_c:.1%} ± {df['consistencia_c'].std():.1%}
-
-{'✓ Os LLMs MANTÊM alta consistência em ambos os problemas.' if min(mean_b, mean_c) > 0.85 else
- '~ Consistência MODERADA entre os problemas.' if min(mean_b, mean_c) > 0.7 else
- '✗ Os LLMs NÃO mantêm consistência.'}
-""")
-
-
-# =============================================================================
-# SIGNIFICÂNCIA ESTATÍSTICA
-# =============================================================================
-
-def bootstrap_ci(data: np.ndarray, n_bootstrap: int = 10000, confidence: float = 0.95) -> Tuple[float, float, float]:
-    """Calcula intervalo de confiança via bootstrap.
-
-    Retorna (média, limite_inferior, limite_superior).
-    Usa o método percentil (Efron & Tibshirani, 1993).
-    """
-    if len(data) < 2:
-        return float(np.mean(data)), float(np.mean(data)), float(np.mean(data))
-    rng = np.random.RandomState(42)
-    boot_means = np.array([
-        np.mean(rng.choice(data, size=len(data), replace=True))
-        for _ in range(n_bootstrap)
-    ])
-    alpha = 1 - confidence
-    lo = np.percentile(boot_means, 100 * alpha / 2)
-    hi = np.percentile(boot_means, 100 * (1 - alpha / 2))
-    return float(np.mean(data)), float(lo), float(hi)
-
-
-def print_statistical_summary(
-    all_results_abc: List[ResultadoExperimento],
-    all_results_e: List[ResultadoPhaseEExperimento],
-):
-    """Imprime sumário estatístico com bootstrap CI e testes de significância.
-
-    Endereça a crítica de ausência de testes estatísticos formais:
-    - Bootstrap 95% CI para todas as métricas principais
-    - Wilcoxon signed-rank test para comparações pareadas
-    - Tamanho de efeito (Cohen's d) quando aplicável
-    """
-    from scipy import stats
-
-    print_section("SUMÁRIO ESTATÍSTICO (Bootstrap 95% CI + Testes de Significância)", "═")
-
-    # --- Fases A-C ---
-    if all_results_abc:
-        print(f"\n  ════════════════════════════════════════════════")
-        print(f"  FASES A-C: INTERVALOS DE CONFIANÇA (Bootstrap)")
-        print(f"  ════════════════════════════════════════════════")
-
-        # Filtrar apenas classes A/B, prompt default para métricas limpas
-        df = pd.DataFrame([{
-            'seed': r.random_seed, 'n_shot': r.n_shot,
-            'nomes': f"{r.nomes_classes[0]}/{r.nomes_classes[1]}",
-            'prompt_variant': r.prompt_variant,
-            'fidelidade': r.fidelidade_problema_a,
-            'consistencia_b': r.consistencia_problema_b,
-            'consistencia_c': r.consistencia_problema_c,
-            'kappa_b': r.kappa_problema_b,
-            'kappa_c': r.kappa_problema_c,
-            'f1_b': r.f1_problema_b,
-            'f1_c': r.f1_problema_c,
-        } for r in all_results_abc])
-
-        # Métricas por n_shot (classes A/B, default prompt)
-        df_default = df[(df['nomes'] == 'A/B') & (df['prompt_variant'] == 'default')]
-        if len(df_default) > 0:
-            print(f"\n  Configuração base: classes A/B, prompt default")
-            print(f"  n = {len(df_default)} observações ({len(df_default['seed'].unique())} seeds)")
-            print(f"\n  {'Métrica':<25} {'n_shot':>6} {'Média':>8} {'95% CI':>20} {'n':>4}")
-            print(f"  {'─'*25} {'─'*6} {'─'*8} {'─'*20} {'─'*4}")
-
-            for n_shot in sorted(df_default['n_shot'].unique()):
-                subset = df_default[df_default['n_shot'] == n_shot]
-                print(f"  --- Perceptron ---")
-                for col, label in [
-                    ('fidelidade', 'Fidelidade A (Perc)'),
-                    ('consistencia_b', 'Consistência B (Perc)'),
-                    ('consistencia_c', 'Consistência C (Perc)'),
-                    ('kappa_b', 'Kappa B (Perc)'),
-                    ('kappa_c', 'Kappa C (Perc)'),
-                ]:
-                    values = subset[col].values
-                    mean, lo, hi = bootstrap_ci(values)
-                    ci_str = f"[{lo:.3f}, {hi:.3f}]"
-                    print(f"  {label:<25} {n_shot:>6} {mean:>8.3f} {ci_str:>20} {len(values):>4}")
-                print()
-
-        # Teste: consistência zero-shot vs. 10-shot (pareado por seed)
-        df_0 = df_default[df_default['n_shot'] == 0].groupby('seed')[['consistencia_b', 'consistencia_c']].mean()
-        df_10 = df_default[df_default['n_shot'] == 10].groupby('seed')[['consistencia_b', 'consistencia_c']].mean() if 10 in df_default['n_shot'].values else None
-
-        if df_10 is not None:
-            common_seeds = df_0.index.intersection(df_10.index)
-            if len(common_seeds) >= 3:
-                print(f"\n  TESTE DE SIGNIFICÂNCIA: Zero-shot vs. 10-shot (pareado por seed)")
-                print(f"  {'─'*60}")
-                for col, label in [('consistencia_b', 'Consistência B'), ('consistencia_c', 'Consistência C')]:
-                    vals_0 = df_0.loc[common_seeds, col].values
-                    vals_10 = df_10.loc[common_seeds, col].values
-                    diff = vals_10 - vals_0
-
-                    mean_diff, lo_diff, hi_diff = bootstrap_ci(diff)
-
-                    # Wilcoxon signed-rank (não-paramétrico, pareado)
-                    if len(common_seeds) >= 5 and not np.all(diff == 0):
-                        stat, p_value = stats.wilcoxon(vals_0, vals_10)
-                        p_str = f"p={p_value:.4f}" if p_value >= 0.001 else f"p<0.001"
-                    else:
-                        p_str = f"n<5, teste não aplicável"
-
-                    # Cohen's d
-                    pooled_std = np.sqrt((np.std(vals_0)**2 + np.std(vals_10)**2) / 2)
-                    cohens_d = mean_diff / pooled_std if pooled_std > 0 else 0
-
-                    print(f"  {label}: Δ={mean_diff:+.3f} CI95%=[{lo_diff:+.3f}, {hi_diff:+.3f}]  "
-                          f"{p_str}  d={cohens_d:.2f}")
-
-                print(f"\n  Interpretação Cohen's d: |d|<0.2 negligível, 0.2-0.5 pequeno, 0.5-0.8 médio, >0.8 grande")
-
-        # Teste: consistência métrica estimada vs. Euclidiana
-        euc_data = [(r.consistencia_problema_b, r.consistencia_euclidiana_problema_b)
-                     for r in all_results_abc
-                     if r.nomes_classes == ("A", "B") and r.prompt_variant == "default" and r.n_shot == 0]
-        if len(euc_data) >= 3:
-            metric_vals = np.array([x[0] for x in euc_data])
-            euc_vals = np.array([x[1] for x in euc_data])
-            diff_euc = metric_vals - euc_vals
-            mean_d, lo_d, hi_d = bootstrap_ci(diff_euc)
-
-            print(f"\n  TESTE: Métrica estimada vs. Euclidiana (zero-shot, Problema B)")
-            print(f"  {'─'*60}")
-            print(f"  Δ(métrica - euclidiana) = {mean_d:+.3f} CI95%=[{lo_d:+.3f}, {hi_d:+.3f}]")
-            if lo_d > 0:
-                print(f"  → Métrica estimada SIGNIFICATIVAMENTE superior à Euclidiana")
-            elif hi_d < 0:
-                print(f"  → Euclidiana SIGNIFICATIVAMENTE superior — limitação diagonal?")
-            else:
-                print(f"  → Diferença NÃO significativa (CI inclui zero)")
-
-        # --- Estabilidade de W entre seeds (H5) ---
-        # A magnitude de W é arbitrária (depende da escala da margem-alvo).
-        # O que importa é a DIREÇÃO: w_ratio = w1/w2 ou o ângulo do vetor unitário.
-        # Se w_ratio é estável entre seeds (mesmo n_shot), H5 é sustentável.
-        print(f"\n  ════════════════════════════════════════════════")
-        print(f"  ESTABILIDADE DE W ENTRE SEEDS (H5)")
-        print(f"  ════════════════════════════════════════════════")
-        print(f"\n  IMPORTANTE: Valores absolutos de W são irrelevantes para a fronteira")
-        print(f"  de decisão — apenas a DIREÇÃO (razão w1/w2) determina a geometria.")
-        print(f"  Multiplicar W por k>0 não altera classificações.\n")
-
-        for n_shot_val in sorted(df_default['n_shot'].unique()):
-            subset_results = [r for r in all_results_abc
-                              if r.nomes_classes == ("A", "B")
-                              and r.prompt_variant == "default"
-                              and r.n_shot == n_shot_val
-                              and r.w_aprendido is not None
-                              and np.linalg.norm(r.w_aprendido) > 0]
-
-            if len(subset_results) < 2:
-                continue
-
-            # Coletar direções (vetores unitários) e razões
-            directions = []
-            ratios = []
-            w_raw = []
-            for r in subset_results:
-                w = r.w_aprendido
-                w_raw.append(w.copy())
-                norm = np.linalg.norm(w)
-                if norm > 0:
-                    directions.append(w / norm)
-                ratio = w[0] / w[1] if w[1] != 0 else float('inf')
-                ratios.append(ratio)
-
-            ratios_finite = [r for r in ratios if np.isfinite(r)]
-
-            print(f"  n_shot={n_shot_val} ({len(subset_results)} observações, "
-                  f"{len(set(r.random_seed for r in subset_results))} seeds):")
-
-            # Tabela: seed | W bruto | W normalizado | w1/w2 | cos(NNLS)
-            print(f"    {'Seed':>6} {'Rep':>4} {'W bruto':>20} {'W unitário':>20} {'w1/w2':>8} {'cos(NNLS)':>10}")
-            print(f"    {'─'*6} {'─'*4} {'─'*20} {'─'*20} {'─'*8} {'─'*10}")
-            for r in subset_results:
-                w = r.w_aprendido
-                norm = np.linalg.norm(w)
-                w_unit = w / norm if norm > 0 else w
-                ratio = w[0] / w[1] if w[1] != 0 else float('inf')
-                cos_nnls = r.w_cosine_sim_nnls
-                print(f"    {r.random_seed:>6} {r.repeticao:>4} "
-                      f"[{w[0]:>7.3f}, {w[1]:>7.3f}] "
-                      f"[{w_unit[0]:>7.3f}, {w_unit[1]:>7.3f}] "
-                      f"{ratio:>8.3f} "
-                      f"{cos_nnls:>10.4f}")
-
-            # Similaridade cosseno entre todos os pares de W (entre seeds)
-            if len(directions) >= 2:
-                cos_sims = []
-                for i in range(len(directions)):
-                    for j in range(i + 1, len(directions)):
-                        cos_sims.append(float(np.dot(directions[i], directions[j])))
-                mean_cos, lo_cos, hi_cos = bootstrap_ci(np.array(cos_sims)) if len(cos_sims) >= 3 else (np.mean(cos_sims), np.min(cos_sims), np.max(cos_sims))
-                print(f"\n    Similaridade cosseno entre seeds (pares): "
-                      f"média={mean_cos:.4f}, range=[{lo_cos:.4f}, {hi_cos:.4f}]")
-                if mean_cos > 0.95:
-                    print(f"    → W ESTÁVEL entre seeds (cos > 0.95) — H5 sustentável")
-                elif mean_cos > 0.80:
-                    print(f"    → W MODERADAMENTE estável (0.80 < cos < 0.95)")
-                else:
-                    print(f"    → W INSTÁVEL entre seeds (cos < 0.80) — H5 em risco")
-
-            # Bootstrap CI da razão w1/w2
-            if len(ratios_finite) >= 2:
-                mean_r, lo_r, hi_r = bootstrap_ci(np.array(ratios_finite)) if len(ratios_finite) >= 3 else (np.mean(ratios_finite), np.min(ratios_finite), np.max(ratios_finite))
-                print(f"    Razão w1/w2: média={mean_r:.4f} CI95%=[{lo_r:.4f}, {hi_r:.4f}]")
-                cv = np.std(ratios_finite) / np.mean(ratios_finite) if np.mean(ratios_finite) != 0 else float('inf')
-                print(f"    Coeficiente de variação (CV): {cv:.2%}")
-                if cv < 0.15:
-                    print(f"    → Razão w1/w2 ESTÁVEL (CV < 15%)")
-                elif cv < 0.30:
-                    print(f"    → Razão w1/w2 MODERADAMENTE estável (15% < CV < 30%)")
-                else:
-                    print(f"    → Razão w1/w2 INSTÁVEL (CV > 30%) — métrica pode não ser captável")
-
-            # Similaridade cosseno média entre algoritmos (robustez ao método)
-            cos_nnls_vals = [r.w_cosine_sim_nnls for r in subset_results if r.w_cosine_sim_nnls > 0]
-            if cos_nnls_vals:
-                print(f"    Cosseno Perceptron-NNLS: média={np.mean(cos_nnls_vals):.4f} "
-                      f"(min={np.min(cos_nnls_vals):.4f}, max={np.max(cos_nnls_vals):.4f})")
-
-            print()
-
-    # --- Fase E ---
-    if all_results_e:
-        print(f"\n  ════════════════════════════════════════════════")
-        print(f"  FASE E: INTERVALOS DE CONFIANÇA (Bootstrap)")
-        print(f"  ════════════════════════════════════════════════")
-
-        df_d = pd.DataFrame([{
-            'seed': r.random_seed, 'n_shot': r.n_shot,
-            'strategy': r.example_strategy,
-            'expert': r.expert_name,
-            'accuracy': r.accuracy_llm_vs_expert,
-            'kappa': r.kappa_llm_vs_expert,
-        } for r in all_results_e])
-
-        # CI por (n_shot, strategy) para expert principal
-        df_d_main = df_d[df_d['expert'] == df_d['expert'].iloc[0]] if len(df_d) > 0 else df_d
-        if len(df_d_main) > 0:
-            print(f"\n  Expert: {df_d_main['expert'].iloc[0]}")
-            print(f"\n  {'Estratégia':<12} {'n_shot':>6} {'Acc Média':>10} {'95% CI':>20} {'n':>4}")
-            print(f"  {'─'*12} {'─'*6} {'─'*10} {'─'*20} {'─'*4}")
-
-            for strategy in sorted(df_d_main['strategy'].unique()):
-                for n_shot in sorted(df_d_main['n_shot'].unique()):
-                    subset = df_d_main[(df_d_main['strategy'] == strategy) & (df_d_main['n_shot'] == n_shot)]
-                    if len(subset) > 0:
-                        values = subset['accuracy'].values
-                        mean, lo, hi = bootstrap_ci(values)
-                        ci_str = f"[{lo:.3f}, {hi:.3f}]"
-                        print(f"  {strategy:<12} {n_shot:>6} {mean:>10.3f} {ci_str:>20} {len(values):>4}")
-                print()
-
-        # Teste: easy vs. hard (pareado por seed, n_shot=10)
-        for n_test in [5, 10, 20]:
-            df_easy = df_d_main[(df_d_main['strategy'] == 'easy') & (df_d_main['n_shot'] == n_test)]
-            df_hard = df_d_main[(df_d_main['strategy'] == 'hard') & (df_d_main['n_shot'] == n_test)]
-            if len(df_easy) >= 3 and len(df_hard) >= 3:
-                easy_by_seed = df_easy.groupby('seed')['accuracy'].mean()
-                hard_by_seed = df_hard.groupby('seed')['accuracy'].mean()
-                common = easy_by_seed.index.intersection(hard_by_seed.index)
-                if len(common) >= 3:
-                    diff_eh = easy_by_seed.loc[common].values - hard_by_seed.loc[common].values
-                    mean_d, lo_d, hi_d = bootstrap_ci(diff_eh)
-                    print(f"  TESTE easy vs. hard ({n_test}-shot): "
-                          f"Δ={mean_d:+.3f} CI95%=[{lo_d:+.3f}, {hi_d:+.3f}]"
-                          f" {'(sig.)' if lo_d > 0 or hi_d < 0 else '(n.s.)'}")
-
-    print(f"\n  Nota: Bootstrap com 10.000 reamostras, seed fixa=42.")
-    print(f"  Wilcoxon signed-rank test usado para comparações pareadas (não-paramétrico).")
-    print(f"  Significância estatística avaliada pelo CI 95% não incluir zero.\n")
-
-
-# =============================================================================
 # EXECUÇÃO PRINCIPAL
 # =============================================================================
 
@@ -6013,7 +2405,10 @@ def _run_phase_abc_experiment(X_train_a, y_train_a, X_b, y_b, X_c, y_c,
                               temperature, seed, seed_idx, phase_a_cache, verbose,
                               prompt_variant="default"):
     """Helper para executar um experimento A-C com cache."""
-    cache_key = (seed, nome_0, nome_1, prompt_variant)
+    # Inclui provider/model_name na chave para blindar contra contaminação entre
+    # modelos caso o phase_a_cache passe a ser compartilhado entre iterações de modelo
+    # (hoje ele é reinicializado por modelo+seed, mas a chave não deve depender disso).
+    cache_key = (provider, model_name, seed, nome_0, nome_1, prompt_variant)
     if cache_key in phase_a_cache:
         cached = phase_a_cache[cache_key]
         result, learned_metric, y_llm_train_a, fidelity, llm_acc_a, n_malformed, detail = run_complete_experiment(
@@ -6110,8 +2505,8 @@ def phase_a_multifeature(
 
     w_perc, gamma = train_relaxed_perceptron(
         X_aug, y_llm, centroids,
-        eta=0.001, C=1.0, delta_gamma=0.05,  # Coelho et al. CILAMCE 2017, p. 16
-        max_epochs=50, tol=1e-4, verbose=False,
+        **PERCEPTRON_PARAMS,
+        verbose=False,
         use_best_effort=True,
     )
     w_nnls, _ = train_least_squares_inverse(X_aug, y_llm, centroids, verbose=False)
@@ -6137,8 +2532,15 @@ def phase_a_multifeature(
         'accuracy_perc_vs_true': accuracy_score(y_true, y_metric_perc),
         'accuracy_nnls_vs_true': accuracy_score(y_true, y_metric_nnls),
         'llm_accuracy_vs_true': accuracy_score(y_true, y_llm),
+        # Item 15 (reunião 20/05): contagem absoluta de erros (problema pequeno).
+        'n_samples': len(y_true),
+        'n_errors_perc_vs_true': int(np.sum(y_metric_perc != y_true)),
+        'n_errors_nnls_vs_true': int(np.sum(y_metric_nnls != y_true)),
+        'n_errors_llm_vs_true': int(np.sum(y_llm != y_true)),
         'n_malformed': n_malformed,
     }
+
+
 
 
 def run_external_problem_pipeline(
@@ -6180,8 +2582,11 @@ def run_external_problem_pipeline(
         print(f"  N amostras total: {len(X)} | Split treino/teste: {n_train_ratio:.0%}/{1-n_train_ratio:.0%}")
 
     for seed in seeds:
-        np.random.seed(seed)
-        idx = np.random.permutation(len(X))
+        # RNG LOCAL por seed (não o estado global): blinda o split e o sorteio
+        # de exemplos contra qualquer consumo de aleatoriedade global inserido
+        # entre este ponto e os usos abaixo.
+        rng = np.random.RandomState(seed)
+        idx = rng.permutation(len(X))
         n_train = int(n_train_ratio * len(X))
         train_idx, test_idx = idx[:n_train], idx[n_train:]
         X_train, y_train = X[train_idx], y_true[train_idx]
@@ -6292,84 +2697,109 @@ def run_external_problem_pipeline(
             y_metric_train = predict_with_metric(X_train_aug, best['centroids'], best['w_perc'])
 
             for n_shot in n_shots_phase_e:
-                if n_shot == 0:
-                    examples_for_prompt = None
-                else:
-                    # Escolhe exemplos balanceados de classes diferentes
-                    n_shot_actual = min(n_shot, len(X_train))
-                    ex_indices = np.random.choice(len(X_train), size=n_shot_actual, replace=False)
-                    examples_for_prompt = []
-                    for ei in ex_indices:
-                        row = [X_train[ei, 0], X_train[ei, 1]]
-                        if best['n_features'] >= 3:
-                            row.extend(X_train_aug[ei, 2:].tolist())
-                        row.append(nome_classe_0 if y_metric_train[ei] == 0 else nome_classe_1)
-                        examples_for_prompt.append(tuple(row))
+                # Item 10 (reunião 20/05): repetir a coleta N_REPETICOES vezes para
+                # tirar média e descartar anomalias de execução única (ex.: o salto
+                # 89% em n=10 → 44% no baseline em n=20 que o orientador estranhou).
+                # Zero-shot não tem exemplos (prompt fixo, temp=0) → 1 repetição basta.
+                n_reps_eff = 1 if n_shot == 0 else N_REPETICOES
+                for rep in range(n_reps_eff):
+                    if n_shot == 0:
+                        examples_for_prompt = None
+                        ex_indices = None
+                    else:
+                        # Escolhe exemplos balanceados de classes diferentes. Cada
+                        # repetição sorteia um conjunto diferente (o rng local da
+                        # seed avança), produzindo a variabilidade mediada nos gráficos.
+                        n_shot_actual = min(n_shot, len(X_train))
+                        ex_indices = rng.choice(len(X_train), size=n_shot_actual, replace=False)
+                        examples_for_prompt = []
+                        for ei in ex_indices:
+                            row = [X_train[ei, 0], X_train[ei, 1]]
+                            if best['n_features'] >= 3:
+                                row.extend(X_train_aug[ei, 2:].tolist())
+                            row.append(nome_classe_0 if y_metric_train[ei] == 0 else nome_classe_1)
+                            examples_for_prompt.append(tuple(row))
 
-                extra_matrix_test = X_test_aug[:, 2:] if best['n_features'] >= 3 else None
+                    extra_matrix_test = X_test_aug[:, 2:] if best['n_features'] >= 3 else None
 
-                t_d = time.time()
-                print(f"    [{problem_name} D seed={seed} {feat_0}/{feat_1}] n_shot={n_shot} | best n_feat={best['n_features']} | coletando LLM (n_test={len(X_test)})...", flush=True)
-                y_llm_test, n_mal_d = collect_llm_decisions(
-                    X_test, nome_classe_0, nome_classe_1,
-                    examples=examples_for_prompt, verbose=False,
-                    nome_feature_0=feat_0, nome_feature_1=feat_1,
-                    extra_features_matrix=extra_matrix_test,
-                    extra_feature_names=extra_features_names_test,
-                    label_prefix=f"[{problem_name} D seed={seed} {feat_0}/{feat_1} n={n_shot}] ",
-                )
-                print(f"    [{problem_name} D seed={seed} {feat_0}/{feat_1}] n_shot={n_shot} coletado em {time.time()-t_d:.1f}s (malformadas={n_mal_d})", flush=True)
-
-                llm_label_maps[(seed, feat_0, feat_1, n_shot)] = {
-                    'X': X_test.copy(), 'y_llm': y_llm_test.copy(),
-                    'y_true': y_test.copy(), 'y_metric': y_metric_test.copy(),
-                }
-
-                acc_llm_vs_metric = accuracy_score(y_metric_test, y_llm_test)
-                acc_llm_vs_true = accuracy_score(y_test, y_llm_test)
-                kappa = cohen_kappa_score(y_metric_test, y_llm_test)
-                f1 = f1_score(y_metric_test, y_llm_test, zero_division=0)
-                # Comparação com Perceptron treinado sobre os MESMOS exemplos do expert
-                acc_perc_baseline = None
-                if examples_for_prompt is not None and n_shot >= 4:
-                    try:
-                        # Reconstroi (X_examples, y_examples) a partir dos índices few-shot
-                        x_ex = X_train[ex_indices]
-                        y_ex = y_metric_train[ex_indices]
-                        if len(np.unique(y_ex)) >= 2:
-                            x_ex_aug = augment_features(x_ex, best['n_features'])
-                            c_ex = compute_centroids(x_ex_aug, y_ex)
-                            w_baseline, _ = train_relaxed_perceptron(
-                                x_ex_aug, y_ex, c_ex,
-                                eta=0.001, C=1.0, delta_gamma=0.05,  # Coelho et al. CILAMCE 2017, p. 16
-                                max_epochs=50, tol=1e-4, verbose=False,
-                                use_best_effort=True,
-                            )
-                            y_baseline = predict_with_metric(X_test_aug, c_ex, w_baseline)
-                            acc_perc_baseline = accuracy_score(y_test, y_baseline)
-                    except Exception as e:
-                        acc_perc_baseline = None
-
-                all_phase_e.append({
-                    'problem_name': problem_name,
-                    'seed': seed,
-                    'feature_names': (feat_0, feat_1),
-                    'n_features': best['n_features'],
-                    'n_shot': n_shot,
-                    'accuracy_llm_vs_metric': acc_llm_vs_metric,
-                    'accuracy_llm_vs_true': acc_llm_vs_true,
-                    'kappa_llm_vs_metric': kappa,
-                    'f1_llm_vs_metric': f1,
-                    'accuracy_perceptron_baseline_vs_true': acc_perc_baseline,
-                    'n_malformed': n_mal_d,
-                })
-
-                if verbose:
-                    baseline_str = f" | perc_baseline={acc_perc_baseline:.1%}" if acc_perc_baseline is not None else ""
-                    print(
-                        f"      D n_shot={n_shot}: LLM_vs_metric={acc_llm_vs_metric:.1%} | "
-                        f"LLM_vs_real={acc_llm_vs_true:.1%}{baseline_str}"
+                    t_d = time.time()
+                    print(f"    [{problem_name} D seed={seed} {feat_0}/{feat_1}] n_shot={n_shot} rep={rep+1}/{n_reps_eff} | best n_feat={best['n_features']} | coletando LLM (n_test={len(X_test)})...", flush=True)
+                    y_llm_test, n_mal_d = collect_llm_decisions(
+                        X_test, nome_classe_0, nome_classe_1,
+                        examples=examples_for_prompt, verbose=False,
+                        nome_feature_0=feat_0, nome_feature_1=feat_1,
+                        extra_features_matrix=extra_matrix_test,
+                        extra_feature_names=extra_features_names_test,
+                        label_prefix=f"[{problem_name} D seed={seed} {feat_0}/{feat_1} n={n_shot} r{rep+1}] ",
                     )
+                    print(f"    [{problem_name} D seed={seed} {feat_0}/{feat_1}] n_shot={n_shot} rep={rep+1}/{n_reps_eff} coletado em {time.time()-t_d:.1f}s (malformadas={n_mal_d})", flush=True)
+
+                    # Guarda o mapa ponto-a-ponto só da 1ª repetição (visualização)
+                    if rep == 0:
+                        llm_label_maps[(seed, feat_0, feat_1, n_shot)] = {
+                            'X': X_test.copy(), 'y_llm': y_llm_test.copy(),
+                            'y_true': y_test.copy(), 'y_metric': y_metric_test.copy(),
+                        }
+
+                    acc_llm_vs_metric = accuracy_score(y_metric_test, y_llm_test)
+                    acc_llm_vs_true = accuracy_score(y_test, y_llm_test)
+                    kappa = cohen_kappa_score(y_metric_test, y_llm_test)
+                    f1 = f1_score(y_metric_test, y_llm_test, zero_division=0)
+                    # Item 15 (reunião 20/05): nº absoluto de amostras erradas — útil
+                    # em problemas pequenos (peso×altura tem ~30 pontos de teste).
+                    n_test_e = len(y_test)
+                    n_err_llm_vs_true = int(np.sum(y_llm_test != y_test))
+                    n_err_llm_vs_metric = int(np.sum(y_llm_test != y_metric_test))
+                    # Comparação com Perceptron treinado sobre os MESMOS exemplos do expert
+                    acc_perc_baseline = None
+                    if examples_for_prompt is not None and n_shot >= 4:
+                        try:
+                            # Reconstroi (X_examples, y_examples) a partir dos índices few-shot
+                            x_ex = X_train[ex_indices]
+                            y_ex = y_metric_train[ex_indices]
+                            if len(np.unique(y_ex)) >= 2:
+                                x_ex_aug = augment_features(x_ex, best['n_features'])
+                                c_ex = compute_centroids(x_ex_aug, y_ex)
+                                w_baseline, _ = train_relaxed_perceptron(
+                                    x_ex_aug, y_ex, c_ex,
+                                    **PERCEPTRON_PARAMS,
+                                    verbose=False,
+                                    use_best_effort=True,
+                                )
+                                y_baseline = predict_with_metric(X_test_aug, c_ex, w_baseline)
+                                acc_perc_baseline = accuracy_score(y_test, y_baseline)
+                        except Exception as e:
+                            # Caminho de DADOS (não cosmético): a acurácia do baseline-perceptron
+                            # entra no CSV externo. Falha silenciosa viraria None sem rastro —
+                            # registra o motivo para auditabilidade.
+                            acc_perc_baseline = None
+                            print(f"    ⚠ Baseline-perceptron (Fase E externa) falhou "
+                                  f"[{problem_name}, n_shot={n_shot}]: {e}")
+
+                    all_phase_e.append({
+                        'problem_name': problem_name,
+                        'seed': seed,
+                        'rep': rep,
+                        'feature_names': (feat_0, feat_1),
+                        'n_features': best['n_features'],
+                        'n_shot': n_shot,
+                        'accuracy_llm_vs_metric': acc_llm_vs_metric,
+                        'accuracy_llm_vs_true': acc_llm_vs_true,
+                        'kappa_llm_vs_metric': kappa,
+                        'f1_llm_vs_metric': f1,
+                        'accuracy_perceptron_baseline_vs_true': acc_perc_baseline,
+                        'n_test': n_test_e,
+                        'n_errors_llm_vs_true': n_err_llm_vs_true,
+                        'n_errors_llm_vs_metric': n_err_llm_vs_metric,
+                        'n_malformed': n_mal_d,
+                    })
+
+                    if verbose:
+                        baseline_str = f" | perc_baseline={acc_perc_baseline:.1%}" if acc_perc_baseline is not None else ""
+                        print(
+                            f"      D n_shot={n_shot} rep={rep+1}: LLM_vs_metric={acc_llm_vs_metric:.1%} | "
+                            f"LLM_vs_real={acc_llm_vs_true:.1%} | erros_vs_real={n_err_llm_vs_true}/{n_test_e}{baseline_str}"
+                        )
 
     return {
         'phase_a_results': all_phase_a,
@@ -6378,193 +2808,10 @@ def run_external_problem_pipeline(
     }
 
 
-def plot_problem_overview(
-    X: np.ndarray,
-    y_true: np.ndarray,
-    title: str,
-    feature_names: Tuple[str, str] = ("x1", "x2"),
-    optimal_boundary_fn: Optional[callable] = None,
-    filename: Optional[str] = None,
-) -> None:
-    """Visualiza um problema (scatter por classe + fronteira ótima opcional).
-
-    Usado para os problemas novos (meia-lua, peso × altura) que nao aparecem
-    nos gráficos `01_all_three_problems.png` (limitados a A/B/C).
-
-    Args:
-        optimal_boundary_fn: função f(x1, x2) cuja curva f=0 será sobreposta
-            (ex.: classificador ótimo bayesiano do peso×altura é a elipse
-            x2² - x2 + x1² - x1 + cte).
-    """
-    fig, ax = plt.subplots(figsize=(7, 6))
-    cmap_class = {0: "tab:blue", 1: "tab:red"}
-    for c in [0, 1]:
-        mask = y_true == c
-        ax.scatter(
-            X[mask, 0], X[mask, 1], c=cmap_class[c], s=50,
-            edgecolor="black", linewidth=0.5, alpha=0.85,
-            label=f"Classe {c}",
-        )
-
-    if optimal_boundary_fn is not None:
-        pad = 0.5
-        xs = np.linspace(X[:, 0].min() - pad, X[:, 0].max() + pad, 200)
-        ys = np.linspace(X[:, 1].min() - pad, X[:, 1].max() + pad, 200)
-        xx, yy = np.meshgrid(xs, ys)
-        try:
-            zz = optimal_boundary_fn(xx, yy)
-            ax.contour(xx, yy, zz, levels=[0.0], colors="black",
-                       linewidths=1.8, linestyles="--")
-            ax.plot([], [], color="black", linestyle="--", label="Fronteira ótima")
-        except Exception:
-            pass
-
-    ax.set_xlabel(feature_names[0])
-    ax.set_ylabel(feature_names[1])
-    ax.set_title(title, fontweight="bold")
-    ax.legend(fontsize=9)
-    ax.grid(True, alpha=0.3)
-    plt.tight_layout()
-    if filename:
-        plt.savefig(filename, dpi=140, bbox_inches="tight")
-    plt.close()
 
 
-def plot_llm_labels_per_problem(
-    X: np.ndarray,
-    y_llm: np.ndarray,
-    y_true: Optional[np.ndarray] = None,
-    title: str = "Rotulação do LLM",
-    feature_names: Tuple[str, str] = ("x1", "x2"),
-    filename: Optional[str] = None,
-) -> None:
-    """Visualiza scatter ponto-a-ponto das rotulações do LLM.
-
-    Item G do plano (e-mail orientador 22:06):
-        "Mostrar graficamente todas as rotulações feitas pela LLM."
-
-    Se y_true for fornecido, gera 3 painéis: LLM, real, erros (LLM ≠ real).
-    """
-    n_panels = 3 if y_true is not None else 1
-    fig, axes = plt.subplots(1, n_panels, figsize=(6 * n_panels, 5))
-    if n_panels == 1:
-        axes = [axes]
-
-    cmap_class = {0: "tab:blue", 1: "tab:red"}
-
-    # Painel 1: rotulação do LLM
-    for c in [0, 1]:
-        mask = y_llm == c
-        axes[0].scatter(X[mask, 0], X[mask, 1], c=cmap_class[c], s=40,
-                        edgecolor="black", linewidth=0.4, alpha=0.85,
-                        label=f"LLM = {c}")
-    axes[0].set_xlabel(feature_names[0])
-    axes[0].set_ylabel(feature_names[1])
-    axes[0].set_title(f"Rotulação do LLM\n(n={len(X)})")
-    axes[0].legend(fontsize=8)
-    axes[0].grid(True, alpha=0.3)
-
-    if y_true is not None:
-        # Painel 2: rótulo real (ground truth)
-        for c in [0, 1]:
-            mask = y_true == c
-            axes[1].scatter(X[mask, 0], X[mask, 1], c=cmap_class[c], s=40,
-                            edgecolor="black", linewidth=0.4, alpha=0.85,
-                            label=f"Real = {c}")
-        axes[1].set_xlabel(feature_names[0])
-        axes[1].set_ylabel(feature_names[1])
-        acc = accuracy_score(y_true, y_llm)
-        axes[1].set_title(f"Rótulo Real\n(acurácia do LLM = {acc:.1%})")
-        axes[1].legend(fontsize=8)
-        axes[1].grid(True, alpha=0.3)
-
-        # Painel 3: erros (LLM ≠ real)
-        errors = y_llm != y_true
-        axes[2].scatter(X[~errors, 0], X[~errors, 1], c="lightgray", s=25,
-                        edgecolor="none", alpha=0.6, label="LLM acertou")
-        axes[2].scatter(X[errors, 0], X[errors, 1], c="black", s=60,
-                        marker="x", linewidths=2, label="LLM errou")
-        axes[2].set_xlabel(feature_names[0])
-        axes[2].set_ylabel(feature_names[1])
-        axes[2].set_title(f"Erros do LLM\n(n_erros = {int(errors.sum())} / {len(X)})")
-        axes[2].legend(fontsize=8)
-        axes[2].grid(True, alpha=0.3)
-
-    fig.suptitle(title, fontweight="bold", fontsize=13)
-    plt.tight_layout()
-    if filename:
-        plt.savefig(filename, dpi=140, bbox_inches="tight")
-    plt.close()
 
 
-def summarize_cross_linearity(
-    results_abc_r3: List[dict],
-    external_results: List[dict],
-    pasta_execucao: str,
-    results_abc_r4: Optional[List[dict]] = None,
-) -> Optional[str]:
-    """Sintetiza ganhos 2→3→4 features em problemas LINEARES (A/B/C) vs NÃO-LINEARES.
-
-    Síntese cruzada dos 3 blocos (slide 62 do roteiro atual). Gera CSV consolidado
-    `final_cross_linearity.csv`: para cada (problema, n_features), reporta fidelidade
-    e acurácia média. Permite tabela final A/B/C × meia-lua × peso×altura.
-    """
-    rows = []
-
-    # Resultados sintéticos A/B/C — R3 (3 features, hipérbole)
-    if results_abc_r3:
-        for r in results_abc_r3:
-            rows.append({
-                'problem': 'A_B_C_lineares',
-                'is_nonlinear': False,
-                'algorithm': 'perceptron',
-                'n_features': 3,
-                'fidelity_vs_llm': r.get('accuracy'),
-                'accuracy_vs_true': None,
-                'seed': r.get('seed'),
-            })
-
-    # Resultados sintéticos A/B/C — R4 (4 features, elipse — sanity check)
-    if results_abc_r4:
-        for r in results_abc_r4:
-            rows.append({
-                'problem': 'A_B_C_lineares',
-                'is_nonlinear': False,
-                'algorithm': 'perceptron',
-                'n_features': 4,
-                'fidelity_vs_llm': r.get('accuracy'),
-                'accuracy_vs_true': None,
-                'seed': r.get('seed'),
-            })
-
-    # Resultados dos problemas externos não-lineares
-    for r in external_results:
-        rows.append({
-            'problem': r.get('problem_name'),
-            'is_nonlinear': True,
-            'algorithm': 'perceptron',
-            'n_features': r.get('n_features'),
-            'fidelity_vs_llm': r.get('fidelity_perc_vs_llm'),
-            'accuracy_vs_true': r.get('accuracy_perc_vs_true'),
-            'seed': r.get('seed'),
-        })
-        rows.append({
-            'problem': r.get('problem_name'),
-            'is_nonlinear': True,
-            'algorithm': 'nnls',
-            'n_features': r.get('n_features'),
-            'fidelity_vs_llm': r.get('fidelity_nnls_vs_llm'),
-            'accuracy_vs_true': r.get('accuracy_nnls_vs_true'),
-            'seed': r.get('seed'),
-        })
-
-    if not rows:
-        return None
-
-    df = pd.DataFrame(rows)
-    filename = os.path.join(pasta_execucao, "final_cross_linearity.csv")
-    df.to_csv(filename, index=False)
-    return filename
 
 
 # =============================================================================
@@ -6576,240 +2823,86 @@ def summarize_cross_linearity(
 #   - LLM vs Perceptron baseline (reunião ~2110s)
 # =============================================================================
 
-def plot_external_learning_curve(
-    phase_e_results: List[dict],
-    filename: Optional[str] = None,
-) -> None:
-    """Curva de aprendizado (acurácia × n_shot) por (problema, variante)."""
-    if not phase_e_results:
-        return
-    df = pd.DataFrame(phase_e_results)
-    df['feature_names_str'] = df['feature_names'].apply(
-        lambda t: '/'.join(t) if isinstance(t, tuple) else t
-    )
-    df['group'] = df['problem_name'].astype(str) + ' | ' + df['feature_names_str']
-
-    fig, axes = plt.subplots(1, 2, figsize=(13, 5))
-    cmap = plt.get_cmap('tab10')
-
-    for idx, metric_col in enumerate(['accuracy_llm_vs_metric', 'accuracy_llm_vs_true']):
-        ax = axes[idx]
-        for i, group in enumerate(sorted(df['group'].unique())):
-            sub = df[df['group'] == group].sort_values('n_shot')
-            stats = sub.groupby('n_shot')[metric_col].agg(['mean', 'std']).reset_index()
-            ax.errorbar(
-                stats['n_shot'], stats['mean'], yerr=stats['std'],
-                marker='o', label=group, color=cmap(i % 10), capsize=3,
-            )
-        ax.set_xlabel('n_shot')
-        ax.set_ylabel(metric_col.replace('_', ' '))
-        ax.set_title('LLM vs métrica' if idx == 0 else 'LLM vs rótulo real', fontweight='bold')
-        ax.set_ylim(0, 1.05)
-        ax.grid(True, alpha=0.3)
-        ax.legend(fontsize=8, loc='lower right')
-
-    fig.suptitle('Fase E (problemas externos) — curva de aprendizado',
-                 fontweight='bold', fontsize=12)
-    plt.tight_layout()
-    if filename:
-        plt.savefig(filename, dpi=140, bbox_inches='tight')
-    plt.close()
 
 
-def plot_external_features_comparison(
-    phase_a_results: List[dict],
-    filename: Optional[str] = None,
-) -> None:
-    """Bar chart comparativo 2/3/4 features por (problema, variante).
-
-    Responde diretamente ao "Verificar se houve ganho?" do e-mail 22:04 ponto 3.
-    """
-    if not phase_a_results:
-        return
-    df = pd.DataFrame(phase_a_results)
-    df['feature_names_str'] = df['feature_names'].apply(
-        lambda t: '/'.join(t) if isinstance(t, tuple) else t
-    )
-    df['group'] = df['problem_name'].astype(str) + ' | ' + df['feature_names_str']
-    groups = sorted(df['group'].unique())
-    n_features_list = sorted(df['n_features'].unique())
-
-    metrics = [
-        ('fidelity_perc_vs_llm', 'Fidelidade Perc (vs LLM)'),
-        ('accuracy_perc_vs_true', 'Acurácia Perc (vs real)'),
-        ('fidelity_nnls_vs_llm', 'Fidelidade NNLS (vs LLM)'),
-        ('accuracy_nnls_vs_true', 'Acurácia NNLS (vs real)'),
-    ]
-
-    fig, axes = plt.subplots(2, 2, figsize=(15, 10))
-    axes = axes.flatten()
-    cmap = plt.get_cmap('tab10')
-
-    for ax, (col, title) in zip(axes, metrics):
-        bar_width = 0.8 / len(n_features_list)
-        x = np.arange(len(groups))
-        for j, nf in enumerate(n_features_list):
-            means, stds = [], []
-            for g in groups:
-                sub = df[(df['group'] == g) & (df['n_features'] == nf)]
-                means.append(sub[col].mean() if len(sub) else 0)
-                stds.append(sub[col].std() if len(sub) > 1 else 0)
-            offset = (j - (len(n_features_list) - 1) / 2) * bar_width
-            ax.bar(x + offset, means, bar_width, yerr=stds, capsize=3,
-                   color=cmap(j), edgecolor='black', alpha=0.8,
-                   label=f'{nf} features')
-        ax.set_xticks(x)
-        ax.set_xticklabels(groups, rotation=20, ha='right', fontsize=8)
-        ax.set_ylabel(title)
-        ax.set_title(title, fontweight='bold', fontsize=10)
-        ax.set_ylim(0, 1.05)
-        ax.grid(True, alpha=0.3, axis='y')
-        ax.legend(fontsize=8)
-
-    fig.suptitle('Fase A externos — comparação 2 / 3 / 4 features\n(orientador 22:04 ponto 3: "Verificar se houve ganho")',
-                 fontweight='bold', fontsize=12)
-    plt.tight_layout()
-    if filename:
-        plt.savefig(filename, dpi=140, bbox_inches='tight')
-    plt.close()
 
 
-def plot_external_decision_boundary(
-    phase_a_results: List[dict],
-    filename: Optional[str] = None,
-) -> None:
-    """Fronteira de decisão projetada em R2 para cada (problema, variante, n_feat).
-
-    Para cada combinação (problema, variante), mostra um painel por n_features
-    com os pontos e a fronteira d_W(x, c_0) = d_W(x, c_1) reconstruída no espaço
-    de 2/3/4 features mas projetada de volta em R2 via grid em (x1, x2).
-    """
-    if not phase_a_results:
-        return
-    df = pd.DataFrame(phase_a_results)
-    df['feature_names_str'] = df['feature_names'].apply(
-        lambda t: '/'.join(t) if isinstance(t, tuple) else t
-    )
-
-    # Agrega: para cada (problema, variante) usa a primeira seed disponível
-    groups = df.groupby(['problem_name', 'feature_names_str'])
-    n_panels = len(groups)
-    if n_panels == 0:
-        return
-
-    fig, axes = plt.subplots(n_panels, 3, figsize=(15, 5 * n_panels), squeeze=False)
-    for row_idx, ((problem_name, fnames), sub) in enumerate(groups):
-        seed = sub['seed'].iloc[0]
-        sub_seed = sub[sub['seed'] == seed].sort_values('n_features')
-        for col_idx, n_feat in enumerate([2, 3, 4]):
-            ax = axes[row_idx, col_idx]
-            row = sub_seed[sub_seed['n_features'] == n_feat]
-            if len(row) == 0:
-                ax.set_title(f'{problem_name} | {fnames} | n_feat={n_feat}\n(não rodado)',
-                             fontsize=9)
-                ax.axis('off')
-                continue
-            r = row.iloc[0]
-            X_aug = r['X_aug']
-            y_llm = r['y_llm']
-            centroids = r['centroids']
-            w = r['w_perc']
-
-            X2 = X_aug[:, :2]
-            pad = 0.5
-            xs = np.linspace(X2[:, 0].min() - pad, X2[:, 0].max() + pad, 120)
-            ys = np.linspace(X2[:, 1].min() - pad, X2[:, 1].max() + pad, 120)
-            xx, yy = np.meshgrid(xs, ys)
-            grid_xy = np.column_stack([xx.ravel(), yy.ravel()])
-            grid_aug = augment_features(grid_xy, n_feat)
-            zz = predict_with_metric(grid_aug, centroids, w).reshape(xx.shape)
-
-            ax.contourf(xx, yy, zz, levels=[-0.5, 0.5, 1.5],
-                        colors=['tab:blue', 'tab:red'], alpha=0.18)
-            ax.contour(xx, yy, zz, levels=[0.5], colors='black', linewidths=1.4)
-            for c in [0, 1]:
-                mask = y_llm == c
-                ax.scatter(X2[mask, 0], X2[mask, 1],
-                           c='tab:blue' if c == 0 else 'tab:red',
-                           s=18, edgecolor='black', linewidth=0.3, alpha=0.85)
-            ax.set_title(
-                f'{problem_name} | {fnames}\n'
-                f'n_feat={n_feat} | seed={seed} | acc_real={r["accuracy_perc_vs_true"]:.1%}',
-                fontsize=9,
-            )
-            ax.grid(True, alpha=0.3)
-
-    fig.suptitle('Fronteira de decisão (Perceptron) — projetada em R2',
-                 fontweight='bold', fontsize=12)
-    plt.tight_layout()
-    if filename:
-        plt.savefig(filename, dpi=140, bbox_inches='tight')
-    plt.close()
 
 
-def plot_phase_e_llm_vs_perceptron(
-    phase_e_results: List[dict],
-    filename: Optional[str] = None,
-) -> None:
-    """Bar chart comparativo: LLM vs Perceptron baseline na Fase E externa.
-
-    Responde à instrução da reunião (~2110s): treinar Perceptron sobre os mesmos
-    exemplos do expert e comparar com o LLM in-context.
-    """
-    if not phase_e_results:
-        return
-    df = pd.DataFrame(phase_e_results)
-    df['feature_names_str'] = df['feature_names'].apply(
-        lambda t: '/'.join(t) if isinstance(t, tuple) else t
-    )
-    df['group'] = df['problem_name'].astype(str) + ' | ' + df['feature_names_str']
-    groups = sorted(df['group'].unique())
-    n_shots = sorted(df['n_shot'].unique())
-
-    fig, axes = plt.subplots(1, len(groups), figsize=(5 * len(groups), 5), squeeze=False)
-    for col_idx, group in enumerate(groups):
-        ax = axes[0, col_idx]
-        sub = df[df['group'] == group]
-        means_llm, means_perc = [], []
-        stds_llm, stds_perc = [], []
-        for ns in n_shots:
-            ss = sub[sub['n_shot'] == ns]
-            means_llm.append(ss['accuracy_llm_vs_true'].mean())
-            stds_llm.append(ss['accuracy_llm_vs_true'].std() if len(ss) > 1 else 0)
-            pb = ss['accuracy_perceptron_baseline_vs_true'].dropna()
-            means_perc.append(pb.mean() if len(pb) else np.nan)
-            stds_perc.append(pb.std() if len(pb) > 1 else 0)
-        x = np.arange(len(n_shots))
-        w = 0.4
-        ax.bar(x - w/2, means_llm, w, yerr=stds_llm, capsize=3,
-               color='tab:orange', edgecolor='black', alpha=0.85, label='LLM')
-        ax.bar(x + w/2, means_perc, w, yerr=stds_perc, capsize=3,
-               color='tab:blue', edgecolor='black', alpha=0.85, label='Perceptron baseline')
-        ax.set_xticks(x)
-        ax.set_xticklabels([str(ns) for ns in n_shots])
-        ax.set_xlabel('n_shot')
-        ax.set_ylabel('Acurácia (vs rótulo real)')
-        ax.set_ylim(0, 1.05)
-        ax.set_title(group, fontweight='bold', fontsize=10)
-        ax.grid(True, alpha=0.3, axis='y')
-        ax.legend(fontsize=8)
-
-    fig.suptitle('Fase E externa — LLM in-context vs Perceptron treinado nos mesmos exemplos',
-                 fontweight='bold', fontsize=12)
-    plt.tight_layout()
-    if filename:
-        plt.savefig(filename, dpi=140, bbox_inches='tight')
-    plt.close()
 
 
 def main():
     global client, async_client, MODEL_NAME, CURRENT_PROVIDER, CURRENT_TEMPERATURE
+    global FEW_SHOT_SIZES, FEW_SHOT_SIZES_PHASE_E, N_REPETICOES, RANDOM_SEEDS
+    global EXTRA_SEEDS_CORE, MODELS_TO_TEST, BIAS_N_SHOTS
+    global DILUTION_EASY_ADDITIONS, EXAMPLE_ORDER_N_SHOTS
+
+    # ─────────────────────────────────────────────────────────────────────
+    # ARGUMENTOS DE LINHA DE COMANDO
+    # --rapido (ou --smoke): execução curta de teste — few-shot [0, 5],
+    # 1 repetição e apenas a seed 42. Sem a flag, roda o experimento completo.
+    # ─────────────────────────────────────────────────────────────────────
+    parser = argparse.ArgumentParser(
+        description="Experimento de consistência decisional de LLMs via otimização inversa."
+    )
+    parser.add_argument(
+        "--rapido", "--smoke", dest="rapido", action="store_true",
+        help="Smoke test: TODOS os experimentos rodam UMA vez cada (inclusive os "
+             "auxiliares, para qualquer modelo), com 1 seed (42), 1 repetição e "
+             "few-shot reduzido a [0, 5]. Sem esta flag, roda o experimento completo.",
+    )
+    parser.add_argument(
+        "--modelo", dest="modelo", default=None,
+        help="Filtra MODELS_TO_TEST por substring do nome do modelo (ex.: --modelo gemini). "
+             "Útil para smoke test isolado de um modelo novo: "
+             "python src/dissertacao_mestrado.py --rapido --modelo gemini",
+    )
+    args = parser.parse_args()
+
+    if args.modelo:
+        MODELS_TO_TEST = [
+            m for m in MODELS_TO_TEST if args.modelo.lower() in m[1].lower()
+        ]
+        if not MODELS_TO_TEST:
+            raise SystemExit(
+                f"--modelo '{args.modelo}' não casa com nenhum modelo em MODELS_TO_TEST"
+            )
+        print(f"  --modelo '{args.modelo}': rodando apenas "
+              f"{', '.join(m[1] for m in MODELS_TO_TEST)}")
+
+    modo_rapido = args.rapido
+    if modo_rapido:
+        # Regra do smoke test: TODOS os experimentos executam (cobertura completa
+        # de código/prompts), cada um UMA vez — 1 seed, 1 repetição, e onde há
+        # few-shot roda apenas o zero-shot + UM few-shot.
+        FEW_SHOT_SIZES = [0, 5]
+        FEW_SHOT_SIZES_PHASE_E = [0, 5]
+        N_REPETICOES = 1
+        RANDOM_SEEDS = [42]
+        EXTRA_SEEDS_CORE = []
+        BIAS_N_SHOTS = [0, 5]              # zero-shot + um few-shot
+        DILUTION_EASY_ADDITIONS = [0, 4]   # 2 pontos da curva de diluição
+        EXAMPLE_ORDER_N_SHOTS = [5]        # um few-shot no viés de ordem
+
+    # Guard: valida as chaves de API de TODOS os modelos selecionados ANTES de
+    # iniciar qualquer coleta — falha na hora zero, não no meio da execução paga.
+    _chaves_faltando = []
+    for _prov, _mod, _tmp, _scp in MODELS_TO_TEST:
+        _env_var = PROVIDER_CONFIG[_prov]["api_key_env"]
+        if not os.getenv(_env_var):
+            _chaves_faltando.append(f"{_prov}/{_mod} → defina {_env_var}")
+    if _chaves_faltando:
+        raise SystemExit(
+            "ERRO: chave(s) de API ausente(s) no ambiente/.env:\n  - "
+            + "\n  - ".join(_chaves_faltando)
+            + "\nDefina a(s) chave(s) no .env ou restrinja com --modelo <substring>."
+        )
 
     # ─────────────────────────────────────────────────────────────────────
     # CRIAÇÃO DA PASTA DE EXECUÇÃO E INÍCIO DO LOG
     # ─────────────────────────────────────────────────────────────────────
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    pasta_execucao = f"execucao_{timestamp}"
+    pasta_execucao = str(BASE_DIR / f"execucao_{timestamp}")
     os.makedirs(pasta_execucao, exist_ok=True)
 
     print(f"\n{'='*70}")
@@ -6818,10 +2911,22 @@ def main():
     print(f" Todos os arquivos (imagens, CSVs e log) serão salvos nesta pasta.")
     print(f"{'='*70}\n")
 
+    # stdout E stderr no MESMO buffer (ordem de chegada): warnings dos
+    # estimadores (warnings.warn -> stderr) e tracebacks precisam constar no
+    # log_execucao.txt persistido — sem isso o log diria "zero avisos" falsamente.
     tee = Tee()
+    tee_err = Tee(sys.stderr, tee._buffer)
     sys.stdout = tee
+    sys.stderr = tee_err
 
     print_section("EXPERIMENTO: CONSISTÊNCIA DECISIONAL DE LLMs VIA OTIMIZAÇÃO INVERSA (v5.0)", "=")
+    if modo_rapido:
+        print_section(
+            "⚡ MODO RÁPIDO ATIVO (--rapido) — smoke test de cobertura completa\n"
+            "   TODOS os experimentos, 1x cada | 1 seed (42) | 1 repetição | few-shot [0, 5]\n"
+            "   (NÃO usar para resultados finais)",
+            "="
+        )
     print("  Organizado em 3 BLOCOS auto-contidos:")
     print("    BLOCO 1 — LLM como FONTE (otim. inversa em A/B/C lineares + D meia-lua)")
     print("    BLOCO 2 — LLM como APRENDIZ (Fase E no perito linear E + meia-lua F)")
@@ -6848,7 +2953,7 @@ def main():
     if RUN_HOMEM_MULHER: flags_active.append("Peso×Altura (real, elipse)")
     if RUN_PROBLEM_MEIALUA: flags_active.append("Meia-lua (não-linear sintético)")
 
-    models_str = '\n    '.join([f"- {p}/{m} (temp={t})" for p, m, t in MODELS_TO_TEST])
+    models_str = '\n    '.join([f"- {p}/{m} (temp={t}, scope={s})" for p, m, t, s in MODELS_TO_TEST])
 
     print(f"""
     ═══════════════════════════════════════════════════
@@ -6861,8 +2966,11 @@ def main():
     PHASES A-C:
       Few-shot sizes: {FEW_SHOT_SIZES}
       Class name variations: {len(NOMES_CLASSES)}
-      Repetitions: {N_REPETICOES}
-      Seeds: {RANDOM_SEEDS}
+      Repetições (regra única): 1 coleta onde a seleção é determinística
+        (zero-shot; margem em B/C; diluição; ordenações); {N_REPETICOES} onde há
+        sorteio de exemplos (Fase E, externos few-shot). Flip de T=0 → auditoria.
+      Seeds: {RANDOM_SEEDS} (+ extras no pipeline central do modelo full: {EXTRA_SEEDS_CORE})
+      Vieses ancorados em n_shot = {BIAS_N_SHOTS}
 
     PHASE D:
       Few-shot sizes: {FEW_SHOT_SIZES_PHASE_E}
@@ -6877,6 +2985,7 @@ def main():
     all_results_dilution = []
     all_results_abc_alternative = []  # Para comparação de algoritmos (NNLS)
     all_results_oracle = []  # Para validação do oráculo
+    all_results_oracle_meialua = []  # Item 5: oracle de aproximação da meia-lua
     all_results_example_order = []  # Para viés de ordem dos exemplos
     all_results_baselines = []  # Para baselines clássicos (k-NN, LR, SVM)
     results_r3_2feat = []  # Fidelidade da métrica R2 (2 pesos) sobre rótulos do LLM
@@ -6887,17 +2996,34 @@ def main():
     # Dados detalhados por seed para visualizações abrangentes
     seed_detailed_data = {}
 
-    for model_idx, (provider, model_name, temperature) in enumerate(MODELS_TO_TEST):
+    for model_idx, (provider, model_name, temperature, model_scope) in enumerate(MODELS_TO_TEST):
         client = get_client(provider)
         async_client = get_async_client(provider)
         MODEL_NAME = model_name
         CURRENT_PROVIDER = provider
         CURRENT_TEMPERATURE = temperature
 
-        for seed_idx, seed in enumerate(RANDOM_SEEDS):
+        # Seeds do modelo: as extras do pipeline central só para o modelo "full".
+        seeds_do_modelo = RANDOM_SEEDS + (EXTRA_SEEDS_CORE if model_scope == "full" else [])
+
+        for seed_idx, seed in enumerate(seeds_do_modelo):
+            # Seeds extras rodam SÓ o pipeline central (Fases A-C + Fase E perito
+            # principal); experimentos auxiliares ficam nas 3 RANDOM_SEEDS do
+            # modelo "full".
+            is_seed_extra = seed_idx >= len(RANDOM_SEEDS)
+            # No --rapido, TODOS os modelos rodam todos os experimentos (smoke test
+            # de cobertura completa); na execução normal, só o modelo "full".
+            run_aux = (model_scope == "full" or modo_rapido) and not is_seed_extra
+
+            # Checkpoint das interações coletadas até aqui (crash a qualquer
+            # momento perde no máximo uma iteração de seed, não a execução inteira)
+            checkpoint_interactions(pasta_execucao)
+
             print_section(
                 f"BLOCO 1 — LLM como FONTE | MODEL {model_idx + 1}/{len(MODELS_TO_TEST)}: "
-                f"{provider}/{model_name} (temp={temperature}) | SEED {seed_idx + 1}/{len(RANDOM_SEEDS)}: {seed}",
+                f"{provider}/{model_name} (temp={temperature}, scope={model_scope}) | "
+                f"SEED {seed_idx + 1}/{len(seeds_do_modelo)}: {seed}"
+                + (" [extra: só pipeline central]" if is_seed_extra else ""),
                 "═"
             )
 
@@ -6957,8 +3083,11 @@ def main():
 
                 print(f"\n>>> Fases A-C: Experimento Principal", flush=True)
                 for n_shot in FEW_SHOT_SIZES:
-                    for rep in range(N_REPETICOES):
-                        print(f"  [ABC] n_shot={n_shot}, rep={rep+1}/{N_REPETICOES}, seed={seed}", flush=True)
+                    # Seleção de exemplos das Fases B/C é DETERMINÍSTICA (maior margem)
+                    # → repetição não sorteia nada; roda-se 1 coleta (ver reps_para).
+                    n_reps_abc = reps_para(n_shot, sorteio_estocastico=False)
+                    for rep in range(n_reps_abc):
+                        print(f"  [ABC] n_shot={n_shot}, rep={rep+1}/{n_reps_abc}, seed={seed}", flush=True)
                         verbose = (rep == 0 and n_shot == FEW_SHOT_SIZES[0] and seed_idx == 0)
                         result, learned_metric, y_llm_train_a, fidelity, llm_acc_a, n_malformed, detail_bc = \
                             _run_phase_abc_experiment(
@@ -6969,18 +3098,20 @@ def main():
                         all_results_abc.append(result)
 
                         # Guarda dados para plots de erros da Fase A e visualizações detalhadas
+                        # (TODOS os modelos alimentam as visualizações por seed —
+                        # dicts chaveados por (provider, model_name, seed))
                         if n_shot == 0 and rep == 0 and learned_metric is not None:
-                            cache_key_ab = (seed, "A", "B", "default")
+                            cache_key_ab = (provider, model_name, seed, "A", "B", "default")
                             if cache_key_ab in phase_a_cache:
                                 cached = phase_a_cache[cache_key_ab]
                                 y_metric_a = predict_with_metric(X_train_a, cached['metric'].centroids, cached['metric'].w)
-                                phase_a_data_for_plots[seed] = {
+                                phase_a_data_for_plots[(provider, model_name, seed)] = {
                                     'X': X_train_a, 'y_llm': cached['y_llm'],
                                     'y_metric': y_metric_a,
                                     'w': cached['metric'].w,
                                     'centroids': cached['metric'].centroids,
                                 }
-                                seed_detailed_data[seed] = {
+                                seed_detailed_data[(provider, model_name, seed)] = {
                                     'X_a': X_train_a, 'y_gt_a': y_train_a,
                                     'X_b': X_b, 'y_gt_b': y_b,
                                     'X_c': X_c, 'y_gt_c': y_c,
@@ -6996,36 +3127,37 @@ def main():
                                     'metrics_c': detail_bc.get('metrics_c'),
                                 }
 
-                print(f"  ✓ Experimento principal concluído ({len(FEW_SHOT_SIZES)} n_shots × {N_REPETICOES} reps)", flush=True)
+                print(f"  ✓ Experimento principal concluído ({len(FEW_SHOT_SIZES)} n_shots × 1 coleta)", flush=True)
 
-                # Variações de nomes de classe
-                print(f"\n>>> Fases A-C: Variações de nomes de classe (10-shot)", flush=True)
-                n_shot_fixed = 10
-                for nome_0, nome_1 in NOMES_CLASSES[1:]:
-                    for rep in range(N_REPETICOES):
-                        print(f"  [ABC-Nomes] classes=({nome_0},{nome_1}), rep={rep+1}/{N_REPETICOES}, seed={seed}", flush=True)
-                        verbose = (rep == 0 and seed_idx == 0)
-                        result, *_ = _run_phase_abc_experiment(
-                            X_train_a, y_train_a, X_b, y_b, X_c, y_c,
-                            n_shot_fixed, nome_0, nome_1, rep, provider, model_name,
-                            temperature, seed, seed_idx, phase_a_cache, verbose
-                        )
-                        all_results_abc.append(result)
+                # Variações de nomes de classe — ancoradas em BIAS_N_SHOTS ({0, 10})
+                # para efeitos comparáveis com as demais análises de viés.
+                if run_aux:
+                    print(f"\n>>> Fases A-C: Variações de nomes de classe (n_shot={BIAS_N_SHOTS})", flush=True)
+                    for nome_0, nome_1 in NOMES_CLASSES[1:]:
+                        for n_shot_bias in BIAS_N_SHOTS:
+                            print(f"  [ABC-Nomes] classes=({nome_0},{nome_1}), n_shot={n_shot_bias}, seed={seed}", flush=True)
+                            verbose = (n_shot_bias == BIAS_N_SHOTS[0] and seed_idx == 0)
+                            result, *_ = _run_phase_abc_experiment(
+                                X_train_a, y_train_a, X_b, y_b, X_c, y_c,
+                                n_shot_bias, nome_0, nome_1, 0, provider, model_name,
+                                temperature, seed, seed_idx, phase_a_cache, verbose
+                            )
+                            all_results_abc.append(result)
 
-                print(f"  ✓ Variações de nomes de classe concluídas", flush=True)
+                    print(f"  ✓ Variações de nomes de classe concluídas", flush=True)
 
                 # ═══════════════════════════════════════════════════════
                 # TESTE DE INVERSÃO DE ORDEM DAS CLASSES
                 # ═══════════════════════════════════════════════════════
-                if RUN_CLASS_ORDER_BIAS:
+                if RUN_CLASS_ORDER_BIAS and run_aux:
                     print(f"\n>>> Fases A-C: Teste de inversão de ordem das classes", flush=True)
                     for nome_0, nome_1 in NOMES_CLASSES_INVERTIDAS:
-                        for rep in range(N_REPETICOES):
-                            print(f"  [ABC-Inversão] classes=({nome_0},{nome_1}), rep={rep+1}/{N_REPETICOES}, seed={seed}", flush=True)
-                            verbose = (rep == 0 and seed_idx == 0)
+                        for n_shot_bias in BIAS_N_SHOTS:
+                            print(f"  [ABC-Inversão] classes=({nome_0},{nome_1}), n_shot={n_shot_bias}, seed={seed}", flush=True)
+                            verbose = (n_shot_bias == BIAS_N_SHOTS[0] and seed_idx == 0)
                             result, *_ = _run_phase_abc_experiment(
                                 X_train_a, y_train_a, X_b, y_b, X_c, y_c,
-                                n_shot_fixed, nome_0, nome_1, rep, provider, model_name,
+                                n_shot_bias, nome_0, nome_1, 0, provider, model_name,
                                 temperature, seed, seed_idx, phase_a_cache, verbose
                             )
                             all_results_abc.append(result)
@@ -7034,17 +3166,17 @@ def main():
                 # ═══════════════════════════════════════════════════════
                 # TESTE DE VARIANTES DE PROMPT (Sensibilidade ao prompt)
                 # ═══════════════════════════════════════════════════════
-                if RUN_PROMPT_VARIANTS:
+                if RUN_PROMPT_VARIANTS and run_aux:
                     print(f"\n>>> Fases A-C: Teste de variantes de prompt", flush=True)
                     for variant_name in PROMPT_VARIANTS:
                         if variant_name == "default":
                             continue  # Já testado no loop principal
-                        for rep in range(N_REPETICOES):
-                            print(f"  [ABC-Prompt] variant={variant_name}, rep={rep+1}/{N_REPETICOES}, seed={seed}", flush=True)
-                            verbose = (rep == 0 and seed_idx == 0)
+                        for n_shot_bias in BIAS_N_SHOTS:
+                            print(f"  [ABC-Prompt] variant={variant_name}, n_shot={n_shot_bias}, seed={seed}", flush=True)
+                            verbose = (n_shot_bias == BIAS_N_SHOTS[0] and seed_idx == 0)
                             result, *_ = _run_phase_abc_experiment(
                                 X_train_a, y_train_a, X_b, y_b, X_c, y_c,
-                                0, "A", "B", rep, provider, model_name,
+                                n_shot_bias, "A", "B", 0, provider, model_name,
                                 temperature, seed, seed_idx, phase_a_cache, verbose,
                                 prompt_variant=variant_name
                             )
@@ -7054,12 +3186,13 @@ def main():
                 # ═══════════════════════════════════════════════════════
                 # TESTE DE NOMES SEMÂNTICOS NAS FEATURES
                 # ═══════════════════════════════════════════════════════
-                if RUN_FEATURE_NAMES:
+                if RUN_FEATURE_NAMES and run_aux:
                     print(f"\n>>> Fases A-C: Teste de nomes semânticos nas features", flush=True)
                     for feat_0, feat_1 in NOMES_FEATURES[1:]:  # Pula o neutro (já testado)
                         print(f"    Features: {feat_0}/{feat_1}")
-                        # Teste simplificado: 1 seed, classe A/B, zero-shot apenas
-                        if seed_idx == 0:
+                        # Classe A/B, zero-shot; roda em TODAS as RANDOM_SEEDS
+                        # (antes: apenas seed_idx==0 — célula fraca do grid, corrigida).
+                        if run_aux:
                             # Coleta decisões com nomes de features alterados
                             y_llm_feat, n_malf = collect_llm_decisions(
                                 X_train_a, "A", "B",
@@ -7074,8 +3207,8 @@ def main():
                                 # Perceptron
                                 w_feat, gamma_feat = train_relaxed_perceptron(
                                     X_train_a, y_llm_feat, centroids_feat,
-                                    eta=0.001, C=1.0, delta_gamma=0.05,  # Coelho et al. CILAMCE 2017, p. 16
-                                    max_epochs=50, tol=1e-4, verbose=False,
+                                    **PERCEPTRON_PARAMS,
+                                    verbose=False,
                                     use_best_effort=True
                                 )
                                 y_metric_feat = predict_with_metric(X_train_a, centroids_feat, w_feat)
@@ -7160,9 +3293,9 @@ def main():
                 # ═══════════════════════════════════════════════════════
                 # COMPARAÇÃO DE ALGORITMOS
                 # ═══════════════════════════════════════════════════════
-                if RUN_ALGORITHM_COMPARISON:
+                if RUN_ALGORITHM_COMPARISON and run_aux:
                     print(f"\n>>> Comparação de Algoritmos: Perceptron vs NNLS", flush=True)
-                    cache_key_ab = (seed, "A", "B", "default")
+                    cache_key_ab = (provider, model_name, seed, "A", "B", "default")
                     if cache_key_ab in phase_a_cache:
                         cached = phase_a_cache[cache_key_ab]
                         y_llm_for_alt = cached['y_llm']
@@ -7231,9 +3364,9 @@ def main():
                             all_results_abc_alternative.append(result_alt)
 
                             # Guarda W do NNLS para visualizações
-                            if seed in seed_detailed_data:
-                                seed_detailed_data[seed]['w_nnls'] = w_alt
-                                seed_detailed_data[seed]['centroids_nnls'] = centroids_alt
+                            if (provider, model_name, seed) in seed_detailed_data:
+                                seed_detailed_data[(provider, model_name, seed)]['w_nnls'] = w_alt
+                                seed_detailed_data[(provider, model_name, seed)]['centroids_nnls'] = centroids_alt
 
                             print(f"    --- Comparação Fase A (Fidelidade) ---", flush=True)
                             print(f"    Perceptron: W=[{cached['metric'].w[0]:.4f}, {cached['metric'].w[1]:.4f}], Fidelidade={cached['fidelity']:.1%}")
@@ -7255,7 +3388,9 @@ def main():
             # VALIDAÇÃO DO ORÁCULO: ALGORITMOS RECUPERAM W CONHECIDO?
             # ═══════════════════════════════════════════════════════════════
 
-            if RUN_ORACLE_VALIDATION:
+            # Oráculo é INDEPENDENTE do modelo (0 chamadas LLM) — roda uma vez, no
+            # primeiro modelo, para todas as seeds (inclusive extras: de graça).
+            if RUN_ORACLE_VALIDATION and model_idx == 0:
                 print(f"\n>>> Validação do Oráculo: Algoritmos recuperam W conhecido?", flush=True)
                 oracle_results = run_oracle_validation(
                     X_a, y_a, X_b, y_b, X_c, y_c, X_e, y_e,
@@ -7266,13 +3401,27 @@ def main():
                 all_results_oracle.extend(oracle_results)
                 print(f"  ✓ Validação do oráculo concluída para seed={seed}", flush=True)
 
+                # Item 5 (reunião 20/05): oracle de APROXIMAÇÃO da meia-lua —
+                # mostra que existe W (em espaço aumentado) que aproxima a fronteira
+                # não-linear, com fidelidade crescente em 2→3→4 features.
+                if RUN_PROBLEM_MEIALUA:
+                    X_ml_o, y_ml_o = create_problem_d_meialua(
+                        n_samples=N_SAMPLES_PROBLEM_A, random_state=seed,
+                    )
+                    ml_oracle = run_oracle_meialua(
+                        X_ml_o, y_ml_o, random_seed=seed, verbose=(seed_idx == 0),
+                    )
+                    all_results_oracle_meialua.extend(ml_oracle)
+
             # ═══════════════════════════════════════════════════════════════
             # FASE E: LLM COMO APRENDIZ
             # ═══════════════════════════════════════════════════════════════
 
             if RUN_PHASE_E:
-                # Determina quais configs de expert usar
-                expert_configs_to_run = EXPERT_CONFIGS if RUN_MULTIPLE_EXPERTS else [EXPERT_CONFIGS[0]]
+                # Múltiplos peritos: só no grid completo (modelo "full", seeds base).
+                # Modelos "core" e seeds extras rodam apenas o perito principal.
+                usa_multiplos_experts = RUN_MULTIPLE_EXPERTS and run_aux
+                expert_configs_to_run = EXPERT_CONFIGS if usa_multiplos_experts else [EXPERT_CONFIGS[0]]
 
                 for expert_cfg in expert_configs_to_run:
                     expert_w = expert_cfg["w"]
@@ -7290,7 +3439,7 @@ def main():
                             combo_count += 1
                             print(f"  [Fase E] Expert={expert_name}, n_shot={n_shot_e}, strategy={strategy} ({combo_count}/{total_e_combos}), seed={seed}", flush=True)
                             if n_shot_e == 0 and strategy != EXAMPLE_STRATEGIES[0]:
-                                base_results = all_results_e[-N_REPETICOES:]
+                                base_results = all_results_e[-reps_para(0):]
                                 for rep, prev_result in enumerate(base_results):
                                     dup_result = ResultadoPhaseEExperimento(
                                         provider=prev_result.provider,
@@ -7319,7 +3468,13 @@ def main():
                                     all_results_e.append(dup_result)
                                 continue
 
-                            for rep in range(N_REPETICOES):
+                            # Zero-shot: 1 coleta (não há exemplos a sortear). Few-shot:
+                            # só a estratégia "random" consome o sorteio (random_state=
+                            # seed+rep); easy/hard/mixed são determinísticas por margem —
+                            # repetir recoletaria o MESMO prompt (o flip de T=0 já é
+                            # quantificado pela auditoria offline). Regra única: reps_para.
+                            reps_e = reps_para(n_shot_e, sorteio_estocastico=(strategy == "random"))
+                            for rep in range(reps_e):
                                 is_verbose = (
                                     rep == 0 and seed_idx == 0 and
                                     (n_shot_e in [0, FEW_SHOT_SIZES_PHASE_E[-1]])
@@ -7348,7 +3503,10 @@ def main():
                 # ═══════════════════════════════════════════════════════
                 # BASELINES CLÁSSICOS (k-NN, LR, SVM)
                 # ═══════════════════════════════════════════════════════
-                if RUN_CLASSICAL_BASELINES:
+                # Baselines clássicos são INDEPENDENTES do LLM (treinam nos exemplos
+                # rotulados pelo perito) — rodar uma vez, no primeiro modelo, evita
+                # linhas duplicadas nos CSVs/plots com múltiplos modelos.
+                if RUN_CLASSICAL_BASELINES and model_idx == 0:
                     print(f"\n>>> Baselines clássicos na Fase E", flush=True)
                     for expert_cfg_bl in (EXPERT_CONFIGS if RUN_MULTIPLE_EXPERTS else [EXPERT_CONFIGS[0]]):
                         expert_w_bl = expert_cfg_bl["w"]
@@ -7412,11 +3570,11 @@ def main():
                 # ═══════════════════════════════════════════════════════
                 # EXPERIMENTO DE DILUIÇÃO
                 # ═══════════════════════════════════════════════════════
-                if RUN_DILUTION:
+                if RUN_DILUTION and run_aux:
                     print(f"\n>>> Experimento de Diluição: 3 hard fixos + N easy progressivos", flush=True)
                     y_expert_dilution = expert_classify(X_e, EXPERT_W, EXPERT_CENTROIDS)
                     n_hard_fixed = 4  # 2 por classe (arredondado para par)
-                    easy_additions = [0, 2, 4, 10, 16, 20]  # N easy adicionados
+                    easy_additions = DILUTION_EASY_ADDITIONS  # N easy adicionados
 
                     for dil_idx, n_easy in enumerate(easy_additions):
                         n_total = n_hard_fixed + n_easy
@@ -7436,7 +3594,8 @@ def main():
                         y_expert_test_dil = y_expert_dilution[test_mask]
                         y_gt_test_dil = y_e[test_mask]
 
-                        for rep in range(N_REPETICOES):
+                        # Seleção da diluição é determinística (margem) → 1 coleta.
+                        for rep in range(reps_para(n_total, sorteio_estocastico=False)):
                             y_llm_dil, n_malf_dil = collect_llm_decisions(
                                 X_test_dil, "A", "B",
                                 examples=examples_dil if n_total > 0 else None,
@@ -7475,14 +3634,14 @@ def main():
             # VIÉS DE ORDEM DOS EXEMPLOS FEW-SHOT (Recency Bias)
             # ═══════════════════════════════════════════════════════════════
 
-            if RUN_EXAMPLE_ORDER_BIAS and RUN_PHASE_E:
+            if RUN_EXAMPLE_ORDER_BIAS and RUN_PHASE_E and run_aux:
                 print(f"\n>>> Experimento de Viés de Ordem dos Exemplos Few-Shot", flush=True)
                 y_expert_order = expert_classify(X_e, EXPERT_W, EXPERT_CENTROIDS)
                 expert_acc_order = accuracy_score(y_e, y_expert_order)
 
                 # Usa n_shot=10 e estratégia "mixed" como configuração fixa
                 # para isolar o efeito da ordenação
-                ORDER_TEST_N_SHOTS = [5, 10, 20]
+                ORDER_TEST_N_SHOTS = EXAMPLE_ORDER_N_SHOTS
 
                 for n_shot_order in ORDER_TEST_N_SHOTS:
                     # Seleciona exemplos uma vez (estratégia mixed)
@@ -7510,9 +3669,12 @@ def main():
                         )
                         print(f"  [Ordem] n_shot={n_shot_order}, ordering={ordering}, seed={seed}", flush=True)
 
-                        for rep in range(N_REPETICOES):
+                        # Compara ORDENAÇÕES FIXAS do mesmo conjunto de exemplos —
+                        # não há sorteio por repetição → 1 coleta por ordenação.
+                        n_reps_order = reps_para(n_shot_order, sorteio_estocastico=False)
+                        for rep in range(n_reps_order):
                             t_rep_start = time.time()
-                            print(f"    [Ordem {ordering}] rep {rep+1}/{N_REPETICOES} (n_test={len(X_test_order)})...", flush=True)
+                            print(f"    [Ordem {ordering}] rep {rep+1}/{n_reps_order} (n_test={len(X_test_order)})...", flush=True)
                             y_llm_order, n_malf_order = collect_llm_decisions(
                                 X_test_order, "A", "B",
                                 examples=reordered,
@@ -7522,7 +3684,7 @@ def main():
                             cons_order = compute_consistency_metrics(y_llm_order, y_expert_test_order)
                             llm_acc_order = accuracy_score(y_gt_test_order, y_llm_order)
                             print(
-                                f"    [Ordem {ordering}] rep {rep+1}/{N_REPETICOES} concluída em "
+                                f"    [Ordem {ordering}] rep {rep+1}/{n_reps_order} concluída em "
                                 f"{time.time()-t_rep_start:.1f}s — acc={cons_order.accuracy:.1%}, kappa={cons_order.cohen_kappa:.3f}, malf={n_malf_order}",
                                 flush=True,
                             )
@@ -7565,7 +3727,7 @@ def main():
                 # Reutiliza classificações do LLM da Fase A (2 features)
                 # O LLM NÃO sabe da existência de x3 — queremos verificar se
                 # implicitamente ele adota não-linearidade no processo de classificação
-                cache_key_r3 = (seed, "A", "B", "default")
+                cache_key_r3 = (provider, model_name, seed, "A", "B", "default")
                 if cache_key_r3 not in phase_a_cache:
                     print("  ⚠ Cache da Fase A não disponível para esta seed, pulando R3")
                 else:
@@ -7592,8 +3754,8 @@ def main():
                         # Perceptron — aprende W com 3 pesos sobre os MESMOS rótulos do LLM
                         w_r3, gamma_r3 = train_relaxed_perceptron(
                             X_a_r3, y_llm_r2, centroids_r3,
-                            eta=0.001, C=1.0, delta_gamma=0.05,  # Coelho et al. CILAMCE 2017, p. 16
-                            max_epochs=50, tol=1e-4, verbose=(seed_idx == 0),
+                            **PERCEPTRON_PARAMS,
+                            verbose=(seed_idx == 0),
                             use_best_effort=True
                         )
                         y_metric_r3 = predict_with_metric(X_a_r3, centroids_r3, w_r3)
@@ -7622,8 +3784,10 @@ def main():
                         results_r3_3feat.append({
                             'accuracy': fid_r3, 'w': w_r3, 'seed': seed,
                             'accuracy_nnls': fid_r3_nnls, 'w_nnls': w_r3_nnls,
+                            'provider': provider, 'model': model_name,
                         })
-                        results_r3_2feat.append({'accuracy': fid_r2, 'seed': seed})
+                        results_r3_2feat.append({'accuracy': fid_r2, 'seed': seed,
+                                                 'provider': provider, 'model': model_name})
 
                         # ─────────────────────────────────────────────────────────────
                         # R4: x3 = x1², x4 = x2² (elipse) — sanity check em problemas
@@ -7641,8 +3805,8 @@ def main():
 
                         w_r4, _ = train_relaxed_perceptron(
                             X_a_r4, y_llm_r2, centroids_r4,
-                            eta=0.001, C=1.0, delta_gamma=0.05,  # Coelho et al. CILAMCE 2017, p. 16
-                            max_epochs=50, tol=1e-4, verbose=False,
+                            **PERCEPTRON_PARAMS,
+                            verbose=False,
                             use_best_effort=True,
                         )
                         y_metric_r4 = predict_with_metric(X_a_r4, centroids_r4, w_r4)
@@ -7667,6 +3831,7 @@ def main():
                         results_r3_4feat.append({
                             'accuracy': fid_r4, 'w': w_r4, 'seed': seed,
                             'accuracy_nnls': fid_r4_nnls, 'w_nnls': w_r4_nnls,
+                            'provider': provider, 'model': model_name,
                         })
 
                     print(f"  ✓ Experimento R2 vs R3 vs R4 concluído (seed={seed})", flush=True)
@@ -7683,7 +3848,9 @@ def main():
     if RUN_HOMEM_MULHER:
         try:
             print_section("BLOCO 3 — ESTUDO DE CASO REAL: PESO × ALTURA (homem/mulher)", "═")
-            X_hm, y_hm = create_problem_homem_mulher()
+            X_hm, y_hm = create_problem_homem_mulher(
+                str(BASE_DIR / "dados_reais/homem_mulher/peso_altura.csv")
+            )
             print(f"  Base: shape={X_hm.shape} | classes={dict(zip(*np.unique(y_hm, return_counts=True)))}")
             print(f"  Classificador ótimo: elipse x2² - x2 + x1² - x1 + cte (e-mail orientador 19:15)")
 
@@ -7699,23 +3866,63 @@ def main():
                 optimal_boundary_fn=_elipse_otima,
                 filename=os.path.join(pasta_execucao, "bloco3_01_peso_altura_overview.png"),
             )
-            print(f"  Gráfico salvo: 25_homem_mulher_overview.png")
+            print(f"  Gráfico salvo: bloco3_01_peso_altura_overview.png")
 
-            hm_pipeline = run_external_problem_pipeline(
-                problem_name="homem_mulher",
-                X=X_hm, y_true=y_hm,
-                nome_classe_0="Homem", nome_classe_1="Mulher",
-                feature_variants=[("x1", "x2"), ("peso", "altura")],
-                seeds=RANDOM_SEEDS,
-                n_shots_phase_e=FEW_SHOT_SIZES_PHASE_E,
-                pasta_execucao=pasta_execucao,
-                n_train_ratio=0.7,
-                verbose=True,
+            # Item 17 (reunião 20/05): roda o peso×altura uma vez por par de nomes
+            # de classe. Com "Homem"/"Mulher" o LLM pode usar prior semântico; com
+            # "A"/"B" ele fica cego ao significado. Comparar as duas isola o efeito
+            # do nome da classe (complementa o teste de nomes de feature x1/x2).
+            class_name_variants = (
+                HM_CLASS_NAME_VARIANTS if RUN_HM_CLASS_NAMES_AB
+                else [("Homem", "Mulher", "homem_mulher")]
             )
-            external_phase_a_results.extend(hm_pipeline['phase_a_results'])
-            external_phase_e_results.extend(hm_pipeline['phase_e_results'])
-            external_llm_label_maps.update(hm_pipeline['llm_label_maps'])
-            print("  ✓ Pipeline peso × altura concluído.", flush=True)
+            # Comparação entre modelos ("central + caso real"): TODOS os modelos de
+            # MODELS_TO_TEST rodam o caso real, em pé de igualdade. Os PNGs de todos
+            # vão para a raiz da execução — o alias do modelo no nome do asset
+            # (llm_asset) evita sobrescrita entre modelos.
+            for ext_provider, ext_model, ext_temp, ext_scope in MODELS_TO_TEST:
+                checkpoint_interactions(pasta_execucao)
+                client = get_client(ext_provider)
+                async_client = get_async_client(ext_provider)
+                MODEL_NAME = ext_model
+                CURRENT_PROVIDER = ext_provider
+                CURRENT_TEMPERATURE = ext_temp
+                # Escopo "full" (ou --rapido) roda também a variante A/B de nomes
+                # de classe; "core" roda só a semântica (Homem/Mulher).
+                variants_do_modelo = (
+                    class_name_variants if (ext_scope == "full" or modo_rapido)
+                    else class_name_variants[:1]
+                )
+
+                for nc0, nc1, pname in variants_do_modelo:
+                    print_section(
+                        f"  → {ext_provider}/{ext_model} | nomes de classe: {nc0}/{nc1} ({pname})", "─")
+                    hm_pipeline = run_external_problem_pipeline(
+                        problem_name=pname,
+                        X=X_hm, y_true=y_hm,
+                        nome_classe_0=nc0, nome_classe_1=nc1,
+                        feature_variants=[("x1", "x2"), ("peso", "altura")],
+                        seeds=RANDOM_SEEDS,
+                        n_shots_phase_e=FEW_SHOT_SIZES_PHASE_E,
+                        pasta_execucao=pasta_execucao,
+                        n_train_ratio=0.7,
+                        verbose=True,
+                    )
+                    for _r in hm_pipeline['phase_a_results'] + hm_pipeline['phase_e_results']:
+                        _r['provider'] = ext_provider
+                        _r['model'] = ext_model
+                    external_phase_a_results.extend(hm_pipeline['phase_a_results'])
+                    external_phase_e_results.extend(hm_pipeline['phase_e_results'])
+                    # O scatter ponto-a-ponto (final_08) é gerado para TODOS os
+                    # modelos: a chave ganha o modelo na frente. Só a variante
+                    # semântica (Homem/Mulher) alimenta a visualização — a A/B
+                    # fica nos CSVs.
+                    if pname == "homem_mulher":
+                        external_llm_label_maps.update({
+                            (ext_model, *k): v
+                            for k, v in hm_pipeline['llm_label_maps'].items()
+                        })
+            print("  ✓ Pipeline peso × altura concluído (todos os modelos).", flush=True)
         except FileNotFoundError as exc:
             print(f"  ⚠ Base peso × altura não encontrada: {exc}")
         except Exception as exc:
@@ -7725,35 +3932,83 @@ def main():
     if RUN_PROBLEM_MEIALUA:
         try:
             print_section("BLOCO 1/2 — PROBLEMA D/F: MEIA-LUA (não-linear sintético)", "═")
-            for seed in RANDOM_SEEDS:
-                X_ml, y_ml = create_problem_d_meialua(n_samples=N_SAMPLES_PROBLEM_A, random_state=seed)
-                print(f"  Meia-lua seed={seed}: shape={X_ml.shape}")
+            # Todos os modelos rodam a meia-lua (barato, e testa se o colapso
+            # zero-shot se repete entre modelos). PNGs de todos na raiz, com o
+            # alias do modelo no nome.
+            for _ml_idx, (ext_provider, ext_model, ext_temp, ext_scope) in enumerate(MODELS_TO_TEST):
+                checkpoint_interactions(pasta_execucao)
+                client = get_client(ext_provider)
+                async_client = get_async_client(ext_provider)
+                MODEL_NAME = ext_model
+                CURRENT_PROVIDER = ext_provider
+                CURRENT_TEMPERATURE = ext_temp
+                print_section(f"  → Meia-lua com {ext_provider}/{ext_model}", "─")
 
-                # Visualização do problema antes de qualquer coleta LLM
-                plot_problem_overview(
-                    X_ml, y_ml,
-                    title=f"Problema E — Meia-lua (sklearn.make_moons, seed={seed})",
-                    feature_names=("x1", "x2"),
-                    optimal_boundary_fn=None,
-                    filename=os.path.join(pasta_execucao, f"bloco1_02_problema_d_meialua_seed{seed}_overview.png"),
-                )
-                print(f"  Gráfico salvo: 26_meia_lua_seed{seed}_overview.png")
+                for seed in RANDOM_SEEDS:
+                    # Reseta o RNG global por semente (consistente com os demais loops):
+                    # garante que qualquer estocasticidade que dependa do estado global
+                    # do NumPy seja reprodutível por semente neste bloco.
+                    np.random.seed(seed)
+                    X_ml, y_ml = create_problem_d_meialua(n_samples=N_SAMPLES_PROBLEM_A, random_state=seed)
+                    print(f"  Meia-lua seed={seed}: shape={X_ml.shape}")
 
-                ml_pipeline = run_external_problem_pipeline(
-                    problem_name=f"meia_lua_seed{seed}",
-                    X=X_ml, y_true=y_ml,
-                    nome_classe_0="A", nome_classe_1="B",
-                    feature_variants=[("x1", "x2")],
-                    seeds=[seed],
-                    n_shots_phase_e=FEW_SHOT_SIZES_PHASE_E,
-                    pasta_execucao=pasta_execucao,
-                    n_train_ratio=0.7,
-                    verbose=True,
-                )
-                external_phase_a_results.extend(ml_pipeline['phase_a_results'])
-                external_phase_e_results.extend(ml_pipeline['phase_e_results'])
-                external_llm_label_maps.update(ml_pipeline['llm_label_maps'])
-            print("  ✓ Pipeline meia-lua concluído.", flush=True)
+                    # Visualização do problema (dado sintético, independe do
+                    # modelo — 1 cópia basta: só no primeiro modelo do loop)
+                    if _ml_idx == 0:
+                        plot_problem_overview(
+                            X_ml, y_ml,
+                            title=f"Problema E — Meia-lua (sklearn.make_moons, seed={seed})",
+                            feature_names=("x1", "x2"),
+                            optimal_boundary_fn=None,
+                            filename=os.path.join(pasta_execucao, f"bloco1_02_problema_d_meialua_seed{seed}_overview.png"),
+                        )
+                        print(f"  Gráfico salvo: bloco1_02_problema_d_meialua_seed{seed}_overview.png")
+
+                    ml_pipeline = run_external_problem_pipeline(
+                        problem_name=f"meia_lua_seed{seed}",
+                        X=X_ml, y_true=y_ml,
+                        nome_classe_0="A", nome_classe_1="B",
+                        feature_variants=[("x1", "x2")],
+                        seeds=[seed],
+                        n_shots_phase_e=FEW_SHOT_SIZES_PHASE_E,
+                        pasta_execucao=pasta_execucao,
+                        n_train_ratio=0.7,
+                        verbose=True,
+                    )
+                    for _r in ml_pipeline['phase_a_results'] + ml_pipeline['phase_e_results']:
+                        _r['provider'] = ext_provider
+                        _r['model'] = ext_model
+                    external_phase_a_results.extend(ml_pipeline['phase_a_results'])
+                    external_phase_e_results.extend(ml_pipeline['phase_e_results'])
+                    external_llm_label_maps.update({
+                        (ext_model, *k): v
+                        for k, v in ml_pipeline['llm_label_maps'].items()
+                    })
+
+                    # Item 7 (reunião 20/05): superfície SVM gaussiano (RBF) vs LLM.
+                    # Usa os rótulos zero-shot do LLM (chave 'train') e a melhor
+                    # métrica diagonal aprendida para a fronteira tracejada.
+                    try:
+                        lbl = ml_pipeline['llm_label_maps'].get((seed, 'x1', 'x2', 'train'))
+                        pa = ml_pipeline['phase_a_results']
+                        best_metric = max(pa, key=lambda r: r['accuracy_perc_vs_true']) if pa else None
+                        if lbl is not None:
+                            svm_saved = plot_meialua_svm_vs_llm(
+                                lbl['X'], lbl['y_true'], lbl['y_llm'],
+                                metric=best_metric, seed=seed,
+                                filename=llm_asset(
+                                    pasta_execucao,
+                                    f"bloco23_external_svm_meialua_seed{seed}.png",
+                                    ext_model,
+                                ),
+                            )
+                            if svm_saved:
+                                print(f"  Gráfico salvo: bloco23_external_svm_meialua_seed{seed}__{_model_alias(ext_model)}.png")
+                            else:
+                                print(f"  ⚠ Plot SVM meia-lua seed={seed} não gerado (classe única no ground truth).")
+                    except Exception as exc_svm:
+                        print(f"  ⚠ Falha no plot SVM meia-lua seed={seed}: {exc_svm}")
+            print("  ✓ Pipeline meia-lua concluído (todos os modelos).", flush=True)
         except Exception as exc:
             print(f"  ⚠ Erro no pipeline meia-lua: {exc}")
             traceback.print_exc()
@@ -7765,100 +4020,14 @@ def main():
     print(f"\n[PASSO 5] Gerando visualizações finais...", flush=True)
     print_section("BLOCO 1 — VISUALIZAÇÕES (Fases A/B/C lineares + meia-lua)", "═")
 
-    if all_results_abc:
-        plot_consistency_comparison_extended(all_results_abc, filename=os.path.join(pasta_execucao, "bloco1_09_consistency_extended.png"))
-        print(f"  Gráfico salvo: 02_consistency_extended.png")
-        plot_class_names_effect(all_results_abc, filename=os.path.join(pasta_execucao, "bloco1_14a_class_names_effect.png"))
-        print(f"  Gráfico salvo: 03_class_names_effect.png")
+    # Cada modelo de MODELS_TO_TEST gera o conjunto COMPLETO de visualizações
+    # na raiz da execução, com seu alias (MODEL_ALIAS) no nome do asset; os
+    # CSVs guardam todos os modelos e o final_09_model_comparison.png compara todos.
+    if all_results_abc and len(MODELS_TO_TEST) > 1:
+        plot_model_comparison(all_results_abc, filename=os.path.join(pasta_execucao, "final_09_model_comparison.png"))
+        print(f"  Gráfico salvo: final_09_model_comparison.png")
 
-        if len(MODELS_TO_TEST) > 1:
-            plot_model_comparison(all_results_abc, filename=os.path.join(pasta_execucao, "final_09_model_comparison.png"))
-            print(f"  Gráfico salvo: 04_model_comparison.png")
-        if len(RANDOM_SEEDS) > 1:
-            plot_seed_comparison(all_results_abc, filename=os.path.join(pasta_execucao, "bloco1_08_seed_comparison.png"))
-            print(f"  Gráfico salvo: 05_seed_comparison.png")
-
-        # Distribuição de W
-        plot_w_distribution(all_results_abc, filename=os.path.join(pasta_execucao, "bloco1_06_w_distribution.png"))
-        print(f"  Gráfico salvo: 10_w_distribution.png")
-
-        # Erros da métrica na Fase A
-        for seed_key, data in phase_a_data_for_plots.items():
-            fname = os.path.join(pasta_execucao, f"bloco1_05_fase_a_errors_seed{seed_key}.png")
-            plot_metric_errors_phase_a(
-                data['X'], data['y_llm'], data['y_metric'],
-                data['w'], data['centroids'], filename=fname
-            )
-            print(f"  Gráfico salvo: 11_metric_errors_phase_a_seed{seed_key}.png")
-
-        # Análise quantitativa de erros por região (complementa gráfico 11)
-        if phase_a_data_for_plots:
-            print_error_analysis_by_region(phase_a_data_for_plots)
-
-        # Análise de sensibilidade dos hiperparâmetros do Perceptron
-        if phase_a_data_for_plots:
-            print_hyperparameter_sensitivity(phase_a_data_for_plots)
-
-        # Viés de ordem das classes
-        if RUN_CLASS_ORDER_BIAS:
-            plot_class_order_bias(all_results_abc, filename=os.path.join(pasta_execucao, "bloco1_12_class_order_bias.png"))
-            print(f"  Gráfico salvo: 15_class_order_bias.png")
-
-        # Efeito de nomes de features
-        if RUN_FEATURE_NAMES:
-            plot_feature_names_effect(all_results_abc, filename=os.path.join(pasta_execucao, "bloco1_14b_feature_names_effect.png"))
-            print(f"  Gráfico salvo: 19_feature_names_effect.png")
-
-        # Variantes de prompt
-        if RUN_PROMPT_VARIANTS:
-            plot_prompt_variant_comparison(all_results_abc, filename=os.path.join(pasta_execucao, "bloco1_13_prompt_variants.png"))
-            print(f"  Gráfico salvo: 17_prompt_variant_comparison.png")
-
-    print_section("BLOCO 2 — VISUALIZAÇÕES (Fase E, LLM como aprendiz)", "═")
-
-    if all_results_e:
-        plot_phase_e_learning_curve(all_results_e, filename=os.path.join(pasta_execucao, "bloco2_04_phase_e_learning_curve.png"))
-        print(f"  Gráfico salvo: bloco2_04_phase_e_learning_curve.png")
-        plot_phase_e_strategy_comparison(all_results_e, filename=os.path.join(pasta_execucao, "bloco2_05_phase_e_strategy_comparison.png"))
-        print(f"  Gráfico salvo: bloco2_05_phase_e_strategy_comparison.png")
-
-    # Baselines clássicos
-    if all_results_baselines and all_results_e:
-        plot_classical_baselines_comparison(
-            all_results_e, all_results_baselines,
-            filename=os.path.join(pasta_execucao, "bloco2_09_classical_baselines.png")
-        )
-        print(f"  Gráfico salvo: 18_classical_baselines.png")
-
-    # Experimento de diluição
-    if all_results_dilution:
-        plot_dilution_experiment(all_results_dilution, filename=os.path.join(pasta_execucao, "bloco2_06_dilution.png"))
-        print(f"  Gráfico salvo: 12_dilution_experiment.png")
-
-    # Viés de ordem dos exemplos few-shot
-    if all_results_example_order:
-        plot_example_order_bias(all_results_example_order, filename=os.path.join(pasta_execucao, "bloco2_07_example_order.png"))
-        print(f"  Gráfico salvo: 16_example_order_bias.png")
-
-        # Análise quantitativa do viés de ordem (recency bias)
-        print_example_order_analysis(all_results_example_order)
-
-    # Não-linearidade implícita: fidelidade R2 (2 pesos) vs R3 (3 pesos)
-    if results_r3_2feat and results_r3_3feat:
-        plot_r3_comparison(results_r3_2feat, results_r3_3feat,
-                          filename=os.path.join(pasta_execucao, "bloco1_10_r3r4_comparison.png"))
-        print(f"  Gráfico salvo: 13_r3_vs_r2.png")
-
-    # Comparação de algoritmos — Perceptron × NNLS
-    if all_results_abc_alternative and all_results_abc:
-        perc_results = [r for r in all_results_abc
-                       if r.n_shot == 0 and r.nomes_classes == ("A", "B")]
-        if perc_results:
-            plot_algorithm_comparison(perc_results, all_results_abc_alternative,
-                                    filename=os.path.join(pasta_execucao, "bloco1_07_algorithm_comparison.png"))
-            print(f"  Gráfico salvo: 14_algorithm_comparison.png")
-
-    # NOVO: Validação do oráculo
+    # Validação do oráculo (independe de modelo — nenhuma chamada de LLM)
     if all_results_oracle:
         plot_oracle_w_recovery(all_results_oracle,
             filename=os.path.join(pasta_execucao, "bloco1_03_oracle_w_recovery.png"))
@@ -7867,56 +4036,192 @@ def main():
             filename=os.path.join(pasta_execucao, "bloco1_04_oracle_transfer.png"))
         print(f"  Gráfico salvo: bloco1_04_oracle_transfer.png")
 
-    # Diagnóstico da busca binária em γ (item b reunião 30/04/2026, ~520s)
-    if PERCEPTRON_GAMMA_DIAGNOSTICS:
-        plot_gamma_convergence(
-            PERCEPTRON_GAMMA_DIAGNOSTICS,
-            filename=os.path.join(pasta_execucao, "final_10_gamma_convergence.png"),
-        )
+    # Item 5: oracle de aproximação da meia-lua (fidelidade vs GT por n_features)
+    if all_results_oracle_meialua:
+        plot_oracle_meialua(all_results_oracle_meialua,
+            filename=os.path.join(pasta_execucao, "bloco1_04b_oracle_meialua.png"))
+        print(f"  Gráfico salvo: bloco1_04b_oracle_meialua.png")
 
-    # ═══════════════════════════════════════════════════════════════════
-    # VISUALIZAÇÕES DETALHADAS POR SEED
-    # ═══════════════════════════════════════════════════════════════════
+    for _viz_provider, _viz_model, _viz_temp, _viz_scope in MODELS_TO_TEST:
+        abc_m = [r for r in all_results_abc
+                 if r.provider == _viz_provider and r.model_name == _viz_model]
+        e_m = [r for r in all_results_e
+               if r.provider == _viz_provider and r.model_name == _viz_model]
+        # Baselines clássicos independem do LLM (lista única, treinada 1×) —
+        # entram na comparação de todos os modelos (são dicts com
+        # provider='classical' e model=<nome do classificador>).
+        baselines_m = all_results_baselines
+        dilution_m = [r for r in all_results_dilution
+                      if r.provider == _viz_provider and r.model_name == _viz_model]
+        order_m = [r for r in all_results_example_order
+                   if r.provider == _viz_provider and r.model_name == _viz_model]
+        alternative_m = [r for r in all_results_abc_alternative
+                         if r.provider == _viz_provider and r.model_name == _viz_model]
+        phase_a_plots_m = {s: d for (p, m, s), d in phase_a_data_for_plots.items()
+                           if (p, m) == (_viz_provider, _viz_model)}
+        seed_detail_m = {s: d for (p, m, s), d in seed_detailed_data.items()
+                         if (p, m) == (_viz_provider, _viz_model)}
+        if not (abc_m or e_m):
+            continue  # modelo sem dados nesta execução (ex.: --rapido --modelo X)
 
-    print_section("FECHAMENTO — VISUALIZAÇÕES DETALHADAS POR SEED", "═")
-    for seed_key, sdata in seed_detailed_data.items():
-        print(f"\n  Gerando visualizações detalhadas para seed {seed_key}...")
+        print_section(
+            f"VISUALIZAÇÕES — {_viz_provider}/{_viz_model} "
+            f"(alias: {_model_alias(_viz_model)})", "═")
 
-        plot_dataset_overview(sdata, seed_key,
-            filename=os.path.join(pasta_execucao, f"final_04_dataset_overview_seed{seed_key}.png"))
-        print(f"  Gráfico salvo: 16_dataset_overview_seed{seed_key}.png")
+        if abc_m:
+            fname = llm_asset(pasta_execucao, "bloco1_09_consistency_extended.png", _viz_model)
+            plot_consistency_comparison_extended(abc_m, filename=fname)
+            print(f"  Gráfico salvo: {os.path.basename(fname)}")
+            fname = llm_asset(pasta_execucao, "bloco1_14a_class_names_effect.png", _viz_model)
+            plot_class_names_effect(abc_m, filename=fname)
+            print(f"  Gráfico salvo: {os.path.basename(fname)}")
 
-        plot_hits_and_errors(sdata, seed_key,
-            filename=os.path.join(pasta_execucao, f"final_05_hits_errors_seed{seed_key}.png"))
-        print(f"  Gráfico salvo: 17_hits_errors_seed{seed_key}.png")
+            if len(RANDOM_SEEDS) > 1:
+                fname = llm_asset(pasta_execucao, "bloco1_08_seed_comparison.png", _viz_model)
+                plot_seed_comparison(abc_m, filename=fname)
+                print(f"  Gráfico salvo: {os.path.basename(fname)}")
 
-        plot_w_comparison_algorithms(sdata, seed_key,
-            filename=os.path.join(pasta_execucao, f"final_06_w_algorithms_seed{seed_key}.png"))
-        print(f"  Gráfico salvo: 18_w_algorithms_seed{seed_key}.png")
+            # Distribuição de W
+            fname = llm_asset(pasta_execucao, "bloco1_06_w_distribution.png", _viz_model)
+            plot_w_distribution(abc_m, filename=fname)
+            print(f"  Gráfico salvo: {os.path.basename(fname)}")
 
-        plot_confusion_matrices_detailed(sdata, seed_key,
-            filename=os.path.join(pasta_execucao, f"final_02_confusion_matrices_seed{seed_key}.png"))
-        print(f"  Gráfico salvo: 20_confusion_matrices_seed{seed_key}.png")
+            # Erros da métrica na Fase A
+            for seed_key, data in phase_a_plots_m.items():
+                fname = llm_asset(pasta_execucao, f"bloco1_05_fase_a_errors_seed{seed_key}.png", _viz_model)
+                plot_metric_errors_phase_a(
+                    data['X'], data['y_llm'], data['y_metric'],
+                    data['w'], data['centroids'], filename=fname
+                )
+                print(f"  Gráfico salvo: {os.path.basename(fname)}")
 
-        plot_margin_analysis_detailed(sdata, seed_key,
-            filename=os.path.join(pasta_execucao, f"final_07_margin_analysis_seed{seed_key}.png"))
-        print(f"  Gráfico salvo: 21_margin_analysis_seed{seed_key}.png")
+            # Análise quantitativa de erros por região (complementa bloco1_05)
+            if phase_a_plots_m:
+                print_error_analysis_by_region(phase_a_plots_m)
 
-        plot_experiment_summary_dashboard(sdata, seed_key, all_results_abc, all_results_e,
-            filename=os.path.join(pasta_execucao, f"final_03_dashboard_seed{seed_key}.png"))
-        print(f"  Gráfico salvo: 19_experiment_dashboard_seed{seed_key}.png")
+            # Análise de sensibilidade dos hiperparâmetros do Perceptron
+            if phase_a_plots_m:
+                print_hyperparameter_sensitivity(phase_a_plots_m)
 
-    # ═══════════════════════════════════════════════════════════════════
-    # ANALYSIS
-    # ═══════════════════════════════════════════════════════════════════
+            # Viés de ordem das classes
+            if RUN_CLASS_ORDER_BIAS:
+                fname = llm_asset(pasta_execucao, "bloco1_12_class_order_bias.png", _viz_model)
+                plot_class_order_bias(abc_m, filename=fname)
+                print(f"  Gráfico salvo: {os.path.basename(fname)}")
 
-    if all_results_abc:
-        print_final_analysis(all_results_abc)
-    if all_results_e:
-        print_phase_e_analysis(all_results_e)
+            # Efeito de nomes de features
+            if RUN_FEATURE_NAMES:
+                fname = llm_asset(pasta_execucao, "bloco1_14b_feature_names_effect.png", _viz_model)
+                plot_feature_names_effect(abc_m, filename=fname)
+                print(f"  Gráfico salvo: {os.path.basename(fname)}")
 
-    # Sumário estatístico com Bootstrap CI, Wilcoxon e Cohen's d
-    print_statistical_summary(all_results_abc, all_results_e)
+            # Variantes de prompt
+            if RUN_PROMPT_VARIANTS:
+                fname = llm_asset(pasta_execucao, "bloco1_13_prompt_variants.png", _viz_model)
+                plot_prompt_variant_comparison(abc_m, filename=fname)
+                print(f"  Gráfico salvo: {os.path.basename(fname)}")
+
+        print_section("BLOCO 2 — VISUALIZAÇÕES (Fase E, LLM como aprendiz)", "═")
+
+        if e_m:
+            fname = llm_asset(pasta_execucao, "bloco2_04_phase_e_learning_curve.png", _viz_model)
+            plot_phase_e_learning_curve(e_m, filename=fname)
+            print(f"  Gráfico salvo: {os.path.basename(fname)}")
+            fname = llm_asset(pasta_execucao, "bloco2_05_phase_e_strategy_comparison.png", _viz_model)
+            plot_phase_e_strategy_comparison(e_m, filename=fname)
+            print(f"  Gráfico salvo: {os.path.basename(fname)}")
+
+        # Baselines clássicos
+        if baselines_m and e_m:
+            fname = llm_asset(pasta_execucao, "bloco2_09_classical_baselines.png", _viz_model)
+            plot_classical_baselines_comparison(e_m, baselines_m, filename=fname)
+            print(f"  Gráfico salvo: {os.path.basename(fname)}")
+
+        # Experimento de diluição (CSV guarda todos os modelos)
+        if dilution_m:
+            fname = llm_asset(pasta_execucao, "bloco2_06_dilution.png", _viz_model)
+            plot_dilution_experiment(dilution_m, filename=fname)
+            print(f"  Gráfico salvo: {os.path.basename(fname)}")
+
+        # Viés de ordem dos exemplos few-shot
+        if order_m:
+            fname = llm_asset(pasta_execucao, "bloco2_07_example_order.png", _viz_model)
+            plot_example_order_bias(order_m, filename=fname)
+            print(f"  Gráfico salvo: {os.path.basename(fname)}")
+
+            # Análise quantitativa do viés de ordem (recency bias)
+            print_example_order_analysis(order_m)
+
+        # Não-linearidade implícita: fidelidade R2 (2 pesos) vs R3 (3 pesos)
+        # (o CSV r3r4 consolida todos os modelos)
+        r3_2feat_viz = [r for r in results_r3_2feat if r.get('model') in (None, _viz_model)]
+        r3_3feat_viz = [r for r in results_r3_3feat if r.get('model') in (None, _viz_model)]
+        if r3_2feat_viz and r3_3feat_viz:
+            fname = llm_asset(pasta_execucao, "bloco1_10_r3r4_comparison.png", _viz_model)
+            plot_r3_comparison(r3_2feat_viz, r3_3feat_viz, filename=fname)
+            print(f"  Gráfico salvo: {os.path.basename(fname)}")
+
+        # Comparação de algoritmos — Perceptron × NNLS
+        if alternative_m and abc_m:
+            perc_results = [r for r in abc_m
+                           if r.n_shot == 0 and r.nomes_classes == ("A", "B")]
+            if perc_results:
+                fname = llm_asset(pasta_execucao, "bloco1_07_algorithm_comparison.png", _viz_model)
+                plot_algorithm_comparison(perc_results, alternative_m, filename=fname)
+                print(f"  Gráfico salvo: {os.path.basename(fname)}")
+
+        # Diagnóstico da busca binária em γ (item b reunião 30/04/2026, ~520s)
+        gamma_diag_m = [d for d in PERCEPTRON_GAMMA_DIAGNOSTICS
+                        if d.get("model") in (None, _viz_model)]
+        if gamma_diag_m:
+            plot_gamma_convergence(
+                gamma_diag_m,
+                filename=llm_asset(pasta_execucao, "final_10_gamma_convergence.png", _viz_model),
+            )
+
+        # ═══════════════════════════════════════════════════════════════
+        # VISUALIZAÇÕES DETALHADAS POR SEED (deste modelo)
+        # ═══════════════════════════════════════════════════════════════
+
+        print_section("FECHAMENTO — VISUALIZAÇÕES DETALHADAS POR SEED", "═")
+        for seed_key, sdata in seed_detail_m.items():
+            print(f"\n  Gerando visualizações detalhadas para seed {seed_key} ({_model_alias(_viz_model)})...")
+
+            fname = llm_asset(pasta_execucao, f"final_04_dataset_overview_seed{seed_key}.png", _viz_model)
+            plot_dataset_overview(sdata, seed_key, filename=fname)
+            print(f"  Gráfico salvo: {os.path.basename(fname)}")
+
+            fname = llm_asset(pasta_execucao, f"final_05_hits_errors_seed{seed_key}.png", _viz_model)
+            plot_hits_and_errors(sdata, seed_key, filename=fname)
+            print(f"  Gráfico salvo: {os.path.basename(fname)}")
+
+            fname = llm_asset(pasta_execucao, f"final_06_w_algorithms_seed{seed_key}.png", _viz_model)
+            plot_w_comparison_algorithms(sdata, seed_key, filename=fname)
+            print(f"  Gráfico salvo: {os.path.basename(fname)}")
+
+            fname = llm_asset(pasta_execucao, f"final_02_confusion_matrices_seed{seed_key}.png", _viz_model)
+            plot_confusion_matrices_detailed(sdata, seed_key, filename=fname)
+            print(f"  Gráfico salvo: {os.path.basename(fname)}")
+
+            fname = llm_asset(pasta_execucao, f"final_07_margin_analysis_seed{seed_key}.png", _viz_model)
+            plot_margin_analysis_detailed(sdata, seed_key, filename=fname)
+            print(f"  Gráfico salvo: {os.path.basename(fname)}")
+
+            fname = llm_asset(pasta_execucao, f"final_03_dashboard_seed{seed_key}.png", _viz_model)
+            plot_experiment_summary_dashboard(sdata, seed_key, abc_m, e_m, filename=fname)
+            print(f"  Gráfico salvo: {os.path.basename(fname)}")
+
+        # ═══════════════════════════════════════════════════════════════
+        # ANALYSIS (deste modelo; CSVs guardam todos os modelos)
+        # ═══════════════════════════════════════════════════════════════
+
+        if abc_m:
+            print_final_analysis(abc_m)
+        if e_m:
+            print_phase_e_analysis(e_m)
+
+        # Sumário estatístico com Bootstrap CI, Wilcoxon e Cohen's d
+        print_statistical_summary(abc_m, e_m)
 
     # ═══════════════════════════════════════════════════════════════════
     # SAVE RESULTS
@@ -8038,6 +4343,7 @@ def main():
             w = r['w']
             w_nnls = r.get('w_nnls', np.array([np.nan]*3))
             r3_rows.append({
+                'provider': r.get('provider'), 'model': r.get('model'),
                 'seed': r['seed'], 'n_features': 3, 'algorithm': 'perceptron',
                 'fidelidade': r['accuracy'],
                 'w0': w[0], 'w1': w[1],
@@ -8045,6 +4351,7 @@ def main():
                 'w3': np.nan,
             })
             r3_rows.append({
+                'provider': r.get('provider'), 'model': r.get('model'),
                 'seed': r['seed'], 'n_features': 3, 'algorithm': 'nnls',
                 'fidelidade': r.get('accuracy_nnls', np.nan),
                 'w0': w_nnls[0], 'w1': w_nnls[1],
@@ -8055,6 +4362,7 @@ def main():
             w = r['w']
             w_nnls = r.get('w_nnls', np.array([np.nan]*4))
             r3_rows.append({
+                'provider': r.get('provider'), 'model': r.get('model'),
                 'seed': r['seed'], 'n_features': 4, 'algorithm': 'perceptron',
                 'fidelidade': r['accuracy'],
                 'w0': w[0], 'w1': w[1],
@@ -8062,6 +4370,7 @@ def main():
                 'w3': w[3] if len(w) > 3 else np.nan,
             })
             r3_rows.append({
+                'provider': r.get('provider'), 'model': r.get('model'),
                 'seed': r['seed'], 'n_features': 4, 'algorithm': 'nnls',
                 'fidelidade': r.get('accuracy_nnls', np.nan),
                 'w0': w_nnls[0], 'w1': w_nnls[1],
@@ -8070,6 +4379,7 @@ def main():
             })
         for r in results_r3_2feat:
             r3_rows.append({
+                'provider': r.get('provider'), 'model': r.get('model'),
                 'seed': r['seed'], 'n_features': 2, 'algorithm': 'llm_2feat',
                 'fidelidade': r['accuracy'],
                 'w0': np.nan, 'w1': np.nan, 'w2': np.nan, 'w3': np.nan,
@@ -8113,11 +4423,35 @@ def main():
         df_oracle.to_csv(filename_oracle, index=False)
         print(f"  Resultados da Validação do Oráculo salvos em: {filename_oracle}")
 
+    if all_results_oracle_meialua:  # Item 5: oracle de aproximação da meia-lua
+        df_oracle_ml = pd.DataFrame(all_results_oracle_meialua)
+        filename_oracle_ml = os.path.join(pasta_execucao, f"bloco1_oracle_meialua_{timestamp_csv}.csv")
+        df_oracle_ml.to_csv(filename_oracle_ml, index=False)
+        print(f"  Oracle meia-lua (aproximação) salvo em: {filename_oracle_ml}")
+
     # ─── Problemas externos não-lineares (peso×altura, meia-lua) ──────────
+    # CSVs guardam TODOS os modelos; plots/sínteses são gerados POR MODELO
+    # (alias no nome do asset). _primary_model resta só como fallback de
+    # preenchimento para linhas legadas sem coluna model.
+    _primary_model = MODELS_TO_TEST[0][1]
+
     if external_phase_a_results:
         rows_a = []
+
+        def _w_comp(w, i):
+            """Componente i do vetor W (ou None se ausente)."""
+            try:
+                return float(w[i]) if w is not None and len(w) > i else None
+            except (TypeError, IndexError):
+                return None
+
         for r in external_phase_a_results:
-            rows_a.append({
+            wp = r.get('w_perc')
+            wn = r.get('w_nnls')
+            wp0, wp1 = _w_comp(wp, 0), _w_comp(wp, 1)
+            row = {
+                'provider': r.get('provider'),
+                'model': r.get('model'),
                 'problem_name': r.get('problem_name'),
                 'seed': r.get('seed'),
                 'n_features': r.get('n_features'),
@@ -8128,9 +4462,26 @@ def main():
                 'accuracy_perc_vs_true': r.get('accuracy_perc_vs_true'),
                 'accuracy_nnls_vs_true': r.get('accuracy_nnls_vs_true'),
                 'llm_accuracy_vs_true': r.get('llm_accuracy_vs_true'),
+                # Item 15: contagem absoluta de erros (peso×altura é pequeno)
+                'n_samples': r.get('n_samples'),
+                'n_errors_perc_vs_true': r.get('n_errors_perc_vs_true'),
+                'n_errors_nnls_vs_true': r.get('n_errors_nnls_vs_true'),
+                'n_errors_llm_vs_true': r.get('n_errors_llm_vs_true'),
+                # Item 3 (reunião 20/05): exibir o W APRENDIDO também no Bloco 3.
+                # w_perc_* / w_nnls_* (até 4 componentes) + razão w0/w1 do Perceptron.
+                'w_perc_0': wp0,
+                'w_perc_1': wp1,
+                'w_perc_2': _w_comp(wp, 2),
+                'w_perc_3': _w_comp(wp, 3),
+                'w_nnls_0': _w_comp(wn, 0),
+                'w_nnls_1': _w_comp(wn, 1),
+                'w_nnls_2': _w_comp(wn, 2),
+                'w_nnls_3': _w_comp(wn, 3),
+                'w_perc_ratio': (wp0 / wp1) if (wp0 is not None and wp1) else None,
                 'gamma_perc': r.get('gamma_perc'),
                 'n_malformed': r.get('n_malformed'),
-            })
+            }
+            rows_a.append(row)
         df_ext_a = pd.DataFrame(rows_a)
         fname_ext_a = os.path.join(pasta_execucao, f"bloco23_external_phase_a_{timestamp_csv}.csv")
         df_ext_a.to_csv(fname_ext_a, index=False)
@@ -8144,30 +4495,44 @@ def main():
         df_ext_d.to_csv(fname_ext_e, index=False)
         print(f"  Resultados Fase E externos salvos em: {fname_ext_e}")
 
-    # Tabela cruzada linear × não-linear
-    cross_fname = summarize_cross_linearity(
-        results_abc_r3=results_r3_3feat if results_r3_3feat else [],
-        external_results=external_phase_a_results,
-        pasta_execucao=pasta_execucao,
-        results_abc_r4=results_r3_4feat if results_r3_4feat else None,
-    )
-    if cross_fname:
-        print(f"  Comparação cruzada linear×não-linear salva em: {cross_fname}")
+    # Tabela cruzada linear × não-linear — uma por modelo (alias no nome)
+    for _ext_provider, _ext_model, _ext_temp, _ext_scope in MODELS_TO_TEST:
+        r3_3feat_m = [r for r in results_r3_3feat if r.get('model') in (None, _ext_model)]
+        r3_4feat_m = [r for r in results_r3_4feat if r.get('model') in (None, _ext_model)]
+        ext_a_m = [
+            r for r in external_phase_a_results
+            if r.get('provider') in (None, _ext_provider)
+            and r.get('model') in (None, _ext_model)
+        ]
+        if not (r3_3feat_m or ext_a_m):
+            continue
+        cross_fname = summarize_cross_linearity(
+            results_abc_r3=r3_3feat_m,
+            external_results=ext_a_m,
+            pasta_execucao=pasta_execucao,
+            results_abc_r4=r3_4feat_m if r3_4feat_m else None,
+            model_name=_ext_model,
+        )
+        if cross_fname:
+            print(f"  Comparação cruzada linear×não-linear salva em: {cross_fname}")
 
     # Visualização ponto-a-ponto das rotulações do LLM (item G, e-mail 22:06)
+    # A chave carrega o modelo — um scatter por (modelo, seed, features, kind).
     if external_llm_label_maps:
         print(f"\n  Gerando scatter ponto-a-ponto das rotulações do LLM...")
         for key, data in external_llm_label_maps.items():
-            seed_val, feat_0, feat_1, kind = key
+            model_lbl, seed_val, feat_0, feat_1, kind = key
             kind_label = f"n_shot={kind}" if isinstance(kind, int) else str(kind)
-            fname_lbl = os.path.join(
+            fname_lbl = llm_asset(
                 pasta_execucao,
                 f"final_08_llm_labels_seed{seed_val}_{feat_0}_{feat_1}_{kind}.png",
+                model_lbl,
             )
             try:
                 plot_llm_labels_per_problem(
                     X=data['X'], y_llm=data['y_llm'], y_true=data.get('y_true'),
-                    title=f"Rotulação LLM — seed={seed_val} | {feat_0}/{feat_1} | {kind_label}",
+                    title=(f"Rotulação LLM ({_model_alias(model_lbl)}) — "
+                           f"seed={seed_val} | {feat_0}/{feat_1} | {kind_label}"),
                     feature_names=(feat_0, feat_1),
                     filename=fname_lbl,
                 )
@@ -8176,66 +4541,86 @@ def main():
         print(f"  ✓ Scatter ponto-a-ponto gerados em {pasta_execucao}/final_08_llm_labels_*.png")
 
     # ─── Plots adicionais para apresentação (problemas externos) ──────────
-    if external_phase_e_results:
-        try:
-            plot_external_learning_curve(
-                external_phase_e_results,
-                filename=os.path.join(pasta_execucao, "bloco23_external_learning_curve.png"),
-            )
-            print(f"  Gráfico salvo: 27_external_learning_curve.png")
-        except Exception as exc:
-            print(f"  ⚠ Falha em 27_external_learning_curve.png: {exc}")
+    # Gerados POR MODELO, com o alias no nome do asset.
+    for _ext_provider, _ext_model, _ext_temp, _ext_scope in MODELS_TO_TEST:
+        ext_e_m = [
+            r for r in external_phase_e_results
+            if r.get('provider') in (None, _ext_provider)
+            and r.get('model') in (None, _ext_model)
+        ]
+        ext_a_m = [
+            r for r in external_phase_a_results
+            if r.get('provider') in (None, _ext_provider)
+            and r.get('model') in (None, _ext_model)
+        ]
+        if ext_e_m:
+            try:
+                plot_external_learning_curve(
+                    ext_e_m,
+                    filename=llm_asset(pasta_execucao, "bloco23_external_learning_curve.png", _ext_model),
+                )
+                print(f"  Gráfico salvo: bloco23_external_learning_curve__{_model_alias(_ext_model)}.png")
+            except Exception as exc:
+                print(f"  ⚠ Falha em bloco23_external_learning_curve ({_ext_model}): {exc}")
 
-        try:
-            plot_phase_e_llm_vs_perceptron(
-                external_phase_e_results,
-                filename=os.path.join(pasta_execucao, "bloco23_external_llm_vs_perceptron.png"),
-            )
-            print(f"  Gráfico salvo: 30_external_llm_vs_perceptron.png")
-        except Exception as exc:
-            print(f"  ⚠ Falha em 30_external_llm_vs_perceptron.png: {exc}")
+            try:
+                plot_phase_e_llm_vs_perceptron(
+                    ext_e_m,
+                    filename=llm_asset(pasta_execucao, "bloco23_external_llm_vs_perceptron.png", _ext_model),
+                )
+                print(f"  Gráfico salvo: bloco23_external_llm_vs_perceptron__{_model_alias(_ext_model)}.png")
+            except Exception as exc:
+                print(f"  ⚠ Falha em bloco23_external_llm_vs_perceptron ({_ext_model}): {exc}")
+
+        if ext_a_m:
+            try:
+                plot_external_features_comparison(
+                    ext_a_m,
+                    filename=llm_asset(pasta_execucao, "bloco23_external_features_comparison.png", _ext_model),
+                )
+                print(f"  Gráfico salvo: bloco23_external_features_comparison__{_model_alias(_ext_model)}.png")
+            except Exception as exc:
+                print(f"  ⚠ Falha em bloco23_external_features_comparison ({_ext_model}): {exc}")
+
+            try:
+                plot_external_decision_boundary(
+                    ext_a_m,
+                    filename=llm_asset(pasta_execucao, "bloco23_external_decision_boundary.png", _ext_model),
+                )
+                print(f"  Gráfico salvo: bloco23_external_decision_boundary__{_model_alias(_ext_model)}.png")
+            except Exception as exc:
+                print(f"  ⚠ Falha em bloco23_external_decision_boundary ({_ext_model}): {exc}")
 
     if external_phase_a_results:
-        try:
-            plot_external_features_comparison(
-                external_phase_a_results,
-                filename=os.path.join(pasta_execucao, "bloco23_external_features_comparison.png"),
-            )
-            print(f"  Gráfico salvo: 28_external_features_comparison.png")
-        except Exception as exc:
-            print(f"  ⚠ Falha em 28_external_features_comparison.png: {exc}")
-
-        try:
-            plot_external_decision_boundary(
-                external_phase_a_results,
-                filename=os.path.join(pasta_execucao, "bloco23_external_decision_boundary.png"),
-            )
-            print(f"  Gráfico salvo: 29_external_decision_boundary.png")
-        except Exception as exc:
-            print(f"  ⚠ Falha em 29_external_decision_boundary.png: {exc}")
-
         # ─── Resumo consolidado no log (auxilia roteiro da apresentação) ──────
         print_section("BLOCO 2/3 — RESUMO CONSOLIDADO: Pipeline externos (Fase A)", "═")
         df_ext = pd.DataFrame(external_phase_a_results)
+        if 'model' not in df_ext.columns:
+            df_ext['model'] = _primary_model
+        df_ext['model'] = df_ext['model'].fillna(_primary_model)
         df_ext['variant'] = df_ext['feature_names'].apply(
             lambda t: '/'.join(t) if isinstance(t, tuple) else str(t)
         )
-        for problem in sorted(df_ext['problem_name'].unique()):
-            sub = df_ext[df_ext['problem_name'] == problem]
-            for variant in sorted(sub['variant'].unique()):
-                sv = sub[sub['variant'] == variant]
-                print(f"\n  {problem} | {variant}:")
-                for nf in sorted(sv['n_features'].unique()):
-                    ss = sv[sv['n_features'] == nf]
-                    print(
-                        f"    n_features={nf}: "
-                        f"fid_perc={ss['fidelity_perc_vs_llm'].mean():.1%}±{ss['fidelity_perc_vs_llm'].std():.1%} | "
-                        f"acc_perc_real={ss['accuracy_perc_vs_true'].mean():.1%}±{ss['accuracy_perc_vs_true'].std():.1%} | "
-                        f"llm_real={ss['llm_accuracy_vs_true'].mean():.1%}"
-                    )
+        for model_sum in sorted(df_ext['model'].unique()):
+            df_m = df_ext[df_ext['model'] == model_sum]
+            print(f"\n  ═══ Modelo: {model_sum} ═══")
+            for problem in sorted(df_m['problem_name'].unique()):
+                sub = df_m[df_m['problem_name'] == problem]
+                for variant in sorted(sub['variant'].unique()):
+                    sv = sub[sub['variant'] == variant]
+                    print(f"\n  {problem} | {variant}:")
+                    for nf in sorted(sv['n_features'].unique()):
+                        ss = sv[sv['n_features'] == nf]
+                        print(
+                            f"    n_features={nf}: "
+                            f"fid_perc={ss['fidelity_perc_vs_llm'].mean():.1%}±{ss['fidelity_perc_vs_llm'].std():.1%} | "
+                            f"acc_perc_real={ss['accuracy_perc_vs_true'].mean():.1%}±{ss['accuracy_perc_vs_true'].std():.1%} | "
+                            f"llm_real={ss['llm_accuracy_vs_true'].mean():.1%}"
+                        )
         best_overall = df_ext.loc[df_ext['accuracy_perc_vs_true'].idxmax()]
         print(
-            f"\n  ★ Melhor configuração geral: {best_overall['problem_name']} | "
+            f"\n  ★ Melhor configuração geral: {best_overall.get('model', '')} | "
+            f"{best_overall['problem_name']} | "
             f"{best_overall['variant']} | n_features={best_overall['n_features']} | "
             f"acc_real={best_overall['accuracy_perc_vs_true']:.1%}"
         )
@@ -8243,42 +4628,84 @@ def main():
     if external_phase_e_results:
         print_section("BLOCO 2/3 — RESUMO CONSOLIDADO: Fase E externa (LLM vs Perceptron)", "═")
         df_d = pd.DataFrame(external_phase_e_results)
+        if 'model' not in df_d.columns:
+            df_d['model'] = _primary_model
+        df_d['model'] = df_d['model'].fillna(_primary_model)
         df_d['variant'] = df_d['feature_names'].apply(
             lambda t: '/'.join(t) if isinstance(t, tuple) else str(t)
         )
         for problem in sorted(df_d['problem_name'].unique()):
-            sub = df_d[df_d['problem_name'] == problem]
-            for variant in sorted(sub['variant'].unique()):
-                sv = sub[sub['variant'] == variant]
-                print(f"\n  {problem} | {variant}:")
-                for nshot in sorted(sv['n_shot'].unique()):
-                    ss = sv[sv['n_shot'] == nshot]
-                    llm_real = ss['accuracy_llm_vs_true'].mean()
-                    pb = ss['accuracy_perceptron_baseline_vs_true'].dropna()
-                    if len(pb):
-                        delta = llm_real - pb.mean()
-                        marker = "LLM>Perceptron" if delta > 0.01 else (
-                            "Perceptron>LLM" if delta < -0.01 else "≈ empate"
-                        )
-                        print(
-                            f"    n_shot={nshot}: llm_real={llm_real:.1%} | "
-                            f"perceptron_real={pb.mean():.1%} | Δ={delta:+.1%} ({marker})"
-                        )
-                    else:
-                        print(f"    n_shot={nshot}: llm_real={llm_real:.1%}")
+            sub_all = df_d[df_d['problem_name'] == problem]
+            for model_sum in sorted(sub_all['model'].unique()):
+                sub = sub_all[sub_all['model'] == model_sum]
+                for variant in sorted(sub['variant'].unique()):
+                    sv = sub[sub['variant'] == variant]
+                    print(f"\n  {problem} | {model_sum} | {variant}:")
+                    for nshot in sorted(sv['n_shot'].unique()):
+                        ss = sv[sv['n_shot'] == nshot]
+                        llm_real = ss['accuracy_llm_vs_true'].mean()
+                        pb = ss['accuracy_perceptron_baseline_vs_true'].dropna()
+                        if len(pb):
+                            delta = llm_real - pb.mean()
+                            marker = "LLM>Perceptron" if delta > 0.01 else (
+                                "Perceptron>LLM" if delta < -0.01 else "≈ empate"
+                            )
+                            print(
+                                f"    n_shot={nshot}: llm_real={llm_real:.1%} | "
+                                f"perceptron_real={pb.mean():.1%} | Δ={delta:+.1%} ({marker})"
+                            )
+                        else:
+                            print(f"    n_shot={nshot}: llm_real={llm_real:.1%}")
 
     # ─── Salvar interações com a LLM em JSON ──────────
-    interactions_path = os.path.join(pasta_execucao, "llm_interactions.json")
-    with open(interactions_path, 'w', encoding='utf-8') as f:
-        json.dump(LLM_INTERACTIONS, f, ensure_ascii=False, indent=2)
-    print(f"  Interações LLM salvas em: {interactions_path} ({len(LLM_INTERACTIONS)} chamadas)")
+    interactions_paths = salvar_json_em_chunks(
+        LLM_INTERACTIONS, pasta_execucao, nome_base="llm_interactions"
+    )
+    # Salvamento oficial concluído → o checkpoint intermediário é redundante
+    _ckpt = os.path.join(pasta_execucao, "llm_interactions_checkpoint.json")
+    if os.path.exists(_ckpt):
+        os.remove(_ckpt)
+    if len(interactions_paths) == 1:
+        print(f"  Interações LLM salvas em: {interactions_paths[0]} "
+              f"({len(LLM_INTERACTIONS)} chamadas)")
+    else:
+        print(f"  Interações LLM ({len(LLM_INTERACTIONS)} chamadas) excederam "
+              f"{LOG_CHUNK_LIMIT_BYTES // (1024*1024)} MiB — "
+              f"fatiadas em {len(interactions_paths)} arquivos JSON válidos:")
+        for p in interactions_paths:
+            print(f"    - {p}")
 
-    # ─── Passo 7: Salvar log TXT ──────────
+    # ─── Auditoria do fallback do parser (fonte da verdade: LLM_INTERACTIONS) ──────
+    # Cada resposta não parseada cai no fallback determinístico por hash e ENTRA nas
+    # métricas (κ/consistência). Um resumo explícito da taxa por run mantém isso
+    # auditável de relance — além da coluna `n_malformed_responses` já salva nos CSVs.
+    n_calls_total = len(LLM_INTERACTIONS)
+    n_fallback = sum(1 for it in LLM_INTERACTIONS if it.get("malformed"))
+    taxa_fallback = (100.0 * n_fallback / n_calls_total) if n_calls_total else 0.0
+    print(f"\n  ── Auditoria do parser ──")
+    print(f"     Chamadas ao LLM: {n_calls_total} | Fallback (hash) acionado: "
+          f"{n_fallback} ({taxa_fallback:.2f}%)")
+    if n_fallback == 0:
+        print(f"     ✓ Nenhum fallback: métricas (κ/consistência) não contêm rótulos pseudo-aleatórios.")
+    elif taxa_fallback <= 5.0:
+        print(f"     ✓ Taxa ≤ 5%: impacto do fallback nas métricas é marginal.")
+    else:
+        print(f"     ⚠️ Taxa > 5%: rótulos de fallback podem poluir κ/consistência — "
+              f"reportar métricas com/sem fallback.")
+
+    # ─── Passo 7: Salvar log TXT (fatiado em partes se passar de 10 MiB) ──────────
     print(f"\n[PASSO 7] Salvando log completo da execução...")
-    sys.stdout = tee._stdout
-    log_path = os.path.join(pasta_execucao, "log_execucao.txt")
-    with open(log_path, 'w', encoding='utf-8') as f:
-        f.write(tee.getvalue())
+    sys.stdout = tee._stream
+    sys.stderr = tee_err._stream
+    log_paths = salvar_log_em_chunks(tee.getvalue(), pasta_execucao, nome_base="log_execucao")
+    if len(log_paths) == 1:
+        log_path = log_paths[0]
+    else:
+        log_path = f"{len(log_paths)} partes: " + ", ".join(os.path.basename(p) for p in log_paths)
+        print(f"  Log excedeu {LOG_CHUNK_LIMIT_BYTES // (1024*1024)} MiB — "
+              f"fatiado em {len(log_paths)} arquivos:")
+        for p in log_paths:
+            print(f"    - {p}")
 
     n_arquivos = len(os.listdir(pasta_execucao))
     print(f"\n{'='*70}")
