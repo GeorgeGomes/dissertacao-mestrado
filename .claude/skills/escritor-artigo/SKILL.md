@@ -25,6 +25,10 @@ forma mais honesta e legível possível.
 
 - **Clareza acima de elegância.** Frase curta, voz ativa, um pensamento por frase. Se
   precisar reler para entender, reescreva.
+- **Sem travessão como pontuação.** Não use travessão (—/–) no lugar de vírgula para
+  apostos/incisos ("o método — que usa NNLS — converge"); use vírgulas ou reformule em
+  frases separadas. Preferência declarada do autor (05/07/2026) — vale para artigo,
+  dissertação e resposta a revisores.
 - **Toda afirmação ancorada.** Resultado vem com número, tabela ou citação. Nada de
   "significativamente melhor" sem o valor e o teste. Distinga o que você mostrou do que
   você conjectura.

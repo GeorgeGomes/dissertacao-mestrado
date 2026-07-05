@@ -27,7 +27,7 @@
 
 % ---- Gráficos e cores ----
 \usepackage{graphicx}
-\graphicspath{{execucao_2026-06-30_23-46-58/}}
+\graphicspath{{execucao_2026-07-05_12-34-52_completa/}}
 \usepackage{xcolor}
 \definecolor{myblue}{RGB}{0,70,127}
 
@@ -77,27 +77,33 @@ Este trabalho investiga se é possível \emph{estimar} uma métrica matemática 
 que reproduza o critério decisório de um LLM a partir de suas classificações observadas.
 A abordagem é a \emph{otimização inversa}: dado um conjunto de classificações realizadas
 por um LLM em problemas de classificação binária bidimensional, infere-se uma métrica de
-Mahalanobis diagonal \West{} por meio de \emph{dois} estimadores independentes — um
-Perceptron Estruturado com Relaxação de Margem e Mínimos Quadrados Não-Negativos (NNLS)
-— cuja concordância direcional serve de controle de robustez. O trabalho organiza-se em
+Mahalanobis diagonal \West{} por meio de \emph{dois} estimadores independentes, um
+Perceptron Estruturado com Relaxação de Margem e Mínimos Quadrados Não-Negativos (NNLS),
+cuja concordância direcional serve de controle de robustez. O trabalho organiza-se em
 três blocos: (\emph{i}) o LLM como \emph{fonte} de decisões (Problemas A–D), avaliando a
 fidelidade de \West{}, sua transferência entre geometrias, um teste-oráculo de sanidade e
 o efeito de vieses semânticos e de \emph{prompt}; (\emph{ii}) o LLM como \emph{aprendiz}
 via \emph{in-context learning} (Problemas E–F), comparado a classificadores clássicos;
 e (\emph{iii}) um estudo de caso \emph{real} de peso $\times$ altura (Problema G).
-Com o modelo \texttt{gpt-4o-mini} a temperatura zero, três sementes e três repetições,
-os resultados mostram: (a) \West{} reproduz o LLM com fidelidade de $76{,}7$–$85{,}3\%$
-(Perceptron/NNLS concordam com cosseno $0{,}993$); (b) o teste-oráculo recupera métricas
+Com os modelos \texttt{gpt-4o-mini} e \texttt{gemini-2.5-flash-lite} a temperatura zero,
+três sementes e três repetições,
+os resultados (\texttt{gpt-4o-mini}, salvo indicação) mostram: (a) \West{} reproduz o LLM
+com fidelidade de $82{,}7$–$86{,}7\%$
+(Perceptron/NNLS concordam com cosseno $0{,}986$); (b) o teste-oráculo recupera métricas
 sintéticas conhecidas com fidelidade de $95$–$100\%$, validando os estimadores; (c) a
-transferência é heterogênea ($\kappa$ de $0{,}30$ a $0{,}73$ em zero-shot, subindo a
-$0{,}84$–$0{,}89$ com poucos exemplos); (d) a direção de \West{} é estável entre sementes
-(cosseno $0{,}990$), mas sua magnitude não (coeficiente de variação de $58\%$); (e) o
+transferência é heterogênea ($\kappa$ de $0{,}33$ a $0{,}75$ em zero-shot, subindo a
+$0{,}67$–$0{,}92$ com poucos exemplos); (d) a direção de \West{} é estável entre sementes
+(cosseno $0{,}971$), mas sua magnitude não (coeficiente de variação de $88\%$); (e) o
 critério é fortemente sensível à semântica de rótulos e \emph{features}; (f) como
-aprendiz, o LLM é praticamente ``cego'' em zero-shot ($54{,}9\%$ na média sobre três
-peritos; $42{,}9\%$ no caso real)
-e aprende com poucos exemplos, mas \emph{não supera} baselines triviais (Regressão
-Logística atinge $100\%$); e (g) a hipótese de que exemplos difíceis ensinam melhor é
-\textbf{refutada} — exemplos fáceis dominam com poucos exemplos.
+aprendiz, o LLM é praticamente ``cego'' em zero-shot ($55{,}2\%$ na média sobre três
+peritos)
+e aprende com poucos exemplos, mas \emph{não supera} de forma consistente baselines
+triviais (a Regressão Logística atinge $97$–$98\%$); e (g) a hipótese de que exemplos
+difíceis ensinam melhor é
+\textbf{refutada}: exemplos fáceis dominam com poucos exemplos. O contraste entre modelos
+revela ainda uma diferença de determinismo a $T=0$: a taxa de \emph{flip} em consultas
+repetidas é de $4{,}3\%$ no \texttt{gpt-4o-mini} contra $0{,}0\%$ no
+\texttt{gemini-2.5-flash-lite}.
 
 \smallskip\noindent\textbf{Palavras-chave:}
 Otimização Inversa, Modelos de Linguagem de Grande Escala, \emph{Metric Learning},
@@ -116,13 +122,13 @@ Modelos de Linguagem de Grande Escala (LLMs) tornaram-se ferramentas onipresente
 tarefas cognitivas, da geração de texto à classificação de dados. Apesar do desempenho
 notável, os mecanismos que governam suas decisões permanecem largamente opacos, o que
 dificulta auditabilidade, detecção de vieses e previsão de comportamento em domínios
-novos — e avaliações recentes questionam até que ponto os ``traços de raciocínio''
+novos. Avaliações recentes questionam até que ponto os ``traços de raciocínio''
 desses modelos refletem processos genuínos de resolução de problemas
 \cite{shojaeeIllusionThinking2025}.
 
 Uma linha de pesquisa em ascensão investiga a capacidade de \emph{in-context learning}
 (ICL) dos LLMs: aprender novas tarefas apenas a partir de exemplos no \emph{prompt}, sem
-atualização de parâmetros — capacidade demonstrada em escala pelo GPT-3
+atualização de parâmetros, capacidade demonstrada em escala pelo GPT-3
 \cite{brownLanguageModels2020} e estudada formalmente em
 \cite{gargWhatTransformers2022, akyurekWhatLearning2023}.
 Trabalhos recentes sugerem que o ICL pode implementar internamente algoritmos de
@@ -136,8 +142,8 @@ Este trabalho aborda a questão pelo \emph{framework} de \emph{otimização inve
 otimização (as classificações do LLM), inferir o critério (função objetivo) que tornaria
 essas classificações ótimas. Especificamente, estima-se uma \emph{métrica de Mahalanobis
 diagonal} \West{} que, usada em classificação por vizinho mais próximo, reproduz as
-decisões do LLM. Adota-se a terminologia \emph{\West{} estimada/inferida} — e não
-``métrica aprendida'' — para enfatizar que \West{} é um \emph{ajuste \textit{a posteriori}}
+decisões do LLM. Adota-se a terminologia \emph{\West{} estimada/inferida}, e não
+``métrica aprendida'', para enfatizar que \West{} é um \emph{ajuste \textit{a posteriori}}
 às decisões observadas, não um objeto treinado dentro do LLM.
 
 O trabalho vai além da estimação isolada. Estrutura-se em três blocos auto-contidos:
@@ -255,8 +261,10 @@ entre eles é usada como controle: se ambos convergem para a mesma direção, o 
 \paragraph{(i) Perceptron Estruturado com Relaxação de Margem.}
 O Perceptron Estruturado \cite{collinsDiscriminativeTraining2002} generaliza o perceptron
 clássico para espaços de saída estruturados, atualizando os pesos quando a predição diverge
-do alvo. A variante usada incorpora um fator de escala $f \in [0,1]$ que suaviza a
-atualização e é ajustado por busca binária para satisfazer uma relaxação de margem $\gamma$
+do alvo. A variante usada, com relaxação de margem e busca binária no parâmetro $\gamma$,
+segue a formulação de Coelho, Borges e Fonseca Neto \cite{coelhoPredicaoEstruturada2017}
+para aprendizado de métrica: incorpora um fator de escala $f \in [0,1]$ que suaviza a
+atualização e é ajustado por busca binária para satisfazer a relaxação de margem $\gamma$
 (Algoritmo~\ref{alg:perceptron}).
 
 \begin{algorithm}[ht]
@@ -303,7 +311,7 @@ A métrica diagonal sobre as \emph{features} originais só induz fronteiras line
 sondar se o LLM captura interações, aumenta-se o espaço de \emph{features} sem sair do
 formalismo linear: a \emph{projeção R3} acrescenta $x_3 = x_1 x_2$ (termo de interação,
 fronteira hiperbólica) e a \emph{projeção R4} acrescenta ainda $x_1^2$ e $x_2^2$ (fronteira
-elíptica — o classificador ótimo do caso peso $\times$ altura). Comparando a fidelidade com
+elíptica, o classificador ótimo do caso peso $\times$ altura). Comparando a fidelidade com
 $2$, $3$ e $4$ \emph{features}, avalia-se se a expressividade adicional aproxima \West{} do
 LLM em problemas não-lineares.
 
@@ -366,7 +374,8 @@ $P_k = \frac{\text{VP}_k}{\text{VP}_k + \text{FP}_k}$ e revocação
 $R_k = \frac{\text{VP}_k}{\text{VP}_k + \text{FN}_k}$, define-se
 $\text{F1}_k = \frac{2 P_k R_k}{P_k + R_k}$ (média harmônica de precisão e revocação). O
 F1 \emph{macro} é a média aritmética simples $\frac{1}{K}\sum_{k=1}^K \text{F1}_k$, tratando
-as classes com igual peso — apropriado para detectar degradação em uma classe minoritária.
+as classes com igual peso, o que é apropriado para detectar degradação em uma classe
+minoritária.
 
 % ============================================================
 \section{Trabalhos Relacionados}
@@ -392,13 +401,15 @@ não para classificar melhor, mas para \emph{explicar} um classificador externo 
 \paragraph{Predição Estruturada.}
 Collins~\cite{collinsDiscriminativeTraining2002} introduziu o Perceptron Estruturado,
 ancestral direto do estimador (i). A regra $w \leftarrow w - \eta f g$ é uma instância da
-regra de Collins adaptada para \emph{metric learning} bidimensional.
+regra de Collins adaptada para \emph{metric learning} bidimensional, na formulação com
+relaxação de margem de Coelho et al.~\cite{coelhoPredicaoEstruturada2017}, da qual o
+estimador (i) é implementação direta.
 
 \paragraph{In-Context Learning.}
 Garg et al.~\cite{gargWhatTransformers2022} e Akyürek et al.~\cite{akyurekWhatLearning2023}
 estabelecem o LLM como aprendiz implícito de funções. Min et
 al.~\cite{minRethinkingRole2022} questionam o papel dos mapeamentos \emph{input-label},
-mostrando que a estrutura das demonstrações importa mais que a correção dos rótulos — achado
+mostrando que a estrutura das demonstrações importa mais que a correção dos rótulos, achado
 com implicações diretas para o Bloco 2 e para a refutação de H4. Su et
 al.~\cite{suSelectiveAnnotation2023} mostram que a seleção estratégica de exemplos, com
 equilíbrio entre diversidade e representatividade, supera a aleatória. Investigamos uma
@@ -444,23 +455,31 @@ G & 3 & Real: peso $\times$ altura ($\approx 70$ amostras, fronteira elíptica).
 
 \subsection{Protocolo Experimental}
 
-O modelo é o \texttt{gpt-4o-mini} (OpenAI) com temperatura $T = 0{,}0$, minimizando
-estocasticidade para isolar o critério. Ressalva-se que $T=0$ \emph{não garante} determinismo
+Avaliam-se dois modelos, \texttt{gpt-4o-mini} (OpenAI) e \texttt{gemini-2.5-flash-lite}
+(Google, via OpenRouter), ambos com temperatura $T = 0{,}0$, minimizando estocasticidade
+para isolar o critério. A narrativa principal segue o \texttt{gpt-4o-mini}, com o
+\texttt{gemini-2.5-flash-lite} usado como réplica de contraste (as diferenças relevantes
+são destacadas explicitamente). Ressalva-se que $T=0$ \emph{não garante} determinismo
 estrito (roteamento, \emph{batching} e não-associatividade de ponto flutuante introduzem
-variação); o desenho usa múltiplas sementes e repetições justamente para medir essa variância.
+variação), fenômeno já documentado em estudos de estabilidade de
+LLMs~\cite{atilLLMStability2024, windischOneRun2026}; o desenho usa múltiplas sementes e
+repetições justamente para medir essa variância.
 As chamadas são assíncronas com concorrência limitada. As respostas passam por um \emph{parser
 de $8$ camadas} ($0$–$7$) que trata variações de formato; respostas irrecuperáveis após
 reenvios recebem rótulo por \emph{hash} MD5 determinístico das coordenadas (evitando viés
-geométrico). Nesta execução \emph{não houve} acionamento do \emph{fallback}: as métricas de
-$\kappa$/consistência não contêm rótulos pseudo-aleatórios.
+geométrico). Nesta execução \emph{não houve} acionamento do \emph{fallback} em nenhum dos
+modelos ($0{,}00\%$ de $129\,868$ chamadas): as métricas de $\kappa$/consistência não contêm
+rótulos pseudo-aleatórios.
 
-A auditoria \emph{offline} das $119\,713$ interações registradas quantificou também o
-não-determinismo residual: $4{,}75\%$ das $29\,116$ consultas repetidas ($1\,384$) receberam
-respostas divergentes entre repetições a $T=0$. Esse valor constitui o \emph{piso de ruído de
-medição} do protocolo: nenhuma métrica de concordância com o LLM (fidelidade, consistência,
-$\kappa$) pode exceder $\approx 95\%$, e os resultados devem ser interpretados contra esse
-teto. As decisões foram coletadas em 30/06--01/07/2026 pelo \emph{alias} \texttt{gpt-4o-mini},
-que resolve para o \emph{snapshot} vigente do provedor na data da chamada (ver Limitações).
+A auditoria \emph{offline} das interações registradas quantificou também o não-determinismo
+residual, e aqui os dois modelos divergem nitidamente: a taxa de \emph{flip} em consultas
+repetidas a $T=0$ é de $4{,}3\%$ no \texttt{gpt-4o-mini}, mas de $0{,}0\%$ no
+\texttt{gemini-2.5-flash-lite} (determinismo estrito no provedor pinado). Para o
+\texttt{gpt-4o-mini}, esse valor constitui o \emph{piso de ruído de medição} do protocolo:
+nenhuma métrica de concordância com o LLM (fidelidade, consistência, $\kappa$) pode exceder
+$\approx 96\%$, e os resultados devem ser interpretados contra esse teto. As decisões foram
+coletadas em 05/07/2026; o \texttt{gpt-4o-mini} resolveu para o \emph{snapshot}
+\texttt{gpt-4o-mini-2024-07-18} (registrado em cada chamada, ver Limitações).
 
 Variáveis de controle:
 \begin{itemize}
@@ -472,8 +491,9 @@ Variáveis de controle:
     feature\_1/feature\_2 (técnico).
   \item \textbf{Variantes de \emph{prompt}}: \emph{default}, \emph{geometric}, \emph{cot}
     (\emph{chain-of-thought}), \emph{tabular}.
-  \item \textbf{Tamanhos few-shot}: $n \in \{0,5,10\}$ (transferência) e
-    $n \in \{0,5,10,20,40\}$ (ICL).
+  \item \textbf{Tamanhos few-shot}: $n \in \{0,4,10\}$ (transferência) e
+    $n \in \{0,4,10,20,40\}$ (ICL). Os tamanhos são pares para garantir seleção
+    balanceada entre as duas classes ($n/2$ exemplos de cada) sem exemplo excedente.
 \end{itemize}
 
 \subsection{Bloco 1 — LLM como Fonte}
@@ -521,7 +541,7 @@ executa-se o ICL. Os exemplos \emph{few-shot} do ICL são selecionados
 \emph{aleatoriamente} (estratégia \emph{random}) entre os pontos de treino, com $3$
 repetições por configuração usando sorteios independentes, e são sempre excluídos do
 conjunto de avaliação (sem \emph{leakage}). Testa-se ainda a variante de \emph{nomes de
-classe} neutros — perguntando ``A ou B'' em vez de ``homem ou mulher'' — para isolar o
+classe} neutros, perguntando ``A ou B'' em vez de ``homem ou mulher'', para isolar o
 prior semântico dos nomes de classe, complementando a variante de \emph{features}
 neutras. Dada a pequena escala, reporta-se o \emph{número absoluto de erros} além
 das porcentagens.
@@ -538,16 +558,17 @@ pelo coeficiente de variação (CV) da razão $w_2/w_1$.
 \label{sec:resultados}
 % ============================================================
 
-Todos os números provêm da execução \texttt{2026-06-30\_23-46-58} (GPT-4o-mini, $T=0$,
-sementes $\{42,123,7\}$, $R=3$).
+Todos os números provêm da execução \texttt{2026-07-05\_12-34-52\_completa}
+(\texttt{gpt-4o-mini} e \texttt{gemini-2.5-flash-lite}, $T=0$, sementes $\{42,123,7\}$,
+$R=3$, $129\,868$ chamadas). Salvo indicação explícita, os valores referem-se ao
+\texttt{gpt-4o-mini}.
 
 \subsection{Bloco 1 — Estimação e Fidelidade (Problema A)}
 
 A Tabela~\ref{tab:fase_a} apresenta a fidelidade dos dois estimadores no Problema A. Os
-valores são \emph{modestos} — o log da execução registra explicitamente ``fidelidade baixa
-em ambos'', um sinal honesto de que a métrica diagonal captura o LLM apenas parcialmente. O
-NNLS supera levemente o Perceptron, e ambos concordam em direção (cosseno médio
-$0{,}993$; ver Seção~\ref{sec:res_estabilidade}).
+valores são \emph{modestos}, um sinal honesto de que a métrica diagonal captura o LLM apenas
+parcialmente. O NNLS supera levemente o Perceptron, e ambos concordam em direção (cosseno
+médio $0{,}986$; ver Seção~\ref{sec:res_estabilidade}).
 
 \begin{table}[ht]
 \centering
@@ -557,21 +578,21 @@ $0{,}993$; ver Seção~\ref{sec:res_estabilidade}).
 \toprule
 \textbf{Semente} & \textbf{Fid.\ Perceptron (\%)} & \textbf{Fid.\ NNLS (\%)} \\
 \midrule
-42  & 76,7 & 82,0 \\
-123 & 85,3 & 85,3 \\
-7   & 82,0 & 80,0 \\
+42  & 82,7 & 83,3 \\
+123 & 86,7 & 86,7 \\
+7   & 82,7 & 87,3 \\
 \midrule
-\textbf{Média} & \textbf{81,3} & \textbf{82,4} \\
+\textbf{Média} & \textbf{84,0} & \textbf{85,8} \\
 \bottomrule
 \end{tabular}
 \end{table}
 
 \begin{figure}[ht]
 \centering
-\includegraphics[width=0.92\textwidth]{bloco1_07_algorithm_comparison.png}
-\caption{Bloco 1: comparação Perceptron $\times$ NNLS — fidelidade no Problema A,
-consistência nas Fases B/C e dispersão das direções de \West{} estimadas. Os dois
-estimadores produzem métricas quase colineares (cosseno $0{,}993$).}
+\includegraphics[width=0.92\textwidth]{bloco1_07_algorithm_comparison__gpt4mini.png}
+\caption{Bloco 1: comparação Perceptron $\times$ NNLS (fidelidade no Problema A,
+consistência nas Fases B/C e dispersão das direções de \West{} estimadas). Os dois
+estimadores produzem métricas quase colineares (cosseno $0{,}986$).}
 \label{fig:alg_comparison}
 \end{figure}
 
@@ -615,11 +636,13 @@ fidelidade modesta observada no LLM reflete o modelo, não uma falha do método.
 \subsection{Bloco 1 — Transferência (Problemas B e C)}
 
 A Tabela~\ref{tab:fase_bc} apresenta consistência e $\kappa$ (com IC \emph{bootstrap} de
-$95\%$) nas transferências, em zero-shot e com $5$ exemplos. O padrão é claro e
-\emph{assimétrico}: o Problema B é difícil em zero-shot ($\kappa = 0{,}30$, ``razoável''),
-enquanto o Problema C já nasce alto ($\kappa = 0{,}73$, ``substancial''). Poucos exemplos
-elevam ambos a $\kappa \approx 0{,}84$–$0{,}89$. O salto zero$\to$few-shot tem tamanho de
-efeito \emph{grande} (Cohen's $d = 6{,}44$ para a consistência em B; $d = 5{,}36$ em C).
+$95\%$) nas transferências, em zero-shot e com $4$ exemplos. O padrão é claro e
+\emph{assimétrico}: o Problema B é difícil em zero-shot ($\kappa = 0{,}33$, ``razoável''),
+enquanto o Problema C já nasce alto ($\kappa = 0{,}75$, ``substancial''). Poucos exemplos
+elevam ambos a $\kappa \approx 0{,}67$–$0{,}92$. O salto zero$\to$$10$-shot na consistência
+tem tamanho de efeito \emph{grande} em C (Cohen's $d = 5{,}78$) e \emph{grande} também em B,
+embora com maior incerteza ($d = 1{,}86$; a transferência para B é mais ruidosa entre
+sementes).
 
 \begin{table}[ht]
 \centering
@@ -630,32 +653,35 @@ efeito \emph{grande} (Cohen's $d = 6{,}44$ para a consistência em B; $d = 5{,}3
 \textbf{Problema} & \textbf{$n$-shot} & \textbf{Consistência [IC$_{95}$]} &
 \textbf{$\kappa$ [IC$_{95}$]} \\
 \midrule
-B & 0 & 0,679 [0,652;\,0,707] & 0,297 [0,239;\,0,359] \\
-B & 5 & 0,921 [0,895;\,0,948] & 0,841 [0,786;\,0,895] \\
+B & 0 & 0,697 [0,670;\,0,750] & 0,333 [0,255;\,0,449] \\
+B & 4 & 0,837 [0,719;\,0,927] & 0,670 [0,432;\,0,853] \\
 \midrule
-C & 0 & 0,871 [0,849;\,0,890] & 0,729 [0,685;\,0,771] \\
-C & 5 & 0,947 [0,939;\,0,955] & 0,893 [0,877;\,0,910] \\
+C & 0 & 0,880 [0,860;\,0,900] & 0,746 [0,703;\,0,789] \\
+C & 4 & 0,962 [0,948;\,0,990] & 0,923 [0,895;\,0,979] \\
 \bottomrule
 \end{tabular}
 \end{table}
 
 \paragraph{Métrica estimada vs.\ euclidiana.}
-A métrica estimada \emph{não} supera significativamente a euclidiana no Problema B em
-zero-shot ($\Delta = +0{,}044$; IC$_{95} = [-0{,}102;\,+0{,}237]$, inclui zero). Ou seja,
-em zero-shot a deformação aprendida agrega pouco sobre a distância trivial — a vantagem de
-\West{} manifesta-se sobretudo com exemplos.
+No Problema B em zero-shot, a métrica estimada é \emph{significativamente inferior} à
+euclidiana ($\Delta_{\text{métrica}-\text{euclid.}} = -0{,}087$;
+IC$_{95} = [-0{,}180;\,-0{,}040]$, exclui zero). Ou seja, a deformação diagonal aprendida a
+partir das decisões do LLM em zero-shot chega a \emph{atrapalhar} a transferência frente à
+distância trivial: a vantagem de \West{} não é intrínseca, e sim contextual, dependente de
+exemplos que ancorem a métrica.
 
 \subsection{Bloco 1 — Não-Linearidade (R3/R4)}
 
 Aumentar o espaço para $3$ ou $4$ \emph{features} produz ganhos \emph{marginais} de
 fidelidade nos problemas lineares A/B/C (Tabela~\ref{tab:r3r4}), coerente com o fato de
-fronteiras lineares não requererem termos de interação: a média sobe de $81{,}6\%$ (R3)
-para $83{,}6\%$ (R4), dentro da faixa da estimação em $2$ \emph{features}. No caso
+fronteiras lineares não requererem termos de interação: a média sobe de $84{,}9\%$ (R3)
+para $86{,}2\%$ (R4), próximo da faixa da estimação em $2$ \emph{features}. No caso
 \emph{não-linear} peso $\times$ altura, ao contrário, a projeção R4 (que introduz a
-fronteira elíptica correta) eleva a fidelidade do NNLS de $\approx 70\%$ para até $81{,}4\%$
-— evidência de que a expressividade adicional só ajuda quando o problema efetivamente exige
-não-linearidade. O teste-oráculo na meia-lua confirma que os estimadores recuperam a
-métrica anisotrópica mesmo em geometria curva (Perceptron $100\%$; NNLS $95{,}3\%$).
+fronteira elíptica correta) eleva a fidelidade com \emph{features} neutras ($x_1/x_2$) de
+$56{,}2\%$ para $69{,}0\%$, evidência de que a expressividade adicional só ajuda quando o
+problema efetivamente exige não-linearidade. O teste-oráculo na meia-lua confirma que os
+estimadores recuperam a métrica anisotrópica mesmo em geometria curva (Perceptron $100\%$;
+NNLS $95{,}3\%$).
 
 \begin{table}[ht]
 \centering
@@ -667,22 +693,23 @@ A/B/C, por semente.}
 \textbf{$n$-features} & \textbf{Seed 42} & \textbf{Seed 123} & \textbf{Seed 7} &
 \textbf{Média} \\
 \midrule
-3 (R3, $+x_1 x_2$)          & 80,0 & 83,3 & 81,3 & 81,6 \\
-4 (R4, $+x_1^2,x_2^2$)      & 78,0 & 83,3 & 89,3 & 83,6 \\
+3 (R3, $+x_1 x_2$)          & 83,3 & 88,7 & 82,7 & 84,9 \\
+4 (R4, $+x_1^2,x_2^2$)      & 81,3 & 86,7 & 90,7 & 86,2 \\
 \bottomrule
 \multicolumn{5}{l}{\footnotesize Valores em \%. Fonte:
-\texttt{final\_cross\_linearity.csv}.}
+\texttt{final\_cross\_linearity\_\_gpt4mini.csv}.}
 \end{tabular}
 \end{table}
 
 \subsection{Bloco 1 — Viés Semântico e de Prompt}
 
 A Tabela~\ref{tab:bias} mostra que \emph{o critério do LLM muda com a rotulagem}. Nomes com
-conotação (Positivo/Negativo) elevam a fidelidade a $98{,}7\%$, ao passo que a mera inversão
-de posição (B/A) a reduz a $68{,}0\%$ — evidência de viés de \emph{ordem}. Nomes de
-\emph{feature} também importam: ``altura/peso'' rende $84{,}0\%$ contra $76{,}7\%$ de
-$x_1/x_2$. Já a variante \emph{tabular} de \emph{prompt} \emph{degrada} a medição a
-$56{,}7\%$, alertando que a forma de apresentação das coordenadas confunde o modelo.
+conotação (Positivo/Negativo) elevam a fidelidade a $99{,}3\%$, ao passo que a mera inversão
+de posição (A/B $\to$ B/A) a reduz de $82{,}7\%$ a $68{,}0\%$, evidência de viés de
+\emph{ordem}. O efeito dos nomes de \emph{feature}, neste modelo, é pequeno (``altura/peso''
+$84{,}7\%$ contra $82{,}7\%$ de $x_1/x_2$). Já a variante \emph{tabular} de \emph{prompt}
+\emph{degrada} a medição a $64{,}7\%$, alertando que a forma de apresentação das coordenadas
+confunde o modelo.
 
 \begin{table}[ht]
 \centering
@@ -696,11 +723,11 @@ $10$-shot; \emph{feature}/\emph{prompt}: zero-shot).}
 \textbf{Nome de feature} & \textbf{Fid.\ (\%)} &
 \textbf{Prompt} & \textbf{Fid.\ (\%)} \\
 \midrule
-Positivo/Negativo & 98,7 & altura/peso        & 84,0 & \emph{geometric} & 81,3 \\
-Negativo/Positivo & 93,3 & $x_1/x_2$          & 76,7 & \emph{cot}       & 78,7 \\
-Azul/Vermelho     & 88,0 & feature\_1/2       & 76,0 & \emph{default}   & 76,7 \\
-A/B               & 76,7 &                    &      & \emph{tabular}   & 56,7 \\
-1/0               & 79,3 &                    &      &                  &      \\
+Positivo/Negativo & 99,3 & altura/peso        & 84,7 & \emph{default}   & 82,7 \\
+Negativo/Positivo & 88,7 & feature\_1/2       & 84,0 & \emph{cot}       & 76,7 \\
+Azul/Vermelho     & 86,7 & $x_1/x_2$          & 82,7 & \emph{geometric} & 68,0 \\
+1/0               & 83,3 &                    &      & \emph{tabular}   & 64,7 \\
+A/B               & 82,7 &                    &      &                  &      \\
 B/A               & 68,0 &                    &      &                  &      \\
 \bottomrule
 \end{tabular}
@@ -708,7 +735,7 @@ B/A               & 68,0 &                    &      &                  &      \
 
 \begin{figure}[ht]
 \centering
-\includegraphics[width=0.9\textwidth]{bloco1_13_prompt_variants.png}
+\includegraphics[width=0.9\textwidth]{bloco1_13_prompt_variants__gpt4mini.png}
 \caption{Bloco 1: efeito das variantes de \emph{prompt} sobre a direção de \West{} e a
 fidelidade. A variante \emph{tabular} desloca a medição, alertando que a forma de
 apresentar as coordenadas interfere no critério inferido.}
@@ -719,7 +746,7 @@ apresentar as coordenadas interfere no critério inferido.}
 
 \paragraph{Cegueira em zero-shot.}
 Sem exemplos, o LLM é praticamente incapaz de reproduzir o critério do especialista: a
-acurácia média, sobre os três peritos, é de $54{,}9\% \pm 5{,}8\%$ — pouco acima do acaso. A
+acurácia média, sobre os três peritos, é de $55{,}2\% \pm 5{,}6\%$, pouco acima do acaso. A
 Tabela~\ref{tab:fase_e} mostra a curva de aprendizado por estratégia (especialista
 aniso.\ $x_2$).
 
@@ -732,18 +759,18 @@ aniso.\ $x_2$).
 \toprule
 \textbf{$n$-shot} & \textbf{Easy} & \textbf{Hard} & \textbf{Mixed} & \textbf{Random} \\
 \midrule
-0  & 60,9 & 60,9 & 60,9 & 60,9 \\
-5  & 84,9 & 62,6 & 81,4 & \textbf{85,2} \\
-10 & 87,1 & 67,5 & 79,8 & \textbf{88,3} \\
-20 & 89,8 & 84,2 & 87,4 & \textbf{92,1} \\
-40 & 88,3 & \textbf{97,8} & 96,9 & 94,1 \\
+0  & 61,1 & 61,1 & 61,1 & 61,1 \\
+4  & \textbf{85,4} & 62,1 & 82,2 & 84,3 \\
+10 & 86,7 & 67,9 & 79,3 & \textbf{88,3} \\
+20 & 90,3 & 83,8 & 86,2 & \textbf{92,1} \\
+40 & 87,6 & 97,9 & \textbf{98,5} & 94,1 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
 \begin{figure}[ht]
 \centering
-\includegraphics[width=0.9\textwidth]{bloco2_04_phase_e_learning_curve.png}
+\includegraphics[width=0.9\textwidth]{bloco2_04_phase_e_learning_curve__gpt4mini.png}
 \caption{Bloco 2: curva de aprendizado por estratégia de seleção de exemplos. \emph{Easy}
 e \emph{Random} dominam com poucos exemplos; \emph{Hard} só alcança as demais em alto
 volume ($40$-shot).}
@@ -752,24 +779,27 @@ volume ($40$-shot).}
 
 \paragraph{H4 refutada.}
 A hipótese \emph{a priori} de que exemplos difíceis ensinam melhor é \textbf{refutada}. Na
-média sobre $n>0$, a ordem é \emph{Random} ($90{,}5\%$) $>$ \emph{Mixed} ($87{,}9\%$) $>$
-\emph{Easy} ($81{,}2\%$) $>$ \emph{Hard} ($75{,}4\%$): a estratégia \emph{hard} é a
-\emph{pior}. A vantagem de \emph{easy} sobre \emph{hard} é estatisticamente significativa com
-poucos exemplos e desaparece com muitos: $\Delta_{5\text{-shot}} = +0{,}223$
-(IC$_{95}=[+0{,}103;+0{,}336]$), $\Delta_{10\text{-shot}} = +0{,}197$
-(IC$_{95}=[+0{,}105;+0{,}288]$), $\Delta_{20\text{-shot}} = +0{,}056$
-(IC$_{95}=[-0{,}156;+0{,}192]$, não significativo). A interpretação, coerente com Min et
-al.~\cite{minRethinkingRole2022}: com poucos exemplos o LLM precisa de \emph{âncoras
-prototípicas} (alta margem); com muitos, a informação sobre a geometria da fronteira
-(exemplos difíceis) supera o ruído — daí \emph{hard} atingir $97{,}8\%$ em $40$-shot.
+média sobre $n>0$ e os três peritos, a ordem é \emph{Random} ($90{,}3\%$) $>$ \emph{Mixed}
+($88{,}0\%$) $>$ \emph{Easy} ($81{,}1\%$) $>$ \emph{Hard} ($75{,}1\%$): a estratégia
+\emph{hard} é a \emph{pior}. A vantagem de \emph{easy} sobre \emph{hard} é estatisticamente
+significativa com poucos exemplos e desaparece com muitos: no especialista aniso.\ $x_2$,
+$\Delta_{10\text{-shot}} = +0{,}188$ (IC$_{95}=[+0{,}107;+0{,}257]$) e
+$\Delta_{20\text{-shot}} = +0{,}064$ (IC$_{95}=[-0{,}154;+0{,}215]$, não significativo). A
+interpretação, coerente com Min et al.~\cite{minRethinkingRole2022}: com poucos exemplos o
+LLM precisa de \emph{âncoras prototípicas} (alta margem); com muitos, a informação sobre a
+geometria da fronteira (exemplos difíceis) supera o ruído: daí \emph{hard} atingir $97{,}9\%$
+em $40$-shot. O padrão se repete no \texttt{gemini-2.5-flash-lite} (\emph{easy} $93{,}5\%$
+vs.\ \emph{hard} $78{,}1\%$ na média sobre $n>0$), reforçando a refutação de H4 nos dois
+modelos.
 
 \paragraph{O LLM não supera baselines triviais.}
 A Tabela~\ref{tab:baselines} compara o LLM a classificadores clássicos treinados nos mesmos
-$40$ exemplos. A Regressão Logística — linear, como o problema — atinge \emph{concordância
-perfeita} ($100\%$, $\kappa=1{,}0$), superando o LLM ($95{,}6\%$). O achado é importante e
-honesto: no regime linear, o LLM \emph{não faz nada que um classificador trivial não faça}.
-O valor do LLM está na \emph{flexibilidade} (não requer treino nem especificação de modelo),
-não na acurácia.
+$40$ exemplos. Todos os métodos ficam numa faixa estreita ($92$–$98\%$) e nenhum domina: no
+especialista aniso.\ $x_2$ o LLM (\emph{hard}, $97{,}9\%$) supera marginalmente a Regressão
+Logística ($97{,}3\%$), ao passo que no aniso.\ $x_1$ a Regressão Logística ($98{,}0\%$)
+supera o LLM ($92{,}4\%$). O achado é importante e honesto: no regime linear, o LLM
+\emph{não supera de forma consistente} um classificador trivial. O valor do LLM está na
+\emph{flexibilidade} (não requer treino nem especificação de modelo), não na acurácia.
 
 \begin{table}[ht]
 \centering
@@ -780,43 +810,45 @@ não na acurácia.
 \textbf{Especialista} & \textbf{LLM (hard)} & \textbf{k-NN} &
 \textbf{Reg.\ Log.} & \textbf{SVM-RBF} \\
 \midrule
-aniso.\ $x_2$ & 95,6\% ($\kappa$0,945) & 98,2\% ($\kappa$0,964) &
-  \textbf{100\%} ($\kappa$1,0) & 90,9\% ($\kappa$0,872) \\
-aniso.\ $x_1$ & $\approx$95,6\%         & 100\% ($\kappa$1,0)    &
-  \textbf{100\%} ($\kappa$1,0) & 97,3\% ($\kappa$0,944) \\
+aniso.\ $x_2$ & \textbf{97,9\%} ($\kappa$0,957) & 94,5\% ($\kappa$0,891) &
+  97,3\% ($\kappa$0,947) & 94,5\% ($\kappa$0,891) \\
+aniso.\ $x_1$ & 92,4\% ($\kappa$0,850)         & 95,6\% ($\kappa$0,912)    &
+  \textbf{98,0\%} ($\kappa$0,961) & 95,5\% ($\kappa$0,911) \\
 \bottomrule
 \end{tabular}
 \end{table}
 
 \begin{figure}[ht]
 \centering
-\includegraphics[width=0.88\textwidth]{bloco2_09_classical_baselines.png}
+\includegraphics[width=0.88\textwidth]{bloco2_09_classical_baselines__gpt4mini.png}
 \caption{Bloco 2: LLM \emph{in-context} vs.\ baselines clássicos (k-NN, Regressão
-Logística, SVM-RBF) nos mesmos exemplos few-shot. No regime linear, a Regressão Logística
-iguala ou supera o LLM.}
+Logística, SVM-RBF) nos mesmos exemplos few-shot. No regime linear, todos os métodos ficam
+numa faixa estreita, sem dominância clara.}
 \label{fig:baselines}
 \end{figure}
 
-\paragraph{Problema F: colapso em classe única.}
-No regime não-linear (meia-lua), o experimento ``LLM como aprendiz'' \emph{não pôde ser
-coletado} nesta execução: em zero-shot, o LLM atribuiu uma única classe a todos os $105$
-pontos de treino nas três sementes, e sem duas classes o \emph{pipeline} few-shot é
-abortado. O colapso é um achado em si — evidencia a fragilidade do zero-shot em geometria
-não-linear — e a Figura~\ref{fig:svm_meialua} o visualiza por contraste com um SVM
-gaussiano (RBF): treinado no \emph{ground truth}, o SVM desenha a fronteira não-linear de
-referência; sobre os rótulos do LLM, não há fronteira alguma a ajustar. Em substituição,
-um teste-oráculo ajusta a métrica diagonal ao rótulo verdadeiro da meia-lua: a fidelidade
-satura em $\approx 86{,}7\%$ ($20/150$ erros) e as projeções R3/R4 \emph{não} ajudam — o
-limite é estrutural (a curvatura em ``S'' exigiria termo fora da diagonal), não de dados.
-O teste do LLM como aprendiz em regime não-linear genuíno migra, portanto, para o caso
-real do Bloco 3.
+\paragraph{Problema F: colapso frágil e dependente de modelo/semente.}
+No regime não-linear (meia-lua), o zero-shot do \texttt{gpt-4o-mini} \emph{colapsa em classe
+única} em duas das três sementes ($123$ e $7$): o modelo atribui um único rótulo a todos os
+$105$ pontos de treino, e sem duas classes o \emph{pipeline} few-shot é abortado. Na semente
+$42$ o \emph{pipeline} roda, mas o desempenho é fraco: a acurácia vs.\ rótulo real parte de
+$53{,}3\%$ (zero-shot) e satura em $\approx 68\%$ com exemplos, muito abaixo do teto atingido
+nos problemas lineares. O \texttt{gemini-2.5-flash-lite}, por contraste, \emph{não colapsa}
+em nenhuma semente, o que mostra que o colapso é uma fragilidade específica do modelo e da
+semente, não uma propriedade universal da geometria. A Figura~\ref{fig:svm_meialua} ilustra
+o caso da semente $42$ por contraste com um SVM gaussiano (RBF) treinado no \emph{ground
+truth}. Um teste-oráculo que ajusta a métrica diagonal diretamente ao rótulo verdadeiro da
+meia-lua satura em $\approx 86{,}7\%$ ($20/150$ erros), e as projeções R3/R4 \emph{não}
+ajudam: o limite é estrutural (a curvatura em ``S'' exigiria termo fora da diagonal), não de
+dados. O teste mais informativo do LLM como aprendiz em regime não-linear genuíno é,
+portanto, o caso real do Bloco 3.
 
 \begin{figure}[ht]
 \centering
-\includegraphics[width=0.95\textwidth]{bloco23_external_svm_meialua_seed42.png}
-\caption{Problema F (meia-lua, seed $42$): superfície de separação do SVM RBF treinado no
-\emph{ground truth} (esq.) vs.\ rótulos zero-shot do LLM (dir.) — classe única, sem
-fronteira. Mesmo colapso nas sementes $123$ e $7$.}
+\includegraphics[width=0.95\textwidth]{bloco23_external_svm_meialua_seed42__gpt4mini.png}
+\caption{Problema F (meia-lua, seed $42$, \texttt{gpt-4o-mini}): superfície de separação do
+SVM RBF treinado no \emph{ground truth} (esq.) vs.\ rótulos zero-shot do LLM (dir.). Nas
+sementes $123$ e $7$ o zero-shot colapsa em classe única e o \emph{pipeline} é abortado.}
 \label{fig:svm_meialua}
 \end{figure}
 
@@ -825,7 +857,7 @@ fronteira. Mesmo colapso nas sementes $123$ e $7$.}
 
 \paragraph{Diluição não dilui.}
 Fixando $4$ exemplos \emph{hard} e acrescentando exemplos \emph{easy} progressivamente, a
-acurácia \emph{cresce monotonicamente} — de $62{,}2\%$ (apenas os $4$ hard) a $84{,}4\%$
+acurácia \emph{cresce monotonicamente}: de $63{,}0\%$ (apenas os $4$ hard) a $84{,}1\%$
 ($4$ hard $+$ $20$ easy), estabilizando em torno de $84\%$ (Figura~\ref{fig:dilution}).
 Não se observa o efeito hipotético de ``diluição'' em que exemplos fáceis prejudicariam:
 ao contrário, cada bloco de fáceis \emph{ajuda}, reforçando a leitura de H4 de que âncoras
@@ -834,100 +866,105 @@ prototípicas transmitem o critério.
 \paragraph{Viés de ordem é modesto.}
 Reordenar os mesmos exemplos (\emph{class0\_first}, \emph{class1\_first}, \emph{shuffled},
 \emph{alternating}) altera pouco o resultado: a dispersão entre ordenações é de apenas
-$2{,}3$–$7{,}5$ pontos percentuais, sem uma ordenação consistentemente vencedora
-(\emph{alternating} é marginalmente melhor). O critério do LLM, neste \emph{setup}, é
-relativamente robusto à ordem das demonstrações — em contraste com a forte sensibilidade a
+$1{,}8$–$7{,}6$ pontos percentuais, sem uma ordenação consistentemente vencedora
+(\emph{shuffled} é marginalmente melhor com poucos exemplos). O critério do LLM, neste
+\emph{setup}, é
+relativamente robusto à ordem das demonstrações, em contraste com a forte sensibilidade a
 \emph{quais} exemplos são escolhidos (Tabela~\ref{tab:fase_e}).
 
 \begin{figure}[ht]
 \centering
 \begin{minipage}[t]{0.49\textwidth}
 \centering
-\includegraphics[width=\textwidth]{bloco2_06_dilution.png}
+\includegraphics[width=\textwidth]{bloco2_06_dilution__gpt4mini.png}
 \end{minipage}\hfill
 \begin{minipage}[t]{0.49\textwidth}
 \centering
-\includegraphics[width=\textwidth]{bloco2_07_example_order.png}
+\includegraphics[width=\textwidth]{bloco2_07_example_order__gpt4mini.png}
 \end{minipage}
-\caption{Esquerda: experimento de diluição — acrescentar exemplos fáceis a $4$ difíceis
-fixos melhora a acurácia monotonicamente. Direita: viés de ordem — as quatro ordenações
-diferem por poucos pontos percentuais.}
+\caption{Esquerda: experimento de diluição (acrescentar exemplos fáceis a $4$ difíceis
+fixos melhora a acurácia monotonicamente). Direita: viés de ordem (as quatro ordenações
+diferem por poucos pontos percentuais).}
 \label{fig:dilution}
 \end{figure}
 
 \subsection{Bloco 3 — Estudo de Caso Real (Peso $\times$ Altura)}
 
-O caso real expõe a \emph{dependência semântica} de forma dramática
-(Tabela~\ref{tab:real_a}). Com nomes \emph{semânticos} (peso/altura), a estimação atinge
-fidelidade de $71$–$73\%$ e a acurácia real do LLM chega a $91{,}4\%$ — apenas \textbf{6
-erros em $\approx 70$ amostras}. Com nomes \emph{neutros} ($x_1/x_2$), tudo desaba: a
-acurácia real do LLM cai a $42{,}9\%$ (\emph{abaixo} do acaso da classe majoritária,
-$57{,}1\%$; \textbf{33 erros}). O contexto semântico das \emph{features} é, no caso real,
-determinante.
+O caso real expõe a \emph{dependência semântica} das \emph{features}
+(Tabela~\ref{tab:real_a}, médias das $3$ sementes, $2$ \emph{features}). Distinguem-se três
+quantidades: a \emph{fidelidade} (a métrica reproduz o LLM), a \emph{acurácia do LLM vs.\
+real} (as decisões do LLM contra o rótulo verdadeiro) e a \emph{acurácia da métrica vs.\
+real} (a métrica estimada contra o rótulo verdadeiro). Com nomes \emph{semânticos}
+(peso/altura), o LLM classifica melhor que com neutros (acurácia própria $56{,}7\%$ vs.\
+$45{,}2\%$, este último abaixo do acaso da classe majoritária, $57{,}1\%$), e a métrica
+estimada a partir dessas decisões recupera a estrutura real com robustez ($89{,}5\%$,
+$\approx 7$ erros em $70$ nas três sementes). Com nomes \emph{neutros} ($x_1/x_2$), a métrica
+vs.\ real torna-se \emph{arbitrária}: entre sementes ela vale $8{,}6\%$, $92{,}9\%$ e
+$31{,}4\%$ (a média $44{,}3\%$ é enganosa), porque, sem âncora semântica, o mapeamento
+rótulo$\leftrightarrow$classe inverte de semente para semente. O contexto semântico das
+\emph{features} é, no caso real, determinante.
 
 \begin{table}[ht]
 \centering
-\caption{Bloco 3: estimação no Problema G (seed $42$). ``err.'' $=$ erros absolutos
-da métrica; ``acc.\ real'' $=$ acurácia do LLM vs.\ rótulo verdadeiro.}
+\caption{Bloco 3: estimação no Problema G ($2$ \emph{features}, médias das $3$ sementes).
+``Fid.'' $=$ métrica vs.\ LLM; ``LLM real'' $=$ LLM vs.\ rótulo verdadeiro; ``Métrica real''
+$=$ métrica estimada vs.\ rótulo verdadeiro.}
 \label{tab:real_a}
-\begin{tabular}{llrrr}
+\begin{tabular}{lrrrr}
 \toprule
-\textbf{Nomes} & \textbf{$n$-feat} & \textbf{Fid.\ (\%)} &
-\textbf{acc.\ real LLM (\%)} & \textbf{err.\ (Perc.)} \\
+\textbf{Nomes} & \textbf{Fid.\ (\%)} & \textbf{LLM real (\%)} &
+\textbf{Métrica real (\%)} & \textbf{err.\ (métrica)} \\
 \midrule
-peso/altura & 2 & 71,4 & 68,6 & 6 \\
-peso/altura & 3 & 71,4 & 68,6 & 6 \\
-peso/altura & 4 & 72,9 & 68,6 & 7 \\
-\midrule
-$x_1/x_2$   & 2 & 55,7 & 42,9 & 33 \\
-$x_1/x_2$   & 3 & 65,7 & 42,9 & 50 \\
-$x_1/x_2$   & 4 & 74,3 & 42,9 & 44 \\
+peso/altura & 59,5 & 56,7 & 89,5 & $\approx 7/70$ \\
+$x_1/x_2$   & 56,2 & 45,2 & arbitrária$^\dagger$ & $\approx 39/70$ \\
 \bottomrule
+\multicolumn{5}{l}{\footnotesize $^\dagger$ Entre sementes: $8{,}6$ / $92{,}9$ / $31{,}4\%$
+(o mapeamento rótulo$\leftrightarrow$classe inverte por semente).}
 \end{tabular}
 \end{table}
 
 \paragraph{Nomes de classe A/B: o mapeamento é arbitrário.}
 Repetindo a classificação com nomes de classe \emph{neutros} (``A ou B'' em vez de
 ``homem ou mulher''), a acurácia da métrica estimada (Perceptron) vs.\ rótulo real, na
-média das $3$ sementes, despenca de $0{,}914$ para $0{,}129$ ($\approx 61/70$ erros) com
+média das $3$ sementes, despenca de $0{,}895$ para $0{,}110$ ($\approx 62/70$ erros) com
 \emph{features} semânticas (Tabela~\ref{tab:real_ab}). O valor, muito \emph{abaixo} do
-acaso, não é ruído: é \emph{inversão sistemática de convenção} — o LLM continua separando
-os dois grupos (invertendo-se os rótulos, $\approx 0{,}87$), mas, sem âncora semântica nos
-nomes, o mapeamento rótulo$\leftrightarrow$classe é arbitrário e emergiu na convenção
-oposta à do \emph{ground truth}. O prior semântico atua, portanto, também nos \emph{nomes
-de classe}, não apenas nas \emph{features}. No ICL, o LLM adota a convenção dos exemplos
-que recebe: a concordância com a métrica-alvo sobe de $0{,}744$ (zero-shot) a $0{,}957$
-($40$-shot), enquanto a acurácia vs.\ real permanece $\approx 0{,}15$ (a métrica-alvo
-herdou a convenção invertida) — e o Perceptron \emph{baseline} treinado nos mesmos
-exemplos acompanha ($0{,}11$–$0{,}19$), indicando consistência entre aprendizes, não
+acaso, não é ruído: é \emph{inversão sistemática de convenção}. O LLM continua separando
+os dois grupos (invertendo-se os rótulos, a acurácia beira $0{,}89$), mas, sem âncora
+semântica nos nomes, o mapeamento rótulo$\leftrightarrow$classe é arbitrário e emergiu na
+convenção oposta à do \emph{ground truth}. O prior semântico atua, portanto, também nos
+\emph{nomes de classe}, não apenas nas \emph{features}. No ICL, o LLM adota a convenção dos
+exemplos que recebe: a concordância com a métrica-alvo sobe de $0{,}778$ (zero-shot) a
+$0{,}974$ ($40$-shot), enquanto a acurácia vs.\ real permanece $\approx 0{,}14$ (a
+métrica-alvo herdou a convenção invertida), e o Perceptron \emph{baseline} treinado nos
+mesmos exemplos acompanha ($0{,}12$–$0{,}19$), indicando consistência entre aprendizes, não
 defeito do LLM.
 
 \begin{table}[ht]
 \centering
 \caption{Bloco 3: efeito dos nomes de classe (A/B vs.\ homem/mulher) na acurácia da
-métrica estimada (Perceptron) vs.\ rótulo real — zero-shot, média das $3$ sementes,
-treino $=70$.}
+métrica estimada (Perceptron) vs.\ rótulo real (zero-shot, média das $3$ sementes,
+treino $=70$).}
 \label{tab:real_ab}
 \begin{tabular}{llrr}
 \toprule
 \textbf{Classes} & \textbf{Features} & \textbf{Acc.\ real} & \textbf{Erros} \\
 \midrule
-homem/mulher & peso/altura & 0,914 & $\approx 6/70$ \\
-A/B          & peso/altura & 0,129 & $\approx 61/70$ \\
-homem/mulher & $x_1/x_2$   & 0,543 & $\approx 32/70$ \\
+homem/mulher & peso/altura & 0,895 & $\approx 7/70$ \\
+A/B          & peso/altura & 0,110 & $\approx 62/70$ \\
+homem/mulher & $x_1/x_2$   & 0,443 & $\approx 39/70$ \\
 A/B          & $x_1/x_2$   & 0,186 & $\approx 57/70$ \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-No ICL (Tabela~\ref{tab:real_e}), o LLM \emph{in-context} supera o Perceptron \emph{baseline}
-em todos os $n$, com vantagem de até $+13{,}3$ pontos (seed $123$, $5$-shot). Poucos exemplos
-bastam: a acurácia real salta de $56$–$67\%$ (zero-shot) para $87$–$90\%$ com apenas $5$
-exemplos.
+No ICL (Tabela~\ref{tab:real_e}), o LLM \emph{in-context} iguala ou supera o Perceptron
+\emph{baseline} na maioria das configurações, com vantagem de até $+15{,}6$ pontos (seed $42$,
+$4$-shot). Poucos exemplos bastam: a acurácia real salta de $53$–$60\%$ (zero-shot) para
+$79$–$90\%$ com apenas $4$ exemplos.
 
 \begin{table}[ht]
 \centering
-\caption{Bloco 3: ICL no Problema G — acurácia real (\%) do LLM vs.\ Perceptron
+\caption{Bloco 3: ICL no Problema G, acurácia real (\%) do LLM vs.\ Perceptron
 (peso/altura).}
 \label{tab:real_e}
 \begin{tabular}{lrrrrr}
@@ -936,11 +973,11 @@ exemplos.
 \cmidrule(lr){2-3}\cmidrule(lr){4-5}
 \textbf{$n$-shot} & \textbf{LLM} & \textbf{Perc.} & \textbf{LLM} & \textbf{Perc.} \\
 \midrule
-0  & 66,7 & --   & 56,7 & --   \\
-5  & 87,4 & 76,7 & 90,0 & 76,7 \\
-10 & 86,3 & 80,7 & 90,0 & 80,7 \\
-20 & 86,3 & 84,1 & 96,7 & 84,1 \\
-40 & 87,8 & 84,1 & 93,3 & 84,1 \\
+0  & 60,0 & --   & 53,3 & --   \\
+4  & 90,0 & 74,4 & 78,9 & 80,0 \\
+10 & 90,0 & 83,3 & 77,8 & 73,3 \\
+20 & 88,9 & 83,3 & 81,1 & 78,9 \\
+40 & 91,1 & 83,3 & 81,1 & 78,9 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -957,12 +994,12 @@ erros absolutos além das porcentagens.}
 \subsection{Estabilidade de \West{} (H5)}
 \label{sec:res_estabilidade}
 
-A direção de \West{} é \emph{estável} entre sementes (cosseno médio $0{,}990$, faixa
-$[0{,}987;\,0{,}993]$), e os dois estimadores concordam (cosseno Perceptron--NNLS
-$0{,}993$). Contudo, a \emph{magnitude} não é estável: a razão $w_2/w_1$ tem média
-$0{,}169$ com IC$_{95}=[0{,}117;\,0{,}229]$ e \emph{coeficiente de variação de $58{,}5\%$}.
+A direção de \West{} é \emph{estável} entre sementes (cosseno médio $0{,}971$, faixa
+$[0{,}955;\,0{,}984]$), e os dois estimadores concordam (cosseno Perceptron--NNLS
+$0{,}986$). Contudo, a \emph{magnitude} não é estável: a razão $w_1/w_2$ tem média
+$0{,}214$ com IC$_{95}=[0{,}114;\,0{,}356]$ e \emph{coeficiente de variação de $88{,}0\%$}.
 Ou seja, \emph{para onde} o LLM olha é reprodutível; \emph{quão intensamente} não. Isso
-qualifica H5: a estabilidade é direcional, não de intensidade — consistente com a
+qualifica H5: a estabilidade é direcional, não de intensidade, o que é consistente com a
 invariância de escala da métrica (Seção~\ref{sec:fundamentos}), que torna a magnitude
 intrinsecamente menos identificável.
 
@@ -973,50 +1010,54 @@ intrinsecamente menos identificável.
 
 \subsection{H1 — Estabilidade do critério}
 \textbf{Parcialmente confirmada.} \West{} reproduz o LLM com fidelidade modesta
-($76{,}7$–$85{,}3\%$ entre sementes) e transfere com $\kappa$ de ``razoável'' (B, $0{,}30$) a
-``substancial'' (C, $0{,}73$) já em zero-shot. Há um critério estimável, mas a métrica
-diagonal o captura só em parte — o teste-oráculo ($95$–$100\%$) prova que a limitação é do
+($82{,}7$–$86{,}7\%$ entre sementes) e transfere com $\kappa$ de ``razoável'' (B, $0{,}33$) a
+``substancial'' (C, $0{,}75$) já em zero-shot. Há um critério estimável, mas a métrica
+diagonal o captura só em parte: o teste-oráculo ($95$–$100\%$) prova que a limitação é do
 LLM, não do estimador.
 
 \subsection{H2 — Transferência de conhecimento}
 \textbf{Confirmada com qualificações.} \West{} generaliza melhor para C do que para B, e a
-adição de exemplos eleva ambos a $\kappa \approx 0{,}84$–$0{,}89$ (Cohen's $d > 5$). Porém,
-em zero-shot \West{} não supera significativamente a métrica euclidiana ($\Delta$ com IC
-incluindo zero): o ganho da deformação aprendida é \emph{contextual}, dependente de exemplos.
+adição de exemplos eleva ambos a $\kappa \approx 0{,}67$–$0{,}92$ (Cohen's $d = 5{,}78$ na
+consistência em C). Porém, em zero-shot \West{} é \emph{significativamente inferior} à
+métrica euclidiana no Problema B ($\Delta = -0{,}087$, IC exclui zero): a deformação
+aprendida não tem valor intrínseco, e sim \emph{contextual}, dependente de exemplos.
 
 \subsection{H3 — Viés semântico}
-\textbf{Fortemente confirmada.} A fidelidade oscila de $56{,}7\%$ (\emph{prompt} tabular) a
-$98{,}7\%$ (Positivo/Negativo) — extremos da grade de variantes, medida na seed $42$ —, e a
-mera inversão de posição (A/B $\to$ B/A) já custa $8{,}7$ pontos ($76{,}7\% \to 68{,}0\%$). No caso real, nomes semânticos vs.\ neutros separam $68{,}6\%$ de $42{,}9\%$ de
-acurácia — e o experimento de nomes de classe A/B (Tabela~\ref{tab:real_ab}) mostra o
+\textbf{Fortemente confirmada.} A fidelidade oscila de $64{,}7\%$ (\emph{prompt} tabular) a
+$99{,}3\%$ (Positivo/Negativo), extremos da grade de variantes medidos na seed $42$, e a
+mera inversão de posição (A/B $\to$ B/A) já custa $14{,}7$ pontos ($82{,}7\% \to 68{,}0\%$).
+No caso real, nomes semânticos vs.\ neutros elevam a acurácia própria do LLM de $45{,}2\%$ a
+$56{,}7\%$, e o experimento de nomes de classe A/B (Tabela~\ref{tab:real_ab}) mostra o
 mecanismo em sua forma mais nítida: sem âncora semântica nos nomes, o LLM ainda separa os
 grupos, mas o mapeamento rótulo$\leftrightarrow$classe emerge em convenção arbitrária
-(acurácia da métrica vs.\ real de $0{,}914$ para $0{,}129$, uma inversão quase perfeita).
+(acurácia da métrica vs.\ real de $0{,}895$ para $0{,}110$, uma inversão quase perfeita).
 O LLM incorpora semântica extrínseca ao problema geométrico, e ela ancora tanto a
 separação quanto a \emph{nomeação} das classes.
 
 \subsection{H4 — Qualidade dos exemplos}
 \textbf{Refutada.} Ao contrário do previsto, exemplos \emph{fáceis} superam \emph{difíceis}
-com poucos exemplos (diferença significativa em $5$/$10$-shot), e \emph{hard} é a pior
-estratégia na média. Exemplos difíceis só compensam em alto volume ($40$-shot). A leitura:
-âncoras prototípicas transmitem o critério; exemplos ambíguos sem contexto suficiente chegam
-a orientar o LLM na direção errada.
+com poucos exemplos (diferença significativa em $10$-shot), e \emph{hard} é a pior
+estratégia na média. Exemplos difíceis só compensam em alto volume ($40$-shot). A refutação
+vale nos \emph{dois} modelos testados. A leitura: âncoras prototípicas transmitem o critério;
+exemplos ambíguos sem contexto suficiente chegam a orientar o LLM na direção errada.
 
 \subsection{H5 — Estabilidade estatística}
-\textbf{Confirmada em direção, refutada em magnitude.} O cosseno entre sementes ($0{,}990$)
-sustenta reprodutibilidade direcional; o CV de $58\%$ na razão $w_2/w_1$ mostra que a
+\textbf{Confirmada em direção, refutada em magnitude.} O cosseno entre sementes ($0{,}971$)
+sustenta reprodutibilidade direcional; o CV de $88\%$ na razão $w_1/w_2$ mostra que a
 intensidade dos pesos não é estável. Dada a invariância de escala, a direção é a quantidade
-cientificamente relevante — e ela é estável.
+cientificamente relevante, e ela é estável.
 
 \subsection{O LLM diante de baselines triviais}
-O achado mais sóbrio: no regime linear, a Regressão Logística iguala ou supera o LLM
-($100\%$ vs.\ $95{,}6\%$). O LLM não ``resolve melhor'' — ele resolve \emph{sem treino e sem
-especificação de modelo}. O quadro, porém, tem dois regimes: na base real (fronteira
-aproximadamente elíptica), o LLM \emph{in-context} supera o Perceptron \emph{baseline}
-treinado nos mesmos exemplos em todos os $n$-shot (até $+13{,}3$ pontos), e no regime
-não-linear sintético (meia-lua) o zero-shot simplesmente colapsa. A contribuição do ICL é
-de \emph{flexibilidade} — condicionada a haver exemplos e semântica que o ancorem —, não
-de acurácia, e qualquer alegação de superioridade geral deve ser resistida.
+O achado mais sóbrio: no regime linear, o LLM e os classificadores triviais ficam numa
+faixa estreita ($92$–$98\%$), sem dominância clara (a Regressão Logística supera o LLM num
+especialista, o LLM a supera no outro). O LLM não ``resolve melhor'': ele resolve \emph{sem
+treino e sem especificação de modelo}. O quadro, porém, tem dois regimes: na base real
+(fronteira aproximadamente elíptica), o LLM \emph{in-context} iguala ou supera o Perceptron
+\emph{baseline} treinado nos mesmos exemplos na maioria das configurações (até $+15{,}6$
+pontos), e no regime não-linear sintético (meia-lua) o zero-shot do \texttt{gpt-4o-mini}
+chega a colapsar em classe única. A contribuição do ICL é de \emph{flexibilidade},
+condicionada a haver exemplos e semântica que o ancorem, não de acurácia, e qualquer
+alegação de superioridade geral deve ser resistida.
 
 % ============================================================
 \section{Limitações}
@@ -1027,16 +1068,19 @@ de acurácia, e qualquer alegação de superioridade geral deve ser resistida.
   \item \textbf{Dados majoritariamente 2D:} embora o Bloco 3 use dados reais, a validade
     externa em alta dimensionalidade permanece aberta.
   \item \textbf{Métrica diagonal:} $M=\mathrm{diag}(w)$ ignora correlações entre
-    \emph{features} — provável causa da fidelidade modesta; uma Mahalanobis completa poderia
+    \emph{features}, provável causa da fidelidade modesta; uma Mahalanobis completa poderia
     elevá-la.
-  \item \textbf{Um único modelo:} os resultados são específicos ao \texttt{gpt-4o-mini}.
-  \item \textbf{Versão do modelo:} a coleta (30/06--01/07/2026) usou o \emph{alias}
-    \texttt{gpt-4o-mini}, sem fixar um \emph{snapshot} datado; o provedor pode atualizar o
-    modelo silenciosamente, o que limita a reprodutibilidade exata das decisões coletadas.
+  \item \textbf{Dois modelos, mesma família de escala:} avaliaram-se \texttt{gpt-4o-mini} e
+    \texttt{gemini-2.5-flash-lite} (modelos rápidos/econômicos); a generalização a modelos
+    maiores ou de outras famílias (Llama, DeepSeek) permanece aberta.
+  \item \textbf{Versão do modelo:} o \texttt{gpt-4o-mini} resolveu para o \emph{snapshot}
+    \texttt{gpt-4o-mini-2024-07-18} (registrado em cada chamada); ainda assim o provedor pode
+    aposentar o \emph{snapshot}, o que limita a reprodutibilidade exata a longo prazo.
   \item \textbf{Temperatura zero:} minimiza variância, mas não captura o comportamento
-    estocástico; $T=0$ não garante determinismo estrito — a taxa de \emph{flip} medida pela
-    auditoria foi de $4{,}75\%$ das consultas repetidas, impondo um teto de $\approx 95\%$ a
-    qualquer métrica de concordância com o LLM.
+    estocástico; $T=0$ não garante determinismo estrito. A taxa de \emph{flip} medida pela
+    auditoria foi de $4{,}3\%$ das consultas repetidas no \texttt{gpt-4o-mini} (impondo um
+    teto de $\approx 96\%$ a qualquer métrica de concordância com esse modelo), mas de
+    $0{,}0\%$ no \texttt{gemini-2.5-flash-lite}.
   \item \textbf{Escala do caso real:} $\approx 70$ amostras tornam cada erro pesado (por
     isso reportam-se erros absolutos); conclusões sobre o Problema G são indicativas.
   \item \textbf{Classificação binária:} a extensão a múltiplas classes exige adaptar o
@@ -1053,9 +1097,10 @@ de acurácia, e qualquer alegação de superioridade geral deve ser resistida.
     expressividade $\times$ interpretabilidade, testando se a fidelidade sobe.
   \item \textbf{Alta dimensionalidade e mais dados reais:} estender o Bloco 3 a datasets
     maiores e $d \gg 2$.
-  \item \textbf{Comparação entre modelos:} aplicar o protocolo a modelos de famílias
-    distintas (ex.: Gemini, Llama, DeepSeek) para contrastar critérios implícitos — incluindo
-    a comparação das taxas de \emph{flip} a $T=0$ como medida de não-determinismo por modelo.
+  \item \textbf{Mais modelos e famílias:} estender a comparação (já iniciada com
+    \texttt{gpt-4o-mini} e \texttt{gemini-2.5-flash-lite}) a modelos maiores e de outras
+    famílias (ex.: Llama, DeepSeek), aprofundando o contraste de critérios implícitos e das
+    taxas de \emph{flip} a $T=0$ como medida de não-determinismo por modelo.
   \item \textbf{Seleção ativa de exemplos:} integrar o eixo de margem
     \cite{minRethinkingRole2022} com diversidade/representatividade
     \cite{suSelectiveAnnotation2023} e incerteza.
@@ -1069,49 +1114,53 @@ de acurácia, e qualquer alegação de superioridade geral deve ser resistida.
 % ============================================================
 
 Este trabalho investigou se é possível estimar uma métrica matemática explícita que capture
-o critério decisório implícito de um LLM. Com \texttt{gpt-4o-mini} sobre sete configurações
-de problema organizadas em três blocos ($119\,713$ chamadas, $3$ sementes $\times$ $3$
-repetições, \emph{fallback} do \emph{parser} de $0{,}00\%$ e piso de ruído de medição de
-$4{,}75\%$ a $T=0$), os experimentos sustentam seis achados:
+o critério decisório implícito de um LLM. Com \texttt{gpt-4o-mini} e
+\texttt{gemini-2.5-flash-lite} sobre sete configurações de problema organizadas em três
+blocos ($129\,868$ chamadas, $3$ sementes $\times$ $3$ repetições, \emph{fallback} do
+\emph{parser} de $0{,}00\%$ e piso de ruído de medição de $4{,}3\%$ a $T=0$ no
+\texttt{gpt-4o-mini}), os experimentos sustentam seis achados (\texttt{gpt-4o-mini}, salvo
+indicação):
 
 \begin{enumerate}
   \item \textbf{O critério é estimável, mas só parcialmente por uma métrica diagonal:}
-    fidelidade de $76{,}7$–$85{,}3\%$ entre sementes (média $0{,}811$,
-    IC$_{95}=[0{,}789;\,0{,}832]$), com
-    dois estimadores congruentes (cosseno Perceptron--NNLS $0{,}993$) e validados por um
-    teste-oráculo ($95$–$100\%$) — a lacuna até o teto de $\approx 95\%$ imposto pelo ruído
+    fidelidade de $82{,}7$–$86{,}7\%$ entre sementes (média $0{,}840$,
+    IC$_{95}=[0{,}827;\,0{,}867]$), com
+    dois estimadores congruentes (cosseno Perceptron--NNLS $0{,}986$) e validados por um
+    teste-oráculo ($95$–$100\%$); a lacuna até o teto de $\approx 96\%$ imposto pelo ruído
     de medição é, portanto, do LLM, não do estimador. O teto é também \emph{estrutural}: no
     oráculo da meia-lua, a métrica diagonal satura em $\approx 86{,}7\%$ e R3/R4 não ajudam.
-  \item \textbf{Transfere de modo heterogêneo:} $\kappa$ de $0{,}30$ (Problema B) a $0{,}73$
-    (Problema C) em zero-shot, subindo a $0{,}84$–$0{,}89$ com poucos exemplos (efeito
-    grande, $d>5$).
-  \item \textbf{É direcionalmente estável mas de magnitude instável:} cosseno $0{,}990$
-    entre sementes, mas CV de $58\%$ na razão dos pesos — dada a invariância de escala,
+  \item \textbf{Transfere de modo heterogêneo:} $\kappa$ de $0{,}33$ (Problema B) a $0{,}75$
+    (Problema C) em zero-shot, subindo a $0{,}67$–$0{,}92$ com poucos exemplos (efeito
+    grande em C, $d=5{,}78$); em zero-shot, porém, \West{} chega a ser inferior à distância
+    euclidiana trivial.
+  \item \textbf{É direcionalmente estável mas de magnitude instável:} cosseno $0{,}971$
+    entre sementes, mas CV de $88\%$ na razão dos pesos: dada a invariância de escala,
     a direção é a quantidade identificável, e ela é reprodutível.
-  \item \textbf{É fortemente semântico — nas \emph{features} e nos nomes de classe:}
-    variantes de \emph{prompt} movem a fidelidade de $56{,}7\%$ a $98{,}7\%$; no caso real,
-    a semântica das \emph{features} separa $68{,}6\%$ de $42{,}9\%$ de acurácia, e com nomes
-    de classe neutros (A/B) o mapeamento rótulo$\leftrightarrow$classe emerge em convenção
-    arbitrária ($0{,}914 \to 0{,}129$, inversão quase perfeita): a semântica ancora até a
-    \emph{nomeação} das classes.
+  \item \textbf{É fortemente semântico, nas \emph{features} e nos nomes de classe:}
+    variantes de \emph{prompt} movem a fidelidade de $64{,}7\%$ a $99{,}3\%$; no caso real,
+    a semântica das \emph{features} eleva a acurácia própria do LLM de $45{,}2\%$ a
+    $56{,}7\%$, e com nomes de classe neutros (A/B) o mapeamento rótulo$\leftrightarrow$classe
+    emerge em convenção arbitrária ($0{,}895 \to 0{,}110$, inversão quase perfeita): a
+    semântica ancora até a \emph{nomeação} das classes.
   \item \textbf{Como aprendiz, o LLM é cego em zero-shot e aprende com poucos exemplos:}
-    $54{,}9\%$ (média sobre três peritos) $\to 95{,}6\%$ no regime linear — sem, porém,
-    superar a Regressão Logística
-    ($100\%$); no regime não-linear sintético o zero-shot \emph{colapsa} em classe única
-    (meia-lua, $3$ sementes), enquanto na base real, com exemplos, o LLM supera o Perceptron
-    \emph{baseline} em todos os $n$-shot ($\approx 87\%$, $\approx 4$ erros em $30$).
+    $55{,}2\%$ (média sobre três peritos) $\to 97{,}9\%$ no regime linear, sem contudo
+    superar de forma consistente a Regressão Logística
+    ($97$–$98\%$); no regime não-linear sintético o zero-shot do \texttt{gpt-4o-mini}
+    \emph{colapsa} em classe única em duas das três sementes (o
+    \texttt{gemini-2.5-flash-lite} não colapsa), enquanto na base real, com exemplos, o LLM
+    iguala ou supera o Perceptron \emph{baseline} na maioria dos $n$-shot ($\approx 87\%$).
   \item \textbf{A hipótese de que exemplos difíceis ensinam melhor é refutada} na forma
-    \emph{a priori}: \emph{easy} supera \emph{hard} com significância em $5$/$10$-shot
-    ($\Delta$ até $+0{,}223$, IC excluindo zero), com reversão apenas em alto volume
-    ($40$-shot, \emph{hard} $97{,}8\%$).
+    \emph{a priori}, nos dois modelos: \emph{easy} supera \emph{hard} com significância em
+    $10$-shot ($\Delta = +0{,}188$, IC excluindo zero), com reversão apenas em alto volume
+    ($40$-shot, \emph{hard} $97{,}9\%$).
 \end{enumerate}
 
-Esses resultados constituem um passo — deliberadamente cético — em direção à explicabilidade
+Esses resultados constituem um passo deliberadamente cético em direção à explicabilidade
 dos critérios decisórios de LLMs: o que uma métrica interpretável captura (direção do
 critério, transferência parcial, dependências semânticas) e o que ela expõe por não
 capturar (o teto de fidelidade, o colapso não-linear, a arbitrariedade do mapeamento sem
 semântica). A aplicação potencial está em auditoria de sistemas de IA, detecção de vieses e
-transferência de conhecimento especializado — sempre com as métricas de concordância lidas
+transferência de conhecimento especializado, sempre com as métricas de concordância lidas
 contra o piso de ruído que o próprio protocolo quantifica.
 
 % ============================================================
@@ -1137,6 +1186,12 @@ Michael Collins.
 \newblock Discriminative training methods for hidden markov models: Theory and
   experiments with perceptron algorithms.
 \newblock Em \emph{Proceedings of EMNLP 2002}, páginas 1--8, 2002.
+
+\bibitem{coelhoPredicaoEstruturada2017}
+Maurício A.~N. Coelho, Carlos C.~H. Borges, e Raul Fonseca Neto.
+\newblock Uso de predição estruturada para o aprendizado de métrica.
+\newblock Em \emph{XXXVIII Iberian Latin-American Congress on Computational Methods
+  in Engineering (CILAMCE)}, Florianópolis, Brasil, 2017.
 
 \bibitem{lawsonSolvingLeastSquares1974}
 Charles~L. Lawson e Richard~J. Hanson.
@@ -1214,6 +1269,18 @@ Parshin Shojaee, Iman Mirzadeh, Keivan Alizadeh, Maxwell Horton, Samy Bengio,
 \newblock The illusion of thinking: Understanding the strengths and
   limitations of reasoning models via the lens of problem complexity.
 \newblock Relatório técnico, Apple Machine Learning Research, 2025.
+
+\bibitem{atilLLMStability2024}
+Berk Atil, Alexa Chittams, Lisheng Fu, Ferhan Ture, Lixinyu Xu, e Breck Baldwin.
+\newblock {LLM} stability: A detailed analysis with some surprises.
+\newblock Preprint arXiv:2408.04667, 2024.
+
+\bibitem{windischOneRun2026}
+Paul Windisch, Carole Koechli, Fabio Dennstädt, Daniel~M. Aebersold,
+  Daniel~R. Zwahlen, Robert Förster, e Christina Schröder.
+\newblock Is one run enough? reproducibility of flagship large language models
+  across temperature and reasoning settings in biomedical text processing.
+\newblock Preprint medRxiv, 2026.
 
 \end{thebibliography}
 

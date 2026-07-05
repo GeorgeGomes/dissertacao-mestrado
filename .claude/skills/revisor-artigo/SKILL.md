@@ -57,6 +57,11 @@ como o de uma revisão por pares séria e construtiva.
    interpretada no texto? Mostram o que o texto afirma?
 8. **Clareza e organização da escrita.** Estrutura lógica, transições, frases claras,
    termos definidos. Densidade e foco. Inglês/português correto e científico.
+   **Pontuação — travessão no lugar de vírgula:** aponte como problema TODO uso de
+   travessão (—/–) onde uma vírgula (ou reformulação) caberia — ex.: "o método — que
+   usa NNLS — converge" → "o método, que usa NNLS, converge". É preferência declarada
+   do autor (05/07/2026): o texto do artigo/dissertação não deve usar travessões como
+   pontuação de aposto/inciso; liste cada ocorrência com a linha e a reescrita sugerida.
 9. **Reprodutibilidade documental.** Disponibilidade de código/dados, versões, hardware,
    hiperparâmetros — o suficiente para um terceiro repetir.
 10. **Referências e ética.** Citações completas e no estilo do venue; sem fontes
