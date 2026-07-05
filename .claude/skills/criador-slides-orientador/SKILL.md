@@ -46,8 +46,9 @@ defesa (enxuto, uma ideia por slide), este deck **explica tudo** — e por isso
 ## Dados: sempre a última execução completa
 
 Antes de gerar qualquer slide, identifique a **última execução completa**
-(pasta `execucao_YYYY-MM-DD_HH-MM-SS/` de timestamp mais alto que tenha rodado
-até o fim — com `log_execucao.txt` e os CSVs dos três blocos). Extraia dela:
+(pasta `execucao_YYYY-MM-DD_HH-MM-SS_completa/` de timestamp mais alto que tenha
+rodado até o fim — com `log_execucao.txt` e os CSVs dos três blocos; ignorar as
+`execucao_*_smoke`, que são smoke tests `--rapido`). Extraia dela:
 
 1. `log_execucao.txt` — visão completa e leituras qualitativas.
 2. CSVs por bloco (`bloco1_*`, `bloco2_*`, `bloco23_external_*`, `final_cross_linearity.csv`).

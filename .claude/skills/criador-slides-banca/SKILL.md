@@ -92,7 +92,8 @@ Adapte ao tempo real, mas a espinha é esta:
 ## Dados: sempre a última execução completa
 
 Os números vêm dos CSVs e do `log_execucao.txt` da **última execução completa**
-(pasta `execucao_YYYY-MM-DD_HH-MM-SS/` de timestamp mais alto). Se o deck de
+(pasta `execucao_YYYY-MM-DD_HH-MM-SS_completa/` de timestamp mais alto; ignorar
+as `execucao_*_smoke`, que são smoke tests `--rapido`). Se o deck de
 acompanhamento já existir para essa execução, **curadorie** dele os poucos
 resultados que entram na defesa — não recolha tudo.
 

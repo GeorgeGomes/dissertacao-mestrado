@@ -44,11 +44,11 @@ para os achados, e dos achados para o fechamento.
 
 ## Procedimento
 
-1. **Localize a última execução.** Padrão `execucao_AAAA-MM-DD_HH-MM-SS/` — pegue a de
-   **timestamp mais alto** (não confie no que o CLAUDE.md cita como "última"; verifique no
-   disco). Se a execução mais recente for um `--rapido` (modo curto: 1 repetição, seed 42,
-   few-shot [0,5]), **avise** que não serve para conclusão final e busque a última execução
-   completa.
+1. **Localize a última execução.** Use SOMENTE pastas `execucao_AAAA-MM-DD_HH-MM-SS_completa/`
+   — pegue a de **timestamp mais alto** (não confie no que o CLAUDE.md cita como "última";
+   verifique no disco). Pastas `execucao_*_smoke` são smoke tests `--rapido` (1 repetição,
+   seed 42, few-shot [0,4]) e **nunca** servem de fonte. Em pasta legada sem sufixo,
+   confirme no `log_execucao.txt` que não é `--rapido`.
 2. **Leia a evidência, nesta ordem:**
    - `log_execucao.txt` (visão geral; note a **auditoria do parser** — se a taxa de
      fallback > 0, as métricas podem estar poluídas e a conclusão deve ressalvar);

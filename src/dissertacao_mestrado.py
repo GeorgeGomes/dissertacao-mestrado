@@ -133,7 +133,7 @@ RECURSOS PRINCIPAIS (mapeados aos blocos)
   30+ PNGs e 11 CSVs por execução nomeados com prefixos bloco{1,2,3}_,
   bloco23_, final_.
 
-PROVEDORES: OpenAI (ativo), Claude/Anthropic (SDK integrado).
+PROVEDORES: OpenAI e OpenRouter (ativos); Anthropic/Gemini direto (SDK integrado, inativo).
 """
 
 import sys
@@ -161,6 +161,7 @@ from relaxed_perceptron import train_relaxed_perceptron
 from least_squares_inverse import train_least_squares_inverse
 from llm_parser import parse_llm_response
 from metrics import (
+    # d_W é reexportado aqui para os testes (dm.d_W em test_metrics.py).
     ConsistencyMetrics, compute_consistency_metrics,
     d_W, compute_centroids, augment_to_r3, augment_to_r4, augment_features,
     predict_with_metric, compute_metric_confidence,
@@ -172,7 +173,7 @@ from data_problems import (
     create_problem_d_meialua, create_problem_homem_mulher, create_anisotropic_problem,
 )
 from plots import (  # reexport: extraído na Fase 1 da modularização
-    _save_panels_individually, plot_algorithm_comparison, plot_class_names_effect, plot_class_order_bias,
+    plot_algorithm_comparison, plot_class_names_effect, plot_class_order_bias,
     plot_classical_baselines_comparison, plot_confusion_matrices_detailed, plot_consistency_comparison_extended, plot_dataset_overview,
     plot_dilution_experiment, plot_example_order_bias, plot_experiment_summary_dashboard, plot_external_decision_boundary,
     plot_external_features_comparison, plot_external_learning_curve, plot_feature_names_effect, plot_gamma_convergence,
@@ -184,13 +185,14 @@ from plots import (  # reexport: extraído na Fase 1 da modularização
     visualize_problem_e_with_expert,
 )
 from relatorios import (  # reexport: extraído na Fase 1 da modularização
-    bootstrap_ci, print_box, print_error_analysis_by_region, print_example_order_analysis,
+    print_error_analysis_by_region, print_example_order_analysis,
     print_final_analysis, print_hyperparameter_sensitivity, print_phase_e_analysis, print_section,
     print_statistical_summary, summarize_cross_linearity,
 )
 from execucao_io import (  # reexport: extraído na Fase 1 da modularização
+    # MODEL_ALIAS e _model_slug são reexportados aqui para os testes (dm.*).
     LLM_INTERACTIONS, LOG_CHUNK_LIMIT_BYTES, MODEL_ALIAS, Tee,
-    _agrupar_por_tamanho, _model_alias, _model_slug, checkpoint_interactions,
+    _model_alias, _model_slug, checkpoint_interactions,
     llm_asset, salvar_json_em_chunks, salvar_log_em_chunks,
 )
 from resultados import (  # reexport: extraído na Fase 1 da modularização
@@ -225,17 +227,12 @@ np.random.seed(RANDOM_SEED)
 #                  + pipelines externos (peso×altura e meia-lua). Comparação entre
 #                  modelos sem multiplicar o custo do grid auxiliar.
 MODELS_TO_TEST = [
-    # Critério de seleção: o modelo rápido/barato de cada família (mini/Lite/Scout/
-    # Flash) — mesmo tier comercial, 4 famílias, 2 fechados + 2 abertos.
-    # TODOS com scope="full": o grid COMPLETO de experimentos roda nos 4 modelos
-    # (decisão 02/07/2026). Todos os modelos são tratados de forma IGUAL: cada um
-    # gera o conjunto completo de gráficos na raiz da execução, com seu alias
-    # (MODEL_ALIAS) no nome do asset. CSVs consolidam todos (colunas provider/model).
+    # Protocolo: 2 modelos, ambos com scope="full" — o grid COMPLETO de
+    # experimentos roda nos 2, tratados de forma IGUAL: cada um gera o conjunto
+    # completo de gráficos na raiz da execução, com seu alias (MODEL_ALIAS) no
+    # nome do asset. CSVs consolidam ambos (colunas provider/model).
     ("openai", "gpt-4o-mini", 0.0, "full"),
-    ("openrouter", "google/gemini-2.5-flash-lite", 0.0, "full"),   # Google (fechado)
-    # ("openrouter", "meta-llama/llama-4-scout", 0.0, "full"),       # Meta (aberto)
-    # ("openrouter", "deepseek/deepseek-v4-flash", 0.0, "full"),     # DeepSeek (aberto)
-    # ("anthropic", "claude-sonnet-4-5", 0.0, "core"),             # Claude (aceita temperature)
+    ("openrouter", "google/gemini-2.5-flash-lite", 0.0, "full"),
 ]
 
 # PROVIDER_CONFIG, get_client e get_async_client → llm_client.py (importados no topo).
@@ -264,8 +261,8 @@ N_SAMPLES_PROBLEM_E = 150  # Bloco 2: perito linear (Fase E)
 
 
 # Meia-lua (Bloco 1 = Problema D; Bloco 2 = Problema F) usa N_SAMPLES_PROBLEM_A=150 também
-FEW_SHOT_SIZES = [0, 5, 10, 20, 40]  # Tamanhos few-shot para Fases B e C
-FEW_SHOT_SIZES_PHASE_E = [0, 5, 10, 20, 40]  # versão completa
+FEW_SHOT_SIZES = [0, 4, 10, 20, 40]  # Tamanhos few-shot para Fases B e C (pares: balanço exato de classes no prompt)
+FEW_SHOT_SIZES_PHASE_E = [0, 4, 10, 20, 40]  # versão completa (pares: balanço exato)
 N_REPETICOES = 3
 
 # Pontos de ancoragem dos experimentos de viés (inversão de nomes de classe e
@@ -274,7 +271,7 @@ BIAS_N_SHOTS = [0, 10]
 
 # Grades dos experimentos auxiliares (reduzidas no --rapido):
 DILUTION_EASY_ADDITIONS = [0, 2, 4, 10, 16, 20]  # N easy adicionados na diluição
-EXAMPLE_ORDER_N_SHOTS = [5, 10, 20]              # n_shots do viés de ordem
+EXAMPLE_ORDER_N_SHOTS = [4, 10, 20]              # n_shots do viés de ordem
 
 # Múltiplas sementes aleatórias para garantir robustez dos resultados
 RANDOM_SEEDS = [42, 123, 7]
@@ -316,7 +313,7 @@ INITIAL_BACKOFF = 10
 
 # Concorrência máxima para chamadas async à API (ajustar conforme tier do OpenAI)
 # Tier 1: ~8, Tier 2+: 15-20
-MAX_CONCURRENCY = 6
+MAX_CONCURRENCY = 10
 
 # Máximo de retentativas para respostas malformadas do LLM
 MAX_FORMAT_RETRIES = 5
@@ -841,8 +838,6 @@ async def async_llm_classify_point(
     prompt_variant: str = "default"
 ) -> Tuple[str, str, bool]:
     """Classifica um ponto via LLM (retries + fallback MD5). Retorna (label_parsed, raw_response, was_malformed)."""
-    global async_client, MODEL_NAME, CURRENT_PROVIDER, CURRENT_TEMPERATURE
-
     # Seleciona builder de prompt conforme a variante
     if examples is None or len(examples) == 0:
         prompt = build_prompt_zero_shot_variant(prompt_variant, x1, x2, nome_classe_0, nome_classe_1,
@@ -1291,7 +1286,7 @@ def select_confident_examples(
     X: np.ndarray,
     centroids: np.ndarray,
     w: np.ndarray,
-    n_per_class: int,
+    n_examples: int,
     nome_classe_0: str,
     nome_classe_1: str,
     verbose: bool = True
@@ -1300,8 +1295,14 @@ def select_confident_examples(
 
     Justificativa: exemplos com maior margem são os mais representativos de cada classe —
     estão longe da fronteira, são os casos mais claros e ancoramos bem o LLM ao padrão da métrica.
+
+    ``n_examples`` é o TOTAL de exemplos, honrado exatamente mesmo quando ímpar:
+    a classe 0 recebe o exemplo excedente (⌈n/2⌉ vs ⌊n/2⌋), determinístico.
     """
     confidences, y_pred_metric = compute_metric_confidence(X, centroids, w)
+
+    n_per_class_0 = n_examples - n_examples // 2
+    n_per_class_1 = n_examples // 2
 
     idx_class_0 = np.where(y_pred_metric == 0)[0]
     idx_class_1 = np.where(y_pred_metric == 1)[0]
@@ -1312,8 +1313,8 @@ def select_confident_examples(
     sorted_idx_0 = idx_class_0[np.argsort(-conf_class_0)]
     sorted_idx_1 = idx_class_1[np.argsort(-conf_class_1)]
 
-    selected_idx_0 = sorted_idx_0[:n_per_class]
-    selected_idx_1 = sorted_idx_1[:n_per_class]
+    selected_idx_0 = sorted_idx_0[:n_per_class_0]
+    selected_idx_1 = sorted_idx_1[:n_per_class_1]
 
     if verbose:
         if len(selected_idx_0) > 0:
@@ -1382,10 +1383,9 @@ def phase_consistency_test(
         if verbose:
             print(f"\n  Selecionando {n_shot} exemplos few-shot (Aprendizado Ativo, rotulados pela métrica)...")
 
-        n_per_class = n_shot // 2
         examples, _, _, selected_indices = select_confident_examples(
             X, learned_metric.centroids, learned_metric.w,
-            n_per_class, nome_classe_0, nome_classe_1, verbose=verbose
+            n_shot, nome_classe_0, nome_classe_1, verbose=verbose
         )
 
     # Correção de vazamento: exclui exemplos few-shot da avaliação.
@@ -1812,7 +1812,8 @@ def select_examples_by_strategy(
         y_expert: Rótulos do perito para todos os pontos
         expert_w: Pesos da métrica do perito
         expert_centroids: Centróides do perito
-        n_examples: Número total de exemplos a selecionar
+        n_examples: Número total de exemplos a selecionar (honrado exatamente,
+            inclusive ímpar: a classe 0 recebe o exemplo excedente — ⌈n/2⌉ vs ⌊n/2⌋).
         strategy: Uma das estratégias: "easy", "hard", "mixed", "random"
         nome_classe_0: Nome da classe 0
         nome_classe_1: Nome da classe 1
@@ -1827,18 +1828,22 @@ def select_examples_by_strategy(
     # Calcula as margens (confiança) de todos os pontos sob a métrica do perito
     confidences, _ = compute_metric_confidence(X, expert_centroids, expert_w)
 
-    n_per_class = n_examples // 2
+    # Honra n_examples EXATO mesmo quando ímpar: a classe 0 recebe o exemplo
+    # excedente (⌈n/2⌉ vs ⌊n/2⌋) — determinístico, para o "5-shot" ter 5 exemplos
+    # de fato no prompt (antes, 5//2 por classe truncava para 4).
+    n_per_class_0 = n_examples - n_examples // 2
+    n_per_class_1 = n_examples // 2
 
     idx_class_0 = np.where(y_expert == 0)[0]
     idx_class_1 = np.where(y_expert == 1)[0]
 
     # Aviso de desbalanceamento: alerta se uma classe tiver menos pontos do que o solicitado
-    if len(idx_class_0) < n_per_class:
+    if len(idx_class_0) < n_per_class_0:
         print(f"  AVISO: Classe 0 tem apenas {len(idx_class_0)} pontos disponíveis, "
-              f"mas {n_per_class} foram solicitados por classe. A seleção será truncada.")
-    if len(idx_class_1) < n_per_class:
+              f"mas {n_per_class_0} foram solicitados. A seleção será truncada.")
+    if len(idx_class_1) < n_per_class_1:
         print(f"  AVISO: Classe 1 tem apenas {len(idx_class_1)} pontos disponíveis, "
-              f"mas {n_per_class} foram solicitados por classe. A seleção será truncada.")
+              f"mas {n_per_class_1} foram solicitados. A seleção será truncada.")
 
     conf_class_0 = confidences[idx_class_0]
     conf_class_1 = confidences[idx_class_1]
@@ -1848,32 +1853,34 @@ def select_examples_by_strategy(
         # Justificativa: exemplos "fáceis" são os mais representativos de cada classe
         sorted_0 = idx_class_0[np.argsort(-conf_class_0)]  # Ordem decrescente (maior margem primeiro)
         sorted_1 = idx_class_1[np.argsort(-conf_class_1)]
-        selected_0 = sorted_0[:n_per_class]
-        selected_1 = sorted_1[:n_per_class]
+        selected_0 = sorted_0[:n_per_class_0]
+        selected_1 = sorted_1[:n_per_class_1]
 
     elif strategy == "hard":
         # Seleciona pontos com MENOR margem (próximos à fronteira, mais ambíguos)
         # Justificativa: exemplos "difíceis" testam se o LLM capta a fronteira com precisão
         sorted_0 = idx_class_0[np.argsort(conf_class_0)]  # Ordem crescente (menor margem primeiro)
         sorted_1 = idx_class_1[np.argsort(conf_class_1)]
-        selected_0 = sorted_0[:n_per_class]
-        selected_1 = sorted_1[:n_per_class]
+        selected_0 = sorted_0[:n_per_class_0]
+        selected_1 = sorted_1[:n_per_class_1]
 
     elif strategy == "mixed":
         # Metade fáceis (maior margem) + metade difíceis (menor margem) por classe
         # Justificativa: cobertura balanceada da fronteira e das regiões centrais de cada classe
-        n_easy = n_per_class // 2
-        n_hard = n_per_class - n_easy
-
         sorted_0_desc = idx_class_0[np.argsort(-conf_class_0)]
         sorted_0_asc = idx_class_0[np.argsort(conf_class_0)]
         sorted_1_desc = idx_class_1[np.argsort(-conf_class_1)]
         sorted_1_asc = idx_class_1[np.argsort(conf_class_1)]
 
-        easy_0 = sorted_0_desc[:n_easy]
-        hard_0 = sorted_0_asc[:n_hard]
-        easy_1 = sorted_1_desc[:n_easy]
-        hard_1 = sorted_1_asc[:n_hard]
+        n_easy_0 = n_per_class_0 // 2
+        n_hard_0 = n_per_class_0 - n_easy_0
+        n_easy_1 = n_per_class_1 // 2
+        n_hard_1 = n_per_class_1 - n_easy_1
+
+        easy_0 = sorted_0_desc[:n_easy_0]
+        hard_0 = sorted_0_asc[:n_hard_0]
+        easy_1 = sorted_1_desc[:n_easy_1]
+        hard_1 = sorted_1_asc[:n_hard_1]
 
         # Remove duplicatas preservando a ordem de inserção (easy primeiro, depois hard).
         # np.unique não é usado aqui pois ordena numericamente e destruiria o balanço easy/hard.
@@ -1881,13 +1888,13 @@ def select_examples_by_strategy(
             seen = set()
             return np.array([x for x in arr if not (x in seen or seen.add(x))], dtype=arr.dtype)
 
-        selected_0 = _unique_ordered(np.concatenate([easy_0, hard_0]))[:n_per_class]
-        selected_1 = _unique_ordered(np.concatenate([easy_1, hard_1]))[:n_per_class]
+        selected_0 = _unique_ordered(np.concatenate([easy_0, hard_0]))[:n_per_class_0]
+        selected_1 = _unique_ordered(np.concatenate([easy_1, hard_1]))[:n_per_class_1]
 
     elif strategy == "random":
         # Seleção aleatória (linha de base sem critério estratégico)
-        selected_0 = rng.choice(idx_class_0, size=min(n_per_class, len(idx_class_0)), replace=False)
-        selected_1 = rng.choice(idx_class_1, size=min(n_per_class, len(idx_class_1)), replace=False)
+        selected_0 = rng.choice(idx_class_0, size=min(n_per_class_0, len(idx_class_0)), replace=False)
+        selected_1 = rng.choice(idx_class_1, size=min(n_per_class_1, len(idx_class_1)), replace=False)
 
     else:
         raise ValueError(f"Estratégia desconhecida: {strategy}")
@@ -2568,7 +2575,10 @@ def run_external_problem_pipeline(
     Retorna dict com:
       - 'phase_a_results': lista de resultados da Fase A (todas configs)
       - 'phase_e_results': lista de resultados da Fase E (somente best)
-      - 'llm_label_maps': dict {(seed, variant): {'X_train', 'y_llm', 'y_true'}}
+      - 'llm_label_maps': dict {(problem_name, seed, feat_0, feat_1, kind):
+        {'X', 'y_llm', 'y_true', ...}} — o problem_name na chave evita colisão
+        entre problemas que usam os mesmos nomes de feature (ex.: meia-lua e
+        peso×altura ambos com x1/x2)
                           para a visualização ponto-a-ponto
     """
     all_phase_a = []
@@ -2610,7 +2620,7 @@ def run_external_problem_pipeline(
             )
             print(f"    [{problem_name} seed={seed} {feat_0}/{feat_1}] Fase A coletada em {time.time()-t_collect:.1f}s (malformadas={n_mal})", flush=True)
 
-            llm_label_maps[(seed, feat_0, feat_1, 'train')] = {
+            llm_label_maps[(problem_name, seed, feat_0, feat_1, 'train')] = {
                 'X': X_train.copy(), 'y_llm': y_llm_train.copy(),
                 'y_true': y_train.copy(),
             }
@@ -2736,7 +2746,7 @@ def run_external_problem_pipeline(
 
                     # Guarda o mapa ponto-a-ponto só da 1ª repetição (visualização)
                     if rep == 0:
-                        llm_label_maps[(seed, feat_0, feat_1, n_shot)] = {
+                        llm_label_maps[(problem_name, seed, feat_0, feat_1, n_shot)] = {
                             'X': X_test.copy(), 'y_llm': y_llm_test.copy(),
                             'y_true': y_test.copy(), 'y_metric': y_metric_test.copy(),
                         }
@@ -2839,7 +2849,7 @@ def main():
 
     # ─────────────────────────────────────────────────────────────────────
     # ARGUMENTOS DE LINHA DE COMANDO
-    # --rapido (ou --smoke): execução curta de teste — few-shot [0, 5],
+    # --rapido (ou --smoke): execução curta de teste — few-shot [0, 4],
     # 1 repetição e apenas a seed 42. Sem a flag, roda o experimento completo.
     # ─────────────────────────────────────────────────────────────────────
     parser = argparse.ArgumentParser(
@@ -2849,7 +2859,7 @@ def main():
         "--rapido", "--smoke", dest="rapido", action="store_true",
         help="Smoke test: TODOS os experimentos rodam UMA vez cada (inclusive os "
              "auxiliares, para qualquer modelo), com 1 seed (42), 1 repetição e "
-             "few-shot reduzido a [0, 5]. Sem esta flag, roda o experimento completo.",
+             "few-shot reduzido a [0, 4]. Sem esta flag, roda o experimento completo.",
     )
     parser.add_argument(
         "--modelo", dest="modelo", default=None,
@@ -2875,12 +2885,12 @@ def main():
         # Regra do smoke test: TODOS os experimentos executam (cobertura completa
         # de código/prompts), cada um UMA vez — 1 seed, 1 repetição, e onde há
         # few-shot roda apenas o zero-shot + UM few-shot.
-        FEW_SHOT_SIZES = [0, 5]
-        FEW_SHOT_SIZES_PHASE_E = [0, 5]
+        FEW_SHOT_SIZES = [0, 4]
+        FEW_SHOT_SIZES_PHASE_E = [0, 4]
         N_REPETICOES = 1
         RANDOM_SEEDS = [42]
         EXTRA_SEEDS_CORE = []
-        BIAS_N_SHOTS = [0, 5]              # zero-shot + um few-shot
+        BIAS_N_SHOTS = [0, 4]              # zero-shot + um few-shot
         DILUTION_EASY_ADDITIONS = [0, 4]   # 2 pontos da curva de diluição
         EXAMPLE_ORDER_N_SHOTS = [5]        # um few-shot no viés de ordem
 
@@ -2902,7 +2912,10 @@ def main():
     # CRIAÇÃO DA PASTA DE EXECUÇÃO E INÍCIO DO LOG
     # ─────────────────────────────────────────────────────────────────────
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    pasta_execucao = str(BASE_DIR / f"execucao_{timestamp}")
+    # Sufixo no nome da pasta distingue smoke (--rapido) de execução completa:
+    # ferramentas/skills que precisam de números finais filtram por "_completa".
+    tipo_execucao = "smoke" if modo_rapido else "completa"
+    pasta_execucao = str(BASE_DIR / f"execucao_{timestamp}_{tipo_execucao}")
     os.makedirs(pasta_execucao, exist_ok=True)
 
     print(f"\n{'='*70}")
@@ -2923,7 +2936,7 @@ def main():
     if modo_rapido:
         print_section(
             "⚡ MODO RÁPIDO ATIVO (--rapido) — smoke test de cobertura completa\n"
-            "   TODOS os experimentos, 1x cada | 1 seed (42) | 1 repetição | few-shot [0, 5]\n"
+            "   TODOS os experimentos, 1x cada | 1 seed (42) | 1 repetição | few-shot [0, 4]\n"
             "   (NÃO usar para resultados finais)",
             "="
         )
@@ -3052,14 +3065,14 @@ def main():
 
                 visualize_all_problems(X_a, y_a, X_b, y_b, X_c, y_c,
                                        filename=os.path.join(pasta_execucao, "bloco1_01_problemas_lineares.png"))
-                print(f"  Imagem salva: 01_all_three_problems.png")
+                print(f"  Imagem salva: bloco1_01_problemas_lineares.png")
 
                 y_expert_e_viz = expert_classify(X_e, EXPERT_W, EXPERT_CENTROIDS)
                 visualize_problem_e_with_expert(
                     X_e, y_e, y_expert_e_viz, EXPERT_W, EXPERT_CENTROIDS,
                     filename=os.path.join(pasta_execucao, "bloco2_01_problema_e_expert.png")
                 )
-                print(f"  Imagem salva: 06_problem_d_expert.png")
+                print(f"  Imagem salva: bloco2_01_problema_e_expert.png")
 
                 plot_phase_e_example_locations(
                     X_e, y_expert_e_viz, EXPERT_W, EXPERT_CENTROIDS,
@@ -3989,7 +4002,8 @@ def main():
                     # Usa os rótulos zero-shot do LLM (chave 'train') e a melhor
                     # métrica diagonal aprendida para a fronteira tracejada.
                     try:
-                        lbl = ml_pipeline['llm_label_maps'].get((seed, 'x1', 'x2', 'train'))
+                        lbl = ml_pipeline['llm_label_maps'].get(
+                            (f"meia_lua_seed{seed}", seed, 'x1', 'x2', 'train'))
                         pa = ml_pipeline['phase_a_results']
                         best_metric = max(pa, key=lambda r: r['accuracy_perc_vs_true']) if pa else None
                         if lbl is not None:
@@ -4517,21 +4531,26 @@ def main():
             print(f"  Comparação cruzada linear×não-linear salva em: {cross_fname}")
 
     # Visualização ponto-a-ponto das rotulações do LLM (item G, e-mail 22:06)
-    # A chave carrega o modelo — um scatter por (modelo, seed, features, kind).
+    # A chave carrega o modelo e o problema — um scatter por
+    # (modelo, problema, seed, features, kind).
     if external_llm_label_maps:
         print(f"\n  Gerando scatter ponto-a-ponto das rotulações do LLM...")
         for key, data in external_llm_label_maps.items():
-            model_lbl, seed_val, feat_0, feat_1, kind = key
+            model_lbl, prob_name, seed_val, feat_0, feat_1, kind = key
             kind_label = f"n_shot={kind}" if isinstance(kind, int) else str(kind)
+            # Nome do problema no arquivo desambigua problemas com os mesmos
+            # nomes de feature; o sufixo _seed{N} do meia_lua_seed{N} é
+            # removido porque o seed já aparece como componente próprio.
+            prob_slug = prob_name.replace(f"_seed{seed_val}", "")
             fname_lbl = llm_asset(
                 pasta_execucao,
-                f"final_08_llm_labels_seed{seed_val}_{feat_0}_{feat_1}_{kind}.png",
+                f"final_08_llm_labels_{prob_slug}_seed{seed_val}_{feat_0}_{feat_1}_{kind}.png",
                 model_lbl,
             )
             try:
                 plot_llm_labels_per_problem(
                     X=data['X'], y_llm=data['y_llm'], y_true=data.get('y_true'),
-                    title=(f"Rotulação LLM ({_model_alias(model_lbl)}) — "
+                    title=(f"Rotulação LLM ({_model_alias(model_lbl)}) — {prob_slug} | "
                            f"seed={seed_val} | {feat_0}/{feat_1} | {kind_label}"),
                     feature_names=(feat_0, feat_1),
                     filename=fname_lbl,
@@ -4601,21 +4620,35 @@ def main():
         df_ext['variant'] = df_ext['feature_names'].apply(
             lambda t: '/'.join(t) if isinstance(t, tuple) else str(t)
         )
+        # Agrupa pelo nome-base do problema: meia_lua_seed{N} → meia_lua, para
+        # que a média±desvio agregue os 3 seeds (cada seed da meia-lua é um
+        # pipeline próprio porque o dataset sintético é regenerado por seed).
+        df_ext['problem_base'] = df_ext['problem_name'].str.replace(
+            r'_seed\d+$', '', regex=True
+        )
+
+        def _fmt_mean_std(serie) -> str:
+            # ± só faz sentido com 2+ valores; com n=1 o std amostral é NaN.
+            if len(serie) > 1:
+                return f"{serie.mean():.1%}±{serie.std():.1%}"
+            return f"{serie.mean():.1%}"
+
         for model_sum in sorted(df_ext['model'].unique()):
             df_m = df_ext[df_ext['model'] == model_sum]
             print(f"\n  ═══ Modelo: {model_sum} ═══")
-            for problem in sorted(df_m['problem_name'].unique()):
-                sub = df_m[df_m['problem_name'] == problem]
+            for problem in sorted(df_m['problem_base'].unique()):
+                sub = df_m[df_m['problem_base'] == problem]
                 for variant in sorted(sub['variant'].unique()):
                     sv = sub[sub['variant'] == variant]
-                    print(f"\n  {problem} | {variant}:")
+                    n_seeds = sv['seed'].nunique() if 'seed' in sv.columns else len(sv)
+                    print(f"\n  {problem} | {variant} (seeds agregados: {n_seeds}):")
                     for nf in sorted(sv['n_features'].unique()):
                         ss = sv[sv['n_features'] == nf]
                         print(
                             f"    n_features={nf}: "
-                            f"fid_perc={ss['fidelity_perc_vs_llm'].mean():.1%}±{ss['fidelity_perc_vs_llm'].std():.1%} | "
-                            f"acc_perc_real={ss['accuracy_perc_vs_true'].mean():.1%}±{ss['accuracy_perc_vs_true'].std():.1%} | "
-                            f"llm_real={ss['llm_accuracy_vs_true'].mean():.1%}"
+                            f"fid_perc={_fmt_mean_std(ss['fidelity_perc_vs_llm'])} | "
+                            f"acc_perc_real={_fmt_mean_std(ss['accuracy_perc_vs_true'])} | "
+                            f"llm_real={_fmt_mean_std(ss['llm_accuracy_vs_true'])}"
                         )
         best_overall = df_ext.loc[df_ext['accuracy_perc_vs_true'].idxmax()]
         print(

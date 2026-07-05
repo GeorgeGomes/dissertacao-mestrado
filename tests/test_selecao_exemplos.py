@@ -56,6 +56,35 @@ class TestSelecaoExemplos(unittest.TestCase):
                     f"exemplo vazou para o conjunto de teste na estratégia {strategy}",
                 )
 
+    def test_n_shot_impar_honrado_exatamente(self):
+        # Regressão: "5-shot" tinha só 4 exemplos no prompt (n//2 por classe).
+        # Contrato atual: n_examples é honrado exatamente; a classe 0 recebe o
+        # excedente do ímpar (⌈n/2⌉ vs ⌊n/2⌋), deterministicamente.
+        X, y, w, c = _dados()
+        for n in (5, 7, 10):
+            for strategy in ("easy", "hard", "mixed", "random"):
+                examples, idx = dm.select_examples_by_strategy(
+                    X, y, w, c, n_examples=n, strategy=strategy,
+                    nome_classe_0="A", nome_classe_1="B",
+                    random_state=42, verbose=False,
+                )
+                self.assertEqual(len(examples), n,
+                                 f"{strategy} com n={n} devolveu {len(examples)} exemplos")
+                rotulos = [ex[2] for ex in examples]
+                self.assertEqual(rotulos.count("A"), n - n // 2, f"{strategy} n={n}")
+                self.assertEqual(rotulos.count("B"), n // 2, f"{strategy} n={n}")
+
+    def test_n_shot_impar_honrado_no_aprendizado_ativo(self):
+        # Mesmo contrato para as Fases B/C (select_confident_examples, que rotula
+        # pela métrica aprendida, não pelo y verdadeiro).
+        X, _, w, c = _dados()
+        for n in (5, 10):
+            examples, _, _, idx = dm.select_confident_examples(
+                X, c, w, n, nome_classe_0="A", nome_classe_1="B", verbose=False,
+            )
+            self.assertEqual(len(examples), n)
+            self.assertEqual(len(np.atleast_1d(idx)), n)
+
     def test_random_state_seed_mais_rep_gera_sorteios_distintos(self):
         X, y, w, c = _dados()
 
@@ -85,8 +114,8 @@ class TestRegraRepeticao(unittest.TestCase):
         self.assertEqual(dm.reps_para(10, sorteio_estocastico=False), 1)
 
     def test_model_slug(self):
-        self.assertEqual(dm._model_slug("meta-llama/llama-4-scout"),
-                         "meta-llama-llama-4-scout")
+        self.assertEqual(dm._model_slug("org/modelo-exemplo v1"),
+                         "org-modelo-exemplo-v1")
         self.assertEqual(dm._model_slug("google/gemini-2.5-flash-lite"),
                          "google-gemini-2.5-flash-lite")
 
@@ -94,8 +123,6 @@ class TestRegraRepeticao(unittest.TestCase):
         # Aliases curtos nos nomes de asset (decisão 03/07/2026).
         self.assertEqual(dm._model_alias("gpt-4o-mini"), "gpt4mini")
         self.assertEqual(dm._model_alias("google/gemini-2.5-flash-lite"), "flashlite")
-        self.assertEqual(dm._model_alias("meta-llama/llama-4-scout"), "scout")
-        self.assertEqual(dm._model_alias("deepseek/deepseek-v4-flash"), "dsflash")
 
     def test_model_alias_fallback_para_slug(self):
         # Modelo fora do protocolo cai no slug longo (nunca quebra).

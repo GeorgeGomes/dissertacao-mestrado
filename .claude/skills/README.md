@@ -41,10 +41,11 @@ a célula *Criar × Slides* comporta duas skills que se dividem por **audiência
 | **Slides / apresentação** | `criador-slides-orientador` (acompanhamento) · `criador-slides-banca` (defesa) | `revisor-slides` | — | — | — |
 | **Código** | — | `revisor-codigo` (engenharia) · `revisor-cientifico` (mérito do método) | `testador-codigo` | — | — |
 | **Referências** | — | `revisor-referencias` | — | — | — |
+| **Resultados de execução** | — | `revisor-resultados` | — | — | — |
 | **Reuniões** | — | — | — | `analisador-reunioes` | — |
 | **Transversal (lente)** | — | `revisor-cientifico` (mérito) · `revisor-autoria` (autoria/voz) | — | — | — |
 
-## As 12 skills
+## As 13 skills
 
 | Skill | Papel | NÃO faz (encaminha para) |
 |---|---|---|
@@ -57,6 +58,7 @@ a célula *Criar × Slides* comporta duas skills que se dividem por **audiência
 | `revisor-codigo` | Code review de engenharia, **sem rodar**. | resultados científicos → `revisor-cientifico`; executar → `testador-codigo` |
 | `testador-codigo` | **Executa** o código: instala, roda, compara números. | estilo → `revisor-codigo`; mérito → `revisor-cientifico` |
 | `revisor-referencias` | Integridade das citações (texto + slides) e PDFs em `artigos_referenciados/`. | mérito → `revisor-cientifico`; redigir → `escritor-artigo`; auditar artigo todo → `revisor-artigo` |
+| `revisor-resultados` | Audita a última `execucao_*` **sem re-executar**: completude dos assets, nomenclatura (`__alias`), coerência CSV × log × código, sinais de resultado suspeito — antes de levar números ao trabalho. | re-executar/API → `testador-codigo`; mérito → `revisor-cientifico`; texto → `revisor-artigo`; slides → `revisor-slides` |
 | `analisador-reunioes` | Lê `reunioes_orientador/`, cruza pedidos com código/texto/slides. | implementar → skill apropriada acima |
 | `revisor-autoria` | Revisão transversal por lente: voz do autor, prontidão de defesa, rastreabilidade e disclosure de IA (texto + slides). **Não** ajuda a fraudar autoria nem burlar detecção. | redigir seções → `escritor-artigo`; mérito → `revisor-cientifico`; peer-review → `revisor-artigo`; slides → `criador-slides-orientador`/`criador-slides-banca`/`revisor-slides` |
 | `conclusor-artigo` | Lê código + última execução, deriva os achados definitivos e fecha a conclusão / monta o artigo completo. | redigir seção sob demanda → `escritor-artigo`; mérito → `revisor-cientifico`; auditar pronto → `revisor-artigo`; rodar → `testador-codigo` |

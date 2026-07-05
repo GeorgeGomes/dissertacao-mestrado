@@ -124,7 +124,8 @@ fallback por hash MD5; auditoria offline em `src/audit_interactions.py` (taxa de
 e taxa de flip de $T=0$).
 
 **Regra de ouro:** os números (fidelidade, $\kappa$, taxas) vêm SEMPRE da **última
-execução completa** (`execucao_*` de timestamp mais alto) — nunca de valores citados
+execução completa** (`execucao_*_completa` de timestamp mais alto; nunca as
+`execucao_*_smoke`) — nunca de valores citados
 neste arquivo, em apresentações antigas ou de memória. E antes de criticar uma ausência
 (IC, teste estatístico, teste unitário, controle), **verifique no código/execução se ela
 já foi suprida** — criticar o que já existe destrói a credibilidade da revisão.

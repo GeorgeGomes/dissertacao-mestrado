@@ -1716,9 +1716,9 @@ def plot_oracle_transfer(oracle_results: List[dict], filename: str = None):
             for prob in probs_for_expert:
                 r_match = [r for r in subset if r['algorithm'] == algo and r['problem'] == prob]
                 values.append(r_match[0]['fidelity'] * 100 if r_match else 0)
-            bars = ax.bar(x_pos + bar_width * (j - 1), values, bar_width,
-                          color=colors_algo[algo], edgecolor='k', alpha=0.7,
-                          label=algo.upper())
+            ax.bar(x_pos + bar_width * (j - 1), values, bar_width,
+                   color=colors_algo[algo], edgecolor='k', alpha=0.7,
+                   label=algo.upper())
             for k, v in enumerate(values):
                 ax.text(x_pos[k] + bar_width * (j - 1), v + 1, f'{v:.1f}%',
                         ha='center', va='bottom', fontsize=7)
@@ -2475,7 +2475,7 @@ def plot_problem_overview(
     """Visualiza um problema (scatter por classe + fronteira ótima opcional).
 
     Usado para os problemas novos (meia-lua, peso × altura) que nao aparecem
-    nos gráficos `01_all_three_problems.png` (limitados a A/B/C).
+    nos gráficos `bloco1_01_problemas_lineares.png` (limitados a A/B/C).
 
     Args:
         optimal_boundary_fn: função f(x1, x2) cuja curva f=0 será sobreposta

@@ -176,7 +176,7 @@ LLM_INTERACTIONS = []
 def _model_slug(model_name: str) -> str:
     """Slug de nome de modelo para pastas/arquivos.
 
-    Ex.: 'meta-llama/llama-4-scout' → 'meta-llama-llama-4-scout'.
+    Ex.: 'google/gemini-2.5-flash-lite' → 'google-gemini-2.5-flash-lite'.
     """
     return re.sub(r"[^a-zA-Z0-9.]+", "-", model_name).strip("-").lower()
 
@@ -187,8 +187,6 @@ def _model_slug(model_name: str) -> str:
 MODEL_ALIAS = {
     "gpt-4o-mini":                  "gpt4mini",
     "google/gemini-2.5-flash-lite": "flashlite",
-    "meta-llama/llama-4-scout":     "scout",
-    "deepseek/deepseek-v4-flash":   "dsflash",
 }
 
 

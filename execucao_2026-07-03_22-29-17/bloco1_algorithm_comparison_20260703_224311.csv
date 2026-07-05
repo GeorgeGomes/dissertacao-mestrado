@@ -1,2 +1,0 @@
-algorithm,provider,model,temperature,random_seed,n_shot_phase_bc,class_0,class_1,repetition,fidelity_problem_a,consistency_problem_b,kappa_problem_b,f1_problem_b,consistency_problem_c,kappa_problem_c,f1_problem_c,w_0,w_1,w_ratio,w_direction_0,w_direction_1,gamma,n_disagreements_b,n_disagreements_c
-NNLS,openrouter,google/gemini-2.5-flash-lite,0.0,42,0,A,B,0,0.84,0.71,0.17707150964812712,0.71,0.92,0.8387096774193549,0.9199999999999999,0.03843987973324927,0.1550123606474866,0.2479794486883878,0.24068939638518938,0.9706021916664588,0.0,29,8

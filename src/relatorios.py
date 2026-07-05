@@ -499,7 +499,6 @@ def print_final_analysis(resultados: List[ResultadoExperimento]):
     ])
 
     models = df['model'].unique()
-    seeds = sorted(df['seed'].unique())
 
     for model in models:
         model_df = df[df['model'] == model]

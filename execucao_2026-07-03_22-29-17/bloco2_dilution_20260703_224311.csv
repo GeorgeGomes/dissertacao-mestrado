@@ -1,3 +1,0 @@
-provider,model,temperature,random_seed,n_shot,example_strategy,repetition,accuracy_llm_vs_expert,kappa_llm_vs_expert,f1_llm_vs_expert
-openrouter,google/gemini-2.5-flash-lite,0.0,42,4,dilution_4hard_0easy,0,0.5547945205479452,0.09012464046021096,0.5547945205479452
-openrouter,google/gemini-2.5-flash-lite,0.0,42,8,dilution_4hard_4easy,0,0.9225352112676056,0.8448857994041707,0.9225352112676057

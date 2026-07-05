@@ -108,7 +108,8 @@ justifique o ganho concreto — abstrair cedo demais atrapalha tanto quanto não
 O código implementa um experimento de **otimização inversa sobre decisões de LLM**:
 chama o GPT-4o-mini para classificar pontos 2D, estima uma métrica diagonal Ŵ_LLM
 (Perceptron Estruturado + NNLS) e roda um grid de experimentos (Blocos 1–3, Problemas
-A–G) salvando CSVs, PNGs e logs em `execucao_AAAA-MM-DD_HH-MM-SS/`.
+A–G) salvando CSVs, PNGs e logs em `execucao_AAAA-MM-DD_HH-MM-SS_{completa|smoke}/`
+(sufixo `_smoke` = execução `--rapido`; análises usam sempre as `_completa`).
 
 **Estado atual — verifique antes de recomendar (muita coisa já foi feita):**
 

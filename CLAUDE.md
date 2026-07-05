@@ -20,22 +20,20 @@ de estimação (Perceptron Estruturado, NNLS).
 
 **Assets cujos dados derivam de UM LLM específico levam o ALIAS curto do modelo antes
 da extensão**, via `llm_asset()` + `MODEL_ALIAS`: ex.
-`bloco1_06_w_distribution__gpt4mini.png`, `final_05_hits_errors_seed42__scout.png`,
+`bloco1_06_w_distribution__gpt4mini.png`, `final_05_hits_errors_seed42__flashlite.png`,
 `final_cross_linearity__flashlite.csv`.
 
 | Modelo | Alias |
 |---|---|
 | `gpt-4o-mini` | `gpt4mini` |
 | `google/gemini-2.5-flash-lite` | `flashlite` |
-| `meta-llama/llama-4-scout` | `scout` |
-| `deepseek/deepseek-v4-flash` | `dsflash` |
 
 **TODOS os modelos são tratados de forma igual**: cada modelo de `MODELS_TO_TEST` gera
 o conjunto COMPLETO de gráficos por modelo (bloco1_05–09, bloco2_04–07/09, bloco23_*,
 final_02–08, final_10, cross-linearity) **na raiz da execução** — não existe mais a
 subpasta `modelos_extras/` nem o conceito de "modelo principal" para plots. Modelo fora
 do protocolo sem entrada em `MODEL_ALIAS` cai no slug longo (`_model_slug`); teste em
-`tests/test_selecao_exemplos.py` garante a cobertura dos 4.
+`tests/test_selecao_exemplos.py` garante a cobertura dos 2.
 
 **NÃO levam sufixo de modelo:**
 - Assets sem dados de LLM: dados sintéticos (`bloco1_01`, `bloco1_02`, `bloco3_01`,
@@ -78,7 +76,9 @@ mestrado/
 ├── reunioes_orientador/           # Transcrições e planos de reuniões com orientador
 ├── artigos_referenciados/         # PDFs de artigos citados
 ├── trabalhos_referencias.txt      # Lista consolidada de referências bibliográficas
-└── execucao_YYYY-MM-DD_HH-MM-SS/ # Pasta criada a cada execução (timestamp automático)
+└── execucao_YYYY-MM-DD_HH-MM-SS_{completa|smoke}/ # Pasta criada a cada execução
+    #   sufixo `_completa` = execução cheia (fonte para o trabalho);
+    #   sufixo `_smoke` = execução `--rapido` (NUNCA usar como fonte de números)
     ├── dados_sinteticos_seed{seed}/       # CSVs dos datasets por seed (A, B, C, D, A_r3)
     # === BLOCO 1 — LLM como FONTE (otim. inversa) ===
     ├── bloco1_01_problemas_lineares.png       # + painéis _problema_{a,b,c}.png
@@ -142,7 +142,7 @@ mestrado/
 e do que cada um deve conter. O arquivo lista, slide a slide: título, tipo de conteúdo
 (texto / tabela / gráfico / fórmula) e uma breve descrição do que deve aparecer.
 Os números concretos (métricas, tabelas de resultados) devem ser extraídos dos CSVs e do
-`log_execucao.txt` da execução mais recente.
+`log_execucao.txt` da execução **`_completa`** mais recente (nunca de uma `_smoke`).
 
 **Ordem obrigatória de edição:** Ao criar ou alterar qualquer apresentação, **sempre atualizar
 primeiro o `roteiro_apresentacao.txt`** e só depois os arquivos `.tex`
@@ -153,7 +153,7 @@ primeiro (renumerando as entradas "Slide N —") e então propagar para os dois 
 
 Quando o usuário pedir para criar uma apresentação LaTeX Beamer com resultados de uma execução,
 o arquivo `.tex` deve ser criado **dentro da pasta da execução correspondente**
-(ex: `execucao_YYYY-MM-DD_HH-MM-SS/apresentacao/apresentacao.tex`), junto com os gráficos e CSVs.
+(ex: `execucao_YYYY-MM-DD_HH-MM-SS_completa/apresentacao/apresentacao.tex`), junto com os gráficos e CSVs.
 Isso garante que a apresentação e seus assets fiquem co-localizados e o `\graphicspath` não seja necessário.
 
 **Preâmbulo LaTeX padrão:** Toda apresentação Beamer (principal e guia) deve usar **exatamente** este preâmbulo,
@@ -212,19 +212,19 @@ pip install -r requirements.txt
 
 # Configurar chaves de API em um arquivo .env (carregado via python-dotenv)
 # OPENAI_API_KEY=sk-...
-# OPENROUTER_API_KEY=sk-or-...   (necessário p/ os modelos "core": Gemini/Llama/DeepSeek via OpenRouter)
-# ANTHROPIC_API_KEY=sk-ant-...   (opcional — só se ativar Claude em MODELS_TO_TEST)
+# OPENROUTER_API_KEY=sk-or-...   (necessário p/ o Gemini via OpenRouter)
 # GOOGLE_API_KEY=...             (opcional — só se ativar Gemini direto)
 
 # Executar o experimento completo (todos os modelos de MODELS_TO_TEST)
 python src/dissertacao_mestrado.py
 
 # Smoke test barato de UM modelo (antes de gastar na execução completa):
+python src/dissertacao_mestrado.py --rapido --modelo gpt
 python src/dissertacao_mestrado.py --rapido --modelo gemini
-python src/dissertacao_mestrado.py --rapido --modelo deepseek
 ```
 
-A execução cria automaticamente uma pasta `execucao_YYYY-MM-DD_HH-MM-SS/` com todos os outputs.
+A execução cria automaticamente uma pasta `execucao_YYYY-MM-DD_HH-MM-SS_completa/`
+(ou `..._smoke/` quando rodada com `--rapido`) com todos os outputs.
 As chamadas à API do LLM são **assíncronas com concorrência limitada**
 (`asyncio.Semaphore(MAX_CONCURRENCY)`), acelerando substancialmente a coleta de decisões.
 
@@ -241,8 +241,8 @@ Constantes no topo de `src/dissertacao_mestrado.py`:
 | `N_SAMPLES_PROBLEM_A` | `150` | Amostras no Problema A |
 | `N_SAMPLES_PROBLEM_B/C` | `100` | Amostras nos Problemas B e C |
 | `N_SAMPLES_PROBLEM_D` | `150` | Amostras no Problema D |
-| `FEW_SHOT_SIZES` | `[0, 5, 10, 20, 40]` | Tamanhos few-shot fases B e C |
-| `FEW_SHOT_SIZES_PHASE_E` | `[0, 5, 10, 20, 40]` | Tamanhos few-shot fase D |
+| `FEW_SHOT_SIZES` | `[0, 4, 10, 20, 40]` | Tamanhos few-shot fases B e C (todos pares: balanço exato de classes no prompt) |
+| `FEW_SHOT_SIZES_PHASE_E` | `[0, 4, 10, 20, 40]` | Tamanhos few-shot fase D (todos pares) |
 | `N_REPETICOES` | `3` | Repetições ONDE HÁ SORTEIO de exemplos (regra única em `reps_para`) |
 | `MAX_CONCURRENCY` | `10` | Chamadas paralelas à API do LLM |
 | `MAX_FORMAT_RETRIES` | `5` | Reenvios para respostas malformadas |
@@ -313,16 +313,14 @@ PROMPT_VARIANTS = {
 ```
 
 **Modelos** (`MODELS_TO_TEST`, formato `(provider, model, temperature, scope)`):
-- Protocolo atual (02/07/2026): **os 4 modelos com `scope="full"`** — o grid COMPLETO de
-  experimentos roda em todos, com 3 seeds uniformes. Critério de seleção: o modelo
-  rápido/barato de cada família (mini/Lite/Scout/Flash), 4 famílias, 2 fechados + 2 abertos:
-  `gpt-4o-mini` (OpenAI, principal), `google/gemini-2.5-flash-lite`,
-  `meta-llama/llama-4-scout` e `deepseek/deepseek-v4-flash` via **OpenRouter**
-  (`OPENROUTER_API_KEY`; `extra_body` com `allow_fallbacks=False`).
+- Protocolo atual: **2 modelos com `scope="full"`** — o grid COMPLETO de
+  experimentos roda em ambos, com 3 seeds uniformes:
+  `gpt-4o-mini` (OpenAI, principal) e `google/gemini-2.5-flash-lite` via
+  **OpenRouter** (`OPENROUTER_API_KEY`; `extra_body` com `allow_fallbacks=False`).
 - **Pinagem de provedor de inferência POR MODELO** (`MODEL_PROVIDER_PIN` em
   `src/llm_client.py`): fixa qual infraestrutura serve cada modelo no OpenRouter
-  (mesmo model-ID pode ser servido por empresas/quantizações distintas). Valores
-  observados no smoke de 02/07/2026: DeepSeek e Scout → `DeepInfra`; Gemini → `Google`.
+  (mesmo model-ID pode ser servido por empresas/quantizações distintas). Valor
+  observado no smoke de 02/07/2026: Gemini → `Google`.
   Se o provedor pinado cair, as chamadas falham visivelmente (fallback resiliente +
   auditoria) em vez de migrar em silêncio — comportamento desejado p/ reprodutibilidade.
 - `scope="core"` continua disponível para reduzir um modelo ao pipeline central
@@ -524,7 +522,7 @@ Usa os mesmos exemplos (estratégia "mixed") com 4 ordenações diferentes:
 - **shuffled:** ordem aleatória
 - **alternating:** 0, 1, 0, 1, ...
 
-Testado com n_shot = [5, 10, 20, 40].
+Testado com n_shot = [4, 10, 20, 40].
 
 #### Baselines Clássicos (k-NN, Logistic Regression, SVM)
 Treina classificadores clássicos nos mesmos exemplos few-shot da Fase E e avalia no mesmo
@@ -642,7 +640,7 @@ Verifica, **sem chamar a API**, duas propriedades que sustentam a credibilidade 
 
 ```bash
 python src/audit_interactions.py                 # audita a execução COMPLETA mais recente
-python src/audit_interactions.py execucao_2026-06-30_23-46-58
+python src/audit_interactions.py execucao_2026-07-05_12-34-52_completa
 python src/audit_interactions.py --json          # saída estruturada (CI/log)
 ```
 Sai com código 1 se a taxa de malformadas ultrapassar `--max-malformed` (5% padrão).
@@ -651,12 +649,14 @@ O teste `tests/test_audit_interactions.py` roda esta auditoria na execução mai
 ## Leitura de Resultados
 
 **IMPORTANTE:** Antes de responder qualquer pergunta sobre resultados ou análise, leia sempre
-os arquivos da **última execução disponível**.
+os arquivos da **última execução COMPLETA disponível** — somente pastas com sufixo
+`_completa`; pastas `_smoke` são smoke tests `--rapido` e NUNCA servem de fonte.
 
-A última execução está em: `execucao_2026-04-14_22-10-02/`
+A última execução completa está em: `execucao_2026-07-05_12-34-52_completa/`
 
-O padrão de nome das pastas é `execucao_YYYY-MM-DD_HH-MM-SS/`. Se houver pastas mais recentes,
-leia a de timestamp mais alto.
+O padrão de nome das pastas é `execucao_YYYY-MM-DD_HH-MM-SS_{completa|smoke}/`. Se houver
+pastas `_completa` mais recentes, leia a de timestamp mais alto. (Pastas legadas sem sufixo:
+confirme no `log_execucao.txt` que não são `--rapido`.)
 
 Arquivos prioritários para leitura:
 1. `log_execucao.txt` — visão completa dos resultados

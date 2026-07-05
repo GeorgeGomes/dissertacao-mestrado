@@ -1,5 +1,0 @@
-provider,model,temperature,random_seed,n_shot,example_ordering,repetition,accuracy_llm_vs_expert,kappa_llm_vs_expert,f1_llm_vs_expert,accuracy_expert_vs_gt,accuracy_llm_vs_gt,n_disagreements,n_total_test,n_malformed_responses
-openrouter,google/gemini-2.5-flash-lite,0.0,42,5,class0_first,0,0.9041095890410958,0.8082191780821918,0.904109589041096,0.8533333333333334,0.9246575342465754,14,146,0
-openrouter,google/gemini-2.5-flash-lite,0.0,42,5,class1_first,0,0.7945205479452054,0.5921028124417955,0.7945205479452054,0.8533333333333334,0.8561643835616438,30,146,0
-openrouter,google/gemini-2.5-flash-lite,0.0,42,5,shuffled,0,0.9041095890410958,0.8086500655307994,0.904109589041096,0.8533333333333334,0.8972602739726028,14,146,0
-openrouter,google/gemini-2.5-flash-lite,0.0,42,5,alternating,0,0.8698630136986302,0.7409897292250234,0.8698630136986302,0.8533333333333334,0.8356164383561644,19,146,0

@@ -81,6 +81,10 @@ def find_latest_execution(root: str = ".", allow_rapido: bool = False) -> Option
 
     Por padrão pula execuções --rapido (curtas, seed única) — elas não servem para
     conclusões finais, mas a auditoria ainda funciona nelas se allow_rapido=True.
+
+    O contrato principal é o SUFIXO no nome da pasta: ``_completa`` (execução
+    cheia) vs ``_smoke`` (--rapido). Pastas legadas sem sufixo caem no fareja-log
+    ``is_rapido`` (compatibilidade).
     """
     dirs = sorted(glob.glob(os.path.join(root, "execucao_*")), reverse=True)
     for d in dirs:
@@ -88,8 +92,13 @@ def find_latest_execution(root: str = ".", allow_rapido: bool = False) -> Option
             os.path.exists(os.path.join(d, "llm_interactions.json"))
         if not has_json:
             continue
-        if not allow_rapido and is_rapido(d):
-            continue
+        nome = os.path.basename(os.path.normpath(d))
+        if not allow_rapido:
+            if nome.endswith("_smoke"):
+                continue
+            # Legado sem sufixo: decide pelo cabeçalho do log.
+            if not nome.endswith("_completa") and is_rapido(d):
+                continue
         return d
     return None
 

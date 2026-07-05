@@ -106,7 +106,8 @@ Nunca relate como validado algo que não executou.
 
 O ponto de entrada é `python src/dissertacao_mestrado.py` (o código está modularizado em
 `src/`: cliente LLM, parser, métricas, estimadores, geração de dados, auditoria). Uma
-execução completa cria `execucao_AAAA-MM-DD_HH-MM-SS/` com CSVs por bloco, PNGs,
+execução completa cria `execucao_AAAA-MM-DD_HH-MM-SS_completa/` (e um `--rapido` cria
+`..._smoke/`) com CSVs por bloco, PNGs,
 `log_execucao.txt` e `llm_interactions_parte*.json`. Detalhe que muda sua estratégia:
 **reproduzir tudo é caro** (milhares de chamadas de API, custo em dinheiro e tempo,
 chave da OpenAI em `.env`). Divida a verificação em camadas:

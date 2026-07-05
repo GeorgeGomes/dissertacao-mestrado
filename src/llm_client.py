@@ -58,9 +58,7 @@ PROVIDER_EXTRA_BODY = {
 # indisponível, as chamadas FALHAM visivelmente (malformadas + auditoria) em vez de
 # migrar em silêncio — comportamento correto para reprodutibilidade.
 MODEL_PROVIDER_PIN = {
-    "deepseek/deepseek-v4-flash":   {"order": ["DeepInfra"], "allow_fallbacks": False},
-    "meta-llama/llama-4-scout":     {"order": ["DeepInfra"], "allow_fallbacks": False},
-    "google/gemini-2.5-flash-lite": {"order": ["Google"],    "allow_fallbacks": False},
+    "google/gemini-2.5-flash-lite": {"order": ["Google"], "allow_fallbacks": False},
 }
 
 

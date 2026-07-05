@@ -169,13 +169,6 @@ class ConsistencyMetrics:
     n_disagreements: int
     disagreement_indices: np.ndarray
 
-    def summary(self) -> str:
-        return (
-            f"Accuracy: {self.accuracy:.1%} | "
-            f"Kappa: {self.cohen_kappa:.3f} | "
-            f"F1: {self.f1_score:.3f}"
-        )
-
 
 def compute_consistency_metrics(
     y_llm: np.ndarray,

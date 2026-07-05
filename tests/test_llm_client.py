@@ -124,10 +124,10 @@ class TestExtraBody(unittest.TestCase):
 
     # --- pinagem de provedor de inferência POR MODELO (MODEL_PROVIDER_PIN) ---
     def test_modelo_pinado_fixa_provedor_de_inferencia(self):
-        # Reprodutibilidade: modelos de pesos abertos são servidos por várias
-        # infraestruturas (quantizações distintas); o pin fixa quem serve.
-        eb = lc.get_extra_body("openrouter", "meta-llama/llama-4-scout")
-        self.assertEqual(eb["provider"]["order"], ["DeepInfra"])
+        # Reprodutibilidade: um mesmo model-ID pode ser servido por várias
+        # infraestruturas no OpenRouter; o pin fixa quem serve.
+        eb = lc.get_extra_body("openrouter", "google/gemini-2.5-flash-lite")
+        self.assertEqual(eb["provider"]["order"], ["Google"])
         self.assertFalse(eb["provider"]["allow_fallbacks"])
 
     def test_todos_os_pins_tem_order_e_fallback_desligado(self):

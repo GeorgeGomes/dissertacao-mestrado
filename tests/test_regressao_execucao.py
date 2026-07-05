@@ -23,15 +23,16 @@ SRC_DIR = os.path.join(os.path.dirname(__file__), "..", "src")
 sys.path.insert(0, os.path.abspath(SRC_DIR))
 
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-# Execução completa de referência (1 modelo, 3 seeds). Valores dourados abaixo
-# foram extraídos de bloco1_algorithm_comparison_20260701_030559.csv (seed 42).
-EXEC_REF = os.path.join(BASE_DIR, "execucao_2026-06-30_23-46-58")
+# Execução completa de referência (2 modelos, 3 seeds). Valores dourados abaixo
+# foram extraídos de bloco1_algorithm_comparison_20260705_000220.csv (gpt-4o-mini,
+# seed 42) e bloco1_phases_abc_20260705_000220.csv (zero-shot default A/B).
+EXEC_REF = os.path.join(BASE_DIR, "execucao_2026-07-04_19-46-25_completa")
 INTERACOES = os.path.join(EXEC_REF, "llm_interactions_parte001.json")
 
-W_NNLS_GOLDEN = np.array([0.035725, 0.141970])   # w_0, w_1 (CSV, 6 casas)
-FID_NNLS_GOLDEN = 0.820000                        # fidelity_problem_a (CSV)
-FID_PERC_STORED = 0.766667                        # fidelidade do W-perceptron armazenado
-W_PERC_STORED = np.array([0.000232, 0.002469])    # bloco1_phases_abc (seed 42, default)
+W_NNLS_GOLDEN = np.array([0.036011, 0.142787])   # w_0, w_1 (CSV, 6 casas)
+FID_NNLS_GOLDEN = 0.833333                        # fidelity_problem_a (CSV)
+FID_PERC_STORED = 0.780000                        # fidelidade do W-perceptron armazenado
+W_PERC_STORED = np.array([0.010691, 0.013545])    # bloco1_phases_abc (seed 42, default)
 
 
 @unittest.skipUnless(os.path.exists(INTERACOES), "execução de referência ausente")

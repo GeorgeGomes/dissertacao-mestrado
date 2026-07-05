@@ -103,7 +103,8 @@ veredito sem evidência localizável não vale; prefira "não localizei" a um pa
 - **Onde cruzar:** código em `src/dissertacao_mestrado.py` (procure funções, flags `RUN_*`,
   colunas de CSV, nomes de gráfico `bloco*`/`final_*`); slides em `roteiro_apresentacao.txt`
   e `execucao_*/apresentacao/apresentacao.tex` (+ `apresentacao_guia.tex`); resultados nos
-  CSVs/PNGs da pasta `execucao_*` de timestamp mais alto.
+  CSVs/PNGs da pasta `execucao_*_completa` de timestamp mais alto (nunca as
+  `execucao_*_smoke`, que são smoke tests `--rapido`).
 - **Padrões que enganam o placar:**
   - Um item dado como "a fazer" no plano pode já estar no código (ex.: peso×altura few-shot)
     — confirme no CSV/função antes de marcar pendente.
