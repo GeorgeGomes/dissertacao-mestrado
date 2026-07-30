@@ -29,6 +29,17 @@ forma mais honesta e legível possível.
   apostos/incisos ("o método — que usa NNLS — converge"); use vírgulas ou reformule em
   frases separadas. Preferência declarada do autor (05/07/2026) — vale para artigo,
   dissertação e resposta a revisores.
+- **Nunca exponha o nome de arquivos internos (CSV, log) nem da pasta de execução.** O
+  leitor do artigo/dissertação NÃO tem acesso aos fontes do projeto, então referências
+  como "execução `2026-07-05_12-34-52_completa`", "Fonte: `final_cross_linearity__gpt4mini.csv`"
+  ou "o `log_execucao.txt` registra…" não significam nada para ele e vazam detalhe de
+  implementação. Use o número diretamente ou uma descrição neutra do procedimento
+  ("os experimentos", "a coleta de decisões", "a análise estatística"). Ex.: "Todos os
+  números provêm da execução `2026-07-05_...`" → "Todos os números provêm de uma única
+  campanha experimental (gpt-4o-mini e gemini-2.5-flash-lite, $T=0$, 3 sementes × 3
+  repetições)"; "Fonte: `final_cross_linearity__gpt4mini.csv`" → remover a linha. Nomes de
+  modelo, hiperparâmetros, sementes e contagens de amostra SIM entram (são reprodutíveis);
+  nomes de pasta/arquivo do repositório, NÃO. Preferência declarada do autor (06/07/2026).
 - **Toda afirmação ancorada.** Resultado vem com número, tabela ou citação. Nada de
   "significativamente melhor" sem o valor e o teste. Distinga o que você mostrou do que
   você conjectura.

@@ -53,6 +53,14 @@ como o de uma revisão por pares séria e construtiva.
    *overclaiming*, generalização indevida ou correlação vendida como causa?
 6. **Consistência interna.** Números do abstract batem com os das tabelas? Texto, figuras
    e legendas concordam? Notação é coerente do início ao fim?
+   **Vazamento de fontes internas do projeto:** aponte como problema TODA menção a nome de
+   arquivo do repositório (CSV, `log_execucao.txt`) ou ao nome da pasta de execução
+   (`execucao_2026-..._completa`) dentro do texto — o leitor não tem acesso aos fontes, então
+   isso não o informa e vaza detalhe de implementação. Liste cada ocorrência (linha) e a
+   reescrita: trocar por uma descrição neutra do procedimento ou remover a citação de fonte,
+   mantendo apenas o número. Modelo, hiperparâmetros, sementes e contagens de amostra podem
+   ficar (são reprodutíveis); nomes de pasta/arquivo do repositório, não. Preferência
+   declarada do autor (06/07/2026).
 7. **Figuras e tabelas.** São legíveis, rotuladas, autoexplicativas? Cada uma é referida e
    interpretada no texto? Mostram o que o texto afirma?
 8. **Clareza e organização da escrita.** Estrutura lógica, transições, frases claras,

@@ -1,0 +1,890 @@
+{
+  "audio_file": "reuniao_raul_21_07_2026.wav",
+  "language": "pt",
+  "duration": 1237.52,
+  "num_speakers": 2,
+  "segments": [
+    {
+      "speaker": "SPEAKER_00",
+      "start": 0.0,
+      "end": 2.32,
+      "text": "beleza tudo bem hoje"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 2.32,
+      "end": 4.86,
+      "text": "é tanto muito lado aqui eu cheguei hoje é melhor"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 4.86,
+      "end": 6.76,
+      "text": "corrido"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 6.76,
+      "end": 9.1,
+      "text": "aí é corrido"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 9.1,
+      "end": 9.68,
+      "text": "a marcar"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 9.68,
+      "end": 12.88,
+      "text": "uma reunião importante antes da aula e"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 13.26,
+      "end": 13.72,
+      "text": "aí eu"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 13.72,
+      "end": 15.48,
+      "text": "tive que começar lá mais tarde"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 16.25,
+      "end": 17.85,
+      "text": "mas"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 17.85,
+      "end": 19.13,
+      "text": "aí deu para terminar agora"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 19.13,
+      "end": 22.31,
+      "text": "boa mas"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 22.41,
+      "end": 33.92,
+      "text": "tá tranquilo como você deu uma olhada agora depois do almoço é bom eu Você pode abrir?"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 34.36,
+      "end": 34.84,
+      "text": "Claro."
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 38.12,
+      "end": 54.2,
+      "text": "Algumas coisinhas aqui pra deixar mais redondo os resultados. E aí eu... Bom, eu também mandei pro Yuri, mas o Yuri não me retornou ainda."
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 55.56,
+      "end": 62.3,
+      "text": "É, você viu que eu deixei em vermelho, deixei o antigo e o novo pra gente ter um parâmetro pra ver o que foi alterado. Não,"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 62.32,
+      "end": 117.0,
+      "text": "não. Você mudou quase tudo. Só não mudou um detalhezinho lá. Qual? É, primeiro lugar, eu vou pegar para reescrever, tá? Por quê? Porque, é, por mais que você vá colocando assim, de uma forma mais fluida, né? Fica, ainda fica assim, de um jeito que você está acostumado a escrever escrever e não adianta né é a gente ficar batendo na mesma tecla né você já tem um texto já entendeu mas então eu esse texto você só gera ele PDF né"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 117.0,
+      "end": 120.36,
+      "text": "não eu tenho em latex também mas"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 121.26,
+      "end": 123.22,
+      "text": "eu não mexo com com a teca muito... Mas"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 123.22,
+      "end": 127.62,
+      "text": "eu posso gerar o que você quiser, Raul. Você gera em doc pra mim?"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 127.82,
+      "end": 128.18,
+      "text": "Gero,"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 128.38,
+      "end": 128.94,
+      "text": "com certeza."
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 129.68,
+      "end": 156.82,
+      "text": "Então tá. Que aí eu vou trabalhar nesse texto, inicialmente em português, tá? Tá. E depois a gente vê, até mesmo pode pedir pro Yuri fazer a tradução, mas a gente faz, depois ele melhora, né? Mas então eu quero trabalhar nesse texto, por exemplo, é... o resumo tem que dar uma fluidez maior nele, né? Não pode ficar do jeito que está."
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 157.74,
+      "end": 158.62,
+      "text": "Não se"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 158.62,
+      "end": 162.58,
+      "text": "coloca esses detalhes no resumo, né? Essas coisas, né?"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 163.28,
+      "end": 163.72,
+      "text": "Então,"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 163.96,
+      "end": 197.76,
+      "text": "eu vou fazendo novos textos. Aquilo que eu precisar em termos de intervenção sua, experimento de resultado ou de detalhes, eu vou te pedindo, tá? Tá bom. Então, por exemplo, no resumo aí, você já podia até anotar, você escreve classificação binária bidimensional. A gente não precisa botar isso bidimensional, porque a gente estendeu o trabalho aí para mais dimensões. Tanto que no restante, você não fala mais de bidimensional, só fala para a sazão binária. Então,"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 197.76,
+      "end": 198.84,
+      "text": "na"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 198.84,
+      "end": 201.8,
+      "text": "quarta linha, não precisa botar isso bidimensional. Tá"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 201.8,
+      "end": 202.76,
+      "text": "bom, entendi."
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 204.18,
+      "end": 271.33,
+      "text": "Tá, e trabalhos relacionados, então eu vou... Bom, nos métodos e técnicas, eu vou explicar melhor esses métodos aí, entendeu? Não, sobe, sobe, sobe. Não, desce. Aí, aí, aí. Esses estimadores de métrica inversa e o próprio problema de predição estruturada, eu vou explicar melhor, tá? Tá. inclusive os dois algoritmos que estão sendo utilizados principalmente o perceptron aí eu tenho o material é porque eu até poderia mandar pra você mas aí eu tenho esse material eu mesmo faço essas inserções se eu for mandar pra você aí tem muita coisa aí você não vai saber direito o que eu coloco o que eu não coloco isso não pode se estender demais mas do jeito que está, está muito pouco um pouco. Já está um parágrafo de três, quatro linhas."
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 272.29,
+      "end": 272.69,
+      "text": "Então,"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 273.09,
+      "end": 281.22,
+      "text": "tem que dar uma melhorada nisso aí. E da mesma forma em trabalhos relacionados. Eu vou tentar esticar um pouco. Você colocou o do Shing, né?"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 281.62,
+      "end": 282.5,
+      "text": "Sim. O"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 282.5,
+      "end": 327.46,
+      "text": "Stuart, né? Mas aí eu vou tentar... O Stuart, não. É o Russell, né? O Russell. Ele com o Russell. É. Não, é o Norvig, né? É o Norvig. É o Peter Norvig. É o Peter Norvig. É o Peter Norvig. Escreveu o livro de ar junto com o Russell. Está lá na bibliografia. O Peter Nobby que é o X, que é o autor principal. Que é o primeiro. Pois é, mas aí eu vou tentar dar uma melhorada aí também. No sentido, eu vou buscar mais o sentido do artigo."
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 328.02,
+      "end": 328.76,
+      "text": "Mas que"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 328.76,
+      "end": 342.37,
+      "text": "vai trazer vai também trazer subsídios para a dissertação. Então, por exemplo, em trabalhos relacionados, você esqueceu de corrigir. Continua o nosso percepto. Ah,"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 342.53,
+      "end": 346.01,
+      "text": "eu esqueci. É, mas assim, detalhes você"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 346.01,
+      "end": 363.4,
+      "text": "esqueceu. Agora, tem algumas coisas que não estão aparecendo. A parte métrica até está bem escrita. Você coloca o algoritmo, mas você não explica muito bem os detalhes dele. Você coloca as equações aí."
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 363.98,
+      "end": 364.48,
+      "text": "É"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 364.48,
+      "end": 369.25,
+      "text": "para cima que estão nós. aqui, ó"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 369.25,
+      "end": 372.15,
+      "text": "tá, eu não coloquei aqui"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 372.15,
+      "end": 372.93,
+      "text": "achou?"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 374.21,
+      "end": 383.51,
+      "text": "achou você não achou? não isso"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 389.78,
+      "end": 435.81,
+      "text": "tá em trabalhos relacionados tá no treito aí é, percebe estruturado com relaxação então tem que reescrever algumas coisas é, percebe estruturado é, percebe somente tem que reescrever a predição estruturada também eu vou colocar alguma coisa que não tem quase nada. Aprendizado em contexto, eu posso até olhar aquele paper famoso, mas eu acho que você já colocou suficiente. Ou seja, começar a dar uma enxertada nos parágrafos aí, de modo a ir estruturando melhor um artigo, entendeu?"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 436.57,
+      "end": 437.05,
+      "text": "Certo."
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 438.82,
+      "end": 452.83,
+      "text": "Mas assim, no geral, está tudo muito bom. bom, então vamos lá 5 .5 essa tabela aí a tabela 6"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 462.54,
+      "end": 463.2,
+      "text": "eu"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 463.2,
+      "end": 476.14,
+      "text": "achei essa tabela mal explicada assim, você não sabe direito o que que entrou altura e peso aí já que isso não era desse problema não era um problema real"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 478.64,
+      "end": 479.96,
+      "text": "o que"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 479.96,
+      "end": 484.08,
+      "text": "que significa lá, default, geométrica, tabular Isso"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 484.08,
+      "end": 487.26,
+      "text": "aqui eu tenho que explicar melhor. Aqui tem uma... É,"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 487.34,
+      "end": 489.78,
+      "text": "porque, entendeu? A pessoa pega uma tabela dessa..."
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 490.36,
+      "end": 497.22,
+      "text": "Aqui tem uma explicação. Esse daí é o tipo de prompt que foi utilizado, entendeu? O default é o tipo de prompt... E outra"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 497.22,
+      "end": 521.74,
+      "text": "coisa. Quando você colocou a questão da não linearidade, essa base que você usou aí, eu não estou entendendo. Essa base que você usou aí, foi a de homem e mulher?"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 523.56,
+      "end": 537.87,
+      "text": "Essa de não... Não, foi do ABC. ABC eu peguei o ABC com fiz três fiz de três três atributos e quatro tributos mas"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 538.6,
+      "end": 541.42,
+      "text": "esse problema são lineares poxa então"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 542.54,
+      "end": 542.98,
+      "text": "a"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 542.98,
+      "end": 553.22,
+      "text": "gente já tinha discutido isso você não ia ter nenhum tipo de mudança e de melhoria não problema que já é linear colocando colocando mais atributos mas eu fiz"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 553.22,
+      "end": 553.98,
+      "text": "o do outro também."
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 555.65,
+      "end": 559.77,
+      "text": "É, mas então a gente tem que explicar melhor. Ó,"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 559.87,
+      "end": 561.63,
+      "text": "o bloco 1, bloco..."
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 562.37,
+      "end": 575.43,
+      "text": "Pois é, mas aí no bloco 1 não tem nada a ver entrar homem e mulher. Eu não entendi se homem e mulher no bloco 1. Altura e peso. Altura e peso. Não entendi isso."
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 576.98,
+      "end": 578.56,
+      "text": "É, eu tenho que explicar melhor isso daqui."
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 579.94,
+      "end": 595.2,
+      "text": "É, parece que você misturou os problemas, entendeu? Toma cuidado. Essa tabela tem que refazer ela. tabela tabela eu coloquei aqui ela tá assim estuando do das outras né as outras também explicar essa aí tá tá confusão só"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 595.2,
+      "end": 601.84,
+      "text": "tá tá bom não vou explicar então antes antes de te enviar lá eu te eu faço essas explicações todas aqui tá melhor"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 601.84,
+      "end": 614.7,
+      "text": "aí vai descendo aí vai descendo aí tá aí na figura figura 5 seria interessante mas"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 619.82,
+      "end": 621.06,
+      "text": "aqui não"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 621.44,
+      "end": 639.48,
+      "text": "mas é o resultado ele está mais vai mais para baixo aí é você colocar também do lado de cá eu não sei se você colocou você tá verde azul mas colocar as as classes corretas."
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 640.04,
+      "end": 641.1,
+      "text": "Ah, tá."
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 641.48,
+      "end": 648.49,
+      "text": "Porque ele vai mostrar que a LAM tá errando muito mais do que o SVM RBF, entendeu?"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 649.84,
+      "end": 653.68,
+      "text": "Tá. Então colocar as classes corretas, tipo fazer outro gráfico com as classes corretas?"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 654.16,
+      "end": 656.64,
+      "text": "Não, igual você fez do outro lado, azul e vermelho."
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 657.0,
+      "end": 658.42,
+      "text": "Tá, entendi."
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 658.56,
+      "end": 665.04,
+      "text": "É o Gruntruf. Aqui, né? É o Gruntruf nos dois. É porque o SVM RBF não erra nada, né?"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 665.99,
+      "end": 666.35,
+      "text": "Uhum."
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 666.53,
+      "end": 670.15,
+      "text": "Ele não erra nada. então é plotar esse ground troop e tu laticar também"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 670.15,
+      "end": 671.33,
+      "text": "mesmo"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 671.33,
+      "end": 676.89,
+      "text": "que fique errando mas só pra ela ter uma noção de que ela erra tá"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 677.12,
+      "end": 681.89,
+      "text": "bom beleza? e"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 681.89,
+      "end": 711.05,
+      "text": "na figura 8 você fala aí de uma região de classificação, mas ela não tá plotada você fala da fronteira elíptica mas você não plotou eu"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 711.05,
+      "end": 725.74,
+      "text": "acho que eu escrevi a imagem errada eu tenho lá lá tem uma imagem que tem aquela curva pretinha exato, eu tenho ela lá, mas eu acho que eu coloquei outra aqui, tá bom, eu vou colocar certa"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 726.76,
+      "end": 735.63,
+      "text": "coloca também, agora vamos lá no set aí você tem um problema lá, vai lá inclusive é"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 736.45,
+      "end": 736.93,
+      "text": "lá"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 736.93,
+      "end": 778.97,
+      "text": "quando você fala de limitações então essa última aí, classificação binária, ela não é uma limitação, é pelo seguinte quando a gente aprende uma métrica e você tem especialista definindo os rótulos, essa métrica serve para qualquer quantidade de classes. Então, você poderia ter três, quatro, cinco classes que o especialista ia definir qual seria o rótulo correto de cada amostra. Então, a métrica é uma só. O algoritmo modifica muito pouco. Em vez de você testar, então, em dois centroides, você testa em três, quatro e ganha aquele mais próximo."
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 779.27,
+      "end": 780.71,
+      "text": "Entendi. Então"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 780.71,
+      "end": 798.18,
+      "text": "não há dificuldade nenhuma em trabalhar num problema de 3, 4 classes, 10 classes, entendeu? Tanto que eu trabalhei com problema de gênero de música com 10 classes. Não tem problema nenhum. A métrica é a única. A métrica é o problema."
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 799.28,
+      "end": 799.76,
+      "text": "Se"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 799.76,
+      "end": 809.14,
+      "text": "ele tem 2, 3, 4 ou 5, não interessa. O classificador também não muda tanto. Por quê? Porque você usa, pelo menos para o algoritmo percepto. Para o outro eu não sei."
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 809.14,
+      "end": 809.84,
+      "text": "Porque"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 809.84,
+      "end": 812.4,
+      "text": "você usa a ideia do centroide mais próximo."
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 814.65,
+      "end": 817.45,
+      "text": "Então, não há dificuldade"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 817.45,
+      "end": 842.78,
+      "text": "nenhuma em estender o problema para mais classes. Agora, o trabalho ficar mais encorpado, e aí enquanto eu estiver arrumando o texto, você poderia dizer que não teria tempo para fazer isso, até mesmo para a sua dissertação, você incluir um problema aí de três classes, poderia ser o problema da íris."
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 846.05,
+      "end": 850.73,
+      "text": "Mas, Raul, é só uma dúvida O problema da íris, ele não deve ser bem conhecido Pela IA?"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 853.22,
+      "end": 856.76,
+      "text": "A gente não sabe A"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 856.96,
+      "end": 857.54,
+      "text": "gente não"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 857.54,
+      "end": 858.48,
+      "text": "sabe Você"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 858.48,
+      "end": 859.4,
+      "text": "vê interessante"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 859.4,
+      "end": 878.79,
+      "text": "Até a questão dos Antributos, né? Você falar em cétala, pétala Porque Se O aprendizado em contexto For muito bem Mais uma vez está provado o contexto aí está influenciando, né?"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 879.15,
+      "end": 880.43,
+      "text": "Hum, legal. Porque aí você"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 880.43,
+      "end": 888.02,
+      "text": "pode fazer os mesmos experimentos que você fez informando só X1, X2, entendeu?"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 888.38,
+      "end": 890.2,
+      "text": "Sim. Não falando"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 890.2,
+      "end": 905.08,
+      "text": "que é cetosa, que é não sei o quê. Depois você ir fazendo a mesma coisa que você fez para o homem e mulher. Só que a gente está com um problema maior, com mais quantidade de amostras e um problema de três classes."
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 906.01,
+      "end": 911.57,
+      "text": "Tá. Então, basicamente, eu faço o que eu fiz com o problema homem e mulher para ir para o índice."
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 911.57,
+      "end": 911.93,
+      "text": "É."
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 912.31,
+      "end": 913.77,
+      "text": "Tá, legal. Isso."
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 914.03,
+      "end": 933.76,
+      "text": "Agora, no problema homem e mulher, você não precisou usar a otimização inversa. Você só usou, você pegou o bloco deles. Você só usou a LLM para rotular, no fill shot, no zero shot, e comparou com o classificador clássico."
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 933.92,
+      "end": 934.98,
+      "text": "Isso, isso aí."
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 935.24,
+      "end": 936.86,
+      "text": "Você vai fazer a mesma coisa no índice."
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 937.99,
+      "end": 939.81,
+      "text": "Show, ótimo. Beleza?"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 940.15,
+      "end": 941.13,
+      "text": "Entendeu? Tá."
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 941.13,
+      "end": 941.67,
+      "text": "Então,"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 941.81,
+      "end": 952.82,
+      "text": "a questão da métrica do aprendizado, você só analisou ela do ponto de vista de botar mais atributos."
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 954.5,
+      "end": 955.06,
+      "text": "Você"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 955.06,
+      "end": 974.21,
+      "text": "falou. Mas eu não vi isso no homem e mulher. Volta lá no exemplo do bloco do homem e mulher. Em caso real."
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 979.36,
+      "end": 979.92,
+      "text": "A"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 979.92,
+      "end": 1003.28,
+      "text": "métrica é a altura. E outra coisa. Você aprendeu a métrica aí? Acho"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 1007.95,
+      "end": 1021.84,
+      "text": "que eu não aprendi a métrica aqui. Não aprendi. Não, aprendi sim. Aprendi sim. Aprendi sim. Igual. Teve aprendizagem métrica aqui? Tem? Uhum."
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 1022.47,
+      "end": 1023.95,
+      "text": "Tem tabela com isso?"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 1024.21,
+      "end": 1024.59,
+      "text": "Você"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 1024.59,
+      "end": 1027.81,
+      "text": "usou só... Você usou o..."
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 1028.26,
+      "end": 1031.08,
+      "text": "Eu posso pôr a tabela aqui. Eu não coloquei, mas eu tenho sim."
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 1031.76,
+      "end": 1035.32,
+      "text": "Ah, então. Não está muito bem claro isso, entendeu? E"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 1035.32,
+      "end": 1035.5,
+      "text": "outra"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 1035.5,
+      "end": 1051.09,
+      "text": "coisa. esse problema sim esse problema a gente percebe que a solução ótima é uma elipse e aí se você colocar aqueles atributos ao quadrado a métrica vai se aproximar muito mais do do Grand Truffle, entendeu?"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 1051.97,
+      "end": 1052.33,
+      "text": "e"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 1052.33,
+      "end": 1068.13,
+      "text": "talvez até da própria LLM mas com contexto porque você mandar ela no zero shot não vai acertar porra agora se você mandar nos Euro Shorts com o contexto"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 1069.2,
+      "end": 1069.74,
+      "text": "dado"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 1069.74,
+      "end": 1075.06,
+      "text": "o peso e altura classifica se é homem ou mulher, eu acho que ela vai acertar bastante, né? eu"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 1075.06,
+      "end": 1081.22,
+      "text": "vou colocar aqui então a tabela não,"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 1081.4,
+      "end": 1095.27,
+      "text": "mas além disso você tem que estender essa análise colocando não precisa colocar da hipérbole não, põe só da elipse só altura ao quadrado mais o peso ao quadrado"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 1095.62,
+      "end": 1096.92,
+      "text": "beleza Que"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 1096.92,
+      "end": 1126.04,
+      "text": "é a equação ótima, que eu vou até colocar depois, que é a equação ótima lá do livro. Ela só tem os termos de x1 ao quadrado, x2 ao quadrado, x1 e x2. Ela não tem x1, b e x2. Ela tem quatro atributos. Seria interessante você também fazer nesse problema... Agora, o do íris não precisa, não. O íris você pode analisar já com os quatro atributos dele, entendeu?"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 1126.88,
+      "end": 1127.28,
+      "text": "Tá."
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 1131.23,
+      "end": 1148.54,
+      "text": "Então aí, ficaria você me passar esse arquivo em doc, eu vou começar a mexer no texto, e você vai complementar o problema homem e mulher, acertar isso aí, né? E fazer o exemplo do íris."
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 1149.34,
+      "end": 1158.96,
+      "text": "Isso, vamos... O que eu posso fazer é o seguinte, Raul, eu arrumo isso que a gente conversou aqui, sem o problema do íris, né? Ah, não, tá, sem"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 1158.96,
+      "end": 1161.24,
+      "text": "o problema do íris. Isso. Ah, tá. Beleza. Isso."
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 1162.0,
+      "end": 1168.12,
+      "text": "Arrumo tudo. Gero um doc de passo. Enquanto isso, eu vou fazendo o problema do íris."
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 1168.6,
+      "end": 1176.02,
+      "text": "É, porque às vezes o problema do íris nem precisa botar no artigo. Deixa ele pra outro artigo ou pra um futuro, pra dissertação, né?"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 1176.16,
+      "end": 1191.59,
+      "text": "Tá bom. Então eu vou arrumar tudo que a gente conversou aqui, gero o doc de passo. Enquanto eu vou fazendo o íris e a gente vai conversando. Beleza? Então, tranquilo. Quando que você me dá de tempo pra eu te mandar isso? Ah, não. Você"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 1191.59,
+      "end": 1193.21,
+      "text": "tem um tempo que você precisa. Tá,"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 1193.21,
+      "end": 1203.67,
+      "text": "eu vou... Então eu vou trabalhar nisso forte esse final de semana. Eu vou tentar... Uns 10 dias? Ah, 10 dias fica bom. Eu vou tentar te mandar até no máximo terça que vem. Pode ser?"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 1205.68,
+      "end": 1207.56,
+      "text": "Até final da semana que vem, pode ser. Tá"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 1207.56,
+      "end": 1207.86,
+      "text": "ótimo."
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 1207.86,
+      "end": 1214.24,
+      "text": "Semana que vem eu tô mais tranquilo, aí eu vou pegar mais a fundo nisso, porque eu já vou estar de férias. De aula, né? De aula, pelo menos."
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 1214.38,
+      "end": 1214.54,
+      "text": "Sim."
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 1214.84,
+      "end": 1217.36,
+      "text": "Aí eu pego mais... Mais firme."
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 1217.36,
+      "end": 1224.28,
+      "text": "ótimo, beleza Raul, obrigado cara, falou de nada valeu, um abraço tchau, tchau, abração"
+    }
+  ]
+}
