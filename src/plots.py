@@ -2380,9 +2380,14 @@ def plot_meialua_svm_vs_llm(
       (2) SVM RBF treinado nos RÓTULOS DO LLM — a fronteira efetiva do LLM; por
           cima, em tracejado verde, a fronteira da métrica diagonal aprendida.
 
+    Em AMBOS os painéis os pontos são coloridos pelo GROUND TRUTH (reunião
+    21/07/2026, ~639s): com as classes corretas no painel 2, os erros do LLM
+    ficam visíveis contra a superfície ajustada aos rótulos dele, evidenciando
+    que o LLM erra muito mais que o SVM RBF de referência.
+
     Se o LLM colapsou em classe única (zero-shot), o painel 2 mostra os pontos
-    com a classe única e uma anotação explícita — o colapso é um achado, não um
-    motivo para suprimir a figura. Retorna True se o arquivo foi salvo.
+    nas classes corretas e uma anotação explícita — o colapso é um achado, não
+    um motivo para suprimir a figura. Retorna True se o arquivo foi salvo.
     """
     try:
         from sklearn.svm import SVC
@@ -2406,9 +2411,11 @@ def plot_meialua_svm_vs_llm(
     for panel_idx, (ax, (title, labels)) in enumerate(zip(axes, panels)):
         if panel_idx == 1 and llm_collapsed:
             unica = int(np.unique(y_llm)[0])
-            ax.scatter(X_ml[:, 0], X_ml[:, 1],
-                       c='tab:blue' if unica == 0 else 'tab:red',
-                       s=22, edgecolor='black', linewidth=0.3, alpha=0.85)
+            for c in [0, 1]:
+                mask = y_true == c
+                ax.scatter(X_ml[mask, 0], X_ml[mask, 1],
+                           c='tab:blue' if c == 0 else 'tab:red',
+                           s=22, edgecolor='black', linewidth=0.3, alpha=0.85)
             ax.set_title('Rótulos do LLM (zero-shot): CLASSE ÚNICA — sem fronteira',
                          fontweight='bold', fontsize=11)
             ax.text(0.5, 0.04,
@@ -2426,8 +2433,10 @@ def plot_meialua_svm_vs_llm(
         ax.contourf(xx, yy, zz, levels=[-0.5, 0.5, 1.5],
                     colors=['tab:blue', 'tab:red'], alpha=0.15)
         ax.contour(xx, yy, zz, levels=[0.5], colors='black', linewidths=1.6)
+        # Pontos SEMPRE nas classes corretas (ground truth) — reunião 21/07:
+        # no painel 2 isso expõe visualmente os erros do LLM contra a superfície.
         for c in [0, 1]:
-            mask = labels == c
+            mask = y_true == c
             ax.scatter(X_ml[mask, 0], X_ml[mask, 1],
                        c='tab:blue' if c == 0 else 'tab:red',
                        s=22, edgecolor='black', linewidth=0.3, alpha=0.85)
