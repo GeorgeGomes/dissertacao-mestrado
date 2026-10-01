@@ -267,14 +267,22 @@ Apêndice~\ref{ap:protocolo} detalha o protocolo experimental de coleta.
 
 O problema de \emph{otimização inversa} consiste em, dadas soluções observadas
 $x^* \in \mathbb{R}^d$ de um problema de otimização parametrizado por $\theta$, inferir os
-parâmetros $\theta$ que tornariam $x^*$ ótima (ou quase-ótima) \cite{chanInverseOptimization2025}.
+parâmetros $\theta$ que tornariam $x^*$ ótima (ou quase-ótima)
+\cite{ahujaInverseOptimization2001,chanInverseOptimization2025}.
 Seja $\mathcal{P}(\theta) = \min_{x \in \mathcal{F}} c(x; \theta)$ o problema direto. A
 otimização inversa busca
 \begin{equation}
   \hat{\theta} = \arg\min_{\theta} \,
   \mathcal{L}\!\left(x^*, \arg\min_{x \in \mathcal{F}} c(x; \theta)\right),
 \end{equation}
-onde $\mathcal{L}$ mede o quão ótima $x^*$ é sob $\theta$. Aqui, as \emph{decisões
+onde $\mathcal{L}$ mede o quão ótima $x^*$ é sob $\theta$. Na formulação clássica de Ahuja
+e Orlin \cite{ahujaInverseOptimization2001}, $\mathcal{L}$ é a norma ($\ell_1$ ou
+$\ell_\infty$) da menor perturbação dos parâmetros que torna $x^*$ exatamente ótima. Quando
+as observações são ruidosas ou apenas aproximadamente ótimas, Keshavarz, Wang e Boyd
+\cite{keshavarzImputingConvex2011} relaxam as condições de otimalidade em resíduos,
+lineares em $\theta$, e escolhem $\theta$ minimizando a soma dos quadrados desses resíduos,
+o que reduz a otimização inversa a um problema de mínimos quadrados com restrições; é essa
+a formulação seguida pelo segundo estimador descrito adiante. Aqui, as \emph{decisões
 observadas} são as classificações do LLM e o parâmetro a inferir é a métrica $W$ que governa
 a função de distância usada na classificação.
 
@@ -351,20 +359,40 @@ Inicializar $w \leftarrow [1, 1]$\;
 \end{algorithm}
 
 \paragraph{(ii) Mínimos Quadrados Não-Negativos (NNLS).}
-O segundo estimador formula a recuperação de $w$ como um problema de mínimos quadrados com
-restrição de não-negatividade,
+O segundo estimador segue a formulação de mínimos quadrados para otimização inversa de
+Keshavarz, Wang e Boyd \cite{keshavarzImputingConvex2011}: cada decisão observada gera um
+resíduo da sua condição de otimalidade, linear nos parâmetros do critério, e o critério
+estimado é aquele que minimiza a soma dos quadrados desses resíduos sob as restrições que
+mantêm o critério válido (aqui, $w \geq 0$). Para a regra de centróide mais próximo, a
+condição de otimalidade da decisão $y^{(i)}$ do LLM sobre o ponto $x^{(i)}$ é que o
+centróide $c_l$ da classe atribuída ($l = y^{(i)}$) esteja mais perto, sob $d_W$, do que o
+centróide rival $c_k$ (o mais próximo de $x^{(i)}$ entre os demais, medido pela distância
+Euclidiana). Impondo essa condição com margem unitária, à maneira de Schultz e Joachims
+\cite{schultzLearningDistance2003}, obtém-se para cada ponto uma equação linear em $w$,
+\begin{equation}
+  \sum_{j=1}^{d} w_j \left[(x^{(i)}_j - c_{k,j})^2 - (x^{(i)}_j - c_{l,j})^2\right] = 1,
+  \label{eq:nnls_margem}
+\end{equation}
+ou seja, $A_{ij} = (x^{(i)}_j - c_{k,j})^2 - (x^{(i)}_j - c_{l,j})^2$ e $b_i = 1$. A
+decisão do LLM entra, portanto, na matriz $A$: ela define qual centróide é o correto e, com
+isso, o sinal de cada linha. O vetor $b = \mathbf{1}$ é a margem-alvo, que fixa a escala de
+$w$ (indeterminada pela invariância discutida acima) e exclui a solução trivial $w = 0$, o
+mesmo papel da normalização usada por Keshavarz, Wang e Boyd. O sistema, em geral
+sobredeterminado e sem solução exata quando as decisões não são perfeitamente separáveis
+por centróides, é resolvido no sentido de mínimos quadrados com restrição de
+não-negatividade,
 \begin{equation}
   \West_{\text{NNLS}} = \arg\min_{w \geq 0} \; \lVert A w - b \rVert_2^2,
   \label{eq:nnls}
 \end{equation}
-onde cada linha de $A$ codifica a diferença de distâncias quadráticas do ponto aos dois
-centroides e $b$ codifica a decisão do LLM. Resolve-se \eqref{eq:nnls} pelo algoritmo
-clássico de Lawson e Hanson \cite{lawsonSolvingLeastSquares1974} (implementação
-\texttt{scipy.optimize.nnls}). Ao contrário do Perceptron, o NNLS \emph{não possui
-hiperparâmetros}, o que o torna um controle valioso: concordância entre os dois sugere que
-\West{} não depende de ajuste fino. Um terceiro estimador (LP Max-Margin) foi avaliado e
-\emph{descartado} por não respeitar a restrição de convexidade; dois estimadores congruentes
-bastam para demonstrar robustez.
+pelo algoritmo clássico de Lawson e Hanson
+\cite{lawsonSolvingLeastSquares1974}\footnote{Implementação
+\texttt{scipy.optimize.nnls}.}, que garante $w \geq 0$ sem projeção posterior e, com
+isso, uma matriz diagonal semidefinida positiva. Ao contrário do
+Perceptron, o NNLS \emph{não possui hiperparâmetros}, o que o torna um controle valioso:
+concordância entre os dois sugere que \West{} não depende de ajuste fino. Um terceiro
+estimador (LP Max-Margin) foi avaliado e \emph{descartado} por não respeitar a restrição
+de convexidade; dois estimadores congruentes bastam para demonstrar robustez.
 
 \subsection{Projeções Não-Lineares (\texorpdfstring{$\mathbb{R}^3$ e $\mathbb{R}^4$}{R3 e R4})}
 \label{sec:r3r4}
@@ -391,7 +419,13 @@ automática. Garg et
 al.~\cite{gargWhatTransformers2022} mostraram que Transformers treinados do zero realizam
 aprendizado em contexto de classes de funções, igualando estimadores ótimos. Akyürek et
 al.~\cite{akyurekWhatLearning2023} provaram por construção que Transformers podem implementar
-internamente gradiente descendente e regressão ridge. Essas descobertas justificam a premissa
+internamente gradiente descendente e regressão ridge. Xie et
+al.~\cite{xieExplanationInContext2022} explicam por que o fenômeno emerge do
+pré-treinamento: se os documentos são gerados por conceitos latentes, o aprendizado em
+contexto corresponde a uma inferência bayesiana implícita, em que o modelo infere o conceito
+compartilhado pelos exemplos do \emph{prompt} e prevê a saída pela distribuição preditiva a
+posteriori, mesmo com a discrepância de distribuição entre \emph{prompts} e
+pré-treinamento. Essas descobertas justificam a premissa
 central: se o LLM implementa otimização interna, é possível recuperar seu critério via
 otimização inversa.
 
@@ -401,7 +435,14 @@ LLMs exibem vieses sistemáticos dependentes dos nomes de classe
 \cite{zhaoCalibrateBefore2021}. Rótulos com conotação semântica tendem a distorcer as
 distribuições previstas, independentemente do conteúdo do exemplo. Zhao et al. identificam
 três fontes: preferência por rótulos majoritários, recência e frequência de \emph{tokens}
-no pré-treinamento. Este trabalho testa sistematicamente o efeito de nomes de classe
+no pré-treinamento. A terceira fonte foi quantificada para entradas numéricas por Razeghi
+et al.~\cite{razeghiImpactPretraining2022}: em adição, multiplicação e conversão de
+unidades com poucos exemplos, a acurácia de modelos GPT pré-treinados no corpus Pile
+cresce com a frequência dos números no pré-treinamento, com diferenças que chegam a $70$
+pontos percentuais entre os $10\%$ de termos mais e menos frequentes, efeito que persiste
+após a remoção das instâncias memorizadas. Como aqui os pontos são apresentados ao LLM
+como números, esse resultado é uma fonte adicional de irregularidade a considerar na
+leitura de \West{}. Este trabalho testa sistematicamente o efeito de nomes de classe
 (neutros, semânticos, cromáticos) e de atributos sobre \West{}.
 
 \subsection{Métricas de Avaliação}
@@ -450,7 +491,15 @@ minoritária.
 Esta pesquisa situa-se na interseção de seis áreas.
 
 \paragraph{Otimização Inversa.}
-Chan et al.~\cite{chanInverseOptimization2025} apresentam o survey definitivo da área,
+A formulação clássica é a de Ahuja e Orlin \cite{ahujaInverseOptimization2001}, que buscam
+a menor perturbação do vetor de custos de um programa linear que torna a solução observada
+ótima, e mostram que o problema inverso sob as normas $\ell_1$ e $\ell_\infty$ continua
+sendo um programa linear. Keshavarz, Wang e Boyd \cite{keshavarzImputingConvex2011}
+estendem a ideia a decisões apenas aproximadamente ótimas: parametrizam o critério como
+combinação de funções-base com pesos não-negativos e estimam os pesos minimizando a soma
+dos quadrados dos resíduos das condições de otimalidade, formulação que fundamenta
+diretamente o estimador NNLS deste trabalho. Chan et
+al.~\cite{chanInverseOptimization2025} apresentam o survey definitivo da área,
 unificando formulações baseadas em KKT, dualidade forte e modelos \emph{data-driven}. Inferir
 \West{} a partir das classificações do LLM é uma instância direta: dadas as soluções
 observadas, busca-se o parâmetro que as tornaria ótimas sob centróide mais próximo. Diferimos
@@ -478,7 +527,10 @@ estimador (i) é implementação direta.
 \paragraph{Aprendizado em Contexto.}
 Garg et al.~\cite{gargWhatTransformers2022} e Akyürek et al.~\cite{akyurekWhatLearning2023}
 estabelecem o LLM como aprendiz implícito de funções, em estudos majoritariamente
-empíricos sobre Transformers treinados de forma controlada. Uma segunda família de
+empíricos sobre Transformers treinados de forma controlada, e Xie et
+al.~\cite{xieExplanationInContext2022} dão ao fenômeno uma explicação bayesiana, em que as
+demonstrações servem para inferir um conceito latente compartilhado, herdado da estrutura
+dos documentos de pré-treinamento. Uma segunda família de
 trabalhos, mais próxima da nossa, estuda o comportamento de LLMs prontos em tarefas de
 classificação apenas com demonstrações no \emph{prompt}. Min et
 al.~\cite{minRethinkingRole2022} questionam o papel dos mapeamentos \emph{input-label},
@@ -487,7 +539,10 @@ com implicações diretas para o Bloco 2 e para a refutação de H4. Su et
 al.~\cite{suSelectiveAnnotation2023} mostram que a seleção estratégica de exemplos, com
 equilíbrio entre diversidade e representatividade, supera a aleatória. Zhao et
 al.~\cite{zhaoCalibrateBefore2021} documentam os vieses de rótulo que motivam nossos
-experimentos de nomes de classe. Há ainda estudos de estabilidade que quantificam o
+experimentos de nomes de classe, e Razeghi et al.~\cite{razeghiImpactPretraining2022}
+mostram que o desempenho numérico em aprendizado em contexto acompanha a frequência dos
+termos no pré-treinamento, alerta pertinente para um protocolo que apresenta pontos como
+coordenadas numéricas. Há ainda estudos de estabilidade que quantificam o
 não-determinismo de LLMs mesmo a $T=0$~\cite{atilLLMStability2024, windischOneRun2026},
 questão que nosso protocolo mede pela taxa de \emph{flip}. Investigamos uma
 dimensão que esses trabalhos não cobrem: o eixo \emph{fácil vs.\ difícil} pela margem
@@ -1002,8 +1057,11 @@ média sobre $n>0$ e os três peritos, a ordem é \emph{Random} ($90{,}3\%$) $>$
 significativa com poucos exemplos e desaparece com muitos: no especialista aniso.\ $x_2$,
 $\Delta_{10\text{-shot}} = +0{,}188$ (IC$_{95}=[+0{,}107;+0{,}257]$) e
 $\Delta_{20\text{-shot}} = +0{,}064$ (IC$_{95}=[-0{,}154;+0{,}215]$, não significativo). A
-interpretação, coerente com Min et al.~\cite{minRethinkingRole2022}: com poucos exemplos o
-LLM precisa de \emph{âncoras prototípicas} (alta margem); com muitos, a informação sobre a
+interpretação, coerente com Min et al.~\cite{minRethinkingRole2022} e com a leitura
+bayesiana de Xie et al.~\cite{xieExplanationInContext2022}, em que cada exemplo é um sinal
+sobre o conceito latente a inferir: com poucos exemplos o
+LLM precisa de \emph{âncoras prototípicas} (alta margem), que dão sinal nítido sobre o
+critério; com muitos, a informação sobre a
 geometria da fronteira (exemplos difíceis) supera o ruído: daí \emph{hard} atingir $97{,}9\%$
 em $40$-shot. O padrão se repete no \texttt{gemini-2.5-flash-lite} (\emph{easy} $93{,}5\%$
 vs.\ \emph{hard} $78{,}1\%$ na média sobre $n>0$), reforçando a refutação de H4 nos dois
@@ -1112,34 +1170,55 @@ diferem por poucos pontos percentuais).}
 
 \subsection{Bloco 3 — Estudo de Caso Real (Peso $\times$ Altura)}
 \label{sec:res_bloco3}
+% REVISAO 25/08/2026: a convencao de rotulo do peso x altura foi corrigida no codigo
+% (classe 1 = Homem, conforme `male?` = +1 em Hghtwght_desired.txt; antes o codigo tratava
+% a classe 0 como "Homem"). Todas as metricas "vs rotulo real" desta secao foram
+% recalculadas offline (troca exata 1 - valor, ver src/corrigir_mapeamento_homem_mulher.py)
+% a partir de execucao_2026-07-05_12-34-52_completa/*_corrigido_hm.csv. Fidelidade,
+% kappa e W nao mudam. PENDENTE: (i) recoletar a Fase E do Bloco 3 (tab:real_e) com a
+% convencao corrigida, pois os exemplos few-shot foram mostrados ao LLM com os nomes
+% trocados; (ii) regerar as figuras bloco23_external_* que exibem acuracia vs real;
+% (iii) propagar os numeros novos para roteiro_apresentacao.txt e slides.
 
 O caso real expõe a \emph{dependência semântica} dos atributos
 (Tabela~\ref{tab:real_a}, médias das $3$ sementes, $2$ atributos). Distinguem-se três
 quantidades: a \emph{fidelidade} (a métrica reproduz o LLM), a \emph{acurácia do LLM vs.\
 real} (as decisões do LLM contra o rótulo verdadeiro) e a \emph{acurácia da métrica vs.\
 real} (a métrica estimada contra o rótulo verdadeiro). Com nomes \emph{semânticos}
-(peso/altura), o LLM classifica melhor que com neutros (acurácia própria $56{,}7\%$ vs.\
-$45{,}2\%$, este último abaixo do acaso da classe majoritária, $57{,}1\%$), e a métrica
-estimada a partir dessas decisões recupera a estrutura real com robustez ($89{,}5\%$,
-$\approx 7$ erros em $70$ nas três sementes). Com nomes \emph{neutros} ($x_1/x_2$), a métrica
-vs.\ real torna-se \emph{arbitrária}: entre sementes ela vale $8{,}6\%$, $92{,}9\%$ e
-$31{,}4\%$ (a média $44{,}3\%$ é enganosa), porque, sem âncora semântica, o mapeamento
+(peso/altura), o LLM classifica \emph{pior} que com neutros (acurácia própria $43{,}3\%$ vs.\
+$54{,}8\%$, ambas abaixo do acaso da classe majoritária, $57{,}1\%$): os valores chegam
+normalizados em $[-1, 1]$, sem unidade, e o LLM rotula como ``Homem'' sobretudo os pontos
+de altura e peso negativos, os mais baixos e leves, invertendo a relação física. Uma
+explicação compatível é a dependência do raciocínio numérico em relação à frequência dos
+números no pré-treinamento, documentada por Razeghi et
+al.~\cite{razeghiImpactPretraining2022}: valores decimais normalizados são termos raros no
+corpus, ao contrário de alturas em metros e pesos em quilogramas. A métrica
+estimada a partir dessas decisões herda essa inversão de forma sistemática ($10{,}5\%$ vs.\
+real, $\approx 63$ erros em $70$; entre $7{,}1\%$ e $12{,}9\%$ nas três sementes), o que
+significa que ela \emph{separa} os dois grupos reais em $89{,}5\%$ dos pontos, mas com os
+nomes trocados. Com nomes \emph{neutros} ($x_1/x_2$), a métrica vs.\ real torna-se
+\emph{arbitrária}: entre sementes ela vale $91{,}4\%$, $7{,}1\%$ e $68{,}6\%$ (a média
+$55{,}7\%$ é enganosa), porque, sem âncora semântica, o mapeamento
 rótulo$\leftrightarrow$classe inverte de semente para semente. O contexto semântico dos
-atributos é, no caso real, determinante.
+atributos é, no caso real, determinante, mas no sentido de fixar uma convenção de
+nomeação, não de acertar o rótulo.
 
-\paragraph{Por que a métrica supera o próprio LLM (peso/altura).}
-Um ponto merece explicação: com nomes semânticos, a métrica estimada acerta $89{,}5\%$ vs.\
-o rótulo real, mais que a acurácia própria do LLM ($56{,}7\%$). Isso não é contradição nem
-artefato. A métrica classifica por centróide mais próximo, e os centróides são calculados
-como a \emph{média} dos pontos rotulados pelo LLM em cada classe. Quando os erros do LLM são
-espacialmente \emph{pouco estruturados} (dispersos, sobretudo perto da fronteira), eles se
-cancelam na média: o centróide de cada classe rotulada pelo LLM ainda cai perto da média
-verdadeira da classe. A regra por centróide mais próximo recupera então a separação correta
-apesar do ruído rótulo a rótulo. Em outras palavras, o LLM \emph{localiza} os dois grupos no
-espaço melhor do que \emph{rotula} pontos individuais, e a agregação por centróides extrai
-essa informação espacial. É também um alerta: a acurácia elevada da métrica vs.\ real mede a
-qualidade da \emph{separação espacial} induzida, não a acurácia ponto a ponto do LLM, que
-permanece modesta.
+\paragraph{Por que a métrica separa melhor do que o LLM rotula (peso/altura).}
+Um ponto merece explicação: com nomes semânticos, a métrica estimada concorda com a
+separação real em $89{,}5\%$ dos pontos (a menos da troca de nomes), muito mais que a
+acurácia própria do LLM ($43{,}3\%$, ou $56{,}7\%$ após a mesma troca). Isso não é
+contradição nem artefato. A métrica classifica por centróide mais próximo, e os centróides
+são calculados como a \emph{média} dos pontos rotulados pelo LLM em cada classe. Quando os
+erros do LLM são espacialmente \emph{pouco estruturados} (dispersos, sobretudo perto da
+fronteira), eles se cancelam na média: o centróide de cada classe rotulada pelo LLM ainda
+cai perto da média verdadeira de um dos grupos. A regra por centróide mais próximo recupera
+então a separação correta apesar do ruído rótulo a rótulo. Em outras palavras, o LLM
+\emph{localiza} os dois grupos no espaço melhor do que \emph{rotula} pontos individuais, e
+a agregação por centróides extrai essa informação espacial. É também um alerta duplo: a
+concordância elevada da métrica com a separação real mede a qualidade da \emph{separação
+espacial} induzida, não a acurácia ponto a ponto do LLM, que permanece modesta; e a
+acurácia vs.\ real nominal ($10{,}5\%$) mostra que essa separação veio com a nomeação das
+classes invertida.
 
 \begin{table}[ht]
 \centering
@@ -1153,11 +1232,13 @@ $=$ métrica estimada vs.\ rótulo verdadeiro.}
 \textbf{Nomes} & \textbf{Fid.\ (\%)} & \textbf{LLM real (\%)} &
 \textbf{Métrica real (\%)} & \textbf{err.\ (métrica)} \\
 \midrule
-peso/altura & 59,5 & 56,7 & 89,5 & $\approx 7/70$ \\
-$x_1/x_2$   & 56,2 & 45,2 & arbitrária$^\dagger$ & $\approx 39/70$ \\
+peso/altura & 59,5 & 43,3 & 10,5$^\ddagger$ & $\approx 63/70$ \\
+$x_1/x_2$   & 56,2 & 54,8 & arbitrária$^\dagger$ & $\approx 31/70$ \\
 \bottomrule
-\multicolumn{5}{l}{\footnotesize $^\dagger$ Entre sementes: $8{,}6$ / $92{,}9$ / $31{,}4\%$
-(o mapeamento rótulo$\leftrightarrow$classe inverte por semente).}
+\multicolumn{5}{l}{\footnotesize $^\dagger$ Entre sementes: $91{,}4$ / $7{,}1$ / $68{,}6\%$
+(o mapeamento rótulo$\leftrightarrow$classe inverte por semente).} \\
+\multicolumn{5}{l}{\footnotesize $^\ddagger$ Nomeação invertida nas três sementes:
+$89{,}5\%$ de concordância com a separação real a menos da troca de nomes.}
 \end{tabular}
 \end{table}
 
@@ -1206,11 +1287,12 @@ Tabela~\ref{tab:real_nfeat}, e a leitura honesta tem duas partes. Primeiro, a el
 melhora o quanto a métrica \emph{reproduz o LLM}: a fidelidade NNLS sobe de $58{,}6\%$
 ($2$ atributos) para $72{,}4\%$ ($4$), e, com nomes neutros, a fidelidade Perceptron sobe
 de $56{,}2\%$ para $69{,}0\%$, o já citado ganho da Seção do Bloco 1. Segundo, a acurácia
-da métrica \emph{contra o rótulo verdadeiro} com nomes semânticos já é alta com $2$
-atributos ($89{,}5\%$) e a elipse a mantém nesse patamar ($88{,}1\%$): como os erros do
-LLM se cancelam na média dos centróides (ver acima), a separação real já é bem capturada
-no espaço original, e o ganho da expressividade quadrática se manifesta na aproximação ao
-\emph{critério do LLM}, não ao \emph{ground truth}.
+da métrica \emph{contra o rótulo verdadeiro} com nomes semânticos fica em $10{,}5\%$ com $2$
+atributos e em $11{,}9\%$ com $4$, isto é, a separação real já é bem capturada no espaço
+original ($\approx 89\%$ a menos da troca de nomes) e a elipse não altera esse patamar:
+como os erros do LLM se cancelam na média dos centróides (ver acima), o ganho da
+expressividade quadrática se manifesta na aproximação ao \emph{critério do LLM}, não ao
+\emph{ground truth}.
 
 \begin{table}[ht]
 \centering
@@ -1223,36 +1305,39 @@ no espaço original, e o ganho da expressividade quadrática se manifesta na apr
 \textbf{Nomes} & \textbf{Atributos} & \textbf{Fid.\ Perc.\ (\%)} &
 \textbf{Fid.\ NNLS (\%)} & \textbf{Métrica real, Perc.\ (\%)} \\
 \midrule
-peso/altura & 2 & 59,5 & 58,6 & 89,5 \\
-peso/altura & 4 (elipse) & 60,0 & 72,4 & 88,1 \\
-$x_1/x_2$   & 2 & 56,2 & 54,8 & 44,3$^\dagger$ \\
-$x_1/x_2$   & 4 (elipse) & 69,0 & 76,7 & 44,8$^\dagger$ \\
+peso/altura & 2 & 59,5 & 58,6 & 10,5$^\ddagger$ \\
+peso/altura & 4 (elipse) & 60,0 & 72,4 & 11,9$^\ddagger$ \\
+$x_1/x_2$   & 2 & 56,2 & 54,8 & 55,7$^\dagger$ \\
+$x_1/x_2$   & 4 (elipse) & 69,0 & 76,7 & 55,2$^\dagger$ \\
 \bottomrule
 \multicolumn{5}{l}{\footnotesize $^\dagger$ Arbitrária entre sementes (inversão de
-rótulo, ver texto).}
+rótulo, ver texto).} \\
+\multicolumn{5}{l}{\footnotesize $^\ddagger$ Nomeação invertida nas três sementes (ver texto).}
 \end{tabular}
 \end{table}
 
-\paragraph{Nomes de classe A/B: o mapeamento é arbitrário.}
+\paragraph{Nomes de classe A/B: o mapeamento inverte nos dois casos.}
 Repetindo a classificação com nomes de classe \emph{neutros} (``A ou B'' em vez de
 ``homem ou mulher''), a acurácia da métrica estimada (Perceptron) vs.\ rótulo real, na
-média das $3$ sementes, despenca de $0{,}895$ para $0{,}110$ ($\approx 62/70$ erros) com
-atributos semânticos (Tabela~\ref{tab:real_ab}). O valor, muito \emph{abaixo} do
-acaso, não é ruído: é \emph{inversão sistemática de convenção}. O LLM continua separando
-os dois grupos (invertendo-se os rótulos, a acurácia beira $0{,}89$), mas, sem âncora
-semântica nos nomes, o mapeamento rótulo$\leftrightarrow$classe é arbitrário e emergiu na
-convenção oposta à do \emph{ground truth}. O prior semântico atua, portanto, também nos
-\emph{nomes de classe}, não apenas nos atributos. Note-se um contraste revelador: a
-inversão com nomes A/B é \emph{sistemática} (as três sementes caem juntas em $0{,}07$–$0{,}13$),
-ao passo que a variante com nomes de classe semânticos mas atributos neutros
-(homem/mulher, $x_1/x_2$) é \emph{caótica} entre sementes ($0{,}09$, $0{,}93$, $0{,}31$).
-Uma leitura plausível, ainda que especulativa, é que com A/B o LLM não tem nenhuma âncora e
-recai numa convenção-padrão consistente (que por acaso inverte a do \emph{ground truth}),
-enquanto a presença de nomes de classe semânticos sem semântica de atributo cria uma
-ancoragem \emph{parcial} e conflitante, que resolve de modo instável a cada semente. No
-aprendizado em contexto,
-o LLM adota a convenção dos
-exemplos que recebe: a concordância com a métrica-alvo sobe de $0{,}778$ (zero-shot) a
+média das $3$ sementes, é $0{,}110$ ($\approx 62/70$ erros) com atributos semânticos
+(Tabela~\ref{tab:real_ab}), praticamente idêntica à obtida com os nomes semânticos
+($0{,}105$). Valores tão \emph{abaixo} do acaso não são ruído: são \emph{inversão
+sistemática de convenção}. O LLM separa os dois grupos (invertendo-se os rótulos, a
+acurácia beira $0{,}89$ nos dois casos), mas o mapeamento rótulo$\leftrightarrow$classe
+emerge na convenção oposta à do \emph{ground truth}, e emerge assim tanto com ``A/B''
+quanto com ``homem/mulher''. Nesta base, portanto, os nomes de classe semânticos
+\emph{não} ancoram a nomeação: com valores normalizados e sem unidade, o LLM associa
+``Homem'' ao grupo de peso e altura negativos, o mais baixo e leve, e ``A'' a esse mesmo
+grupo. O prior semântico dos nomes de classe, visível no Bloco 1
+(Tabela~\ref{tab:bias}), não se manifesta aqui como acerto de convenção. Note-se um
+contraste: a inversão é \emph{sistemática} quando os atributos são semânticos (as três
+sementes caem juntas em $0{,}07$–$0{,}13$, com qualquer nome de classe), ao passo que a
+variante com nomes de classe semânticos e atributos neutros (homem/mulher, $x_1/x_2$) é
+\emph{caótica} entre sementes ($0{,}91$, $0{,}07$, $0{,}69$). Uma leitura plausível, ainda
+que especulativa, é que a semântica dos atributos fixa uma convenção consistente (que
+inverte a do \emph{ground truth}), enquanto atributos neutros deixam a convenção ao acaso
+de cada semente. No aprendizado em contexto, o LLM adota a convenção dos exemplos que
+recebe: com nomes A/B a concordância com a métrica-alvo sobe de $0{,}778$ (zero-shot) a
 $0{,}974$ ($40$-shot), enquanto a acurácia vs.\ real permanece $\approx 0{,}14$ (a
 métrica-alvo herdou a convenção invertida), e o Perceptron \emph{baseline} treinado nos
 mesmos exemplos acompanha ($0{,}12$–$0{,}19$), indicando consistência entre aprendizes, não
@@ -1268,23 +1353,29 @@ treino $=70$).}
 \toprule
 \textbf{Classes} & \textbf{Features} & \textbf{Acc.\ real} & \textbf{Erros} \\
 \midrule
-homem/mulher & peso/altura & 0,895 & $\approx 7/70$ \\
+homem/mulher & peso/altura & 0,105 & $\approx 63/70$ \\
 A/B          & peso/altura & 0,110 & $\approx 62/70$ \\
-homem/mulher & $x_1/x_2$   & 0,443 & $\approx 39/70$ \\
+homem/mulher & $x_1/x_2$   & 0,557 & $\approx 31/70$ \\
 A/B          & $x_1/x_2$   & 0,186 & $\approx 57/70$ \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-No aprendizado em contexto (Tabela~\ref{tab:real_e}), o LLM iguala ou supera o Perceptron
-\emph{baseline} na maioria das configurações, com vantagem de até $+15{,}6$ pontos (seed $42$,
-$4$-shot). Poucos exemplos bastam: a acurácia real salta de $53$–$60\%$ (zero-shot) para
-$79$–$90\%$ com apenas $4$ exemplos.
+No aprendizado em contexto (Tabela~\ref{tab:real_e}), os exemplos fornecidos ao LLM foram
+rotulados pela melhor métrica estimada na Fase A, que, como visto, carrega a nomeação
+invertida; o resultado deve ser lido, portanto, como adoção da convenção dos exemplos. É o
+que ocorre: a concordância do LLM com a métrica-alvo sobe de $53$–$73\%$ (zero-shot) para
+$91$–$100\%$ com $4$ exemplos ou mais, e a acurácia contra o rótulo real cai de $40$–$47\%$
+para $9$–$22\%$, acompanhada pelo Perceptron \emph{baseline} treinado nos mesmos exemplos
+($10$–$27\%$). Poucos exemplos bastam para o LLM assumir a convenção que lhe é apresentada,
+seja ela qual for.
 
 \begin{table}[ht]
 \centering
 \caption{Bloco 3: aprendizado em contexto no Problema G, acurácia real (\%) do LLM vs.\
-Perceptron (peso/altura); avaliação nos $30$ pontos de teste.}
+Perceptron (peso/altura); avaliação nos $30$ pontos de teste. Os exemplos foram rotulados
+pela métrica estimada na Fase A, cuja nomeação é invertida em relação ao rótulo real (ver
+texto).}
 \label{tab:real_e}
 \begin{tabular}{lrrrrr}
 \toprule
@@ -1292,11 +1383,11 @@ Perceptron (peso/altura); avaliação nos $30$ pontos de teste.}
 \cmidrule(lr){2-3}\cmidrule(lr){4-5}
 \textbf{$n$-shot} & \textbf{LLM} & \textbf{Perc.} & \textbf{LLM} & \textbf{Perc.} \\
 \midrule
-0  & 60,0 & --   & 53,3 & --   \\
-4  & 90,0 & 74,4 & 78,9 & 80,0 \\
-10 & 90,0 & 83,3 & 77,8 & 73,3 \\
-20 & 88,9 & 83,3 & 81,1 & 78,9 \\
-40 & 91,1 & 83,3 & 81,1 & 78,9 \\
+0  & 40,0 & --   & 46,7 & --   \\
+4  & 10,0 & 25,6 & 21,1 & 20,0 \\
+10 & 10,0 & 16,7 & 22,2 & 26,7 \\
+20 & 11,1 & 16,7 & 18,9 & 21,1 \\
+40 &  8,9 & 16,7 & 18,9 & 21,1 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -1364,13 +1455,14 @@ O viés de apresentação é ainda \emph{dependente de modelo}: o estilo \emph{t
 mais degrada o \texttt{gpt-4o-mini} ($66{,}7\%$), é o melhor estilo no
 \texttt{gemini-2.5-flash-lite} ($87{,}6\%$), cujos piores são \emph{cot} e
 \emph{geometric} (Tabela~\ref{tab:bias}).
-No caso real, nomes semânticos vs.\ neutros elevam a acurácia própria do LLM de $45{,}2\%$ a
-$56{,}7\%$, e o experimento de nomes de classe A/B (Tabela~\ref{tab:real_ab}) mostra o
-mecanismo em sua forma mais nítida: sem âncora semântica nos nomes, o LLM ainda separa os
-grupos, mas o mapeamento rótulo$\leftrightarrow$classe emerge em convenção arbitrária
-(acurácia da métrica vs.\ real de $0{,}895$ para $0{,}110$, uma inversão quase perfeita).
-O LLM incorpora semântica extrínseca ao problema geométrico, e ela ancora tanto a
-separação quanto a \emph{nomeação} das classes.
+No caso real, nomes de atributo semânticos vs.\ neutros \emph{reduzem} a acurácia própria
+do LLM de $54{,}8\%$ a $43{,}3\%$: com valores normalizados e sem unidade, o LLM aplica a
+semântica de ``peso'' e ``altura'' na direção errada. O experimento de nomes de classe A/B
+(Tabela~\ref{tab:real_ab}) mostra o mecanismo em sua forma mais nítida: o LLM separa os
+grupos, mas o mapeamento rótulo$\leftrightarrow$classe emerge em convenção invertida em
+relação ao \emph{ground truth}, com nomes neutros ($0{,}110$) e semânticos ($0{,}105$) por
+igual. O LLM incorpora semântica extrínseca ao problema geométrico, e ela ancora a
+separação e uma convenção de \emph{nomeação} das classes, não necessariamente a correta.
 
 \subsection{H4 — Qualidade dos exemplos}
 \textbf{Refutada.} Ao contrário do previsto, exemplos \emph{fáceis} superam \emph{difíceis}
@@ -1425,6 +1517,12 @@ alegação de superioridade geral deve ser resistida.
   \item \textbf{Escala do caso real:} $100$ amostras ($70$ de treino por semente) tornam
     cada erro pesado (por
     isso reportam-se erros absolutos); conclusões sobre o Problema G são indicativas.
+  \item \textbf{Entradas numéricas:} os pontos chegam ao LLM como números decimais
+    normalizados (quatro casas, e em $[-1,1]$ no caso real), termos raros no
+    pré-treinamento; como o desempenho numérico \emph{few-shot} de LLMs depende da
+    frequência desses termos no corpus~\cite{razeghiImpactPretraining2022}, parte da
+    fidelidade perdida e da inversão física observada no Bloco 3 pode vir da
+    representação numérica, e não do critério geométrico.
 \end{enumerate}
 
 % ============================================================
@@ -1487,11 +1585,12 @@ indicação):
     magnitude é em parte esperada e, com $3$ sementes, não permite conclusão forte.
   \item \textbf{É fortemente semântico, nos atributos e nos nomes de classe:}
     variantes de apresentação movem a fidelidade de $59{,}3\%$ a $99{,}1\%$ (médias das
-    sementes), com o estilo prejudicial variando por modelo; no caso real,
-    a semântica dos atributos eleva a acurácia própria do LLM de $45{,}2\%$ a
-    $56{,}7\%$, e com nomes de classe neutros (A/B) o mapeamento rótulo$\leftrightarrow$classe
-    emerge em convenção arbitrária ($0{,}895 \to 0{,}110$, inversão quase perfeita): a
-    semântica ancora até a \emph{nomeação} das classes.
+    sementes), com o estilo prejudicial variando por modelo; no caso real, com valores
+    normalizados e sem unidade, a semântica dos atributos \emph{reduz} a acurácia própria
+    do LLM de $54{,}8\%$ a $43{,}3\%$, e o mapeamento rótulo$\leftrightarrow$classe emerge
+    em convenção invertida em relação ao \emph{ground truth} tanto com nomes de classe
+    neutros (A/B, $0{,}110$) quanto semânticos (homem/mulher, $0{,}105$): a semântica fixa
+    uma convenção de \emph{nomeação}, não necessariamente a correta.
   \item \textbf{Como aprendiz, o LLM é cego em zero-shot e aprende com poucos exemplos:}
     $55{,}2\%$ (média sobre três peritos) $\to 97{,}9\%$ no regime linear, sem contudo
     superar de forma consistente a Regressão Logística
@@ -1741,6 +1840,23 @@ Charles~L. Lawson e Richard~J. Hanson.
 \newblock \emph{Solving Least Squares Problems}.
 \newblock Prentice-Hall, Englewood Cliffs, NJ, 1974.
 
+\bibitem{keshavarzImputingConvex2011}
+Arezou Keshavarz, Yang Wang, e Stephen Boyd.
+\newblock Imputing a convex objective function.
+\newblock Em \emph{Proceedings of the 2011 IEEE International Symposium on
+  Intelligent Control (ISIC)}, páginas 613--619, Denver, CO, 2011.
+
+\bibitem{ahujaInverseOptimization2001}
+Ravindra~K. Ahuja e James~B. Orlin.
+\newblock Inverse optimization.
+\newblock \emph{Operations Research}, 49(5):771--783, 2001.
+
+\bibitem{schultzLearningDistance2003}
+Matthew Schultz e Thorsten Joachims.
+\newblock Learning a distance metric from relative comparisons.
+\newblock Em \emph{Advances in Neural Information Processing Systems 16 (NIPS
+  2003)}, 2003.
+
 \bibitem{gargWhatTransformers2022}
 Shivam Garg, Dimitris Tsipras, Percy Liang, e Gregory Valiant.
 \newblock What can transformers learn in-context? a case study of simple
@@ -1754,6 +1870,13 @@ Ekin Akyürek, Dale Schuurmans, Jacob Andreas, Tengyu Ma, e Denny Zhou.
   linear models.
 \newblock Em \emph{ICLR 2023 (Oral)}, 2023.
 
+\bibitem{xieExplanationInContext2022}
+Sang~Michael Xie, Aditi Raghunathan, Percy Liang, e Tengyu Ma.
+\newblock An explanation of in-context learning as implicit {B}ayesian
+  inference.
+\newblock Em \emph{International Conference on Learning Representations (ICLR
+  2022)}, 2022.
+
 \bibitem{suSelectiveAnnotation2023}
 Hongjin Su, Jungo Kasai, Chen~Henry Wu, Weijia Shi, Tianlu Wang, Jiayi Xin,
   Rui Zhang, Mari Ostendorf, Luke Zettlemoyer, Noah~A. Smith, e Tao Yu.
@@ -1766,6 +1889,13 @@ Zihao Zhao, Eric Wallace, Shi Feng, Dan Klein, e Sameer Singh.
   models.
 \newblock Em \emph{Proceedings of ICML 2021}, volume 139 of \emph{PMLR},
   páginas 12697--12706, 2021.
+
+\bibitem{razeghiImpactPretraining2022}
+Yasaman Razeghi, Robert~L. Logan~IV, Matt Gardner, e Sameer Singh.
+\newblock Impact of pretraining term frequencies on few-shot numerical
+  reasoning.
+\newblock Em \emph{Findings of the Association for Computational Linguistics:
+  EMNLP 2022}, páginas 840--854, Abu Dhabi, 2022.
 
 \bibitem{minRethinkingRole2022}
 Sewon Min, Xinxi Lyu, Ari Holtzman, Mikel Artetxe, Mike Lewis, Hannaneh

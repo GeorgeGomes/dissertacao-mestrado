@@ -1,6 +1,6 @@
 Revisão Bibliográfica Estruturada
 Dissertação: Explicando Decisões de LLMs via Otimização Inversa
-10 Referências Validadas e Organizadas
+15 Referências Validadas e Organizadas
 
 Tabela Resumo: Cobertura das Referências
 #	Artigo	Conceito-Chave	Fase(s)
@@ -14,6 +14,11 @@ Tabela Resumo: Cobertura das Referências
 8	Min et al. (2022)	O que direciona ICL	D (interpretação)
 9	Zhao, Nguyen & Grover (2024)	Fronteiras de decisão ICL	A–D (design experimental)
 10	Artstein & Poesio (2008)	Cohen's Kappa	B/C (métrica de concordância)
+11	Keshavarz, Wang & Boyd (2011)	Mínimos quadrados em otimização inversa	A (estimador NNLS)
+12	Ahuja & Orlin (2001)	Otimização inversa clássica	A–C (fundamentação)
+13	Schultz & Joachims (2003)	Margem unitária para aprendizado de métrica	A (construção de A e b no NNLS)
+14	Razeghi et al. (2022)	Frequência no pré-treinamento × raciocínio numérico few-shot	A–C (entradas numéricas), D, Bloco 3 (dados normalizados)
+15	Xie et al. (2022)	ICL como inferência bayesiana implícita (conceito latente)	A (premissa do critério interno), D (interpretação de H4)
  
 
 Análise Detalhada das Referências
@@ -206,3 +211,98 @@ O que ele ajuda a justificar no meu trabalho?
 Referência padrão para justificar o uso de Cohen's Kappa como métrica principal de consistência decisional (H1) nas Fases B/C. A dissertação trata o LLM e a métrica W como dois "anotadores" fixos, o que corresponde exatamente ao cenário de Cohen's κ. Fornece os limiares de interpretação (κ > 0.7 = substancial).
 Onde citar no meu trabalho?
 Metodologia (definição e justificativa de Cohen's Kappa como medida de consistência), Resultados §Fases B/C (interpretação dos valores de κ usando os limiares do artigo), Fundamentação Teórica (métricas de concordância).
+
+ARTIGO 11
+Título: Imputing a Convex Objective Function
+Autores: Arezou Keshavarz, Yang Wang, Stephen Boyd
+Ano: 2011
+Conferência/Journal: 2011 IEEE International Symposium on Intelligent Control (ISIC), Denver, CO, pp. 613–619
+Status: ✅ Verificado no PDF (cópia pública em https://web.stanford.edu/~boyd/papers/pdf/imputed_objective_msc.pdf). Arquivo em artigos_referenciados/.
+Contexto e Motivação
+Um agente toma decisões resolvendo um problema de otimização convexa cuja função objetivo é desconhecida. Dadas observações de decisões ótimas ou aproximadamente ótimas para vários valores de um parâmetro, o problema inverso é imputar (estimar) essa função objetivo. É a referência fundacional da estimação de critérios por resíduos de otimalidade, citada como ponto de partida pelos trabalhos posteriores de otimização inversa com dados ruidosos.
+O que o artigo fala?
+Restringe a função objetivo a uma combinação afim de funções-base, f = Σ αᵢ fᵢ, com pesos α em um conjunto convexo A (tipicamente α ≥ 0, o que garante convexidade). Relaxa as condições de otimalidade KKT de cada decisão observada em resíduos, lineares em α e nas variáveis duais, e estima α minimizando uma penalidade convexa desses resíduos (equação 3, Seção III), sujeito a λ ≥ 0 e α ∈ A. Nos exemplos do artigo a penalidade é a soma de quadrados dos resíduos, φ = ‖r_stat‖₂² + ‖r_comp‖₂², o que torna a estimação um problema de mínimos quadrados com restrições. Discute a normalização necessária para excluir a solução trivial α = 0.
+Como ele fez o experimento?
+Três aplicações numéricas com dados gerados por um agente que otimiza uma função conhecida: utilidade de consumidor (5 produtos, 200 observações de demanda), redução de complexidade de um controlador por horizonte recuado (função valor quadrática imputada) e custos em rede de fluxo. A qualidade é medida pela capacidade preditiva da função imputada em novos parâmetros, resolvendo o problema (3) com φ quadrática via CVX.
+O que ele prova?
+Que, conhecida a estrutura do problema de decisão, a função objetivo pode ser imputada resolvendo um único problema convexo (de mínimos quadrados, na escolha adotada), mesmo com decisões ruidosas ou aproximadamente ótimas; a função imputada prevê bem decisões futuras.
+O que ele ajuda a justificar no meu trabalho?
+É a âncora bibliográfica do segundo estimador (NNLS). A correspondência é direta: as funções-base são (xⱼ − cⱼ)², os pesos são wⱼ ≥ 0, a condição de otimalidade da decisão do LLM (centróide da classe atribuída mais perto que o rival) gera o resíduo Aᵢw − 1, e a soma dos quadrados desses resíduos é minimizada com w ≥ 0. A margem-alvo b = 1 cumpre o papel da normalização que o artigo usa para excluir a solução trivial.
+Onde citar no meu trabalho?
+Fundamentação Teórica §Otimização Inversa (passagem da formulação clássica para a formulação por resíduos e mínimos quadrados), Metodologia §Estimadores da Métrica Inversa, item (ii) NNLS (citação central), Trabalhos Relacionados §Otimização Inversa.
+
+ARTIGO 12
+Título: Inverse Optimization
+Autores: Ravindra K. Ahuja, James B. Orlin
+Ano: 2001
+Conferência/Journal: Operations Research, Vol. 49, No. 5, pp. 771–783 (INFORMS)
+Status: ✅ Verificado (metadados via INFORMS PubsOnLine, DOI 10.1287/opre.49.5.771.10607). Referência mencionada pelo orientador na reunião de 13/03/2026.
+Contexto e Motivação
+Em otimização inversa clássica, tem-se um problema de otimização P com vetor de custos c e uma solução viável x⁰ que se deseja ótima. O problema inverso consiste em perturbar c para um vetor d, com ‖d − c‖ mínima, de modo que x⁰ se torne ótima para d.
+O que o artigo fala?
+Formaliza o problema inverso para programação linear e mostra que, sob as normas L1 e L∞, o problema inverso é também um programa linear; estende o resultado a problemas combinatórios polinomialmente solúveis (caminho mínimo, atribuição, fluxo de custo mínimo), cujas versões inversas continuam polinomiais.
+Como ele fez o experimento?
+Trabalho teórico: dualidade de programação linear para caracterizar as condições de otimalidade de x⁰ e derivar os problemas inversos como programas lineares; sem experimentos numéricos.
+O que ele prova?
+Que o problema inverso de um programa linear sob L1 e L∞ é um programa linear, e que várias classes de problemas de otimização inversa herdam a complexidade polinomial do problema direto.
+O que ele ajuda a justificar no meu trabalho?
+É a formulação clássica da qual a dissertação parte: dada uma decisão observada, encontrar os parâmetros do critério que a tornam ótima. Situa o trabalho na tradição de otimização inversa e contrasta com a formulação por resíduos de Keshavarz, Wang e Boyd, usada quando as decisões são apenas aproximadamente ótimas (caso das decisões do LLM).
+Onde citar no meu trabalho?
+Fundamentação Teórica §Otimização Inversa (definição clássica), Trabalhos Relacionados §Otimização Inversa.
+
+ARTIGO 13
+Título: Learning a Distance Metric from Relative Comparisons
+Autores: Matthew Schultz, Thorsten Joachims
+Ano: 2003
+Conferência/Journal: Advances in Neural Information Processing Systems 16 (NIPS 2003), MIT Press
+Status: ✅ Verificado no PDF (proceedings.neurips.cc). Arquivo em artigos_referenciados/.
+Contexto e Motivação
+Aprender uma distância a partir de comparações relativas do tipo "A está mais perto de B do que de C", informação qualitativa mais fácil de obter do que rótulos ou distâncias numéricas.
+O que o artigo fala?
+Formula o aprendizado de uma métrica de Mahalanobis diagonal (matriz de pesos W diagonal, W ≥ 0) como um problema de programação quadrática convexa análogo ao SVM: cada comparação relativa vira uma restrição de margem unitária, d_W(xᵢ, xₖ) − d_W(xᵢ, xⱼ) ≥ 1 (com variáveis de folga), e minimiza-se ‖W‖² mais a penalização das folgas.
+Como ele fez o experimento?
+Experimentos com dados sintéticos e com coleções de documentos (WebKB), comparando a métrica aprendida com a Euclidiana e com métricas de referência em tarefas de agrupamento e recuperação.
+O que ele prova?
+Que restrições de comparação relativa bastam para aprender uma métrica diagonal útil por um programa quadrático convexo com estrutura de SVM.
+O que ele ajuda a justificar no meu trabalho?
+É a origem da construção das linhas de A e do vetor b no estimador NNLS: a condição "centróide da classe atribuída mais perto que o rival" é escrita como diferença de distâncias quadráticas com margem unitária (b = 1), exatamente a restrição de margem deste artigo, trocando a comparação entre pontos pela comparação ponto-centróide (como em Coelho, Borges e Fonseca Neto, 2017). A dissertação relaxa a desigualdade de margem em uma igualdade aproximada resolvida por mínimos quadrados.
+Onde citar no meu trabalho?
+Metodologia §Estimadores da Métrica Inversa, item (ii) NNLS (origem da margem unitária).
+
+ARTIGO 14
+Título: Impact of Pretraining Term Frequencies on Few-Shot Numerical Reasoning
+Autores: Yasaman Razeghi, Robert L. Logan IV, Matt Gardner, Sameer Singh
+Ano: 2022
+Conferência/Journal: Findings of the Association for Computational Linguistics: EMNLP 2022, Abu Dhabi, pp. 840–854 (ACL). DOI: 10.18653/v1/2022.findings-emnlp.59. Preprint arXiv:2202.07206 (fev/2022, título sem "Numerical").
+Status: ✅ Verificado no PDF (ACL Anthology, primeira página e Seções 1–2 e 6–7). Arquivo em artigos_referenciados/. Pedida pelo orientador por e-mail em 02/09/2026.
+Contexto e Motivação
+LLMs acertam tarefas de raciocínio numérico com poucos exemplos no prompt, mas não se sabia se isso refletia raciocínio robusto ou dependência das estatísticas do corpus de pré-treinamento. Um modelo que aprendeu a multiplicar deveria ter a mesma acurácia em "24 vezes X" e "23 vezes X"; na prática, a acurácia acompanha quantas vezes cada número aparece no pré-treinamento.
+O que o artigo fala?
+Define o "performance gap", a diferença entre a acurácia média nas instâncias cujos termos (números e unidades) estão entre os 10% mais frequentes no corpus de pré-treinamento e nas instâncias cujos termos estão entre os 10% menos frequentes, contando termos isolados e coocorrências dentro de uma janela. Mostra que a acurácia few-shot em raciocínio numérico cresce com a frequência dos termos, com gaps que em alguns casos ultrapassam 70 pontos percentuais absolutos, e que o efeito persiste após remover as instâncias memorizadas (combinações frequentes no corpus).
+Como ele fez o experimento?
+Três tamanhos de modelos EleutherAI pré-treinados no Pile (GPT-Neo-1.3B, GPT-Neo-2.7B, GPT-J-6B), escolhidos por terem corpus público que permite contar frequências. Tarefas de adição, multiplicação e conversão de unidades (inclusive de tempo), em formato pergunta-resposta com poucos exemplos (por exemplo, 2-shot), operandos como os inteiros de 0 a 99, cinco sementes. Acurácia média por termo plotada contra a frequência do termo; gap entre os decis extremos para unigramas e coocorrências; análise de robustez removendo instâncias memorizadas.
+O que ele prova?
+Que o desempenho em contexto em tarefas numéricas é afetado de forma significativa por estatísticas de coocorrência de baixa ordem do pré-treinamento, e que verificações de sobreposição por n-gramas longos (como a de 13-gramas de Brown et al., 2020) não bastam: estatísticas de unigramas já influenciam o resultado. Os autores não fazem afirmação causal e recomendam que avaliações de raciocínio levem em conta o corpus de pré-treinamento.
+O que ele ajuda a justificar no meu trabalho?
+Todo o protocolo apresenta os pontos ao LLM como números decimais com quatro casas, e no Bloco 3 os atributos chegam normalizados em [-1, 1], sem unidade: termos raros no pré-treinamento. O artigo é a evidência de que a representação numérica das entradas é uma fonte de irregularidade no critério do LLM, complementando pelo lado das entradas a terceira fonte de viés de Zhao, Wallace et al. (2021), que trata dos rótulos. Fornece uma hipótese compatível com a inversão física do Bloco 3 (valores normalizados longe da distribuição de alturas e pesos vista no pré-treinamento) e fundamenta uma limitação explícita sobre entradas numéricas. Não serve para explicar a queda com as classes 0/1 (tokens frequentíssimos), que segue ancorada em Zhao et al. (2021).
+Onde citar no meu trabalho?
+Fundamentação Teórica §Viés Semântico em LLMs (após as três fontes de viés de Zhao et al.), Trabalhos Relacionados §Aprendizado em Contexto, Resultados §Bloco 3 (hipótese para a inversão física nos dados normalizados), Limitações (item sobre entradas numéricas).
+
+ARTIGO 15
+Título: An Explanation of In-context Learning as Implicit Bayesian Inference
+Autores: Sang Michael Xie, Aditi Raghunathan, Percy Liang, Tengyu Ma
+Ano: 2022
+Conferência/Journal: International Conference on Learning Representations (ICLR 2022). Preprint arXiv:2111.02080 (v1 nov/2021, v6 jul/2022).
+Status: ✅ Verificado no PDF (arXiv v6, primeira página, Seções 1, 2 e 4) e no campo "Comments: ICLR 2022" da página do arXiv; venue confirmado também nas bibliografias de Garg et al. (2022) e Min et al. (2022). Arquivo em artigos_referenciados/. Pedida pelo orientador por e-mail em 03/09/2026 ("Xi et al., 2022").
+Contexto e Motivação
+LLMs como o GPT-3 executam tarefas novas só de condicionar em um prompt com exemplos entrada-saída, sem terem sido treinados para aprender com exemplos e apesar de o prompt (concatenação de exemplos independentes) ser um texto pouco natural. Faltava uma explicação de como esse comportamento emerge do pré-treinamento por previsão do próximo token.
+O que o artigo fala?
+Propõe um modelo generativo do pré-treinamento com conceito latente: cada documento é gerado sorteando um conceito e depois uma sequência de um HMM parametrizado por ele. No prompt, os exemplos compartilham um conceito; o aprendizado em contexto ocorre quando o modelo infere esse conceito compartilhado e prevê a saída pela distribuição preditiva a posteriori (marginalizando os conceitos), ou seja, faz inferência bayesiana implícita. Prova que, apesar da discrepância de distribuição entre prompt e pré-treinamento, o erro do preditor em contexto é assintoticamente ótimo quando o sinal sobre o conceito latente em cada exemplo supera o erro da discrepância, e que o erro cai com o comprimento dos exemplos (a informação das entradas ajuda, não só o mapeamento entrada-saída).
+Como ele fez o experimento?
+Constrói o dataset sintético GINC (mistura uniforme de 5 conceitos/HMMs, 1000 documentos, cerca de 10 milhões de tokens; prompts com 0 a 64 exemplos e comprimentos 3, 5, 8, 10; 2500 prompts por configuração). Treina Transformers baseados em GPT-2 (4, 12, 16 camadas) e LSTMs em vocabulários de 50, 100 e 150, com 5 execuções de pré-treinamento. Ablações: um único conceito, transições aleatórias e conceitos nunca vistos fazem o aprendizado em contexto falhar. Testa ainda sensibilidade à ordem dos exemplos (24 permutações de 4 exemplos) e o efeito da escala do modelo.
+O que ele prova?
+Que o aprendizado em contexto emerge de uma distribuição de pré-treinamento com estrutura de conceitos latentes e pode ser entendido como inferência bayesiana implícita; que a acurácia em contexto cresce com o número e o comprimento dos exemplos; e que fenômenos observados em LLMs reais (ganho com a escala sob a mesma perda de pré-treinamento, variação de 10 a 40 pontos com a ordem dos exemplos, casos em que zero-shot supera few-shot) se reproduzem no GINC.
+O que ele ajuda a justificar no meu trabalho?
+Dá forma à premissa de que o LLM tem um critério interno recuperável: as demonstrações servem para inferir um conceito latente compartilhado, e no Bloco 2 esse conceito é a métrica do perito. Oferece uma leitura compatível com a refutação de H4: exemplos fáceis (alta margem) carregam sinal nítido sobre o critério, exemplos difíceis são evidência ambígua, e só o acúmulo de muitos exemplos compensa a ambiguidade. Também conecta a sensibilidade à ordem dos exemplos do GINC ao experimento de ordem dos exemplos few-shot. É uma leitura compatível, não uma previsão formal, pois a teoria trata de sequências de tokens e HMMs, não de pontos no plano.
+Onde citar no meu trabalho?
+Fundamentação Teórica §Aprendizado em Contexto em LLMs (após Garg et al. e Akyürek et al.), Trabalhos Relacionados §Aprendizado em Contexto, Resultados §Bloco 2 (interpretação da refutação de H4, ao lado de Min et al.).

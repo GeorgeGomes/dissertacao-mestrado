@@ -3,21 +3,32 @@
 Encontra W que minimiza o erro quadrático nas margens observadas.
 Resolve: min_w ||Aw - b||^2 sujeito a w >= 0.
 
-A formulação é inspirada em Schultz & Joachims (2003), que propõem restrições de margem
-para aprendizado de métrica: d_W(xi, ck) - d_W(xi, cl) ≥ 1, com minimização de ||w||.
-Aqui relaxamos para mínimos quadrados (margem-alvo, não margem-mínima), usando NNLS
-para garantir w ≥ 0 (condição de semidefinida positiva da matriz diagonal).
+A estrutura segue a formulação de mínimos quadrados para otimização inversa de
+Keshavarz, Wang & Boyd (2011): cada decisão observada gera um resíduo da sua condição
+de otimalidade, linear nos parâmetros do critério (aqui, w), e estima-se o critério
+minimizando a soma dos quadrados desses resíduos sob as restrições que o mantêm válido
+(w ≥ 0). A condição de otimalidade usada é a de margem de Schultz & Joachims (2003):
+d_W(xi, ck) - d_W(xi, cl) ≥ 1, relaxada para margem-alvo (= 1, não ≥ 1). O NNLS
+garante w ≥ 0 (condição de semidefinida positiva da matriz diagonal).
 
 Referências:
-    [1] Schultz, M. & Joachims, T. (2003).
+    [1] Keshavarz, A., Wang, Y. & Boyd, S. (2011).
+        "Imputing a convex objective function." IEEE ISIC 2011, pp. 613-619.
+        → Otimização inversa por mínimos quadrados: resíduos das condições de
+          otimalidade das decisões observadas, penalidade ||·||² (Eq. 3 + exemplos),
+          pesos não-negativos e normalização contra a solução trivial (papel do b = 1).
+    [2] Schultz, M. & Joachims, T. (2003).
         "Learning a distance metric from relative comparisons."
-        → Formulação de margem unitária para metric learning (Eq. 10).
-    [2] Ahuja, R.K. & Orlin, J.B. (2001).
+        → Formulação de margem unitária para metric learning (define as linhas de A e b = 1).
+    [3] Ahuja, R.K. & Orlin, J.B. (2001).
         "Inverse Optimization." Operations Research, 49(5), pp. 771-783.
-        → Framework teórico de otimização inversa: dado solução observada, inferir função objetivo.
-    [3] Xing, E.P., Ng, A.Y., Jordan, M.I. & Russell, S. (2002).
+        → Formulação clássica de otimização inversa: dada a solução observada, inferir
+          os parâmetros do critério que a tornam ótima.
+    [4] Xing, E.P., Ng, A.Y., Jordan, M.I. & Russell, S. (2002).
         "Distance metric learning with application to clustering with side-information."
         → Formulação original de aprendizado de métrica de Mahalanobis com w ≥ 0.
+    [5] Lawson, C.L. & Hanson, R.J. (1974). "Solving Least Squares Problems."
+        → Algoritmo NNLS (conjunto ativo) usado por scipy.optimize.nnls.
 """
 
 import warnings

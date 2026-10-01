@@ -41,7 +41,14 @@ python src/dissertacao_mestrado.py
 
 # ou, para uma execução CURTA de teste (few-shot [0, 5], 1 repetição, só a seed 42):
 python src/dissertacao_mestrado.py --rapido
+
+# ou, para rodar SÓ alguns blocos (bloco1 | bloco2 | bloco3 | oraculo; aceita vários):
+python src/dissertacao_mestrado.py --apenas bloco3
+python src/dissertacao_mestrado.py --apenas bloco2 bloco3 --modelo gpt
 ```
+
+Com `--apenas`, a pasta de saída recebe o sufixo `_apenas-<blocos>` (nunca `_completa`),
+deixando claro que é uma execução parcial.
 
 Cada execução cria uma pasta `execucao_AAAA-MM-DD_HH-MM-SS/` com todos os outputs
 (gráficos PNG, CSVs por bloco, `log_execucao.txt` e `llm_interactions_parte*.json`).

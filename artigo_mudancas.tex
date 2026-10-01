@@ -1,7 +1,7 @@
 % ============================================================
 %DIF LATEXDIFF DIFFERENCE FILE
 %DIF DEL artigo versao 2026 07 21.tex   Thu Jul 30 16:20:23 2026
-%DIF ADD artigo.tex                     Fri Jul 31 08:36:20 2026
+%DIF ADD artigo.tex                     Thu Sep  3 16:16:31 2026
 %  Artigo de Mestrado — Explicando Decisões de LLMs via
 %  Otimização Inversa: Alcances e Limites de uma Aproximação Interpretável
 %  (versão expandida — Blocos 1–3, Problemas A–G)
@@ -56,11 +56,11 @@
 
 % ============================================================
 %DIF PREAMBLE EXTENSION ADDED BY LATEXDIFF
-%DIF CFONT PREAMBLE %DIF PREAMBLE
+%DIF UNDERLINE PREAMBLE %DIF PREAMBLE
+\RequirePackage[normalem]{ulem} %DIF PREAMBLE
 \RequirePackage{color}\definecolor{RED}{rgb}{1,0,0}\definecolor{BLUE}{rgb}{0,0,1} %DIF PREAMBLE
-\DeclareOldFontCommand{\sf}{\normalfont\sffamily}{\mathsf} %DIF PREAMBLE
-\providecommand{\DIFaddtex}[1]{{\protect\color{red} #1}} %DIF PREAMBLE
-\providecommand{\DIFdeltex}[1]{{\protect\color{gray} \scriptsize #1}} %DIF PREAMBLE
+\providecommand{\DIFaddtex}[1]{{\protect\color{blue}\uwave{#1}}} %DIF PREAMBLE
+\providecommand{\DIFdeltex}[1]{{\protect\color{red}\sout{#1}}} %DIF PREAMBLE
 %DIF SAFE PREAMBLE %DIF PREAMBLE
 \providecommand{\DIFaddbegin}{} %DIF PREAMBLE
 \providecommand{\DIFaddend}{} %DIF PREAMBLE
@@ -78,13 +78,59 @@
 %DIF HYPERREF PREAMBLE %DIF PREAMBLE
 \providecommand{\DIFadd}[1]{\texorpdfstring{\DIFaddtex{#1}}{#1}} %DIF PREAMBLE
 \providecommand{\DIFdel}[1]{\texorpdfstring{\DIFdeltex{#1}}{}} %DIF PREAMBLE
+\providecommand{\DIFscaledelfig}{0.5}
+%DIF HIGHLIGHTGRAPHICS PREAMBLE %DIF PREAMBLE
+\RequirePackage{settobox} %DIF PREAMBLE
+\RequirePackage{letltxmacro} %DIF PREAMBLE
+\newsavebox{\DIFdelgraphicsbox} %DIF PREAMBLE
+\newlength{\DIFdelgraphicswidth} %DIF PREAMBLE
+\newlength{\DIFdelgraphicsheight} %DIF PREAMBLE
+% store original definition of \includegraphics %DIF PREAMBLE
+\LetLtxMacro{\DIFOincludegraphics}{\includegraphics} %DIF PREAMBLE
+\providecommand{\DIFaddincludegraphics}[2][]{{\color{blue}\fbox{\DIFOincludegraphics[#1]{#2}}}} %DIF PREAMBLE
+\providecommand{\DIFdelincludegraphics}[2][]{% %DIF PREAMBLE
+\sbox{\DIFdelgraphicsbox}{\DIFOincludegraphics[#1]{#2}}% %DIF PREAMBLE
+\settoboxwidth{\DIFdelgraphicswidth}{\DIFdelgraphicsbox} %DIF PREAMBLE
+\settoboxtotalheight{\DIFdelgraphicsheight}{\DIFdelgraphicsbox} %DIF PREAMBLE
+\scalebox{\DIFscaledelfig}{% %DIF PREAMBLE
+\parbox[b]{\DIFdelgraphicswidth}{\usebox{\DIFdelgraphicsbox}\\[-\baselineskip] \rule{\DIFdelgraphicswidth}{0em}}\llap{\resizebox{\DIFdelgraphicswidth}{\DIFdelgraphicsheight}{% %DIF PREAMBLE
+\setlength{\unitlength}{\DIFdelgraphicswidth}% %DIF PREAMBLE
+\begin{picture}(1,1)% %DIF PREAMBLE
+\thicklines\linethickness{2pt} %DIF PREAMBLE
+{\color[rgb]{1,0,0}\put(0,0){\framebox(1,1){}}}% %DIF PREAMBLE
+{\color[rgb]{1,0,0}\put(0,0){\line( 1,1){1}}}% %DIF PREAMBLE
+{\color[rgb]{1,0,0}\put(0,1){\line(1,-1){1}}}% %DIF PREAMBLE
+\end{picture}% %DIF PREAMBLE
+}\hspace*{3pt}}} %DIF PREAMBLE
+} %DIF PREAMBLE
+\LetLtxMacro{\DIFOaddbegin}{\DIFaddbegin} %DIF PREAMBLE
+\LetLtxMacro{\DIFOaddend}{\DIFaddend} %DIF PREAMBLE
+\LetLtxMacro{\DIFOdelbegin}{\DIFdelbegin} %DIF PREAMBLE
+\LetLtxMacro{\DIFOdelend}{\DIFdelend} %DIF PREAMBLE
+\DeclareRobustCommand{\DIFaddbegin}{\DIFOaddbegin \let\includegraphics\DIFaddincludegraphics} %DIF PREAMBLE
+\DeclareRobustCommand{\DIFaddend}{\DIFOaddend \let\includegraphics\DIFOincludegraphics} %DIF PREAMBLE
+\DeclareRobustCommand{\DIFdelbegin}{\DIFOdelbegin \let\includegraphics\DIFdelincludegraphics} %DIF PREAMBLE
+\DeclareRobustCommand{\DIFdelend}{\DIFOaddend \let\includegraphics\DIFOincludegraphics} %DIF PREAMBLE
+\LetLtxMacro{\DIFOaddbeginFL}{\DIFaddbeginFL} %DIF PREAMBLE
+\LetLtxMacro{\DIFOaddendFL}{\DIFaddendFL} %DIF PREAMBLE
+\LetLtxMacro{\DIFOdelbeginFL}{\DIFdelbeginFL} %DIF PREAMBLE
+\LetLtxMacro{\DIFOdelendFL}{\DIFdelendFL} %DIF PREAMBLE
+\DeclareRobustCommand{\DIFaddbeginFL}{\DIFOaddbeginFL \let\includegraphics\DIFaddincludegraphics} %DIF PREAMBLE
+\DeclareRobustCommand{\DIFaddendFL}{\DIFOaddendFL \let\includegraphics\DIFOincludegraphics} %DIF PREAMBLE
+\DeclareRobustCommand{\DIFdelbeginFL}{\DIFOdelbeginFL \let\includegraphics\DIFdelincludegraphics} %DIF PREAMBLE
+\DeclareRobustCommand{\DIFdelendFL}{\DIFOaddendFL \let\includegraphics\DIFOincludegraphics} %DIF PREAMBLE
+%DIF AMSMATHULEM PREAMBLE %DIF PREAMBLE
+\makeatletter %DIF PREAMBLE
+\let\sout@orig\sout %DIF PREAMBLE
+\renewcommand{\sout}[1]{\ifmmode\text{\sout@orig{\ensuremath{#1}}}\else\sout@orig{#1}\fi} %DIF PREAMBLE
+\makeatother %DIF PREAMBLE
 %DIF COLORLISTINGS PREAMBLE %DIF PREAMBLE
 \RequirePackage{listings} %DIF PREAMBLE
 \RequirePackage{color} %DIF PREAMBLE
 \lstdefinelanguage{DIFcode}{ %DIF PREAMBLE
-%DIF DIFCODE_CFONT %DIF PREAMBLE
-  moredelim=[il][\color{red}\scriptsize]{\%DIF\ <\ }, %DIF PREAMBLE
-  moredelim=[il][\color{blue}\sffamily]{\%DIF\ >\ } %DIF PREAMBLE
+%DIF DIFCODE_UNDERLINE %DIF PREAMBLE
+  moredelim=[il][\color{red}\sout]{\%DIF\ <\ }, %DIF PREAMBLE
+  moredelim=[il][\color{blue}\uwave]{\%DIF\ >\ } %DIF PREAMBLE
 } %DIF PREAMBLE
 \lstdefinestyle{DIFverbatimstyle}{ %DIF PREAMBLE
 	language=DIFcode, %DIF PREAMBLE
@@ -313,14 +359,30 @@ Apêndice~\ref{ap:protocolo} detalha o protocolo experimental de coleta.
 
 O problema de \emph{otimização inversa} consiste em, dadas soluções observadas
 $x^* \in \mathbb{R}^d$ de um problema de otimização parametrizado por $\theta$, inferir os
-parâmetros $\theta$ que tornariam $x^*$ ótima (ou quase-ótima) \cite{chanInverseOptimization2025}.
+parâmetros $\theta$ que tornariam $x^*$ ótima (ou quase-ótima)
+\DIFdelbegin \DIFdel{\mbox{%DIFAUXCMD
+\cite{chanInverseOptimization2025}}\hskip0pt%DIFAUXCMD
+}\DIFdelend \DIFaddbegin \DIFadd{\mbox{%DIFAUXCMD
+\cite{ahujaInverseOptimization2001,chanInverseOptimization2025}}\hskip0pt%DIFAUXCMD
+}\DIFaddend .
 Seja $\mathcal{P}(\theta) = \min_{x \in \mathcal{F}} c(x; \theta)$ o problema direto. A
 otimização inversa busca
 \begin{equation}
   \hat{\theta} = \arg\min_{\theta} \,
   \mathcal{L}\!\left(x^*, \arg\min_{x \in \mathcal{F}} c(x; \theta)\right),
 \end{equation}
-onde $\mathcal{L}$ mede o quão ótima $x^*$ é sob $\theta$. Aqui, as \emph{decisões
+onde $\mathcal{L}$ mede o quão ótima $x^*$ é sob $\theta$. \DIFaddbegin \DIFadd{Na formulação clássica de Ahuja
+e Orlin \mbox{%DIFAUXCMD
+\cite{ahujaInverseOptimization2001}}\hskip0pt%DIFAUXCMD
+, $\mathcal{L}$ é a norma ($\ell_1$ ou
+$\ell_\infty$) da menor perturbação dos parâmetros que torna $x^*$ exatamente ótima. Quando
+as observações são ruidosas ou apenas aproximadamente ótimas, Keshavarz, Wang e Boyd
+\mbox{%DIFAUXCMD
+\cite{keshavarzImputingConvex2011} }\hskip0pt%DIFAUXCMD
+relaxam as condições de otimalidade em resíduos,
+lineares em $\theta$, e escolhem $\theta$ minimizando a soma dos quadrados desses resíduos,
+o que reduz a otimização inversa a um problema de mínimos quadrados com restrições; é essa
+a formulação seguida pelo segundo estimador descrito adiante. }\DIFaddend Aqui, as \emph{decisões
 observadas} são as classificações do LLM e o parâmetro a inferir é a métrica $W$ que governa
 a função de distância usada na classificação.
 
@@ -397,20 +459,53 @@ Inicializar $w \leftarrow [1, 1]$\;
 \end{algorithm}
 
 \paragraph{(ii) Mínimos Quadrados Não-Negativos (NNLS).}
-O segundo estimador formula a recuperação de $w$ como um problema de mínimos quadrados com
-restrição de não-negatividade,
-\begin{equation}
-  \West_{\text{NNLS}} = \arg\min_{w \geq 0} \; \lVert A w - b \rVert_2^2,
+O segundo estimador \DIFdelbegin \DIFdel{formula a recuperação de $w$ como um problema de }\DIFdelend \DIFaddbegin \DIFadd{segue a formulação de }\DIFaddend mínimos quadrados \DIFdelbegin \DIFdel{com
+restrição de
+não-negatividade, }\begin{displaymath}
+  \DIFdel{\West_{\text{NNLS}} = \arg\min_{w \geq 0} \; \lVert A w - b \rVert_2^2,
+  %DIFDELCMD < \label{eq:nnls}%%%
+}\end{displaymath}%DIFAUXCMD
+\DIFdelend \DIFaddbegin \DIFadd{para otimização inversa de
+Keshavarz, Wang e Boyd \mbox{%DIFAUXCMD
+\cite{keshavarzImputingConvex2011}}\hskip0pt%DIFAUXCMD
+: cada decisão observada gera um
+resíduo da sua condição de otimalidade, linear nos parâmetros do critério, e o critério
+estimado é aquele que minimiza a soma dos quadrados desses resíduos sob as restrições que
+mantêm o critério válido (aqui, $w \geq 0$). Para a regra de centróide mais próximo, a
+condição de otimalidade da decisão $y^{(i)}$ do LLM sobre o ponto $x^{(i)}$ é que o
+centróide $c_l$ da classe atribuída ($l = y^{(i)}$) esteja mais perto, sob $d_W$, do que o
+centróide rival $c_k$ (o mais próximo de $x^{(i)}$ entre os demais, medido pela distância
+Euclidiana). Impondo essa condição com margem unitária, à maneira de Schultz e Joachims
+\mbox{%DIFAUXCMD
+\cite{schultzLearningDistance2003}}\hskip0pt%DIFAUXCMD
+, obtém-se para cada ponto uma equação linear em $w$,
+}\begin{equation}
+  \DIFadd{\sum_{j=1}^{d} w_j \left[(x^{(i)}_j - c_{k,j})^2 - (x^{(i)}_j - c_{l,j})^2\right] = 1,
+  \label{eq:nnls_margem}
+}\end{equation}\DIFaddend 
+\DIFdelbegin \DIFdel{onde cada linha de $A$ codifica a diferença de distâncias quadráticas do ponto aos dois
+centroides e $b$ codifica a }\DIFdelend \DIFaddbegin \DIFadd{ou seja, $A_{ij} = (x^{(i)}_j - c_{k,j})^2 - (x^{(i)}_j - c_{l,j})^2$ e $b_i = 1$. A
+}\DIFaddend decisão do LLM \DIFdelbegin \DIFdel{. Resolve-se \eqref{eq:nnls} }\DIFdelend \DIFaddbegin \DIFadd{entra, portanto, na matriz $A$: ela define qual centróide é o correto e, com
+isso, o sinal de cada linha. O vetor $b = \mathbf{1}$ é a margem-alvo, que fixa a escala de
+$w$ (indeterminada pela invariância discutida acima) e exclui a solução trivial $w = 0$, o
+mesmo papel da normalização usada por Keshavarz, Wang e Boyd. O sistema, em geral
+sobredeterminado e sem solução exata quando as decisões não são perfeitamente separáveis
+por centróides, é resolvido no sentido de mínimos quadrados com restrição de
+não-negatividade,
+}\begin{equation}
+  \DIFadd{\West_{\text{NNLS}} = \arg\min_{w \geq 0} \; \lVert A w - b \rVert_2^2,
   \label{eq:nnls}
-\end{equation}
-onde cada linha de $A$ codifica a diferença de distâncias quadráticas do ponto aos dois
-centroides e $b$ codifica a decisão do LLM. Resolve-se \eqref{eq:nnls} pelo algoritmo
-clássico de Lawson e Hanson \cite{lawsonSolvingLeastSquares1974} (implementação
-\texttt{scipy.optimize.nnls}). Ao contrário do Perceptron, o NNLS \emph{não possui
-hiperparâmetros}, o que o torna um controle valioso: concordância entre os dois sugere que
-\West{} não depende de ajuste fino. Um terceiro estimador (LP Max-Margin) foi avaliado e
-\emph{descartado} por não respeitar a restrição de convexidade; dois estimadores congruentes
-bastam para demonstrar robustez.
+}\end{equation}
+\DIFaddend pelo algoritmo clássico de Lawson e Hanson
+\cite{lawsonSolvingLeastSquares1974}\DIFdelbegin \DIFdel{(implementação
+}\texttt{\DIFdel{scipy.optimize.nnls}}%DIFAUXCMD
+\DIFdel{)}\DIFdelend \DIFaddbegin \footnote{\DIFadd{Implementação
+}\texttt{\DIFadd{scipy.optimize.nnls}}\DIFadd{.}}\DIFadd{, que garante $w \geq 0$ sem projeção posterior e, com
+isso, uma matriz diagonal semidefinida positiva}\DIFaddend . Ao contrário do
+Perceptron, o NNLS \emph{não possui hiperparâmetros}, o que o torna um controle valioso:
+concordância entre os dois sugere que \West{} não depende de ajuste fino. Um terceiro
+estimador (LP Max-Margin) foi avaliado e \emph{descartado} por não respeitar a restrição
+de convexidade; dois estimadores congruentes bastam para demonstrar robustez.
 
 \subsection{Projeções Não-Lineares (\texorpdfstring{$\mathbb{R}^3$ e $\mathbb{R}^4$}{R3 e R4})}
 \label{sec:r3r4}
@@ -437,7 +532,15 @@ automática. Garg et
 al.~\cite{gargWhatTransformers2022} mostraram que Transformers treinados do zero realizam
 aprendizado em contexto de classes de funções, igualando estimadores ótimos. Akyürek et
 al.~\cite{akyurekWhatLearning2023} provaram por construção que Transformers podem implementar
-internamente gradiente descendente e regressão ridge. Essas descobertas justificam a premissa
+internamente gradiente descendente e regressão ridge. \DIFaddbegin \DIFadd{Xie et
+al.~\mbox{%DIFAUXCMD
+\cite{xieExplanationInContext2022} }\hskip0pt%DIFAUXCMD
+explicam por que o fenômeno emerge do
+pré-treinamento: se os documentos são gerados por conceitos latentes, o aprendizado em
+contexto corresponde a uma inferência bayesiana implícita, em que o modelo infere o conceito
+compartilhado pelos exemplos do }\emph{\DIFadd{prompt}} \DIFadd{e prevê a saída pela distribuição preditiva a
+posteriori, mesmo com a discrepância de distribuição entre }\emph{\DIFadd{prompts}} \DIFadd{e
+pré-treinamento. }\DIFaddend Essas descobertas justificam a premissa
 central: se o LLM implementa otimização interna, é possível recuperar seu critério via
 otimização inversa.
 
@@ -447,7 +550,16 @@ LLMs exibem vieses sistemáticos dependentes dos nomes de classe
 \cite{zhaoCalibrateBefore2021}. Rótulos com conotação semântica tendem a distorcer as
 distribuições previstas, independentemente do conteúdo do exemplo. Zhao et al. identificam
 três fontes: preferência por rótulos majoritários, recência e frequência de \emph{tokens}
-no pré-treinamento. Este trabalho testa sistematicamente o efeito de nomes de classe
+no pré-treinamento. \DIFaddbegin \DIFadd{A terceira fonte foi quantificada para entradas numéricas por Razeghi
+et al.~\mbox{%DIFAUXCMD
+\cite{razeghiImpactPretraining2022}}\hskip0pt%DIFAUXCMD
+: em adição, multiplicação e conversão de
+unidades com poucos exemplos, a acurácia de modelos GPT pré-treinados no corpus Pile
+cresce com a frequência dos números no pré-treinamento, com diferenças que chegam a $70$
+pontos percentuais entre os $10\%$ de termos mais e menos frequentes, efeito que persiste
+após a remoção das instâncias memorizadas. Como aqui os pontos são apresentados ao LLM
+como números, esse resultado é uma fonte adicional de irregularidade a considerar na
+leitura de }\West{}\DIFadd{. }\DIFaddend Este trabalho testa sistematicamente o efeito de nomes de classe
 (neutros, semânticos, cromáticos) e de atributos sobre \West{}.
 
 \subsection{Métricas de Avaliação}
@@ -496,7 +608,19 @@ minoritária.
 Esta pesquisa situa-se na interseção de seis áreas.
 
 \paragraph{Otimização Inversa.}
-Chan et al.~\cite{chanInverseOptimization2025} apresentam o survey definitivo da área,
+\DIFaddbegin \DIFadd{A formulação clássica é a de Ahuja e Orlin \mbox{%DIFAUXCMD
+\cite{ahujaInverseOptimization2001}}\hskip0pt%DIFAUXCMD
+, que buscam
+a menor perturbação do vetor de custos de um programa linear que torna a solução observada
+ótima, e mostram que o problema inverso sob as normas $\ell_1$ e $\ell_\infty$ continua
+sendo um programa linear. Keshavarz, Wang e Boyd \mbox{%DIFAUXCMD
+\cite{keshavarzImputingConvex2011}
+}\hskip0pt%DIFAUXCMD
+estendem a ideia a decisões apenas aproximadamente ótimas: parametrizam o critério como
+combinação de funções-base com pesos não-negativos e estimam os pesos minimizando a soma
+dos quadrados dos resíduos das condições de otimalidade, formulação que fundamenta
+diretamente o estimador NNLS deste trabalho. }\DIFaddend Chan et
+al.~\cite{chanInverseOptimization2025} apresentam o survey definitivo da área,
 unificando formulações baseadas em KKT, dualidade forte e modelos \emph{data-driven}. Inferir
 \West{} a partir das classificações do LLM é uma instância direta: dadas as soluções
 observadas, busca-se o parâmetro que as tornaria ótimas sob centróide mais próximo. Diferimos
@@ -524,7 +648,12 @@ estimador (i) é implementação direta.
 \paragraph{Aprendizado em Contexto.}
 Garg et al.~\cite{gargWhatTransformers2022} e Akyürek et al.~\cite{akyurekWhatLearning2023}
 estabelecem o LLM como aprendiz implícito de funções, em estudos majoritariamente
-empíricos sobre Transformers treinados de forma controlada. Uma segunda família de
+empíricos sobre Transformers treinados de forma controlada\DIFaddbegin \DIFadd{, e Xie et
+al.~\mbox{%DIFAUXCMD
+\cite{xieExplanationInContext2022} }\hskip0pt%DIFAUXCMD
+dão ao fenômeno uma explicação bayesiana, em que as
+demonstrações servem para inferir um conceito latente compartilhado, herdado da estrutura
+dos documentos de pré-treinamento}\DIFaddend . Uma segunda família de
 trabalhos, mais próxima da nossa, estuda o comportamento de LLMs prontos em tarefas de
 classificação apenas com demonstrações no \emph{prompt}. Min et
 al.~\cite{minRethinkingRole2022} questionam o papel dos mapeamentos \emph{input-label},
@@ -533,7 +662,12 @@ com implicações diretas para o Bloco 2 e para a refutação de H4. Su et
 al.~\cite{suSelectiveAnnotation2023} mostram que a seleção estratégica de exemplos, com
 equilíbrio entre diversidade e representatividade, supera a aleatória. Zhao et
 al.~\cite{zhaoCalibrateBefore2021} documentam os vieses de rótulo que motivam nossos
-experimentos de nomes de classe. Há ainda estudos de estabilidade que quantificam o
+experimentos de nomes de classe\DIFaddbegin \DIFadd{, e Razeghi et al.~\mbox{%DIFAUXCMD
+\cite{razeghiImpactPretraining2022}
+}\hskip0pt%DIFAUXCMD
+mostram que o desempenho numérico em aprendizado em contexto acompanha a frequência dos
+termos no pré-treinamento, alerta pertinente para um protocolo que apresenta pontos como
+coordenadas numéricas}\DIFaddend . Há ainda estudos de estabilidade que quantificam o
 não-determinismo de LLMs mesmo a $T=0$~\cite{atilLLMStability2024, windischOneRun2026},
 questão que nosso protocolo mede pela taxa de \emph{flip}. Investigamos uma
 dimensão que esses trabalhos não cobrem: o eixo \emph{fácil vs.\ difícil} pela margem
@@ -878,22 +1012,21 @@ não é intrínseca, e sim contextual.
 \DIFdelbegin \DIFdel{Aumentar o espaço para $3$ ou $4$ atributos produz ganhos }\DIFdelend \DIFaddbegin \DIFadd{Cabe explicar o desenho deste experimento antes dos números. Os Problemas A/B/C são
 }\DIFaddend \emph{\DIFdelbegin \DIFdel{marginais}%DIFDELCMD < \MBLOCKRIGHTBRACE %%%
 \DIFdel{de fidelidadenos problemas }\DIFdelend lineares\DIFaddbegin } \DIFadd{por construção; portanto, ao projetá-los em $\mathbb{R}^3$/$\mathbb{R}^4$
-\emph{não se espera} melhoria de fidelidade: fronteiras lineares não requerem termos de
-interação nem quadráticos. Eles entram aqui como \emph{controle negativo}: se o simples
+}\emph{\DIFadd{não se espera}} \DIFadd{melhoria de fidelidade: fronteiras lineares não requerem termos de
+interação nem quadráticos. Eles entram aqui como }\emph{\DIFadd{controle negativo}}\DIFadd{: se o simples
 acréscimo de atributos elevasse a fidelidade num problema que não exige não-linearidade,
 isso indicaria um artefato do procedimento (capacidade extra ajustando ruído), e não um
 ganho real. O contraste relevante é com os problemas genuinamente não-lineares, em que a
-mesma projeção \emph{deve} ajudar.
+mesma projeção }\emph{\DIFadd{deve}} \DIFadd{ajudar.
 }
 
 \DIFadd{O resultado confirma o desenho. Nos problemas lineares }\DIFaddend A/B/C\DIFaddbegin \DIFadd{, os ganhos são
-\emph{marginais} }\DIFaddend (Tabela~\ref{tab:r3r4})\DIFdelbegin \DIFdel{, coerente com o fato de
+}\emph{\DIFadd{marginais}} \DIFaddend (Tabela~\ref{tab:r3r4})\DIFdelbegin \DIFdel{, coerente com o fato de
 fronteiras lineares não requererem termos de interação}\DIFdelend : a média sobe de $84{,}9\%$
 ($\mathbb{R}^3$)
-para $86{,}2\%$ ($\mathbb{R}^4$), próximo da faixa da estimação em $2$ atributos. \DIFdelbegin \DIFdel{No caso
-\emph{não-linear} }\DIFdelend \DIFaddbegin \DIFadd{Já no
-caso
-\emph{não-linear} de }\DIFaddend peso $\times$ altura \DIFaddbegin \DIFadd{(a base real do Bloco 3, cujos resultados
+para $86{,}2\%$ ($\mathbb{R}^4$), próximo da faixa da estimação em $2$ atributos. \DIFdelbegin \DIFdel{No }\DIFdelend \DIFaddbegin \DIFadd{Já no
+}\DIFaddend caso
+\emph{não-linear} \DIFaddbegin \DIFadd{de }\DIFaddend peso $\times$ altura \DIFaddbegin \DIFadd{(a base real do Bloco 3, cujos resultados
 completos são apresentados na Seção~\ref{sec:res_bloco3}; ela é antecipada aqui apenas
 como contraponto não-linear)}\DIFaddend , \DIFdelbegin \DIFdel{ao contrário, }\DIFdelend a projeção $\mathbb{R}^4$ (que
 introduz a
@@ -923,60 +1056,83 @@ A/B/C, por semente.}
 \subsection{Bloco 1 — Viés Semântico e de Prompt}
 
 \DIFdelbegin \DIFdel{A }\DIFdelend \DIFaddbegin \DIFadd{Este experimento mede o quanto o critério do LLM depende da forma como o problema é
-\emph{apresentado}, mantendo os dados fixos. Importa deixar claro o desenho: as três
+}\emph{\DIFadd{apresentado}}\DIFadd{, mantendo os dados fixos. Importa deixar claro o desenho: as três
 manipulações da Tabela~\ref{tab:bias} são independentes e todas rodam sobre os
-\emph{mesmos pontos sintéticos do Problema A}; muda apenas o texto do \emph{prompt}.
-No primeiro bloco de linhas, variam-se os \emph{nomes das classes} (perguntar ``A ou B'',
+}\emph{\DIFadd{mesmos pontos sintéticos do Problema A}}\DIFadd{; muda apenas o texto do }\emph{\DIFadd{prompt}}\DIFadd{.
+No primeiro bloco de linhas, variam-se os }\emph{\DIFadd{nomes das classes}} \DIFadd{(perguntar ``A ou B'',
 ``Positivo ou Negativo'' etc.), incluindo as inversões de ordem. No segundo, variam-se os
-\emph{nomes dos atributos}:
+}\emph{\DIFadd{nomes dos atributos}}\DIFadd{:
 as coordenadas são as mesmas, mas são apresentadas ao LLM como ``$x_1$/$x_2$'',
 ``feature\_1/feature\_2'' ou ``altura/peso''. Ressalte-se que ``altura/peso'' aqui é
-apenas um \emph{rótulo semântico} aplicado ao dado sintético, para medir o efeito do nome;
+apenas um }\emph{\DIFadd{rótulo semântico}} \DIFadd{aplicado ao dado sintético, para medir o efeito do nome;
 não se trata da base real de peso $\times$ altura do Bloco~3. No terceiro bloco,
-variam-se os \emph{estilos de prompt}, quatro formas de redigir a mesma pergunta:
-\emph{default} (instrução direta, usada em todo o restante do trabalho), \emph{geometric}
-(descreve a tarefa como classificação espacial por proximidade em um espaço métrico),
-\emph{cot} (\emph{chain-of-thought}, pede raciocínio passo a passo antes da resposta) e
-\emph{tabular} (apresenta as coordenadas formatadas como tabela). Os textos completos dos
+variam-se os }\emph{\DIFadd{estilos de prompt}}\DIFadd{, quatro formas de redigir a mesma pergunta:
+}\emph{\DIFadd{default}} \DIFadd{(instrução direta, usada em todo o restante do trabalho), }\emph{\DIFadd{geometric}}
+\DIFadd{(descreve a tarefa como classificação espacial por proximidade em um espaço métrico),
+}\emph{\DIFadd{cot}} \DIFadd{(}\emph{\DIFadd{chain-of-thought}}\DIFadd{, pede raciocínio passo a passo antes da resposta) e
+}\emph{\DIFadd{tabular}} \DIFadd{(apresenta as coordenadas formatadas como tabela). Os textos completos dos
 quatro estilos, tal como enviados ao LLM, estão transcritos no
 Apêndice~\ref{ap:prompts}.
 }
 
-\DIFadd{Para cada variante reportam-se, para os \emph{dois modelos} e como \emph{média das três
-sementes}, duas quantidades: a fidelidade da estimação no Problema A (a
+\DIFadd{Para cada variante reportam-se, para os }\emph{\DIFadd{dois modelos}} \DIFadd{e como }\emph{\DIFadd{média das três
+sementes}}\DIFadd{, duas quantidades: a fidelidade da estimação no Problema A (a
 rotulação do Problema A é única, em zero-shot, e por isso independe de $n$) e a
 consistência da transferência ao Problema B, medida em zero-shot e com $n=10$ exemplos, que
 é onde o efeito do número de exemplos aparece. A }\DIFaddend Tabela~\ref{tab:bias} \DIFdelbegin \DIFdel{mostra que }\DIFdelend \DIFaddbegin \DIFadd{apresenta a
-manipulação principal, os \emph{nomes de classe}; as tabelas homólogas para nomes de
-atributo e estilos de \emph{prompt} estão no Apêndice~\ref{ap:bias_tabelas}
+manipulação principal, os }\emph{\DIFadd{nomes de classe}}\DIFadd{; as tabelas homólogas para nomes de
+atributo e estilos de }\emph{\DIFadd{prompt}} \DIFadd{estão no Apêndice~\ref{ap:bias_tabelas}
 (Tabelas~\ref{tab:bias_feat} e~\ref{tab:bias_prompt}).
 }
 
 \DIFadd{A leitura central é que }\DIFaddend \emph{o critério do LLM muda com a rotulagem\DIFaddbegin \DIFadd{, e o padrão da
-mudança depende do modelo}\DIFaddend }. \DIFdelbegin \DIFdel{Nomes }\DIFdelend \DIFaddbegin \DIFadd{No \texttt{gpt-4o-mini}, nomes }\DIFaddend com conotação
+mudança depende do modelo}\DIFaddend }. \DIFdelbegin \DIFdel{Nomes }\DIFdelend \DIFaddbegin \DIFadd{No }\texttt{\DIFadd{gpt-4o-mini}}\DIFadd{, nomes }\DIFaddend com conotação
 (Positivo/Negativo) elevam a fidelidade a \DIFdelbegin \DIFdel{$99{,}3\%$, ao passo que a mera }\DIFdelend \DIFaddbegin \DIFadd{$99{,}1\%$, a }\DIFaddend inversão de posição (A/B $\to$
 B/A) \DIFdelbegin \DIFdel{a reduz de $82{,}7\%$ a $68{,}0\%$, evidência de viés de
-\emph{ordem}}\DIFdelend \DIFaddbegin \DIFadd{custa $14{,}4$ pontos ($84{,}0\% \to 69{,}6\%$) e os nomes numéricos $0/1$ derrubam a
-fidelidade a $59{,}3\%$; no \texttt{gemini-2.5-flash-lite}, os mesmos $0/1$ quase não
+}\emph{\DIFdel{ordem}}%DIFAUXCMD
+\DIFdelend \DIFaddbegin \DIFadd{custa $14{,}4$ pontos ($84{,}0\% \to 69{,}6\%$) e os nomes numéricos $0/1$ derrubam a
+fidelidade a $59{,}3\%$; no }\texttt{\DIFadd{gemini-2.5-flash-lite}}\DIFadd{, os mesmos $0/1$ quase não
 incomodam ($82{,}4\%$) e a inversão custa menos ($81{,}3\% \to 76{,}9\%$)}\DIFaddend . O efeito dos
 nomes de atributo \DIFdelbegin \DIFdel{, neste modelo, }\DIFdelend \DIFaddbegin \DIFadd{também diverge (Tabela~\ref{tab:bias_feat}):
-``feature\_1/feature\_2'' reduz o \texttt{gpt-4o-mini} a
-$74{,}7\%$, mas }\DIFaddend é \DIFdelbegin \DIFdel{pequeno (``altura/peso'' $84{,}7\%$ contra $82{,}7\%$ de $x_1/x_2$). Já a variante \emph{tabular} de \emph{prompt}
-}\DIFdelend \DIFaddbegin \DIFadd{o melhor nome para o \texttt{gemini-2.5-flash-lite} ($88{,}4\%$). O
-contraste mais nítido está nos estilos de \emph{prompt}
-(Tabela~\ref{tab:bias_prompt}): no \texttt{gpt-4o-mini} o estilo
+``feature\_1/feature\_2'' reduz o }\texttt{\DIFadd{gpt-4o-mini}} \DIFadd{a
+$74{,}7\%$, mas }\DIFaddend é \DIFdelbegin \DIFdel{pequeno (``altura/peso'' $84{,}7\%$ contra $82{,}7\%$ }\DIFdelend \DIFaddbegin \DIFadd{o melhor nome para o }\texttt{\DIFadd{gemini-2.5-flash-lite}} \DIFadd{($88{,}4\%$). O
+contraste mais nítido está nos estilos }\DIFaddend de \DIFdelbegin \DIFdel{$x_1/x_2$). Já a variante }\emph{\DIFdel{tabular}} %DIFAUXCMD
+\DIFdel{de }\DIFdelend \emph{prompt}
+\DIFaddbegin \DIFadd{(Tabela~\ref{tab:bias_prompt}): no }\texttt{\DIFadd{gpt-4o-mini}} \DIFadd{o estilo
 }\DIFaddend \emph{\DIFdelbegin \DIFdel{degrada}\DIFdelend \DIFaddbegin \DIFadd{tabular}\DIFaddend } \DIFaddbegin \DIFadd{é o que mais degrada ($66{,}7\%$), ao passo que no
-\texttt{gemini-2.5-flash-lite} o \emph{tabular} é o \emph{melhor} estilo ($87{,}6\%$) e
-quem degrada são \emph{cot} e \emph{geometric} ($\approx 67\%$). A conclusão robusta aos
+}\texttt{\DIFadd{gemini-2.5-flash-lite}} \DIFadd{o }\emph{\DIFadd{tabular}} \DIFadd{é o }\emph{\DIFadd{melhor}} \DIFadd{estilo ($87{,}6\%$) e
+quem degrada são }\emph{\DIFadd{cot}} \DIFadd{e }\emph{\DIFadd{geometric}} \DIFadd{($\approx 67\%$). A conclusão robusta aos
 dois modelos é que }\DIFaddend a \DIFdelbegin \DIFdel{medição a $64{,}7\%$, alertando que a }\DIFdelend forma de apresentação \DIFdelbegin \DIFdel{das coordenadas
-confunde o modelo. }\DIFdelend \DIFaddbegin \DIFadd{interfere na medição; \emph{qual} forma
+confunde o modelo. }\DIFdelend \DIFaddbegin \DIFadd{interfere na medição; }\emph{\DIFadd{qual}} \DIFadd{forma
 atrapalha, porém, é idiossincrático de cada modelo. Por fim, a consistência na
 transferência com $10$ exemplos sobe em quase todas as variantes (por exemplo, B/A vai de
-$81{,}3\%$ a $96{,}7\%$ no \texttt{gpt-4o-mini}), confirmando o papel re-ancorador dos
+$81{,}3\%$ a $96{,}7\%$ no }\texttt{\DIFadd{gpt-4o-mini}}\DIFadd{), confirmando o papel re-ancorador dos
 exemplos já observado na Seção anterior.
 }\DIFaddend 
 
-\begin{table}[ht]
+\DIFdelbegin %DIFDELCMD < \begin{table}[ht]
+%DIFDELCMD < \centering
+%DIFDELCMD < \caption{Efeito de rotulagem e \emph{prompt} sobre a fidelidade (seed $42$; classe:
+%DIFDELCMD < $10$-shot; atributo/\emph{prompt}: zero-shot).}
+%DIFDELCMD < \label{tab:bias}
+%DIFDELCMD < \small
+%DIFDELCMD < \begin{tabular}{lr@{\hskip 1.2cm}lr@{\hskip 1.2cm}lr}
+%DIFDELCMD < \toprule
+%DIFDELCMD < \textbf{Nome de classe} & \textbf{Fid.\ (\%)} &
+%DIFDELCMD < \textbf{Nome de atributo} & \textbf{Fid.\ (\%)} &
+%DIFDELCMD < \textbf{Prompt} & \textbf{Fid.\ (\%)} \\
+%DIFDELCMD < \midrule
+%DIFDELCMD < Positivo/Negativo & 99,3 & altura/peso        & 84,7 & \emph{default}   & 82,7 \\
+%DIFDELCMD < Negativo/Positivo & 88,7 & feature\_1/2       & 84,0 & \emph{cot}       & 76,7 \\
+%DIFDELCMD < Azul/Vermelho     & 86,7 & $x_1/x_2$          & 82,7 & \emph{geometric} & 68,0 \\
+%DIFDELCMD < 1/0               & 83,3 &                    &      & \emph{tabular}   & 64,7 \\
+%DIFDELCMD < A/B               & 82,7 &                    &      &                  &      \\
+%DIFDELCMD < B/A               & 68,0 &                    &      &                  &      \\
+%DIFDELCMD < \bottomrule
+%DIFDELCMD < \end{tabular}
+%DIFDELCMD < \end{table}
+%DIFDELCMD < %%%
+\DIFdelend \DIFaddbegin \begin{table}[ht]
 \centering
 \caption{Efeito dos \emph{nomes de classe} sobre a estimação, por modelo (média das $3$
 sementes; atributos $x_1/x_2$, estilo \emph{default}). ``Fid.\
@@ -984,7 +1140,7 @@ A'' $=$ fidelidade da estimação no Problema A (rotulação zero-shot, independ
 ``Cons.\ B ($n$)'' $=$ consistência da transferência ao Problema B com $n$ exemplos.
 Valores em \%.}
 \label{tab:bias}
-\footnotesize\color{red}
+\footnotesize
 \setlength{\tabcolsep}{5pt}
 \begin{tabular}{lrrrrrr}
 \toprule
@@ -1005,6 +1161,7 @@ Vermelho/Azul     & 82,2 & 73,0 & 73,3 & 77,3 & 68,0 & 90,0 \\
 \bottomrule
 \end{tabular}
 \end{table}
+\DIFaddend 
 
 \begin{figure}[ht]
 \centering
@@ -1058,8 +1215,13 @@ média sobre $n>0$ e os três peritos, a ordem é \emph{Random} ($90{,}3\%$) $>$
 significativa com poucos exemplos e desaparece com muitos: no especialista aniso.\ $x_2$,
 $\Delta_{10\text{-shot}} = +0{,}188$ (IC$_{95}=[+0{,}107;+0{,}257]$) e
 $\Delta_{20\text{-shot}} = +0{,}064$ (IC$_{95}=[-0{,}154;+0{,}215]$, não significativo). A
-interpretação, coerente com Min et al.~\cite{minRethinkingRole2022}: com poucos exemplos o
-LLM precisa de \emph{âncoras prototípicas} (alta margem); com muitos, a informação sobre a
+interpretação, coerente com Min et al.~\cite{minRethinkingRole2022} \DIFaddbegin \DIFadd{e com a leitura
+bayesiana de Xie et al.~\mbox{%DIFAUXCMD
+\cite{xieExplanationInContext2022}}\hskip0pt%DIFAUXCMD
+, em que cada exemplo é um sinal
+sobre o conceito latente a inferir}\DIFaddend : com poucos exemplos o
+LLM precisa de \emph{âncoras prototípicas} (alta margem)\DIFaddbegin \DIFadd{, que dão sinal nítido sobre o
+critério}\DIFaddend ; com muitos, a informação sobre a
 geometria da fronteira (exemplos difíceis) supera o ruído: daí \emph{hard} atingir $97{,}9\%$
 em $40$-shot. O padrão se repete no \texttt{gemini-2.5-flash-lite} (\emph{easy} $93{,}5\%$
 vs.\ \emph{hard} $78{,}1\%$ na média sobre $n>0$), reforçando a refutação de H4 nos dois
@@ -1124,8 +1286,8 @@ portanto, o caso real do Bloco 3.
 \DIFdelendFL \DIFaddbeginFL \includegraphics[width=0.95\textwidth]{bloco23_external_svm_meialua_seed42__gpt4mini_gt.png}
 \DIFaddendFL \caption{Problema F (meia-lua, seed $42$, \texttt{gpt-4o-mini}): superfície de separação do
 SVM RBF treinado no \emph{ground truth} (esq.) vs.\ \DIFaddbeginFL \DIFaddFL{treinado nos }\DIFaddendFL rótulos zero-shot do LLM
-(dir.). \DIFaddbeginFL \DIFaddFL{Em ambos os painéis os pontos aparecem nas classes \emph{corretas}
-(\emph{ground truth}, azul/vermelho): à direita, a lua vermelha inteira cai na região
+(dir.). \DIFaddbeginFL \DIFaddFL{Em ambos os painéis os pontos aparecem nas classes }\emph{\DIFaddFL{corretas}}
+\DIFaddFL{(}\emph{\DIFaddFL{ground truth}}\DIFaddFL{, azul/vermelho): à direita, a lua vermelha inteira cai na região
 azul, evidenciando que o LLM erra muito mais que o SVM RBF de referência, que não erra
 nenhum ponto. }\DIFaddendFL Nas
 sementes $123$ e $7$ o zero-shot colapsa em classe única e o protocolo é abortado.}
@@ -1170,6 +1332,15 @@ diferem por poucos pontos percentuais).}
 
 \subsection{Bloco 3 — Estudo de Caso Real (Peso $\times$ Altura)}
 \DIFaddbegin \label{sec:res_bloco3}
+%DIF >  REVISAO 25/08/2026: a convencao de rotulo do peso x altura foi corrigida no codigo
+%DIF >  (classe 1 = Homem, conforme `male?` = +1 em Hghtwght_desired.txt; antes o codigo tratava
+%DIF >  a classe 0 como "Homem"). Todas as metricas "vs rotulo real" desta secao foram
+%DIF >  recalculadas offline (troca exata 1 - valor, ver src/corrigir_mapeamento_homem_mulher.py)
+%DIF >  a partir de execucao_2026-07-05_12-34-52_completa/*_corrigido_hm.csv. Fidelidade,
+%DIF >  kappa e W nao mudam. PENDENTE: (i) recoletar a Fase E do Bloco 3 (tab:real_e) com a
+%DIF >  convencao corrigida, pois os exemplos few-shot foram mostrados ao LLM com os nomes
+%DIF >  trocados; (ii) regerar as figuras bloco23_external_* que exibem acuracia vs real;
+%DIF >  (iii) propagar os numeros novos para roteiro_apresentacao.txt e slides.
 \DIFaddend 
 
 O caso real expõe a \emph{dependência semântica} dos atributos
@@ -1177,30 +1348,67 @@ O caso real expõe a \emph{dependência semântica} dos atributos
 quantidades: a \emph{fidelidade} (a métrica reproduz o LLM), a \emph{acurácia do LLM vs.\
 real} (as decisões do LLM contra o rótulo verdadeiro) e a \emph{acurácia da métrica vs.\
 real} (a métrica estimada contra o rótulo verdadeiro). Com nomes \emph{semânticos}
-(peso/altura), o LLM classifica melhor que com neutros (acurácia própria $56{,}7\%$ vs.\
-$45{,}2\%$, este último abaixo do acaso da classe majoritária, $57{,}1\%$), e a métrica
-estimada a partir dessas decisões recupera a estrutura real com robustez ($89{,}5\%$,
-$\approx 7$ erros em $70$ nas três sementes). Com nomes \emph{neutros} ($x_1/x_2$), a métrica
-vs.\ real torna-se \emph{arbitrária}: entre sementes ela vale $8{,}6\%$, $92{,}9\%$ e
-$31{,}4\%$ (a média $44{,}3\%$ é enganosa), porque, sem âncora semântica, o mapeamento
+(peso/altura), o LLM classifica \DIFdelbegin \DIFdel{melhor }\DIFdelend \DIFaddbegin \emph{\DIFadd{pior}} \DIFaddend que com neutros (acurácia própria \DIFdelbegin \DIFdel{$56{,}7\%$ }\DIFdelend \DIFaddbegin \DIFadd{$43{,}3\%$ }\DIFaddend vs.\
+\DIFdelbegin \DIFdel{$45{,}2\%$, este último }\DIFdelend \DIFaddbegin \DIFadd{$54{,}8\%$, ambas }\DIFaddend abaixo do acaso da classe majoritária, $57{,}1\%$)\DIFdelbegin \DIFdel{, e }\DIFdelend \DIFaddbegin \DIFadd{: os valores chegam
+normalizados em $[-1, 1]$, sem unidade, e o LLM rotula como ``Homem'' sobretudo os pontos
+de altura e peso negativos, os mais baixos e leves, invertendo a relação física. Uma
+explicação compatível é }\DIFaddend a \DIFaddbegin \DIFadd{dependência do raciocínio numérico em relação à frequência dos
+números no pré-treinamento, documentada por Razeghi et
+al.~\mbox{%DIFAUXCMD
+\cite{razeghiImpactPretraining2022}}\hskip0pt%DIFAUXCMD
+: valores decimais normalizados são termos raros no
+corpus, ao contrário de alturas em metros e pesos em quilogramas. A }\DIFaddend métrica
+estimada a partir dessas decisões \DIFdelbegin \DIFdel{recupera a estrutura real com robustez ($89{,}5\%$, $\approx 7$ }\DIFdelend \DIFaddbegin \DIFadd{herda essa inversão de forma sistemática ($10{,}5\%$ vs.\
+real, $\approx 63$ }\DIFaddend erros em $70$\DIFaddbegin \DIFadd{; entre $7{,}1\%$ e $12{,}9\%$ }\DIFaddend nas três sementes)\DIFaddbegin \DIFadd{, o que
+significa que ela }\emph{\DIFadd{separa}} \DIFadd{os dois grupos reais em $89{,}5\%$ dos pontos, mas com os
+nomes trocados}\DIFaddend . Com nomes \emph{neutros} ($x_1/x_2$), a métrica vs.\ real torna-se
+\emph{arbitrária}: entre sementes ela vale \DIFdelbegin \DIFdel{$8{,}6\%$, $92{,}9\%$ e $31{,}4\%$ }\DIFdelend \DIFaddbegin \DIFadd{$91{,}4\%$, $7{,}1\%$ e $68{,}6\%$ }\DIFaddend (a média
+\DIFdelbegin \DIFdel{$44{,}3\%$ }\DIFdelend \DIFaddbegin \DIFadd{$55{,}7\%$ }\DIFaddend é enganosa), porque, sem âncora semântica, o mapeamento
 rótulo$\leftrightarrow$classe inverte de semente para semente. O contexto semântico dos
-atributos é, no caso real, determinante.
+atributos é, no caso real, determinante\DIFaddbegin \DIFadd{, mas no sentido de fixar uma convenção de
+nomeação, não de acertar o rótulo}\DIFaddend .
 
-\paragraph{Por que a métrica supera o próprio LLM (peso/altura).}
-Um ponto merece explicação: com nomes semânticos, a métrica estimada acerta $89{,}5\%$ vs.\
-o rótulo real, mais que a acurácia própria do LLM ($56{,}7\%$). Isso não é contradição nem
-artefato. A métrica classifica por centróide mais próximo, e os centróides são calculados
-como a \emph{média} dos pontos rotulados pelo LLM em cada classe. Quando os erros do LLM são
-espacialmente \emph{pouco estruturados} (dispersos, sobretudo perto da fronteira), eles se
-cancelam na média: o centróide de cada classe rotulada pelo LLM ainda cai perto da média
-verdadeira da classe. A regra por centróide mais próximo recupera então a separação correta
-apesar do ruído rótulo a rótulo. Em outras palavras, o LLM \emph{localiza} os dois grupos no
-espaço melhor do que \emph{rotula} pontos individuais, e a agregação por centróides extrai
-essa informação espacial. É também um alerta: a acurácia elevada da métrica vs.\ real mede a
-qualidade da \emph{separação espacial} induzida, não a acurácia ponto a ponto do LLM, que
-permanece modesta.
+\paragraph{Por que a métrica \DIFdelbegin \DIFdel{supera }\DIFdelend \DIFaddbegin \DIFadd{separa melhor do que }\DIFaddend o \DIFdelbegin \DIFdel{próprio }\DIFdelend LLM \DIFaddbegin \DIFadd{rotula }\DIFaddend (peso/altura).}
+Um ponto merece explicação: com nomes semânticos, a métrica estimada \DIFdelbegin \DIFdel{acerta }\DIFdelend \DIFaddbegin \DIFadd{concorda com a
+separação real em }\DIFaddend $89{,}5\%$ \DIFdelbegin \DIFdel{vs.\
+o rótulo real , }\DIFdelend \DIFaddbegin \DIFadd{dos pontos (a menos da troca de nomes), muito }\DIFaddend mais que a
+acurácia própria do LLM (\DIFaddbegin \DIFadd{$43{,}3\%$, ou }\DIFaddend $56{,}7\%$ \DIFaddbegin \DIFadd{após a mesma troca}\DIFaddend ). Isso não é
+contradição nem artefato. A métrica classifica por centróide mais próximo, e os centróides
+são calculados como a \emph{média} dos pontos rotulados pelo LLM em cada classe. Quando os
+erros do LLM são espacialmente \emph{pouco estruturados} (dispersos, sobretudo perto da
+fronteira), eles se cancelam na média: o centróide de cada classe rotulada pelo LLM ainda
+cai perto da média verdadeira \DIFdelbegin \DIFdel{da classe}\DIFdelend \DIFaddbegin \DIFadd{de um dos grupos}\DIFaddend . A regra por centróide mais próximo recupera
+então a separação correta apesar do ruído rótulo a rótulo. Em outras palavras, o LLM
+\emph{localiza} os dois grupos no espaço melhor do que \emph{rotula} pontos individuais, e
+a agregação por centróides extrai essa informação espacial. É também um alerta \DIFdelbegin \DIFdel{: a acurácia }\DIFdelend \DIFaddbegin \DIFadd{duplo: a
+concordância }\DIFaddend elevada da métrica \DIFdelbegin \DIFdel{vs.\ }\DIFdelend \DIFaddbegin \DIFadd{com a separação }\DIFaddend real mede a qualidade da \emph{separação
+espacial} induzida, não a acurácia ponto a ponto do LLM, que permanece modesta\DIFdelbegin \DIFdel{.
+}\DIFdelend \DIFaddbegin \DIFadd{; e a
+acurácia vs.\ real nominal ($10{,}5\%$) mostra que essa separação veio com a nomeação das
+classes invertida.
+}\DIFaddend 
 
-\begin{table}[ht]
+\DIFdelbegin %DIFDELCMD < \begin{table}[ht]
+%DIFDELCMD < \centering
+%DIFDELCMD < \caption{Bloco 3: estimação no Problema G ($2$ atributos, médias das $3$ sementes;
+%DIFDELCMD < estimação e avaliação sobre os $70$ pontos de treino).
+%DIFDELCMD < ``Fid.'' $=$ métrica vs.\ LLM; ``LLM real'' $=$ LLM vs.\ rótulo verdadeiro; ``Métrica real''
+%DIFDELCMD < $=$ métrica estimada vs.\ rótulo verdadeiro.}
+%DIFDELCMD < \label{tab:real_a}
+%DIFDELCMD < \begin{tabular}{lrrrr}
+%DIFDELCMD < \toprule
+%DIFDELCMD < \textbf{Nomes} & \textbf{Fid.\ (\%)} & \textbf{LLM real (\%)} &
+%DIFDELCMD < \textbf{Métrica real (\%)} & \textbf{err.\ (métrica)} \\
+%DIFDELCMD < \midrule
+%DIFDELCMD < peso/altura & 59,5 & 56,7 & 89,5 & $\approx 7/70$ \\
+%DIFDELCMD < $x_1/x_2$   & 56,2 & 45,2 & arbitrária$^\dagger$ & $\approx 39/70$ \\
+%DIFDELCMD < \bottomrule
+%DIFDELCMD < \multicolumn{5}{l}{\footnotesize $^\dagger$ Entre sementes: $8{,}6$ / $92{,}9$ / $31{,}4\%$
+%DIFDELCMD < (o mapeamento rótulo$\leftrightarrow$classe inverte por semente).}
+%DIFDELCMD < \end{tabular}
+%DIFDELCMD < \end{table}
+%DIFDELCMD < %%%
+\DIFdelend \DIFaddbegin \begin{table}[ht]
 \centering
 \caption{Bloco 3: estimação no Problema G ($2$ atributos, médias das $3$ sementes;
 estimação e avaliação sobre os $70$ pontos de treino).
@@ -1212,114 +1420,148 @@ $=$ métrica estimada vs.\ rótulo verdadeiro.}
 \textbf{Nomes} & \textbf{Fid.\ (\%)} & \textbf{LLM real (\%)} &
 \textbf{Métrica real (\%)} & \textbf{err.\ (métrica)} \\
 \midrule
-peso/altura & 59,5 & 56,7 & 89,5 & $\approx 7/70$ \\
-$x_1/x_2$   & 56,2 & 45,2 & arbitrária$^\dagger$ & $\approx 39/70$ \\
+peso/altura & 59,5 & 43,3 & 10,5$^\ddagger$ & $\approx 63/70$ \\
+$x_1/x_2$   & 56,2 & 54,8 & arbitrária$^\dagger$ & $\approx 31/70$ \\
 \bottomrule
-\multicolumn{5}{l}{\footnotesize $^\dagger$ Entre sementes: $8{,}6$ / $92{,}9$ / $31{,}4\%$
-(o mapeamento rótulo$\leftrightarrow$classe inverte por semente).}
+\multicolumn{5}{l}{\footnotesize $^\dagger$ Entre sementes: $91{,}4$ / $7{,}1$ / $68{,}6\%$
+(o mapeamento rótulo$\leftrightarrow$classe inverte por semente).} \\
+\multicolumn{5}{l}{\footnotesize $^\ddagger$ Nomeação invertida nas três sementes:
+$89{,}5\%$ de concordância com a separação real a menos da troca de nomes.}
 \end{tabular}
 \end{table}
+\DIFaddend 
 
-\DIFaddbegin \paragraph{\DIFadd{A métrica aprendida e a projeção elíptica.}}
+\paragraph{\DIFdelbegin \DIFdel{Nomes de classe }\DIFdelend A \DIFaddbegin \DIFadd{métrica aprendida e a projeção elíptica.}}
 \DIFadd{Para tornar explícito o aprendizado de métrica no caso real, a
 Tabela~\ref{tab:real_w} apresenta os vetores de parâmetros }\West{} \DIFadd{estimados com nomes
-semânticos (peso/altura), com $2$ atributos e com a projeção elíptica de $4$ atributos
+semânticos (peso}\DIFaddend /\DIFdelbegin \DIFdel{B: o mapeamento }\DIFdelend \DIFaddbegin \DIFadd{altura), com $2$ atributos e com a projeção elíptica de $4$ atributos
 ($\text{peso}^2$, $\text{altura}^2$), que corresponde à forma quadrática do classificador
-ótimo deste problema. A leitura deve ser \emph{direcional} (invariância de escala): o NNLS
-identifica consistentemente a \emph{altura} como atributo dominante ($w_{\text{altura}}
+ótimo deste problema. A leitura deve ser }\emph{\DIFadd{direcional}} \DIFadd{(invariância de escala): o NNLS
+identifica consistentemente a }\emph{\DIFadd{altura}} \DIFadd{como atributo dominante ($w_{\text{altura}}
 \gg w_{\text{peso}}$ nas três sementes) e, com $4$ atributos, transfere peso substancial
 aos termos quadráticos, coerente com a geometria elíptica. O Perceptron, neste problema,
 quase não se afasta da inicialização $[1,\ldots,1]$ (direção pouco informativa), o que
-reforça o valor de usar dois estimadores: onde um é pouco sensível, o outro captura a
+reforça o valor de usar dois estimadores: onde um }\DIFaddend é \DIFdelbegin \DIFdel{arbitrário}\DIFdelend \DIFaddbegin \DIFadd{pouco sensível, o outro captura a
 estrutura.
 }
 
 \begin{table}[ht]
 \centering
-\caption{\DIFaddFL{Bloco 3: vetores }\West{} \DIFaddFL{estimados no caso real (nomes peso/altura,
+\caption{Bloco 3: vetores \West{} estimados no caso real (nomes peso/altura,
 \texttt{gpt-4o-mini}), por semente. Com $2$ atributos, $W = [w_{\text{peso}};
 w_{\text{altura}}]$; com $4$, acrescentam-se $[w_{\text{peso}^2}; w_{\text{altura}^2}]$
-(projeção elíptica). Leitura direcional (invariância de escala).}}
+(projeção elíptica). Leitura direcional (invariância de escala).}
 \label{tab:real_w}
 \footnotesize
 \setlength{\tabcolsep}{4pt}
 \begin{tabular}{lllll}
 \toprule
-& \multicolumn{2}{c}{\DIFaddFL{\textbf{$2$ atributos}}} & \multicolumn{2}{c}{\DIFaddFL{\textbf{$4$ atributos
-(elipse)}}} \\
+& \multicolumn{2}{c}{\textbf{$2$ atributos}} & \multicolumn{2}{c}{\textbf{$4$ atributos
+(elipse)}} \\
 \cmidrule(lr){2-3}\cmidrule(lr){4-5}
-\DIFaddFL{\textbf{Semente} }& \DIFaddFL{\textbf{Perceptron} }& \DIFaddFL{\textbf{NNLS} }& \DIFaddFL{\textbf{Perceptron} }&
-\DIFaddFL{\textbf{NNLS} }\\
+\textbf{Semente} & \textbf{Perceptron} & \textbf{NNLS} & \textbf{Perceptron} &
+\textbf{NNLS} \\
 \midrule
-\DIFaddFL{42  }& \DIFaddFL{$[0{,}97;\,0{,}94]$ }& \DIFaddFL{$[0{,}00;\,2{,}38]$ }& \DIFaddFL{$[0{,}98;\,0{,}97;\,1{,}00;\,1{,}01]$ }&
-\DIFaddFL{$[1{,}87;\,4{,}70;\,10{,}0;\,17{,}3]$ }\\
-\DIFaddFL{123 }& \DIFaddFL{$[0{,}89;\,0{,}88]$ }& \DIFaddFL{$[1{,}07;\,1{,}34]$ }& \DIFaddFL{$[0{,}89;\,0{,}88;\,1{,}00;\,1{,}00]$ }&
-\DIFaddFL{$[1{,}10;\,1{,}53;\,19{,}8;\,6{,}75]$ }\\
-\DIFaddFL{7   }& \DIFaddFL{$[0{,}95;\,0{,}89]$ }& \DIFaddFL{$[0{,}00;\,1{,}88]$ }& \DIFaddFL{$[0{,}96;\,0{,}89;\,1{,}02;\,1{,}03]$ }&
-\DIFaddFL{$[0{,}47;\,2{,}14;\,8{,}08;\,8{,}93]$ }\\
+42  & $[0{,}97;\,0{,}94]$ & $[0{,}00;\,2{,}38]$ & $[0{,}98;\,0{,}97;\,1{,}00;\,1{,}01]$ &
+$[1{,}87;\,4{,}70;\,10{,}0;\,17{,}3]$ \\
+123 & $[0{,}89;\,0{,}88]$ & $[1{,}07;\,1{,}34]$ & $[0{,}89;\,0{,}88;\,1{,}00;\,1{,}00]$ &
+$[1{,}10;\,1{,}53;\,19{,}8;\,6{,}75]$ \\
+7   & $[0{,}95;\,0{,}89]$ & $[0{,}00;\,1{,}88]$ & $[0{,}96;\,0{,}89;\,1{,}02;\,1{,}03]$ &
+$[0{,}47;\,2{,}14;\,8{,}08;\,8{,}93]$ \\
 \bottomrule
 \end{tabular}
 \end{table}
 
 \DIFadd{O efeito da projeção elíptica sobre o desempenho aparece na
 Tabela~\ref{tab:real_nfeat}, e a leitura honesta tem duas partes. Primeiro, a elipse
-melhora o quanto a métrica \emph{reproduz o LLM}: a fidelidade NNLS sobe de $58{,}6\%$
+melhora o quanto a métrica }\emph{\DIFadd{reproduz o LLM}}\DIFadd{: a fidelidade NNLS sobe de $58{,}6\%$
 ($2$ atributos) para $72{,}4\%$ ($4$), e, com nomes neutros, a fidelidade Perceptron sobe
 de $56{,}2\%$ para $69{,}0\%$, o já citado ganho da Seção do Bloco 1. Segundo, a acurácia
-da métrica \emph{contra o rótulo verdadeiro} com nomes semânticos já é alta com $2$
-atributos ($89{,}5\%$) e a elipse a mantém nesse patamar ($88{,}1\%$): como os erros do
-LLM se cancelam na média dos centróides (ver acima), a separação real já é bem capturada
-no espaço original, e o ganho da expressividade quadrática se manifesta na aproximação ao
-\emph{critério do LLM}, não ao \emph{ground truth}.
-}
+da métrica }\emph{\DIFadd{contra o rótulo verdadeiro}} \DIFadd{com nomes semânticos fica em $10{,}5\%$ com $2$
+atributos e em $11{,}9\%$ com $4$, isto é, a separação real já é bem capturada no espaço
+original ($\approx 89\%$ a menos da troca de nomes) e a elipse não altera esse patamar:
+como os erros do LLM se cancelam na média dos centróides (ver acima), o ganho da
+expressividade quadrática se manifesta na aproximação ao }\emph{\DIFadd{critério do LLM}}\DIFadd{, não ao
+}\emph{\DIFadd{ground truth}}\DIFaddend .
+\DIFdelbegin %DIFDELCMD < \MBLOCKRIGHTBRACE
+%DIFDELCMD < %%%
+\DIFdelend \DIFaddbegin 
 
 \begin{table}[ht]
 \centering
-\caption{\DIFaddFL{Bloco 3: efeito da projeção elíptica ($2$ vs.\ $4$ atributos) no caso real
-(\texttt{gpt-4o-mini}, médias das $3$ sementes, avaliação nos $70$ pontos de treino).}}
+\caption{Bloco 3: efeito da projeção elíptica ($2$ vs.\ $4$ atributos) no caso real
+(\texttt{gpt-4o-mini}, médias das $3$ sementes, avaliação nos $70$ pontos de treino).}
 \label{tab:real_nfeat}
 \small
 \begin{tabular}{llrrr}
 \toprule
-\DIFaddFL{\textbf{Nomes} }& \DIFaddFL{\textbf{Atributos} }& \DIFaddFL{\textbf{Fid.\ Perc.\ (\%)} }&
-\DIFaddFL{\textbf{Fid.\ NNLS (\%)} }& \DIFaddFL{\textbf{Métrica real, Perc.\ (\%)} }\\
+\textbf{Nomes} & \textbf{Atributos} & \textbf{Fid.\ Perc.\ (\%)} &
+\textbf{Fid.\ NNLS (\%)} & \textbf{Métrica real, Perc.\ (\%)} \\
 \midrule
-\DIFaddFL{peso/altura }& \DIFaddFL{2 }& \DIFaddFL{59,5 }& \DIFaddFL{58,6 }& \DIFaddFL{89,5 }\\
-\DIFaddFL{peso/altura }& \DIFaddFL{4 (elipse) }& \DIFaddFL{60,0 }& \DIFaddFL{72,4 }& \DIFaddFL{88,1 }\\
-\DIFaddFL{$x_1/x_2$   }& \DIFaddFL{2 }& \DIFaddFL{56,2 }& \DIFaddFL{54,8 }& \DIFaddFL{44,3$^\dagger$ }\\
-\DIFaddFL{$x_1/x_2$   }& \DIFaddFL{4 (elipse) }& \DIFaddFL{69,0 }& \DIFaddFL{76,7 }& \DIFaddFL{44,8$^\dagger$ }\\
+peso/altura & 2 & 59,5 & 58,6 & 10,5$^\ddagger$ \\
+peso/altura & 4 (elipse) & 60,0 & 72,4 & 11,9$^\ddagger$ \\
+$x_1/x_2$   & 2 & 56,2 & 54,8 & 55,7$^\dagger$ \\
+$x_1/x_2$   & 4 (elipse) & 69,0 & 76,7 & 55,2$^\dagger$ \\
 \bottomrule
-\multicolumn{5}{l}{\footnotesize \DIFaddFL{$^\dagger$ Arbitrária entre sementes (inversão de
-rótulo, ver texto).}}
+\multicolumn{5}{l}{\footnotesize $^\dagger$ Arbitrária entre sementes (inversão de
+rótulo, ver texto).} \\
+\multicolumn{5}{l}{\footnotesize $^\ddagger$ Nomeação invertida nas três sementes (ver texto).}
 \end{tabular}
 \end{table}
 
-\DIFaddend \paragraph{Nomes de classe A/B: o mapeamento é arbitrário.}
-Repetindo a classificação com nomes de classe \emph{neutros} (``A ou B'' em vez de
+\paragraph{\DIFadd{Nomes de classe A/B: o mapeamento inverte nos dois casos.}}
+\DIFaddend Repetindo a classificação com nomes de classe \emph{neutros} (``A ou B'' em vez de
 ``homem ou mulher''), a acurácia da métrica estimada (Perceptron) vs.\ rótulo real, na
-média das $3$ sementes, despenca de $0{,}895$ para $0{,}110$ ($\approx 62/70$ erros) com
-atributos semânticos (Tabela~\ref{tab:real_ab}). O valor, muito \emph{abaixo} do
-acaso, não é ruído: é \emph{inversão sistemática de convenção}. O LLM continua separando
-os dois grupos (invertendo-se os rótulos, a acurácia beira $0{,}89$), mas, sem âncora
-semântica nos nomes, o mapeamento rótulo$\leftrightarrow$classe é arbitrário e emergiu na
-convenção oposta à do \emph{ground truth}. O prior semântico atua, portanto, também nos
-\emph{nomes de classe}, não apenas nos atributos. Note-se um contraste revelador: a
-inversão com nomes A/B é \emph{sistemática} (as três sementes caem juntas em $0{,}07$–$0{,}13$),
-ao passo que a variante com nomes de classe semânticos mas atributos neutros
-(homem/mulher, $x_1/x_2$) é \emph{caótica} entre sementes ($0{,}09$, $0{,}93$, $0{,}31$).
-Uma leitura plausível, ainda que especulativa, é que com A/B o LLM não tem nenhuma âncora e
-recai numa convenção-padrão consistente (que por acaso inverte a do \emph{ground truth}),
-enquanto a presença de nomes de classe semânticos sem semântica de atributo cria uma
-ancoragem \emph{parcial} e conflitante, que resolve de modo instável a cada semente. No
-aprendizado em contexto,
-o LLM adota a convenção dos
-exemplos que recebe: a concordância com a métrica-alvo sobe de $0{,}778$ (zero-shot) a
+média das $3$ sementes, \DIFdelbegin \DIFdel{despenca de $0{,}895$ para }\DIFdelend \DIFaddbegin \DIFadd{é }\DIFaddend $0{,}110$ ($\approx 62/70$ erros) com atributos semânticos
+(Tabela~\ref{tab:real_ab})\DIFdelbegin \DIFdel{. O valor, muito }\DIFdelend \DIFaddbegin \DIFadd{, praticamente idêntica à obtida com os nomes semânticos
+($0{,}105$). Valores tão }\DIFaddend \emph{abaixo} do acaso \DIFdelbegin \DIFdel{, }\DIFdelend não \DIFdelbegin \DIFdel{é }\DIFdelend \DIFaddbegin \DIFadd{são }\DIFaddend ruído: \DIFdelbegin \DIFdel{é }\DIFdelend \DIFaddbegin \DIFadd{são }\DIFaddend \emph{inversão
+sistemática de convenção}. O LLM \DIFdelbegin \DIFdel{continua separando
+}\DIFdelend \DIFaddbegin \DIFadd{separa }\DIFaddend os dois grupos (invertendo-se os rótulos, a
+acurácia beira $0{,}89$ \DIFaddbegin \DIFadd{nos dois casos}\DIFaddend ), mas \DIFdelbegin \DIFdel{, sem âncora
+semântica nos nomes, }\DIFdelend o mapeamento rótulo$\leftrightarrow$classe
+\DIFdelbegin \DIFdel{é arbitrário e emergiu }\DIFdelend \DIFaddbegin \DIFadd{emerge }\DIFaddend na convenção oposta à do \emph{ground truth}\DIFdelbegin \DIFdel{. }\DIFdelend \DIFaddbegin \DIFadd{, e emerge assim tanto com ``A/B''
+quanto com ``homem/mulher''. Nesta base, portanto, os nomes de classe semânticos
+}\emph{\DIFadd{não}} \DIFadd{ancoram a nomeação: com valores normalizados e sem unidade, o LLM associa
+``Homem'' ao grupo de peso e altura negativos, o mais baixo e leve, e ``A'' a esse mesmo
+grupo. }\DIFaddend O prior semântico \DIFdelbegin \DIFdel{atua, portanto, também nos
+}\emph{\DIFdel{nomes de classe}}%DIFAUXCMD
+\DIFdel{, }\DIFdelend \DIFaddbegin \DIFadd{dos nomes de classe, visível no Bloco 1
+(Tabela~\ref{tab:bias}), }\DIFaddend não \DIFdelbegin \DIFdel{apenas nos atributos}\DIFdelend \DIFaddbegin \DIFadd{se manifesta aqui como acerto de convenção}\DIFaddend . Note-se um
+contraste\DIFdelbegin \DIFdel{revelador}\DIFdelend : a inversão \DIFdelbegin \DIFdel{com nomes A/B }\DIFdelend é \emph{sistemática} \DIFaddbegin \DIFadd{quando os atributos são semânticos }\DIFaddend (as três
+sementes caem juntas em $0{,}07$–$0{,}13$\DIFaddbegin \DIFadd{, com qualquer nome de classe}\DIFaddend ), ao passo que a
+variante com nomes de classe semânticos \DIFdelbegin \DIFdel{mas }\DIFdelend \DIFaddbegin \DIFadd{e }\DIFaddend atributos neutros (homem/mulher, $x_1/x_2$) é
+\emph{caótica} entre sementes (\DIFdelbegin \DIFdel{$0{,}09$, $0{,}93$, $0{,}31$}\DIFdelend \DIFaddbegin \DIFadd{$0{,}91$, $0{,}07$, $0{,}69$}\DIFaddend ). Uma leitura plausível, ainda
+que especulativa, é que \DIFdelbegin \DIFdel{com A/B o LLM não tem nenhuma âncora e
+recai numa convenção-padrão }\DIFdelend \DIFaddbegin \DIFadd{a semântica dos atributos fixa uma convenção }\DIFaddend consistente (que
+\DIFdelbegin \DIFdel{por acaso }\DIFdelend inverte a do \emph{ground truth}), enquanto \DIFdelbegin \DIFdel{a presença de nomes de classe semânticos sem semântica de atributo cria uma
+ancoragem }\emph{\DIFdel{parcial}} %DIFAUXCMD
+\DIFdel{e conflitante, que resolve de modo instável a }\DIFdelend \DIFaddbegin \DIFadd{atributos neutros deixam a convenção ao acaso
+de }\DIFaddend cada semente. No aprendizado em contexto, o LLM adota a convenção dos exemplos que
+recebe: \DIFaddbegin \DIFadd{com nomes A/B }\DIFaddend a concordância com a métrica-alvo sobe de $0{,}778$ (zero-shot) a
 $0{,}974$ ($40$-shot), enquanto a acurácia vs.\ real permanece $\approx 0{,}14$ (a
 métrica-alvo herdou a convenção invertida), e o Perceptron \emph{baseline} treinado nos
 mesmos exemplos acompanha ($0{,}12$–$0{,}19$), indicando consistência entre aprendizes, não
 defeito do LLM.
 
-\begin{table}[ht]
+\DIFdelbegin %DIFDELCMD < \begin{table}[ht]
+%DIFDELCMD < \centering
+%DIFDELCMD < \caption{Bloco 3: efeito dos nomes de classe (A/B vs.\ homem/mulher) na acurácia da
+%DIFDELCMD < métrica estimada (Perceptron) vs.\ rótulo real (zero-shot, média das $3$ sementes,
+%DIFDELCMD < treino $=70$).}
+%DIFDELCMD < \label{tab:real_ab}
+%DIFDELCMD < \begin{tabular}{llrr}
+%DIFDELCMD < \toprule
+%DIFDELCMD < \textbf{Classes} & \textbf{Features} & \textbf{Acc.\ real} & \textbf{Erros} \\
+%DIFDELCMD < \midrule
+%DIFDELCMD < homem/mulher & peso/altura & 0,895 & $\approx 7/70$ \\
+%DIFDELCMD < A/B          & peso/altura & 0,110 & $\approx 62/70$ \\
+%DIFDELCMD < homem/mulher & $x_1/x_2$   & 0,443 & $\approx 39/70$ \\
+%DIFDELCMD < A/B          & $x_1/x_2$   & 0,186 & $\approx 57/70$ \\
+%DIFDELCMD < \bottomrule
+%DIFDELCMD < \end{tabular}
+%DIFDELCMD < \end{table}
+%DIFDELCMD < %%%
+\DIFdelend \DIFaddbegin \begin{table}[ht]
 \centering
 \caption{Bloco 3: efeito dos nomes de classe (A/B vs.\ homem/mulher) na acurácia da
 métrica estimada (Perceptron) vs.\ rótulo real (zero-shot, média das $3$ sementes,
@@ -1329,23 +1571,54 @@ treino $=70$).}
 \toprule
 \textbf{Classes} & \textbf{Features} & \textbf{Acc.\ real} & \textbf{Erros} \\
 \midrule
-homem/mulher & peso/altura & 0,895 & $\approx 7/70$ \\
+homem/mulher & peso/altura & 0,105 & $\approx 63/70$ \\
 A/B          & peso/altura & 0,110 & $\approx 62/70$ \\
-homem/mulher & $x_1/x_2$   & 0,443 & $\approx 39/70$ \\
+homem/mulher & $x_1/x_2$   & 0,557 & $\approx 31/70$ \\
 A/B          & $x_1/x_2$   & 0,186 & $\approx 57/70$ \\
 \bottomrule
 \end{tabular}
 \end{table}
+\DIFaddend 
 
-No aprendizado em contexto (Tabela~\ref{tab:real_e}), o LLM iguala ou supera o Perceptron
-\emph{baseline} na maioria das configurações, com vantagem de até $+15{,}6$ pontos (seed $42$,
-$4$-shot). Poucos exemplos bastam: a acurácia real salta de $53$–$60\%$ (zero-shot) para
-$79$–$90\%$ com apenas $4$ exemplos.
+No aprendizado em contexto (Tabela~\ref{tab:real_e}), \DIFdelbegin \DIFdel{o LLM iguala ou supera o Perceptron
+}\emph{\DIFdel{baseline}} %DIFAUXCMD
+\DIFdel{na maioria das configurações, com vantagem de até $+15{,}6$ pontos (seed $42$, $4$-shot). Poucos exemplosbastam: a acurácia real salta }\DIFdelend \DIFaddbegin \DIFadd{os exemplos fornecidos ao LLM foram
+rotulados pela melhor métrica estimada na Fase A, que, como visto, carrega a nomeação
+invertida; o resultado deve ser lido, portanto, como adoção da convenção dos exemplos. É o
+que ocorre: a concordância do LLM com a métrica-alvo sobe }\DIFaddend de $53$–\DIFdelbegin \DIFdel{$60\%$ }\DIFdelend \DIFaddbegin \DIFadd{$73\%$ }\DIFaddend (zero-shot) para
+\DIFdelbegin \DIFdel{$79$}\DIFdelend \DIFaddbegin \DIFadd{$91$}\DIFaddend –\DIFdelbegin \DIFdel{$90\%$ com apenas }\DIFdelend \DIFaddbegin \DIFadd{$100\%$ com }\DIFaddend $4$ exemplos \DIFdelbegin \DIFdel{.
+}\DIFdelend \DIFaddbegin \DIFadd{ou mais, e a acurácia contra o rótulo real cai de $40$–$47\%$
+para $9$–$22\%$, acompanhada pelo Perceptron }\emph{\DIFadd{baseline}} \DIFadd{treinado nos mesmos exemplos
+($10$–$27\%$). Poucos exemplos bastam para o LLM assumir a convenção que lhe é apresentada,
+seja ela qual for.
+}\DIFaddend 
 
-\begin{table}[ht]
+\DIFdelbegin %DIFDELCMD < \begin{table}[ht]
+%DIFDELCMD < \centering
+%DIFDELCMD < \caption{Bloco 3: aprendizado em contexto no Problema G, acurácia real (\%) do LLM vs.\
+%DIFDELCMD < Perceptron (peso/altura); avaliação nos $30$ pontos de teste.}
+%DIFDELCMD < \label{tab:real_e}
+%DIFDELCMD < \begin{tabular}{lrrrrr}
+%DIFDELCMD < \toprule
+%DIFDELCMD < & \multicolumn{2}{c}{\textbf{Seed 42}} & \multicolumn{2}{c}{\textbf{Seed 123}} \\
+%DIFDELCMD < \cmidrule(lr){2-3}\cmidrule(lr){4-5}
+%DIFDELCMD < \textbf{$n$-shot} & \textbf{LLM} & \textbf{Perc.} & \textbf{LLM} & \textbf{Perc.} \\
+%DIFDELCMD < \midrule
+%DIFDELCMD < 0  & 60,0 & --   & 53,3 & --   \\
+%DIFDELCMD < 4  & 90,0 & 74,4 & 78,9 & 80,0 \\
+%DIFDELCMD < 10 & 90,0 & 83,3 & 77,8 & 73,3 \\
+%DIFDELCMD < 20 & 88,9 & 83,3 & 81,1 & 78,9 \\
+%DIFDELCMD < 40 & 91,1 & 83,3 & 81,1 & 78,9 \\
+%DIFDELCMD < \bottomrule
+%DIFDELCMD < \end{tabular}
+%DIFDELCMD < \end{table}
+%DIFDELCMD < %%%
+\DIFdelend \DIFaddbegin \begin{table}[ht]
 \centering
 \caption{Bloco 3: aprendizado em contexto no Problema G, acurácia real (\%) do LLM vs.\
-Perceptron (peso/altura); avaliação nos $30$ pontos de teste.}
+Perceptron (peso/altura); avaliação nos $30$ pontos de teste. Os exemplos foram rotulados
+pela métrica estimada na Fase A, cuja nomeação é invertida em relação ao rótulo real (ver
+texto).}
 \label{tab:real_e}
 \begin{tabular}{lrrrrr}
 \toprule
@@ -1353,14 +1626,15 @@ Perceptron (peso/altura); avaliação nos $30$ pontos de teste.}
 \cmidrule(lr){2-3}\cmidrule(lr){4-5}
 \textbf{$n$-shot} & \textbf{LLM} & \textbf{Perc.} & \textbf{LLM} & \textbf{Perc.} \\
 \midrule
-0  & 60,0 & --   & 53,3 & --   \\
-4  & 90,0 & 74,4 & 78,9 & 80,0 \\
-10 & 90,0 & 83,3 & 77,8 & 73,3 \\
-20 & 88,9 & 83,3 & 81,1 & 78,9 \\
-40 & 91,1 & 83,3 & 81,1 & 78,9 \\
+0  & 40,0 & --   & 46,7 & --   \\
+4  & 10,0 & 25,6 & 21,1 & 20,0 \\
+10 & 10,0 & 16,7 & 22,2 & 26,7 \\
+20 & 11,1 & 16,7 & 18,9 & 21,1 \\
+40 &  8,9 & 16,7 & 18,9 & 21,1 \\
 \bottomrule
 \end{tabular}
 \end{table}
+\DIFaddend 
 
 \begin{figure}[ht]
 \centering
@@ -1419,23 +1693,26 @@ métrica euclidiana no Problema B ($\Delta = -0{,}087$, IC exclui zero): a defor
 aprendida não tem valor intrínseco, e sim \emph{contextual}, dependente de exemplos.
 
 \subsection{H3 — Viés semântico}
-\textbf{Fortemente confirmada.} A fidelidade oscila de \DIFdelbegin \DIFdel{$64{,}7\%$ (\emph{prompt} tabular) a
+\textbf{Fortemente confirmada.} A fidelidade oscila de \DIFdelbegin \DIFdel{$64{,}7\%$ (}\emph{\DIFdel{prompt}} %DIFAUXCMD
+\DIFdel{tabular) a
 $99{,}3\%$ }\DIFdelend \DIFaddbegin \DIFadd{$59{,}3\%$ (classes $0/1$) a
 $99{,}1\%$ }\DIFaddend (Positivo/Negativo), extremos da grade de variantes \DIFdelbegin \DIFdel{medidos na seed $42$}\DIFdelend \DIFaddbegin \DIFadd{nas médias das três
 sementes}\DIFaddend , e a
 mera inversão de posição (A/B $\to$ B/A) já custa \DIFdelbegin \DIFdel{$14{,}7$ pontos ($82{,}7\% \to 68{,}0\%$).
 }\DIFdelend \DIFaddbegin \DIFadd{$14{,}4$ pontos ($84{,}0\% \to 69{,}6\%$).
-O viés de apresentação é ainda \emph{dependente de modelo}: o estilo \emph{tabular}, que
-mais degrada o \texttt{gpt-4o-mini} ($66{,}7\%$), é o melhor estilo no
-\texttt{gemini-2.5-flash-lite} ($87{,}6\%$), cujos piores são \emph{cot} e
-\emph{geometric} (Tabela~\ref{tab:bias}).
-}\DIFaddend No caso real, nomes semânticos vs.\ neutros elevam a acurácia própria do LLM de $45{,}2\%$ a
-$56{,}7\%$, e o experimento de nomes de classe A/B (Tabela~\ref{tab:real_ab}) mostra o
-mecanismo em sua forma mais nítida: sem âncora semântica nos nomes, o LLM ainda separa os
-grupos, mas o mapeamento rótulo$\leftrightarrow$classe emerge em convenção arbitrária
-(acurácia da métrica vs.\ real de $0{,}895$ para $0{,}110$, uma inversão quase perfeita).
-O LLM incorpora semântica extrínseca ao problema geométrico, e ela ancora tanto a
-separação quanto a \emph{nomeação} das classes.
+O viés de apresentação é ainda }\emph{\DIFadd{dependente de modelo}}\DIFadd{: o estilo }\emph{\DIFadd{tabular}}\DIFadd{, que
+mais degrada o }\texttt{\DIFadd{gpt-4o-mini}} \DIFadd{($66{,}7\%$), é o melhor estilo no
+}\texttt{\DIFadd{gemini-2.5-flash-lite}} \DIFadd{($87{,}6\%$), cujos piores são }\emph{\DIFadd{cot}} \DIFadd{e
+}\emph{\DIFadd{geometric}} \DIFadd{(Tabela~\ref{tab:bias}).
+}\DIFaddend No caso real, nomes \DIFaddbegin \DIFadd{de atributo }\DIFaddend semânticos vs.\ neutros \DIFdelbegin \DIFdel{elevam }\DIFdelend \DIFaddbegin \emph{\DIFadd{reduzem}} \DIFaddend a acurácia própria
+do LLM de \DIFdelbegin \DIFdel{$45{,}2\%$ a $56{,}7\%$, e o }\DIFdelend \DIFaddbegin \DIFadd{$54{,}8\%$ a $43{,}3\%$: com valores normalizados e sem unidade, o LLM aplica a
+semântica de ``peso'' e ``altura'' na direção errada. O }\DIFaddend experimento de nomes de classe A/B
+(Tabela~\ref{tab:real_ab}) mostra o mecanismo em sua forma mais nítida: \DIFdelbegin \DIFdel{sem âncora semântica nos nomes, o LLM ainda }\DIFdelend \DIFaddbegin \DIFadd{o LLM }\DIFaddend separa os
+grupos, mas o mapeamento rótulo$\leftrightarrow$classe emerge em convenção \DIFdelbegin \DIFdel{arbitrária
+(acurácia da métrica vs.\ real de $0{,}895$ para }\DIFdelend \DIFaddbegin \DIFadd{invertida em
+relação ao }\emph{\DIFadd{ground truth}}\DIFadd{, com nomes neutros (}\DIFaddend $0{,}110$\DIFdelbegin \DIFdel{, uma inversão quase perfeita) }\DIFdelend \DIFaddbegin \DIFadd{) e semânticos ($0{,}105$) por
+igual}\DIFaddend . O LLM incorpora semântica extrínseca ao problema geométrico, e ela ancora \DIFdelbegin \DIFdel{tanto }\DIFdelend a
+separação \DIFdelbegin \DIFdel{quanto a }\DIFdelend \DIFaddbegin \DIFadd{e uma convenção de }\DIFaddend \emph{nomeação} das classes\DIFaddbegin \DIFadd{, não necessariamente a correta}\DIFaddend .
 
 \subsection{H4 — Qualidade dos exemplos}
 \textbf{Refutada.} Ao contrário do previsto, exemplos \emph{fáceis} superam \emph{difíceis}
@@ -1490,11 +1767,16 @@ alegação de superioridade geral deve ser resistida.
   \item \textbf{Escala do caso real:} $100$ amostras ($70$ de treino por semente) tornam
     cada erro pesado (por
     isso reportam-se erros absolutos); conclusões sobre o Problema G são indicativas.
-\DIFdelbegin %DIFDELCMD < \item %%%
-\item%DIFAUXCMD
-\DIFdel{\textbf{Classificação binária:} a extensão a múltiplas classes exige adaptar a
-    formulação inversa.
-}\DIFdelend \end{enumerate}
+  \item \textbf{\DIFdelbegin \DIFdel{Classificação binária}\DIFdelend \DIFaddbegin \DIFadd{Entradas numéricas}\DIFaddend :} \DIFdelbegin \DIFdel{a extensão a múltiplas classes exige adaptar a
+    formulação inversa}\DIFdelend \DIFaddbegin \DIFadd{os pontos chegam ao LLM como números decimais
+    normalizados (quatro casas, e em $[-1,1]$ no caso real), termos raros no
+    pré-treinamento; como o desempenho numérico }\emph{\DIFadd{few-shot}} \DIFadd{de LLMs depende da
+    frequência desses termos no corpus~\mbox{%DIFAUXCMD
+\cite{razeghiImpactPretraining2022}}\hskip0pt%DIFAUXCMD
+, parte da
+    fidelidade perdida e da inversão física observada no Bloco 3 pode vir da
+    representação numérica, e não do critério geométrico}\DIFaddend .
+\end{enumerate}
 
 % ============================================================
 \section{Trabalho Futuro}
@@ -1515,7 +1797,7 @@ alegação de superioridade geral deve ser resistida.
     \cite{suSelectiveAnnotation2023} e incerteza.
   \item \textbf{Geometria de fronteiras:} comparar a fronteira induzida por \West{} com a
     fronteira real do LLM, seguindo Zhao et al.~\cite{zhaoProbing2024}.
-  \DIFaddbegin \item \DIFadd{\textbf{Extensão a múltiplas classes:} a classificação por centróide mais próximo
+  \DIFaddbegin \item \textbf{\DIFadd{Extensão a múltiplas classes:}} \DIFadd{a classificação por centróide mais próximo
     estende-se naturalmente a $K$ classes (a métrica é única; muda apenas o número de
     centróides comparados), de modo que a formulação atual não precisa ser modificada em
     essência. Um candidato natural é a base Íris ($3$ classes, $4$ atributos), replicando
@@ -1555,12 +1837,15 @@ indicação):
     escala, a direção é a quantidade identificável e reprodutível, ao passo que a variação de
     magnitude é em parte esperada e, com $3$ sementes, não permite conclusão forte.
   \item \textbf{É fortemente semântico, nos atributos e nos nomes de classe:}
-    variantes de \DIFdelbegin \DIFdel{\emph{prompt} }\DIFdelend \DIFaddbegin \DIFadd{apresentação }\DIFaddend movem a fidelidade de \DIFdelbegin \DIFdel{$64{,}7\%$ a $99{,}3\%$}\DIFdelend \DIFaddbegin \DIFadd{$59{,}3\%$ a $99{,}1\%$ (médias das
-    sementes), com o estilo prejudicial variando por modelo}\DIFaddend ; no caso real,
-    a semântica dos atributos eleva a acurácia própria do LLM de $45{,}2\%$ a
-    $56{,}7\%$, e com nomes de classe neutros (A/B) o mapeamento rótulo$\leftrightarrow$classe
-    emerge em convenção arbitrária ($0{,}895 \to 0{,}110$, inversão quase perfeita): a
-    semântica ancora até a \emph{nomeação} das classes.
+    variantes de \DIFdelbegin \emph{\DIFdel{prompt}} %DIFAUXCMD
+\DIFdelend \DIFaddbegin \DIFadd{apresentação }\DIFaddend movem a fidelidade de \DIFdelbegin \DIFdel{$64{,}7\%$ a $99{,}3\%$}\DIFdelend \DIFaddbegin \DIFadd{$59{,}3\%$ a $99{,}1\%$ (médias das
+    sementes), com o estilo prejudicial variando por modelo}\DIFaddend ; no caso real, \DIFaddbegin \DIFadd{com valores
+    normalizados e sem unidade, }\DIFaddend a semântica dos atributos \DIFdelbegin \DIFdel{eleva }\DIFdelend \DIFaddbegin \emph{\DIFadd{reduz}} \DIFaddend a acurácia própria
+    do LLM de \DIFdelbegin \DIFdel{$45{,}2\%$ a $56{,}7\%$, e }\DIFdelend \DIFaddbegin \DIFadd{$54{,}8\%$ a $43{,}3\%$, e o mapeamento rótulo$\leftrightarrow$classe emerge
+    em convenção invertida em relação ao }\emph{\DIFadd{ground truth}} \DIFadd{tanto }\DIFaddend com nomes de classe
+    neutros (A/B\DIFaddbegin \DIFadd{, $0{,}110$) quanto semânticos (homem/mulher, $0{,}105$}\DIFaddend )\DIFdelbegin \DIFdel{o mapeamento rótulo$\leftrightarrow$classe
+    emerge em convenção arbitrária ($0{,}895 \to 0{,}110$, inversão quase perfeita)}\DIFdelend : a semântica \DIFdelbegin \DIFdel{ancora até a }\DIFdelend \DIFaddbegin \DIFadd{fixa
+    uma convenção de }\DIFaddend \emph{nomeação}\DIFdelbegin \DIFdel{das classes}\DIFdelend \DIFaddbegin \DIFadd{, não necessariamente a correta}\DIFaddend .
   \item \textbf{Como aprendiz, o LLM é cego em zero-shot e aprende com poucos exemplos:}
     $55{,}2\%$ (média sobre três peritos) $\to 97{,}9\%$ no regime linear, sem contudo
     superar de forma consistente a Regressão Logística
@@ -1623,21 +1908,20 @@ arquivos estruturados, sobre os quais roda a auditoria \emph{offline} que mede a
     garantir seleção
     balanceada entre as duas classes ($n/2$ exemplos de cada) sem exemplo excedente.
 \end{itemize}
-\DIFaddbegin 
 
-\subsection{\DIFadd{Exemplos dos estilos de prompt}}
+\DIFaddbegin \subsection{\DIFadd{Exemplos dos estilos de prompt}}
 \label{ap:prompts}
 
-\DIFadd{Transcrevem-se a seguir, \emph{verbatim}, exemplos reais de prompt zero-shot enviados ao
+\DIFadd{Transcrevem-se a seguir, }\emph{\DIFadd{verbatim}}\DIFadd{, exemplos reais de prompt zero-shot enviados ao
 LLM em cada um dos quatro estilos avaliados (registros da campanha experimental; apenas as
 coordenadas do ponto variam entre chamadas). Cada estilo combina uma mensagem de sistema
-(\emph{system message}) e um corpo de prompt.
+(}\emph{\DIFadd{system message}}\DIFadd{) e um corpo de prompt.
 }
 
-\paragraph{\DIFadd{\emph{default} (padrão, usado em todo o restante do trabalho).}}
+\paragraph{\emph{\DIFadd{default}} \DIFadd{(padrão, usado em todo o restante do trabalho).}}
 \DIFadd{Instrução direta, resposta restrita ao rótulo.
-Mensagem de sistema: \texttt{You are a classifier. Respond only with the class label.}
-}\DIFmodbegin
+Mensagem de sistema: }\texttt{\DIFadd{You are a classifier. Respond only with the class label.}}
+\DIFmodbegin
 \begin{DIFverbatim}[alsolanguage=DIFcode]
 %DIF > You are a binary classifier for 2D points.
 %DIF > 
@@ -1652,12 +1936,12 @@ Mensagem de sistema: \texttt{You are a classifier. Respond only with the class l
 \end{DIFverbatim}
 \DIFmodend
 
-\paragraph{\DIFadd{\emph{geometric}.}}
+\paragraph{\emph{\DIFadd{geometric}}\DIFadd{.}}
 \DIFadd{Enquadra a tarefa explicitamente como classificação espacial por proximidade a centros de
 grupos em um espaço métrico.
-Mensagem de sistema: \texttt{You are a geometric classifier analyzing point positions in
-metric space. Respond only with the class label.}
-}\DIFmodbegin
+Mensagem de sistema: }\texttt{\DIFadd{You are a geometric classifier analyzing point positions in
+metric space. Respond only with the class label.}}
+\DIFmodbegin
 \begin{DIFverbatim}[alsolanguage=DIFcode]
 %DIF > You are a binary classifier for 2D points in Euclidean space.
 %DIF > 
@@ -1675,12 +1959,12 @@ metric space. Respond only with the class label.}
 \end{DIFverbatim}
 \DIFmodend
 
-\paragraph{\DIFadd{\emph{cot} (\emph{chain-of-thought}).}}
+\paragraph{\emph{\DIFadd{cot}} \DIFadd{(}\emph{\DIFadd{chain-of-thought}}\DIFadd{).}}
 \DIFadd{Pede raciocínio passo a passo antes da resposta final (limite de tokens ampliado de $50$
 para $300$).
-Mensagem de sistema: \texttt{You are a classifier. Think step by step, then give your
-final answer on the last line as just the class label.}
-}\DIFmodbegin
+Mensagem de sistema: }\texttt{\DIFadd{You are a classifier. Think step by step, then give your
+final answer on the last line as just the class label.}}
+\DIFmodbegin
 \begin{DIFverbatim}[alsolanguage=DIFcode]
 %DIF > You are a binary classifier for 2D points.
 %DIF > 
@@ -1695,11 +1979,11 @@ final answer on the last line as just the class label.}
 \end{DIFverbatim}
 \DIFmodend
 
-\paragraph{\DIFadd{\emph{tabular}.}}
-\DIFadd{Idêntico ao \emph{default}, mas com as coordenadas apresentadas como tabela
-\emph{markdown} em vez de linhas ``$x_i = $ valor''.
-Mensagem de sistema: \texttt{You are a classifier. Respond only with the class label.}
-}\DIFmodbegin
+\paragraph{\emph{\DIFadd{tabular}}\DIFadd{.}}
+\DIFadd{Idêntico ao }\emph{\DIFadd{default}}\DIFadd{, mas com as coordenadas apresentadas como tabela
+}\emph{\DIFadd{markdown}} \DIFadd{em vez de linhas ``$x_i = $ valor''.
+Mensagem de sistema: }\texttt{\DIFadd{You are a classifier. Respond only with the class label.}}
+\DIFmodbegin
 \begin{DIFverbatim}[alsolanguage=DIFcode]
 %DIF > You are a binary classifier for 2D points.
 %DIF > 
@@ -1716,7 +2000,7 @@ Mensagem de sistema: \texttt{You are a classifier. Respond only with the class l
 \end{DIFverbatim}
 \DIFmodend
 
-\DIFadd{Nos estilos few-shot, o mesmo corpo é precedido por um bloco \texttt{Examples:} com os $n$
+\DIFadd{Nos estilos few-shot, o mesmo corpo é precedido por um bloco }\texttt{\DIFadd{Examples:}} \DIFadd{com os $n$
 exemplos rotulados, mantendo o formato de coordenadas de cada estilo.
 }
 
@@ -1726,8 +2010,8 @@ exemplos rotulados, mantendo o formato de coordenadas de cada estilo.
 \DIFadd{Complementando a Tabela~\ref{tab:bias} (nomes de classe), as
 Tabelas~\ref{tab:bias_feat} e~\ref{tab:bias_prompt} reportam, com a mesma estrutura
 (média das $3$ sementes, dois modelos), as outras duas manipulações do experimento de
-viés: os nomes de atributo e os estilos de \emph{prompt}. Em ambas, a primeira linha
-(atributos $x_1/x_2$ ou estilo \emph{default}, com classes A/B) é a configuração de
+viés: os nomes de atributo e os estilos de }\emph{\DIFadd{prompt}}\DIFadd{. Em ambas, a primeira linha
+(atributos $x_1/x_2$ ou estilo }\emph{\DIFadd{default}}\DIFadd{, com classes A/B) é a configuração de
 referência, a mesma da Tabela~\ref{tab:bias}.
 }
 
@@ -1737,7 +2021,7 @@ referência, a mesma da Tabela~\ref{tab:bias}.
 sementes; classes A/B, estilo \emph{default}). Colunas como na Tabela~\ref{tab:bias};
 valores em \%. A variação de nome de atributo foi coletada apenas em zero-shot (``--'').}
 \label{tab:bias_feat}
-\footnotesize\color{red}
+\footnotesize
 \setlength{\tabcolsep}{5pt}
 \begin{tabular}{lrrrrrr}
 \toprule
@@ -1761,7 +2045,7 @@ feature\_1/2 & 74,7 & 69,0 & --   & 88,4 & 82,7 & --   \\
 sementes; classes A/B, atributos $x_1/x_2$). Colunas como na Tabela~\ref{tab:bias};
 valores em \%. Estilos transcritos no Apêndice~\ref{ap:prompts}.}
 \label{tab:bias_prompt}
-\footnotesize\color{red}
+\footnotesize
 \setlength{\tabcolsep}{5pt}
 \begin{tabular}{lrrrrrr}
 \toprule
@@ -1779,9 +2063,8 @@ valores em \%. Estilos transcritos no Apêndice~\ref{ap:prompts}.}
 \bottomrule
 \end{tabular}
 \end{table}
-\DIFaddend 
 
-% ============================================================
+\DIFaddend % ============================================================
 %  Referências
 % ============================================================
 \bibliographystyle{plain}
@@ -1823,7 +2106,27 @@ Charles~L. Lawson e Richard~J. Hanson.
 \newblock \emph{Solving Least Squares Problems}.
 \newblock Prentice-Hall, Englewood Cliffs, NJ, 1974.
 
-\bibitem{gargWhatTransformers2022}
+\DIFaddbegin \bibitem{keshavarzImputingConvex2011}
+\DIFadd{Arezou Keshavarz, Yang Wang, e Stephen Boyd.
+}\newblock \DIFadd{Imputing a convex objective function.
+}\newblock \DIFadd{Em }\emph{\DIFadd{Proceedings of the 2011 IEEE International Symposium on
+  Intelligent Control (ISIC)}}\DIFadd{, páginas 613--619, Denver, CO, 2011.
+}
+
+\bibitem{ahujaInverseOptimization2001}
+\DIFadd{Ravindra~K. Ahuja e James~B. Orlin.
+}\newblock \DIFadd{Inverse optimization.
+}\newblock \emph{\DIFadd{Operations Research}}\DIFadd{, 49(5):771--783, 2001.
+}
+
+\bibitem{schultzLearningDistance2003}
+\DIFadd{Matthew Schultz e Thorsten Joachims.
+}\newblock \DIFadd{Learning a distance metric from relative comparisons.
+}\newblock \DIFadd{Em }\emph{\DIFadd{Advances in Neural Information Processing Systems 16 (NIPS
+  2003)}}\DIFadd{, 2003.
+}
+
+\DIFaddend \bibitem{gargWhatTransformers2022}
 Shivam Garg, Dimitris Tsipras, Percy Liang, e Gregory Valiant.
 \newblock What can transformers learn in-context? a case study of simple
   function classes.
@@ -1836,7 +2139,15 @@ Ekin Akyürek, Dale Schuurmans, Jacob Andreas, Tengyu Ma, e Denny Zhou.
   linear models.
 \newblock Em \emph{ICLR 2023 (Oral)}, 2023.
 
-\bibitem{suSelectiveAnnotation2023}
+\DIFaddbegin \bibitem{xieExplanationInContext2022}
+\DIFadd{Sang~Michael Xie, Aditi Raghunathan, Percy Liang, e Tengyu Ma.
+}\newblock \DIFadd{An explanation of in-context learning as implicit }{\DIFadd{B}}\DIFadd{ayesian
+  inference.
+}\newblock \DIFadd{Em }\emph{\DIFadd{International Conference on Learning Representations (ICLR
+  2022)}}\DIFadd{, 2022.
+}
+
+\DIFaddend \bibitem{suSelectiveAnnotation2023}
 Hongjin Su, Jungo Kasai, Chen~Henry Wu, Weijia Shi, Tianlu Wang, Jiayi Xin,
   Rui Zhang, Mari Ostendorf, Luke Zettlemoyer, Noah~A. Smith, e Tao Yu.
 \newblock Selective annotation makes language models better few-shot learners.
@@ -1848,6 +2159,15 @@ Zihao Zhao, Eric Wallace, Shi Feng, Dan Klein, e Sameer Singh.
   models.
 \newblock Em \emph{Proceedings of ICML 2021}, volume 139 of \emph{PMLR},
   páginas 12697--12706, 2021.
+\DIFaddbegin 
+
+\bibitem{razeghiImpactPretraining2022}
+\DIFadd{Yasaman Razeghi, Robert~L. Logan~IV, Matt Gardner, e Sameer Singh.
+}\newblock \DIFadd{Impact of pretraining term frequencies on few-shot numerical
+  reasoning.
+}\newblock \DIFadd{Em }\emph{\DIFadd{Findings of the Association for Computational Linguistics:
+  EMNLP 2022}}\DIFadd{, páginas 840--854, Abu Dhabi, 2022.
+}\DIFaddend 
 
 \bibitem{minRethinkingRole2022}
 Sewon Min, Xinxi Lyu, Ari Holtzman, Mikel Artetxe, Mike Lewis, Hannaneh

@@ -401,6 +401,7 @@ RUN_R3R4_EXPERIMENT = True           # Augmentação R3 (x1·x2) e R4 (x1², x2�
 RUN_MULTIPLE_EXPERTS = True        # Múltiplas configs de expert na Fase E
 RUN_ALGORITHM_COMPARISON = True    # Comparação Perceptron × NNLS (robustez ao método)
 RUN_ORACLE_VALIDATION = True       # Validação: algoritmos recuperam W conhecido?
+RUN_ORACLE_MEIALUA = True          # Sub-flag do oráculo: aproximação da meia-lua em R2/R3/R4 (item 5; 0 chamadas LLM)
 RUN_EXAMPLE_ORDER_BIAS = True      # Teste de viés de ordem dos exemplos few-shot
 RUN_PROMPT_VARIANTS = True         # Teste de múltiplas variantes de prompt
 RUN_CLASSICAL_BASELINES = True     # Comparação com baselines clássicos (k-NN, LR, SVM)
@@ -412,10 +413,63 @@ RUN_HM_CLASS_NAMES_AB = True       # Item 17 (reunião 20/05): repetir peso×alt
 # Isola o prior semântico nos NOMES DAS CLASSES — "Homem"/"Mulher" carregam
 # significado; "A"/"B" são neutros. Complementa o teste de nomes de FEATURE
 # (x1/x2 vs peso/altura). Cada par extra multiplica o custo de API do bloco.
+#
+# CONVENÇÃO (tupla = (nome da classe 0, nome da classe 1, nome do problema)):
+# na base peso_altura.csv a classe 0 corresponde a `male? = -1` e a classe 1 a
+# `male? = +1` (arquivo-fonte Hghtwght_desired.txt); a classe 1 é a mais alta
+# e mais pesada. Logo classe 0 = Mulher e classe 1 = Homem. Até 25/08/2026 a
+# tupla estava invertida (("Homem", "Mulher")), o que fazia a resposta "Homem"
+# virar y_llm = 0 e ser comparada com y_true = 1: todas as métricas "vs rótulo
+# real" do Bloco 3 saíam como 1 - valor. Ver src/corrigir_mapeamento_homem_mulher.py.
 HM_CLASS_NAME_VARIANTS = [
-    ("Homem", "Mulher", "homem_mulher"),      # semântico (original)
+    ("Mulher", "Homem", "homem_mulher"),      # semântico (classe 0 = Mulher, 1 = Homem)
     ("A", "B", "homem_mulher_classesAB"),     # neutro (item 17)
 ]
+
+# CLI `--apenas <bloco> [<bloco> ...]`: roda SÓ os blocos selecionados. Cada bloco
+# é definido pelas flags de topo que o ativam; as sub-flags (vieses, R3/R4 dentro
+# das Fases A-C, diluição/baselines dentro da Fase E, A/B dentro do peso×altura,
+# meia-lua dentro do oráculo) continuam valendo o que está configurado acima,
+# porque já são gateadas pelo bloco-pai. As flags dos blocos NÃO selecionados são
+# forçadas a False e as dos selecionados a True. A pasta de execução recebe o
+# sufixo `_apenas-<blocos>` (nunca `_completa`), para não ser confundida com uma
+# execução cheia pelas ferramentas que leem "a última _completa".
+BLOCOS_APENAS = {
+    "bloco1":  ["RUN_PHASES_ABC", "RUN_R3R4_EXPERIMENT"],    # LLM como fonte (A/B/C + R3/R4)
+    "bloco2":  ["RUN_PHASE_E", "RUN_PROBLEM_MEIALUA"],       # LLM como aprendiz (E + meia-lua F)
+    "bloco3":  ["RUN_HOMEM_MULHER"],                         # caso real peso × altura
+    "oraculo": ["RUN_ORACLE_VALIDATION"],                    # validação sem LLM (0 chamadas)
+}
+
+
+def flags_para_apenas(selecao) -> dict:
+    """Devolve {nome_da_flag: bool} para `--apenas selecao`.
+
+    Flags de topo dos blocos selecionados ficam True; as dos demais, False. Só as
+    flags listadas em BLOCOS_APENAS são tocadas. Levanta ValueError para bloco
+    desconhecido ou seleção vazia.
+    """
+    selecao = list(selecao)
+    if not selecao:
+        raise ValueError("--apenas exige ao menos um bloco")
+    desconhecidos = sorted(set(selecao) - set(BLOCOS_APENAS))
+    if desconhecidos:
+        raise ValueError(
+            f"bloco(s) desconhecido(s) em --apenas: {desconhecidos}; "
+            f"válidos: {list(BLOCOS_APENAS)}"
+        )
+    ativas = {flag for bloco in selecao for flag in BLOCOS_APENAS[bloco]}
+    return {
+        flag: (flag in ativas)
+        for bloco in BLOCOS_APENAS
+        for flag in BLOCOS_APENAS[bloco]
+    }
+
+
+def sufixo_apenas(selecao) -> str:
+    """Sufixo de pasta para `--apenas`: ``apenas-bloco3`` ou ``apenas-bloco2+bloco3``."""
+    ordenados = [b for b in BLOCOS_APENAS if b in set(selecao)]
+    return "apenas-" + "+".join(ordenados)
 
 # Estratégias de ordenação dos exemplos few-shot
 EXAMPLE_ORDERINGS = ["class0_first", "class1_first", "shuffled", "alternating"]
@@ -2867,7 +2921,24 @@ def main():
              "Útil para smoke test isolado de um modelo novo: "
              "python src/dissertacao_mestrado.py --rapido --modelo gemini",
     )
+    parser.add_argument(
+        "--apenas", dest="apenas", nargs="+", choices=list(BLOCOS_APENAS),
+        metavar="BLOCO", default=None,
+        help="Roda SÓ os blocos indicados (bloco1 | bloco2 | bloco3 | oraculo; aceita "
+             "mais de um). Força as flags RUN_* de topo dos blocos escolhidos e desliga "
+             "as dos demais; a pasta de saída ganha o sufixo _apenas-<blocos> em vez de "
+             "_completa. Ex.: python src/dissertacao_mestrado.py --apenas bloco3",
+    )
     args = parser.parse_args()
+
+    apenas = args.apenas
+    if apenas:
+        # Sobrescreve as flags de topo no namespace do módulo: main() só as LÊ,
+        # então globals() evita declarar cada uma como `global` aqui.
+        for _flag, _valor in flags_para_apenas(apenas).items():
+            globals()[_flag] = _valor
+        print(f"  --apenas {' '.join(apenas)}: rodando somente "
+              f"{', '.join(b for b in BLOCOS_APENAS if b in apenas)}")
 
     if args.modelo:
         MODELS_TO_TEST = [
@@ -2914,7 +2985,12 @@ def main():
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     # Sufixo no nome da pasta distingue smoke (--rapido) de execução completa:
     # ferramentas/skills que precisam de números finais filtram por "_completa".
-    tipo_execucao = "smoke" if modo_rapido else "completa"
+    # Com --apenas a execução é PARCIAL: nunca leva "_completa" (leva
+    # "_apenas-<blocos>", e "_smoke" no fim quando combinada com --rapido).
+    if apenas:
+        tipo_execucao = sufixo_apenas(apenas) + ("_smoke" if modo_rapido else "")
+    else:
+        tipo_execucao = "smoke" if modo_rapido else "completa"
     pasta_execucao = str(BASE_DIR / f"execucao_{timestamp}_{tipo_execucao}")
     os.makedirs(pasta_execucao, exist_ok=True)
 
@@ -2940,6 +3016,13 @@ def main():
             "   (NÃO usar para resultados finais)",
             "="
         )
+    if apenas:
+        print_section(
+            f"▶ EXECUÇÃO PARCIAL (--apenas {' '.join(apenas)})\n"
+            f"   Somente: {', '.join(b for b in BLOCOS_APENAS if b in apenas)} | "
+            f"pasta sem sufixo _completa (não substitui a execução cheia)",
+            "="
+        )
     print("  Organizado em 3 BLOCOS auto-contidos:")
     print("    BLOCO 1 — LLM como FONTE (otim. inversa em A/B/C lineares + D meia-lua)")
     print("    BLOCO 2 — LLM como APRENDIZ (Fase E no perito linear E + meia-lua F)")
@@ -2950,20 +3033,24 @@ def main():
     # ─────────────────────────────────────────────────────────────────────
     # FLAGS DE EXECUÇÃO ATIVAS
     # ─────────────────────────────────────────────────────────────────────
+    # Sub-flags só aparecem quando o bloco-pai que as gateia está ativo (com
+    # --apenas, os blocos desligados não rodam nada, mesmo com sub-flag True).
     flags_active = []
     if RUN_PHASES_ABC: flags_active.append("Fases A-C")
     if RUN_PHASE_E: flags_active.append("Fase E")
-    if RUN_CLASS_ORDER_BIAS: flags_active.append("Viés de Ordem")
-    if RUN_FEATURE_NAMES: flags_active.append("Nomes de Features")
-    if RUN_DILUTION: flags_active.append("Diluição")
+    if RUN_PHASES_ABC and RUN_CLASS_ORDER_BIAS: flags_active.append("Viés de Ordem")
+    if RUN_PHASES_ABC and RUN_FEATURE_NAMES: flags_active.append("Nomes de Features")
+    if RUN_PHASE_E and RUN_DILUTION: flags_active.append("Diluição")
     if RUN_R3R4_EXPERIMENT: flags_active.append("Não-linearidade Implícita (R3/R4)")
-    if RUN_MULTIPLE_EXPERTS: flags_active.append("Múltiplos Experts")
-    if RUN_ALGORITHM_COMPARISON: flags_active.append("Comparação Algoritmos")
+    if RUN_PHASE_E and RUN_MULTIPLE_EXPERTS: flags_active.append("Múltiplos Experts")
+    if RUN_PHASES_ABC and RUN_ALGORITHM_COMPARISON: flags_active.append("Comparação Algoritmos")
     if RUN_ORACLE_VALIDATION: flags_active.append("Validação Oráculo")
-    if RUN_EXAMPLE_ORDER_BIAS: flags_active.append("Viés Ordem Exemplos")
-    if RUN_PROMPT_VARIANTS: flags_active.append("Variantes de Prompt")
-    if RUN_CLASSICAL_BASELINES: flags_active.append("Baselines Clássicos")
+    if RUN_ORACLE_VALIDATION and RUN_ORACLE_MEIALUA: flags_active.append("Oráculo Meia-lua")
+    if RUN_PHASE_E and RUN_EXAMPLE_ORDER_BIAS: flags_active.append("Viés Ordem Exemplos")
+    if RUN_PHASES_ABC and RUN_PROMPT_VARIANTS: flags_active.append("Variantes de Prompt")
+    if RUN_PHASE_E and RUN_CLASSICAL_BASELINES: flags_active.append("Baselines Clássicos")
     if RUN_HOMEM_MULHER: flags_active.append("Peso×Altura (real, elipse)")
+    if RUN_HOMEM_MULHER and RUN_HM_CLASS_NAMES_AB: flags_active.append("Peso×Altura classes A/B")
     if RUN_PROBLEM_MEIALUA: flags_active.append("Meia-lua (não-linear sintético)")
 
     models_str = '\n    '.join([f"- {p}/{m} (temp={t}, scope={s})" for p, m, t, s in MODELS_TO_TEST])
@@ -3417,7 +3504,10 @@ def main():
                 # Item 5 (reunião 20/05): oracle de APROXIMAÇÃO da meia-lua —
                 # mostra que existe W (em espaço aumentado) que aproxima a fronteira
                 # não-linear, com fidelidade crescente em 2→3→4 features.
-                if RUN_PROBLEM_MEIALUA:
+                # Sub-flag do oráculo (0 chamadas LLM): independe do pipeline
+                # externo da meia-lua (RUN_PROBLEM_MEIALUA), para que
+                # `--apenas oraculo` valide também a meia-lua.
+                if RUN_ORACLE_MEIALUA:
                     X_ml_o, y_ml_o = create_problem_d_meialua(
                         n_samples=N_SAMPLES_PROBLEM_A, random_state=seed,
                     )
@@ -3887,7 +3977,7 @@ def main():
             # do nome da classe (complementa o teste de nomes de feature x1/x2).
             class_name_variants = (
                 HM_CLASS_NAME_VARIANTS if RUN_HM_CLASS_NAMES_AB
-                else [("Homem", "Mulher", "homem_mulher")]
+                else HM_CLASS_NAME_VARIANTS[:1]
             )
             # Comparação entre modelos ("central + caso real"): TODOS os modelos de
             # MODELS_TO_TEST rodam o caso real, em pé de igualdade. Os PNGs de todos

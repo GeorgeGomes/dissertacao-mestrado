@@ -221,10 +221,21 @@ python src/dissertacao_mestrado.py
 # Smoke test barato de UM modelo (antes de gastar na execução completa):
 python src/dissertacao_mestrado.py --rapido --modelo gpt
 python src/dissertacao_mestrado.py --rapido --modelo gemini
+
+# Execução PARCIAL: só os blocos indicados (bloco1 | bloco2 | bloco3 | oraculo; aceita vários)
+python src/dissertacao_mestrado.py --apenas bloco3                 # só peso×altura (Fase A + E)
+python src/dissertacao_mestrado.py --apenas bloco2 bloco3 --modelo gpt
+python src/dissertacao_mestrado.py --apenas oraculo               # 0 chamadas de API
 ```
 
 A execução cria automaticamente uma pasta `execucao_YYYY-MM-DD_HH-MM-SS_completa/`
 (ou `..._smoke/` quando rodada com `--rapido`) com todos os outputs.
+Com `--apenas`, a pasta recebe `..._apenas-<blocos>/` (ex.: `_apenas-bloco3`, ou
+`_apenas-bloco3_smoke` se combinada com `--rapido`) e **nunca** `_completa`: é uma
+execução parcial e não serve de fonte para o trabalho inteiro. `--apenas` força as flags
+`RUN_*` de topo dos blocos escolhidos (`BLOCOS_APENAS` em `dissertacao_mestrado.py`) e
+desliga as dos demais; as sub-flags (vieses, R3/R4, diluição, baselines, A/B, oráculo
+meia-lua) continuam valendo o que está no código, pois já são gateadas pelo bloco-pai.
 As chamadas à API do LLM são **assíncronas com concorrência limitada**
 (`asyncio.Semaphore(MAX_CONCURRENCY)`), acelerando substancialmente a coleta de decisões.
 
@@ -265,6 +276,7 @@ Controlam quais experimentos rodar sem precisar comentar/descomentar código:
 | `RUN_MULTIPLE_EXPERTS` | `True` | Múltiplas configs de expert na Fase E |
 | `RUN_ALGORITHM_COMPARISON` | `True` | Comparação dos 3 algoritmos de otim. inversa |
 | `RUN_ORACLE_VALIDATION` | `True` | **NOVO:** Validação: algoritmos recuperam W conhecido? |
+| `RUN_ORACLE_MEIALUA` | `True` | Sub-flag do oráculo: aproximação da meia-lua em R2/R3/R4 (0 chamadas LLM) |
 | `RUN_EXAMPLE_ORDER_BIAS` | `True` | Teste de viés de ordem dos exemplos few-shot |
 | `RUN_PROMPT_VARIANTS` | `True` | Teste de múltiplas variantes de prompt |
 | `RUN_CLASSICAL_BASELINES` | `True` | Comparação com baselines clássicos (k-NN, LR, SVM) |
@@ -326,6 +338,8 @@ PROMPT_VARIANTS = {
 - `scope="core"` continua disponível para reduzir um modelo ao pipeline central
   (Fases A-C + Fase E perito principal + externos, sem experimentos auxiliares).
 - CLI `--modelo <substring>` filtra `MODELS_TO_TEST` (smoke test isolado).
+- CLI `--apenas <bloco> [...]` (`bloco1|bloco2|bloco3|oraculo`) roda só os blocos
+  indicados; pasta `_apenas-<blocos>` (nunca `_completa`).
 - **Todos os modelos são iguais para outputs**: cada um gera o conjunto completo de
   PNGs por modelo na raiz da execução, com seu alias (`MODEL_ALIAS`) no nome do asset.
   CSVs consolidam todos (colunas `provider`/`model`); `final_09_model_comparison.png`
