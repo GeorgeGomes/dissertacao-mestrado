@@ -13,7 +13,7 @@ import pandas as pd
 
 from execucao_io import llm_asset
 from metrics import compute_metric_confidence, predict_with_metric
-from protocolo import EXAMPLE_STRATEGIES, EXPERT_W
+from protocolo import EXAMPLE_STRATEGIES, EXPERT_W, PERCEPTRON_PARAMS
 from relaxed_perceptron import train_relaxed_perceptron
 from resultados import ResultadoExperimento, ResultadoPhaseEExperimento
 
@@ -42,7 +42,7 @@ def print_error_analysis_by_region(phase_a_data: dict):
     """Análise quantitativa de erros por região (distância à fronteira).
 
     Responde: onde o LLM erra? Perto da fronteira (margem baixa) ou longe?
-    Complementa o gráfico 11 com métricas numéricas no log.
+    Complementa bloco1_05_fase_a_errors_seed* com métricas numéricas no log.
     """
     print_section("ANÁLISE DE ERROS POR REGIÃO (DISTÂNCIA À FRONTEIRA)", "═")
 
@@ -133,10 +133,13 @@ def print_hyperparameter_sensitivity(phase_a_data: dict):
     C_VALUES = [0.1, 1.0, 10.0]
     DELTA_GAMMA_VALUES = [0.01, 0.05, 0.1]
 
-    # Configuração padrão usada no experimento (Coelho et al. CILAMCE 2017)
-    DEFAULT_ETA = 0.001
-    DEFAULT_C = 1.0
-    DEFAULT_DELTA = 0.05
+    # Configuração padrão do protocolo (PERCEPTRON_PARAMS, protocolo.py) — lida de lá
+    # para que este relatório nunca divirja do que o runner realmente usa.
+    DEFAULT_ETA = PERCEPTRON_PARAMS["eta"]
+    DEFAULT_C = PERCEPTRON_PARAMS["C"]
+    DEFAULT_DELTA = PERCEPTRON_PARAMS["delta_gamma"]
+    MAX_EPOCHS = PERCEPTRON_PARAMS["max_epochs"]
+    TOL = PERCEPTRON_PARAMS["tol"]
 
     for seed_key, data in sorted(phase_a_data.items()):
         X = data['X']
@@ -159,7 +162,7 @@ def print_hyperparameter_sensitivity(phase_a_data: dict):
             w_test, _ = train_relaxed_perceptron(
                 X, y_llm, centroids,
                 eta=eta, C=DEFAULT_C, delta_gamma=DEFAULT_DELTA,
-                max_epochs=50, tol=1e-4, verbose=False, use_best_effort=True
+                max_epochs=MAX_EPOCHS, tol=TOL, verbose=False, use_best_effort=True
             )
             w_norm = np.linalg.norm(w_test)
             w_dir = w_test / w_norm if w_norm > 0 else w_test
@@ -168,7 +171,7 @@ def print_hyperparameter_sensitivity(phase_a_data: dict):
             y_pred = predict_with_metric(X, centroids, w_test)
             fid = np.mean(y_pred == y_llm)
             marker = " ← padrão" if eta == DEFAULT_ETA else ""
-            print(f"    {eta:>6.2f} [{w_test[0]:>8.4f}, {w_test[1]:>8.4f}] "
+            print(f"    {eta:>6g} [{w_test[0]:>8.4f}, {w_test[1]:>8.4f}] "
                   f"[{w_dir[0]:>8.4f}, {w_dir[1]:>8.4f}] "
                   f"{cos_sim:>14.4f} {fid:>12.1%}{marker}")
 
@@ -182,7 +185,7 @@ def print_hyperparameter_sensitivity(phase_a_data: dict):
             w_test, _ = train_relaxed_perceptron(
                 X, y_llm, centroids,
                 eta=DEFAULT_ETA, C=C, delta_gamma=DEFAULT_DELTA,
-                max_epochs=50, tol=1e-4, verbose=False, use_best_effort=True
+                max_epochs=MAX_EPOCHS, tol=TOL, verbose=False, use_best_effort=True
             )
             w_norm = np.linalg.norm(w_test)
             w_dir = w_test / w_norm if w_norm > 0 else w_test
@@ -205,7 +208,7 @@ def print_hyperparameter_sensitivity(phase_a_data: dict):
             w_test, _ = train_relaxed_perceptron(
                 X, y_llm, centroids,
                 eta=DEFAULT_ETA, C=DEFAULT_C, delta_gamma=dg,
-                max_epochs=50, tol=1e-4, verbose=False, use_best_effort=True
+                max_epochs=MAX_EPOCHS, tol=TOL, verbose=False, use_best_effort=True
             )
             w_norm = np.linalg.norm(w_test)
             w_dir = w_test / w_norm if w_norm > 0 else w_test
@@ -353,19 +356,25 @@ def print_phase_e_analysis(results_e: List[ResultadoPhaseEExperimento]):
             'expert_vs_gt': r.accuracy_expert_vs_gt,
             'n_disagreements': r.n_disagreements,
             'n_malformed': r.n_malformed_responses,
+            'expert': r.expert_name,
+            'expert_w': tuple(float(v) for v in np.asarray(r.expert_w).ravel()),
         }
         for r in results_e
     ])
 
     models = df['model'].unique()
 
+    # Uma análise por (modelo, perito): com RUN_MULTIPLE_EXPERTS há 3 peritos
+    # (aniso_x2, aniso_x1, euclidean) e misturá-los diluiria as curvas.
     for model in models:
-        model_df = df[df['model'] == model]
+      for expert in df[df['model'] == model]['expert'].unique():
+        model_df = df[(df['model'] == model) & (df['expert'] == expert)]
+        expert_w = model_df['expert_w'].iloc[0]
         print(f"\n{'═' * 70}")
-        print(f" MODELO: {model}")
+        print(f" MODELO: {model} | PERITO: {expert}")
         print(f"{'═' * 70}")
 
-        print(f"\n  Métrica do Perito W = [{EXPERT_W[0]:.2f}, {EXPERT_W[1]:.2f}]")
+        print(f"\n  Métrica do Perito W = [{expert_w[0]:.2f}, {expert_w[1]:.2f}]")
         print(f"  Acurácia do Perito vs. GT: {model_df['expert_vs_gt'].mean():.1%}")
 
         # 1. Curva de aprendizado por estratégia
@@ -421,13 +430,15 @@ def print_phase_e_analysis(results_e: List[ResultadoPhaseEExperimento]):
         if total_malformed > 0:
             print(f"\n  ⚠️ Total de respostas malformadas: {total_malformed}")
 
-    # Conclusão geral do experimento
-    overall_zero = df[df['n_shot'] == 0]['accuracy'].mean()
-    overall_best = df.groupby(['n_shot', 'strategy'])['accuracy'].mean().max()
-    best_config = df.groupby(['n_shot', 'strategy'])['accuracy'].mean().idxmax()
+    # Conclusão geral do experimento — perito PRINCIPAL (EXPERT_W = aniso_x2)
+    main_expert = df['expert'].iloc[0]
+    df_main = df[df['expert'] == main_expert]
+    overall_zero = df_main[df_main['n_shot'] == 0]['accuracy'].mean()
+    overall_best = df_main.groupby(['n_shot', 'strategy'])['accuracy'].mean().max()
+    best_config = df_main.groupby(['n_shot', 'strategy'])['accuracy'].mean().idxmax()
 
     print_box(f"""
-CONCLUSÃO DA FASE E: LLM COMO APRENDIZ
+CONCLUSÃO DA FASE E: LLM COMO APRENDIZ (perito principal: {main_expert})
 
 Métrica do perito: W = [{EXPERT_W[0]:.2f}, {EXPERT_W[1]:.2f}]
 (Pondera a dimensão x2 {EXPERT_W[1]/EXPERT_W[0]:.1f}x mais do que x1)
@@ -690,6 +701,7 @@ def print_statistical_summary(
             subset_results = [r for r in all_results_abc
                               if r.nomes_classes == ("A", "B")
                               and r.prompt_variant == "default"
+                              and tuple(r.feature_names) == ("x1", "x2")
                               and r.n_shot == n_shot_val
                               and r.w_aprendido is not None
                               and np.linalg.norm(r.w_aprendido) > 0]
@@ -773,7 +785,7 @@ def print_statistical_summary(
         print(f"  FASE E: INTERVALOS DE CONFIANÇA (Bootstrap)")
         print(f"  ════════════════════════════════════════════════")
 
-        df_d = pd.DataFrame([{
+        df_e = pd.DataFrame([{
             'seed': r.random_seed, 'n_shot': r.n_shot,
             'strategy': r.example_strategy,
             'expert': r.expert_name,
@@ -782,15 +794,15 @@ def print_statistical_summary(
         } for r in all_results_e])
 
         # CI por (n_shot, strategy) para expert principal
-        df_d_main = df_d[df_d['expert'] == df_d['expert'].iloc[0]] if len(df_d) > 0 else df_d
-        if len(df_d_main) > 0:
-            print(f"\n  Expert: {df_d_main['expert'].iloc[0]}")
+        df_e_main = df_e[df_e['expert'] == df_e['expert'].iloc[0]] if len(df_e) > 0 else df_e
+        if len(df_e_main) > 0:
+            print(f"\n  Expert: {df_e_main['expert'].iloc[0]}")
             print(f"\n  {'Estratégia':<12} {'n_shot':>6} {'Acc Média':>10} {'95% CI':>20} {'n':>4}")
             print(f"  {'─'*12} {'─'*6} {'─'*10} {'─'*20} {'─'*4}")
 
-            for strategy in sorted(df_d_main['strategy'].unique()):
-                for n_shot in sorted(df_d_main['n_shot'].unique()):
-                    subset = df_d_main[(df_d_main['strategy'] == strategy) & (df_d_main['n_shot'] == n_shot)]
+            for strategy in sorted(df_e_main['strategy'].unique()):
+                for n_shot in sorted(df_e_main['n_shot'].unique()):
+                    subset = df_e_main[(df_e_main['strategy'] == strategy) & (df_e_main['n_shot'] == n_shot)]
                     if len(subset) > 0:
                         values = subset['accuracy'].values
                         mean, lo, hi = bootstrap_ci(values)
@@ -798,10 +810,11 @@ def print_statistical_summary(
                         print(f"  {strategy:<12} {n_shot:>6} {mean:>10.3f} {ci_str:>20} {len(values):>4}")
                 print()
 
-        # Teste: easy vs. hard (pareado por seed, n_shot=10)
-        for n_test in [5, 10, 20]:
-            df_easy = df_d_main[(df_d_main['strategy'] == 'easy') & (df_d_main['n_shot'] == n_test)]
-            df_hard = df_d_main[(df_d_main['strategy'] == 'hard') & (df_d_main['n_shot'] == n_test)]
+        # Teste: easy vs. hard (pareado por seed) para cada n_shot > 0 observado
+        # (FEW_SHOT_SIZES_PHASE_E; lido dos dados para não importar o runner)
+        for n_test in sorted(int(n) for n in df_e_main['n_shot'].unique() if n > 0):
+            df_easy = df_e_main[(df_e_main['strategy'] == 'easy') & (df_e_main['n_shot'] == n_test)]
+            df_hard = df_e_main[(df_e_main['strategy'] == 'hard') & (df_e_main['n_shot'] == n_test)]
             if len(df_easy) >= 3 and len(df_hard) >= 3:
                 easy_by_seed = df_easy.groupby('seed')['accuracy'].mean()
                 hard_by_seed = df_hard.groupby('seed')['accuracy'].mean()
@@ -818,46 +831,45 @@ def print_statistical_summary(
     print(f"  Significância estatística avaliada pelo CI 95% não incluir zero.\n")
 
 
+PROBLEMA_LINEAR_R3R4 = "A_linear"  # rótulo das linhas sintéticas do CSV cruzado
+
+
 def summarize_cross_linearity(
     results_abc_r3: List[dict],
     external_results: List[dict],
     pasta_execucao: str,
     results_abc_r4: Optional[List[dict]] = None,
     model_name: Optional[str] = None,
+    results_abc_r2: Optional[List[dict]] = None,
 ) -> Optional[str]:
-    """Sintetiza ganhos 2→3→4 features em problemas LINEARES (A/B/C) vs NÃO-LINEARES.
+    """Sintetiza ganhos 2→3→4 atributos no Problema A (LINEAR) vs problemas NÃO-LINEARES.
 
-    Síntese cruzada dos 3 blocos (slide 62 do roteiro atual). Gera CSV consolidado
-    `final_cross_linearity.csv`: para cada (problema, n_features), reporta fidelidade
-    e acurácia média. Permite tabela final A/B/C × meia-lua × peso×altura.
+    Síntese cruzada dos 3 blocos. Gera ``final_cross_linearity__<alias>.csv`` (um por
+    modelo): para cada (problema, algoritmo, n_features), fidelidade vs LLM e acurácia
+    vs rótulo real por seed. As linhas sintéticas (``PROBLEMA_LINEAR_R3R4``) vêm do
+    experimento R2/R3/R4 sobre o Problema A (os únicos dados lineares aumentados);
+    as não-lineares, dos pipelines externos (meia-lua e peso × altura).
     """
     rows = []
 
-    # Resultados sintéticos A/B/C — R3 (3 features, hipérbole)
-    if results_abc_r3:
-        for r in results_abc_r3:
-            rows.append({
-                'problem': 'A_B_C_lineares',
-                'is_nonlinear': False,
-                'algorithm': 'perceptron',
-                'n_features': 3,
-                'fidelity_vs_llm': r.get('accuracy'),
-                'accuracy_vs_true': None,
-                'seed': r.get('seed'),
-            })
+    def _linear_rows(results, n_features):
+        for r in results or []:
+            for algo, key in (('perceptron', 'accuracy'), ('nnls', 'accuracy_nnls')):
+                if r.get(key) is None:
+                    continue
+                rows.append({
+                    'problem': PROBLEMA_LINEAR_R3R4,
+                    'is_nonlinear': False,
+                    'algorithm': algo,
+                    'n_features': n_features,
+                    'fidelity_vs_llm': r.get(key),
+                    'accuracy_vs_true': None,
+                    'seed': r.get('seed'),
+                })
 
-    # Resultados sintéticos A/B/C — R4 (4 features, elipse — sanity check)
-    if results_abc_r4:
-        for r in results_abc_r4:
-            rows.append({
-                'problem': 'A_B_C_lineares',
-                'is_nonlinear': False,
-                'algorithm': 'perceptron',
-                'n_features': 4,
-                'fidelity_vs_llm': r.get('accuracy'),
-                'accuracy_vs_true': None,
-                'seed': r.get('seed'),
-            })
+    _linear_rows(results_abc_r2, 2)   # R2: 2 atributos originais
+    _linear_rows(results_abc_r3, 3)   # R3: + x1·x2 (hipérbole)
+    _linear_rows(results_abc_r4, 4)   # R4: + x1², x2² (elipse — sanity check)
 
     # Resultados dos problemas externos não-lineares
     for r in external_results:
@@ -884,10 +896,10 @@ def summarize_cross_linearity(
         return None
 
     df = pd.DataFrame(rows)
-    # Dados derivados de UM LLM (o principal) → nome do modelo no asset
+    # Dados derivados de UM LLM → alias do modelo no nome (um CSV por modelo)
     if model_name:
         filename = llm_asset(pasta_execucao, "final_cross_linearity.csv", model_name)
-    else:
+    else:  # só para uso offline sem modelo identificado
         filename = os.path.join(pasta_execucao, "final_cross_linearity.csv")
     df.to_csv(filename, index=False)
     return filename

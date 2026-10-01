@@ -34,6 +34,9 @@ from pathlib import Path
 
 import pandas as pd
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from execucao_io import asset_variant  # noqa: E402
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 PROBLEMA_AFETADO = "homem_mulher"
 SUFIXO = "_corrigido_hm"
@@ -80,7 +83,8 @@ def corrigir_cross_linearity(caminho: Path) -> pd.DataFrame:
 
 
 def _salvar(df: pd.DataFrame, original: Path) -> Path:
-    destino = original.with_name(original.stem + SUFIXO + original.suffix)
+    # Sufixo ANTES do alias do modelo (final_cross_linearity_corrigido_hm__gpt4mini.csv)
+    destino = Path(asset_variant(str(original), SUFIXO.lstrip("_")))
     df.to_csv(destino, index=False)
     return destino
 

@@ -15,15 +15,18 @@ dissertação. Contratos verificados:
 Execução: .venv/bin/python -m unittest tests.test_relatorios
 """
 import os
+import shutil
 import sys
+import tempfile
 import unittest
 
 import numpy as np
+import pandas as pd
 
 SRC_DIR = os.path.join(os.path.dirname(__file__), "..", "src")
 sys.path.insert(0, os.path.abspath(SRC_DIR))
 
-from relatorios import bootstrap_ci  # noqa: E402
+from relatorios import bootstrap_ci, summarize_cross_linearity, PROBLEMA_LINEAR_R3R4  # noqa: E402
 
 
 class TestBootstrapCI(unittest.TestCase):
@@ -64,6 +67,40 @@ class TestBootstrapCI(unittest.TestCase):
         _, lo_p, hi_p = bootstrap_ci(base[:50])
         _, lo_g, hi_g = bootstrap_ci(base)
         self.assertLess(hi_g - lo_g, hi_p - lo_p)
+
+
+class TestSummarizeCrossLinearity(unittest.TestCase):
+    """O CSV cruzado deve ter R2/R3/R4 do Problema A (perceptron E nnls) com o alias."""
+
+    def setUp(self):
+        self.tmp = tempfile.mkdtemp()
+
+    def tearDown(self):
+        shutil.rmtree(self.tmp, ignore_errors=True)
+
+    def test_inclui_r2_r3_r4_dois_algoritmos_e_rotulo_problema_a(self):
+        r2 = [{'accuracy': .80, 'accuracy_nnls': .81, 'seed': 42}]
+        r3 = [{'accuracy': .85, 'accuracy_nnls': .86, 'seed': 42}]
+        r4 = [{'accuracy': .84, 'accuracy_nnls': .88, 'seed': 42}]
+        f = summarize_cross_linearity(r3, [], self.tmp, results_abc_r4=r4,
+                                      model_name="gpt-4o-mini", results_abc_r2=r2)
+        self.assertEqual(os.path.basename(f), "final_cross_linearity__gpt4mini.csv")
+        df = pd.read_csv(f)
+        self.assertEqual(set(df['problem']), {PROBLEMA_LINEAR_R3R4})
+        self.assertEqual(PROBLEMA_LINEAR_R3R4, "A_linear")
+        self.assertEqual(sorted(df['n_features'].unique()), [2, 3, 4])
+        self.assertEqual(set(df['algorithm']), {"perceptron", "nnls"})
+        self.assertEqual(len(df), 6)
+
+    def test_r2_sem_nnls_gera_so_perceptron(self):
+        r2 = [{'accuracy': .80, 'accuracy_nnls': None, 'seed': 7}]
+        r3 = [{'accuracy': .85, 'seed': 7}]
+        f = summarize_cross_linearity(r3, [], self.tmp, model_name="google/gemini-2.5-flash-lite",
+                                      results_abc_r2=r2)
+        self.assertTrue(f.endswith("final_cross_linearity__flashlite.csv"))
+        df = pd.read_csv(f)
+        self.assertEqual(set(df['algorithm']), {"perceptron"})
+        self.assertEqual(sorted(df['n_features'].unique()), [2, 3])
 
 
 if __name__ == "__main__":

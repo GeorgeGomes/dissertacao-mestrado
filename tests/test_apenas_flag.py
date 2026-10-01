@@ -32,6 +32,17 @@ class TestFlagsParaApenas(unittest.TestCase):
             if flag != "RUN_HOMEM_MULHER":
                 self.assertFalse(flags[flag], flag)
 
+    def test_bloco1_liga_meia_lua_como_problema_d(self):
+        # A meia-lua é o Problema D do Bloco 1 (LLM como fonte, R2/R3/R4) E o
+        # Problema F do Bloco 2: a flag precisa ligar em `--apenas bloco1`.
+        flags = dm.flags_para_apenas(["bloco1"])
+        self.assertTrue(flags["RUN_PHASES_ABC"])
+        self.assertTrue(flags["RUN_R3R4_EXPERIMENT"])
+        self.assertTrue(flags["RUN_PROBLEM_MEIALUA"])
+        self.assertFalse(flags["RUN_PHASE_E"])
+        self.assertFalse(flags["RUN_HOMEM_MULHER"])
+        self.assertFalse(flags["RUN_ORACLE_VALIDATION"])
+
     def test_oraculo_nao_liga_llm(self):
         flags = dm.flags_para_apenas(["oraculo"])
         self.assertTrue(flags["RUN_ORACLE_VALIDATION"])

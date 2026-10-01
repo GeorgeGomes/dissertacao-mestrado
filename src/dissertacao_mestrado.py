@@ -34,7 +34,7 @@ BLOCO 1 — LLM como FONTE (otimização inversa)
         mesma magnitude de B, direção oposta — pareados)
     D — meia-lua sintética (sklearn.make_moons, noise=0.15) [não-linear]
   Experimentos: Oracle Validation (sanity), Fase A (W via Perc+NNLS),
-    Fases B/C (transferência), R2 -> R3 -> R4 em todos os 4 problemas,
+    Fases B/C (transferência), R2 -> R3 -> R4 no Problema A e na meia-lua,
     vieses de classe, variantes de prompt, nomes semânticos.
 
 BLOCO 2 — LLM como APRENDIZ (perito externo via in-context learning)
@@ -62,7 +62,7 @@ Fase A — LLM rotula em zero-shot no Problema A (linear). Aprende-se W via
          Perceptron Estruturado + NNLS (otim. inversa). Bloco 1.
 Fase B — Aplicação de W em Problema B (rotação horária ±1.5). Bloco 1.
 Fase C — Aplicação de W em Problema C (rotação anti-horária ±1.5). Bloco 1.
-Fase D — Aplicação em Problema D (meia-lua não-linear) com augmentação
+Problema D (meia-lua não-linear) — Fase A externa, LLM como fonte, com augmentação
          R2/R3/R4. Detecta não-linearidade implícita no critério do LLM.
          Bloco 1, realizada via run_external_problem_pipeline(problem_name="meia_lua_...").
 Fase E — LLM como APRENDIZ (in-context learning). Bloco 2. Um perito
@@ -92,7 +92,8 @@ HIPÓTESES DO EXPERIMENTO
 
 H1 (Consistência) — Bloco 1: o LLM mantém critério decisório implícito em
   problemas distintos. W estimada em A prevê classificações em B/C com
-  Kappa > 0.5 (Landis & Koch 1977).
+  Kappa > 0.4 (piso da faixa "moderada" de Landis & Koch 1977 — limiar do artigo;
+  testa a EXISTÊNCIA de um critério consistente, não seu domínio).
 
 H2 (Few-shot amplifica) — Bloco 1: exemplos rotulados pela métrica
   aumentam a concordância LLM-métrica.
@@ -105,13 +106,16 @@ H4 (Exemplos difíceis) — Bloco 2 [REFUTADA com significância]: hipótese
   (Cohen d ~ 1.5); efeito desaparece em n_shot >= 20.
 
 H5 (Estabilidade) — Transversal: comportamento reproduzível entre 3 seeds
-  x 3 repetições = 9 observações por configuração.
+  (bases distintas); onde há sorteio de exemplos, 3 repetições por seed
+  (regra única em `reps_para`).
 
 =====================================================
 DESIGN DE VARIABILIDADE
 =====================================================
 
-- N_REPETICOES=3: variabilidade do LLM na MESMA base.
+- N_REPETICOES=3: repetições SÓ onde há sorteio de exemplos few-shot (Fase E
+  'random' e externos; random_state = seed + rep); seleções determinísticas e
+  zero-shot rodam 1 coleta. O flip a T=0 é medido pela auditoria offline.
 - RANDOM_SEEDS=[42, 123, 7]: BASES distintas.
 - NOMES_CLASSES variados: detecta viés semântico (Bloco 1).
 - Temperatura 0.0 REDUZ mas não elimina estocasticidade. Motivos:
@@ -129,11 +133,13 @@ RECURSOS PRINCIPAIS (mapeados aos blocos)
 - BLOCO 3: peso x altura (Fase A R2/R3/R4, paradoxo do overfitting,
   Fase E, LLM vs Perceptron).
 - Comum: bootstrap CI 10k, Wilcoxon pareado, Cohen's d, concorrência
-  asyncio.Semaphore(10), parser 7 camadas + fallback MD5, 3 seeds x 3 reps,
-  30+ PNGs e 11 CSVs por execução nomeados com prefixos bloco{1,2,3}_,
-  bloco23_, final_.
+  asyncio.Semaphore(10), parser 8 camadas (0-7) + fallback MD5, 3 seeds
+  (x 3 reps onde há sorteio), centenas de PNGs (combinados + painéis) e 11 CSVs
+  consolidados + 1 final_cross_linearity__<alias>.csv por modelo, nomeados com
+  prefixos bloco{1,2,3}_, bloco23_, final_ e sufixo __<alias> nos derivados de LLM.
 
-PROVEDORES: OpenAI e OpenRouter (ativos); Anthropic/Gemini direto (SDK integrado, inativo).
+PROVEDOR: OpenRouter, único (todos os modelos, inclusive os da OpenAI, via
+  id `<org>/<modelo>`; pin de infraestrutura por modelo em llm_client.MODEL_PROVIDER_PIN).
 """
 
 import sys
@@ -152,7 +158,6 @@ import warnings
 from sklearn.metrics import accuracy_score, cohen_kappa_score, f1_score
 from classical_baselines import ClassicalBaselineRunner
 
-import anthropic
 import time
 import asyncio
 import traceback
@@ -166,7 +171,7 @@ from metrics import (
     d_W, compute_centroids, augment_to_r3, augment_to_r4, augment_features,
     predict_with_metric, compute_metric_confidence,
 )
-from llm_client import PROVIDER_CONFIG, get_client, get_async_client, get_extra_body
+from llm_client import PROVIDER_CONFIG, get_async_client, get_extra_body
 from data_problems import (
     PROBLEM_A_CENTERS, PROBLEM_B_CENTERS, PROBLEM_C_CENTERS,
     create_problem_a, create_problem_b, create_problem_c, create_problem_e_expert,
@@ -192,14 +197,14 @@ from relatorios import (  # reexport: extraído na Fase 1 da modularização
 from execucao_io import (  # reexport: extraído na Fase 1 da modularização
     # MODEL_ALIAS e _model_slug são reexportados aqui para os testes (dm.*).
     LLM_INTERACTIONS, LOG_CHUNK_LIMIT_BYTES, MODEL_ALIAS, Tee,
-    _model_alias, _model_slug, checkpoint_interactions,
+    _model_alias, _model_slug, asset_variant, checkpoint_interactions,
     llm_asset, salvar_json_em_chunks, salvar_log_em_chunks,
 )
 from resultados import (  # reexport: extraído na Fase 1 da modularização
     LearnedMetric, ResultadoExperimento, ResultadoPhaseEExperimento,
 )
 from protocolo import (  # reexport: extraído na Fase 1 da modularização
-    EXAMPLE_STRATEGIES, EXPERT_CENTROIDS, EXPERT_W,
+    EXAMPLE_STRATEGIES, EXPERT_CENTROIDS, EXPERT_W, PERCEPTRON_PARAMS,
 )
 
 # =============================================================================
@@ -222,7 +227,7 @@ np.random.seed(RANDOM_SEED)
 
 # Formato: (provider, model, temperature, scope)
 #   scope "full" — grid completo (vieses, variantes, diluição, ordem, múltiplos peritos)
-#                  + seeds extras do pipeline central (EXTRA_SEEDS_CORE).
+#                  + seeds extras do pipeline central (EXTRA_SEEDS_CORE, hoje vazio).
 #   scope "core" — apenas o pipeline central: Fases A-C + Fase E (perito principal)
 #                  + pipelines externos (peso×altura e meia-lua). Comparação entre
 #                  modelos sem multiplicar o custo do grid auxiliar.
@@ -231,24 +236,26 @@ MODELS_TO_TEST = [
     # experimentos roda nos 2, tratados de forma IGUAL: cada um gera o conjunto
     # completo de gráficos na raiz da execução, com seu alias (MODEL_ALIAS) no
     # nome do asset. CSVs consolidam ambos (colunas provider/model).
-    ("openai", "gpt-4o-mini", 0.0, "full"),
+    # Provedor único: OpenRouter (id do modelo no formato <org>/<modelo>).
+    ("openrouter", "openai/gpt-4o-mini", 0.0, "full"),
     ("openrouter", "google/gemini-2.5-flash-lite", 0.0, "full"),
 ]
 
-# PROVIDER_CONFIG, get_client e get_async_client → llm_client.py (importados no topo).
+# PROVIDER_CONFIG e get_async_client → llm_client.py (importados no topo).
 # Ver tests/test_llm_client.py.
 
 
-# Cliente global — será definido para cada modelo durante os experimentos
-client = None
-async_client = None  # Cliente assíncrono para chamadas concorrentes
+# Cliente global (assíncrono, OpenRouter) — definido para cada modelo durante os experimentos
+async_client = None
 MODEL_NAME = None
 CURRENT_PROVIDER = None
 # Temperatura 0.0: REDUZ mas NÃO ELIMINA estocasticidade do LLM.
 # Mesmo com temp=0, variabilidade pode ocorrer por: batching em GPU (arredondamentos float16),
 # hardware heterogêneo entre requests, atualizações silenciosas do modelo pelo provider,
 # e paralelismo não-determinístico em operações de ponto flutuante (softmax não-associativa).
-# Por isso o experimento usa múltiplas seeds (RANDOM_SEEDS) e repetições (N_REPETICOES).
+# Por isso o experimento usa múltiplas seeds (RANDOM_SEEDS) e quantifica o flip a
+# T=0 na auditoria offline (src/audit_interactions.py); as repetições (N_REPETICOES)
+# variam o SORTEIO dos exemplos few-shot, não a consulta (ver `reps_para`).
 CURRENT_TEMPERATURE = 0.0
 
 
@@ -276,7 +283,7 @@ EXAMPLE_ORDER_N_SHOTS = [4, 10, 20]              # n_shots do viés de ordem
 # Múltiplas sementes aleatórias para garantir robustez dos resultados
 RANDOM_SEEDS = [42, 123, 7]
 
-# Sementes EXTRAS do pipeline central (apenas o modelo principal): elevariam o n de
+# Sementes EXTRAS do pipeline central (modelos com scope="full"): elevariam o n de
 # bases distintas para 6 nas Fases A-C e na Fase E (perito principal), habilitando
 # testes pareados por seed (Wilcoxon exige n>=5-6 para p<0,05).
 # DESATIVADAS (decisão 02/07/2026): protocolo uniforme de 3 seeds para tudo, em
@@ -324,24 +331,14 @@ MAX_FORMAT_RETRIES = 5
 
 
 
-# Hiperparâmetros do Perceptron Estruturado usados em TODAS as estimações de W do
-# protocolo (Coelho, Borges & Fonseca Neto, CILAMCE 2017, p. 16: η=0.001, C∈[0.1, 1]).
-# Ponto ÚNICO de configuração — mudar aqui alcança os 8 call sites de uma vez.
-# A sensibilidade a eta/C/delta_gamma é explorada à parte em
-# print_hyperparameter_sensitivity, que varia os valores localmente de propósito.
-PERCEPTRON_PARAMS = {
-    "eta": 0.001,
-    "C": 1.0,
-    "delta_gamma": 0.05,
-    "max_epochs": 50,
-    "tol": 1e-4,
-}
+# PERCEPTRON_PARAMS (hiperparâmetros do Perceptron Estruturado, ponto ÚNICO de
+# configuração dos 8 call sites) vive em protocolo.py — importado/reexportado acima.
 
 # Coletor global para diagnóstico da busca binária em γ no Perceptron Estruturado
 # (item b da reunião 30/04/2026, ~520s — orientador pediu para verificar se gamma
-# converge crescentemente). Preenchido nas chamadas estratégicas a
-# train_relaxed_perceptron(..., return_history=True) e plotado em
-# plot_gamma_convergence -> final_10_gamma_convergence.png.
+# converge crescentemente). Preenchido pela única chamada com
+# train_relaxed_perceptron(..., return_history=True) — a Fase A no Problema A,
+# por (modelo, seed) — e plotado em plot_gamma_convergence -> final_10_gamma_convergence.png.
 PERCEPTRON_GAMMA_DIAGNOSTICS: List[dict] = []
 
 # Nomes de classe distintos para testar viés semântico do LLM (conjunto reduzido)
@@ -435,9 +432,14 @@ HM_CLASS_NAME_VARIANTS = [
 # sufixo `_apenas-<blocos>` (nunca `_completa`), para não ser confundida com uma
 # execução cheia pelas ferramentas que leem "a última _completa".
 BLOCOS_APENAS = {
-    "bloco1":  ["RUN_PHASES_ABC", "RUN_R3R4_EXPERIMENT"],    # LLM como fonte (A/B/C + R3/R4)
+    # RUN_PROBLEM_MEIALUA cobre a meia-lua nos DOIS papéis: Problema D (Bloco 1,
+    # LLM como fonte, R2/R3/R4) e Problema F (Bloco 2, LLM como aprendiz) — por
+    # isso aparece em bloco1 E bloco2 (flags_para_apenas faz a união).
+    "bloco1":  ["RUN_PHASES_ABC", "RUN_R3R4_EXPERIMENT", "RUN_PROBLEM_MEIALUA"],  # LLM como fonte (A/B/C + R3/R4 + D)
     "bloco2":  ["RUN_PHASE_E", "RUN_PROBLEM_MEIALUA"],       # LLM como aprendiz (E + meia-lua F)
-    "bloco3":  ["RUN_HOMEM_MULHER"],                         # caso real peso × altura
+    "bloco3":  ["RUN_HOMEM_MULHER"],                         # caso real peso × altura (Problema G)
+    # Oráculo = chave própria (0 chamadas de API), embora seus assets sejam do
+    # Bloco 1 (bloco1_03/04/04b, bloco1_oracle_*): `--apenas bloco1` NÃO o roda.
     "oraculo": ["RUN_ORACLE_VALIDATION"],                    # validação sem LLM (0 chamadas)
 }
 
@@ -783,31 +785,10 @@ Your classification:"""
         raise ValueError(f"Variante de prompt desconhecida: {variant}")
 
 
-def llm_classify_point_anthropic(client: anthropic.Anthropic, model_name: str,
-                                  prompt: str, temperature: float,
-                                  system_message: str = "You are a classifier. Respond only with the class label.",
-                                  max_tokens: int = 50) -> str:
-    """Classifica um ponto usando a API da Anthropic (Claude)."""
-    response = client.messages.create(
-        model=model_name,
-        max_tokens=max_tokens,
-        temperature=temperature,
-        system=system_message,
-        messages=[
-            {"role": "user", "content": prompt}
-        ]
-    )
-    # Guarda contra resposta sem blocos de conteúdo (ou texto None): devolve
-    # string vazia (tratada como malformada, com retry) em vez de estourar.
-    if not getattr(response, "content", None):
-        return ""
-    return (getattr(response.content[0], "text", None) or "").strip()
-
-
 async def async_llm_classify_point_openai(async_client, model_name: str, prompt: str,
                                            temperature: float,
                                            system_message: str = "You are a classifier. Respond only with the class label.") -> Tuple[str, dict]:
-    """Chama a API compatível com OpenAI (OpenAI, Gemini ou OpenRouter) de forma assíncrona.
+    """Chama a API compatível com OpenAI (OpenRouter) de forma assíncrona.
 
     Envolve a chamada em asyncio.wait_for(timeout=90s) como segunda barreira contra
     travamentos: se a requisição não responder em 90s mesmo após retries do SDK,
@@ -913,19 +894,8 @@ async def async_llm_classify_point(
         for rate_attempt in range(MAX_RETRIES):
             await _respeitar_rate_limit_global()
             try:
-                config = PROVIDER_CONFIG[CURRENT_PROVIDER]
-
-                if config["client_type"] == "anthropic":
-                    # Anthropic não tem async_client neste script; fallback sync em thread
-                    label = await asyncio.get_event_loop().run_in_executor(
-                        None, llm_classify_point_anthropic, client, MODEL_NAME, prompt,
-                        CURRENT_TEMPERATURE, system_msg, max_tok
-                    )
-                    call_meta = {}
-                else:
-                    label, call_meta = await async_llm_classify_point_openai(async_client, MODEL_NAME, prompt,
-                                                                             CURRENT_TEMPERATURE, system_msg)
-
+                label, call_meta = await async_llm_classify_point_openai(async_client, MODEL_NAME, prompt,
+                                                                         CURRENT_TEMPERATURE, system_msg)
                 break
             except Exception as e:
                 error_str = str(e).lower()
@@ -1177,7 +1147,7 @@ def collect_llm_decisions(
 
 # =============================================================================
 # APRENDIZADO DE MÉTRICA (OTIMIZAÇÃO INVERSA: PERCEPTRON ESTRUTURADO + NNLS)
-# Inclui também augment_to_r3/r4 e augment_features p/ R2/R3/R4
+# (augment_to_r3/r4 e augment_features, p/ R2/R3/R4, vivem em metrics.py)
 # =============================================================================
 
 # d_W e compute_centroids → metrics.py (importados no topo).
@@ -1400,7 +1370,7 @@ def phase_consistency_test(
     problem_name: str,
     verbose: bool = True,
     prompt_variant: str = "default"
-) -> Tuple[ConsistencyMetrics, np.ndarray, np.ndarray, float, float, int, float, Dict]:
+) -> Tuple[ConsistencyMetrics, np.ndarray, np.ndarray, float, float, int, float, Dict, np.ndarray]:
     """Teste de consistência genérico em um novo problema usando a métrica estimada no Problema A.
 
     Apenas o vetor W é transferido do Problema A. Os centróides são recalculados localmente
@@ -1422,6 +1392,7 @@ def phase_consistency_test(
         n_malformed: respostas malformadas do LLM
         consistency_euclidean: consistência da baseline Euclidiana
         baselines_consistency: dict {nome_clf: {accuracy_vs_expert, kappa_vs_expert, ...}} (vazio se zero-shot)
+        X_test: pontos efetivamente avaliados (sem os exemplos few-shot)
     """
     if verbose:
         print(f"\n  ══════════════════════════════════════════════════════════════")
@@ -2512,7 +2483,10 @@ def _run_phase_abc_experiment(X_train_a, y_train_a, X_b, y_b, X_c, y_c,
 
 
 # =============================================================================
-# PIPELINE PARA PROBLEMAS EXTERNOS (Bloco 2/3 — peso×altura e meia-lua)
+# PIPELINE PARA PROBLEMAS EXTERNOS — meia-lua e peso×altura (Problema G).
+# Fase A externa = LLM como FONTE (Problema D → Bloco 1; G → Bloco 3);
+# Fase E externa = LLM como APRENDIZ (Problema F → Bloco 2; G → Bloco 3).
+# Os assets saem com prefixo bloco23_* (CSVs/curvas externas) ou bloco1_11 (SVM da meia-lua).
 #
 # Implementa os itens da reunião 30/04/2026 (e-mails 19:15 e 22:04):
 #   - Item 2: base peso×altura como problema central
@@ -2520,7 +2494,7 @@ def _run_phase_abc_experiment(X_train_a, y_train_a, X_b, y_b, X_c, y_c,
 #   - Item 4: Fase A com n_features ∈ {2, 3, 4} para detectar não-linearidade
 #   - Item 5: acurácia da métrica vs rótulo ORIGINAL (atende e-mail 22:04 ponto 4)
 #   - Item 6: Fase E com a melhor métrica (exemplos no mesmo n_feat)
-#   - Item 7: visualização ponto-a-ponto das rotulações (e-mail 22:06)
+#   - Item 7 (30/04): visualização ponto-a-ponto das rotulações (e-mail 22:06; final_08)
 #   - Itens 8-11: mesma pipeline aplicada à meia-lua (Parte 3 do plano)
 # =============================================================================
 
@@ -2771,9 +2745,10 @@ def run_external_problem_pipeline(
                         examples_for_prompt = None
                         ex_indices = None
                     else:
-                        # Escolhe exemplos balanceados de classes diferentes. Cada
-                        # repetição sorteia um conjunto diferente (o rng local da
-                        # seed avança), produzindo a variabilidade mediada nos gráficos.
+                        # Sorteio UNIFORME sem estratificação por classe (n_shot par
+                        # não garante balanço exato aqui). Cada repetição sorteia um
+                        # conjunto diferente (o rng local da seed avança), produzindo a
+                        # variabilidade mediada nos gráficos.
                         n_shot_actual = min(n_shot, len(X_train))
                         ex_indices = rng.choice(len(X_train), size=n_shot_actual, replace=False)
                         examples_for_prompt = []
@@ -2786,17 +2761,17 @@ def run_external_problem_pipeline(
 
                     extra_matrix_test = X_test_aug[:, 2:] if best['n_features'] >= 3 else None
 
-                    t_d = time.time()
-                    print(f"    [{problem_name} D seed={seed} {feat_0}/{feat_1}] n_shot={n_shot} rep={rep+1}/{n_reps_eff} | best n_feat={best['n_features']} | coletando LLM (n_test={len(X_test)})...", flush=True)
-                    y_llm_test, n_mal_d = collect_llm_decisions(
+                    t_e = time.time()
+                    print(f"    [{problem_name} E seed={seed} {feat_0}/{feat_1}] n_shot={n_shot} rep={rep+1}/{n_reps_eff} | best n_feat={best['n_features']} | coletando LLM (n_test={len(X_test)})...", flush=True)
+                    y_llm_test, n_mal_e = collect_llm_decisions(
                         X_test, nome_classe_0, nome_classe_1,
                         examples=examples_for_prompt, verbose=False,
                         nome_feature_0=feat_0, nome_feature_1=feat_1,
                         extra_features_matrix=extra_matrix_test,
                         extra_feature_names=extra_features_names_test,
-                        label_prefix=f"[{problem_name} D seed={seed} {feat_0}/{feat_1} n={n_shot} r{rep+1}] ",
+                        label_prefix=f"[{problem_name} E seed={seed} {feat_0}/{feat_1} n={n_shot} r{rep+1}] ",
                     )
-                    print(f"    [{problem_name} D seed={seed} {feat_0}/{feat_1}] n_shot={n_shot} rep={rep+1}/{n_reps_eff} coletado em {time.time()-t_d:.1f}s (malformadas={n_mal_d})", flush=True)
+                    print(f"    [{problem_name} E seed={seed} {feat_0}/{feat_1}] n_shot={n_shot} rep={rep+1}/{n_reps_eff} coletado em {time.time()-t_e:.1f}s (malformadas={n_mal_e})", flush=True)
 
                     # Guarda o mapa ponto-a-ponto só da 1ª repetição (visualização)
                     if rep == 0:
@@ -2814,7 +2789,8 @@ def run_external_problem_pipeline(
                     n_test_e = len(y_test)
                     n_err_llm_vs_true = int(np.sum(y_llm_test != y_test))
                     n_err_llm_vs_metric = int(np.sum(y_llm_test != y_metric_test))
-                    # Comparação com Perceptron treinado sobre os MESMOS exemplos do expert
+                    # Comparação com Perceptron treinado sobre os MESMOS exemplos few-shot
+                    # (rotulados pela melhor métrica da Fase A externa; não há perito aqui)
                     acc_perc_baseline = None
                     if examples_for_prompt is not None and n_shot >= 4:
                         try:
@@ -2855,13 +2831,13 @@ def run_external_problem_pipeline(
                         'n_test': n_test_e,
                         'n_errors_llm_vs_true': n_err_llm_vs_true,
                         'n_errors_llm_vs_metric': n_err_llm_vs_metric,
-                        'n_malformed': n_mal_d,
+                        'n_malformed': n_mal_e,
                     })
 
                     if verbose:
                         baseline_str = f" | perc_baseline={acc_perc_baseline:.1%}" if acc_perc_baseline is not None else ""
                         print(
-                            f"      D n_shot={n_shot} rep={rep+1}: LLM_vs_metric={acc_llm_vs_metric:.1%} | "
+                            f"      E n_shot={n_shot} rep={rep+1}: LLM_vs_metric={acc_llm_vs_metric:.1%} | "
                             f"LLM_vs_real={acc_llm_vs_true:.1%} | erros_vs_real={n_err_llm_vs_true}/{n_test_e}{baseline_str}"
                         )
 
@@ -2878,14 +2854,9 @@ def run_external_problem_pipeline(
 
 
 
-# =============================================================================
-# VISUALIZAÇÕES DOS PROBLEMAS EXTERNOS (peso × altura, meia-lua)
-# Os 4 plots abaixo respondem aos pedidos do e-mail 22:04 (pontos 3-5):
-#   - Curva de aprendizado da Fase E com a melhor métrica
-#   - Comparação 2/3/4 features (resposta visual a "houve ganho?")
-#   - Fronteira de decisão por n_features (projetada em R2)
-#   - LLM vs Perceptron baseline (reunião ~2110s)
-# =============================================================================
+# As visualizações dos problemas externos (bloco23_external_*: curva de aprendizado
+# da Fase E, comparação 2/3/4 atributos, fronteira por n_features, LLM vs
+# Perceptron — e-mail de 30/04/2026 22:04, pontos 3-5) vivem em plots.py.
 
 
 
@@ -2963,7 +2934,7 @@ def main():
         EXTRA_SEEDS_CORE = []
         BIAS_N_SHOTS = [0, 4]              # zero-shot + um few-shot
         DILUTION_EASY_ADDITIONS = [0, 4]   # 2 pontos da curva de diluição
-        EXAMPLE_ORDER_N_SHOTS = [5]        # um few-shot no viés de ordem
+        EXAMPLE_ORDER_N_SHOTS = [4]        # um few-shot (par) no viés de ordem
 
     # Guard: valida as chaves de API de TODOS os modelos selecionados ANTES de
     # iniciar qualquer coleta — falha na hora zero, não no meio da execução paga.
@@ -3008,7 +2979,7 @@ def main():
     sys.stdout = tee
     sys.stderr = tee_err
 
-    print_section("EXPERIMENTO: CONSISTÊNCIA DECISIONAL DE LLMs VIA OTIMIZAÇÃO INVERSA (v5.0)", "=")
+    print_section("EXPERIMENTO: CONSISTÊNCIA DECISIONAL DE LLMs VIA OTIMIZAÇÃO INVERSA", "=")
     if modo_rapido:
         print_section(
             "⚡ MODO RÁPIDO ATIVO (--rapido) — smoke test de cobertura completa\n"
@@ -3072,11 +3043,11 @@ def main():
       Seeds: {RANDOM_SEEDS} (+ extras no pipeline central do modelo full: {EXTRA_SEEDS_CORE})
       Vieses ancorados em n_shot = {BIAS_N_SHOTS}
 
-    PHASE D:
+    PHASE E:
       Few-shot sizes: {FEW_SHOT_SIZES_PHASE_E}
       Example strategies: {EXAMPLE_STRATEGIES}
       Expert configs: {[c['name'] for c in EXPERT_CONFIGS] if RUN_MULTIPLE_EXPERTS else ['aniso_x2 (original)']}
-      Problem D samples: {N_SAMPLES_PROBLEM_E}
+      Problem E samples: {N_SAMPLES_PROBLEM_E}
     ═══════════════════════════════════════════════════
     """)
 
@@ -3085,19 +3056,18 @@ def main():
     all_results_dilution = []
     all_results_abc_alternative = []  # Para comparação de algoritmos (NNLS)
     all_results_oracle = []  # Para validação do oráculo
-    all_results_oracle_meialua = []  # Item 5: oracle de aproximação da meia-lua
+    all_results_oracle_meialua = []  # Item 5 (reunião 20/05/2026): oracle de aproximação da meia-lua
     all_results_example_order = []  # Para viés de ordem dos exemplos
     all_results_baselines = []  # Para baselines clássicos (k-NN, LR, SVM)
     results_r3_2feat = []  # Fidelidade da métrica R2 (2 pesos) sobre rótulos do LLM
     results_r3_3feat = []  # Fidelidade da métrica R3 (3 pesos, x3=x1*x2) sobre os mesmos rótulos
-    results_r3_4feat = []  # Fidelidade da métrica R4 (4 pesos, +x1², x2²) — sanity check elipse em A/B/C
+    results_r3_4feat = []  # Fidelidade da métrica R4 (4 pesos, +x1², x2²) — sanity check elipse no Problema A
     # Cache de dados da Fase A para gráficos de erros
     phase_a_data_for_plots = {}
     # Dados detalhados por seed para visualizações abrangentes
     seed_detailed_data = {}
 
     for model_idx, (provider, model_name, temperature, model_scope) in enumerate(MODELS_TO_TEST):
-        client = get_client(provider)
         async_client = get_async_client(provider)
         MODEL_NAME = model_name
         CURRENT_PROVIDER = provider
@@ -3120,7 +3090,7 @@ def main():
             checkpoint_interactions(pasta_execucao)
 
             print_section(
-                f"BLOCO 1 — LLM como FONTE | MODEL {model_idx + 1}/{len(MODELS_TO_TEST)}: "
+                f"MODEL {model_idx + 1}/{len(MODELS_TO_TEST)}: "
                 f"{provider}/{model_name} (temp={temperature}, scope={model_scope}) | "
                 f"SEED {seed_idx + 1}/{len(seeds_do_modelo)}: {seed}"
                 + (" [extra: só pipeline central]" if is_seed_extra else ""),
@@ -3137,12 +3107,12 @@ def main():
             X_c, y_c = create_problem_c(N_SAMPLES_PROBLEM_C, seed + 2)
             X_e, y_e = create_problem_e_expert(N_SAMPLES_PROBLEM_E, seed + 3)
 
-            print(f"  Dados gerados: A={len(X_a)}, B={len(X_b)}, C={len(X_c)}, D={len(X_e)}")
+            print(f"  Dados gerados: A={len(X_a)}, B={len(X_b)}, C={len(X_c)}, E={len(X_e)}")
 
             # Salva dados sintéticos na pasta de execução
             seed_data_dir = os.path.join(pasta_execucao, f"dados_sinteticos_seed{seed}")
             os.makedirs(seed_data_dir, exist_ok=True)
-            for name, X_data, y_data in [("A", X_a, y_a), ("B", X_b, y_b), ("C", X_c, y_c), ("D", X_e, y_e)]:
+            for name, X_data, y_data in [("A", X_a, y_a), ("B", X_b, y_b), ("C", X_c, y_c), ("E", X_e, y_e)]:
                 df = pd.DataFrame({"x1": X_data[:, 0], "x2": X_data[:, 1], "y": y_data})
                 df.to_csv(os.path.join(seed_data_dir, f"problem_{name}.csv"), index=False)
             print(f"  Dados salvos em: {seed_data_dir}/")
@@ -3177,7 +3147,7 @@ def main():
             phase_a_cache = {}
 
             if RUN_PHASES_ABC:
-
+                print_section("BLOCO 1 — LLM como FONTE (Fases A/B/C, Problemas A/B/C lineares)", "─")
                 print(f"\n[PASSO 3] Iniciando Fases A-C...")
                 print(f"  Modelo: {provider}/{model_name} | Seeds: {seed} | Few-shot: {FEW_SHOT_SIZES}")
 
@@ -3501,7 +3471,7 @@ def main():
                 all_results_oracle.extend(oracle_results)
                 print(f"  ✓ Validação do oráculo concluída para seed={seed}", flush=True)
 
-                # Item 5 (reunião 20/05): oracle de APROXIMAÇÃO da meia-lua —
+                # Item 5 (reunião 20/05/2026): oracle de APROXIMAÇÃO da meia-lua —
                 # mostra que existe W (em espaço aumentado) que aproxima a fronteira
                 # não-linear, com fidelidade crescente em 2→3→4 features.
                 # Sub-flag do oráculo (0 chamadas LLM): independe do pipeline
@@ -3609,6 +3579,10 @@ def main():
                 # Baselines clássicos são INDEPENDENTES do LLM (treinam nos exemplos
                 # rotulados pelo perito) — rodar uma vez, no primeiro modelo, evita
                 # linhas duplicadas nos CSVs/plots com múltiplos modelos.
+                # Sorteio com random_state=seed: corresponde à rep 0 da estratégia
+                # 'random' da Fase E (as demais reps usam seed+rep). Roda para todos
+                # os peritos de EXPERT_CONFIGS quando RUN_MULTIPLE_EXPERTS, mesmo em
+                # scope='core' (custo zero de API).
                 if RUN_CLASSICAL_BASELINES and model_idx == 0:
                     print(f"\n>>> Baselines clássicos na Fase E", flush=True)
                     for expert_cfg_bl in (EXPERT_CONFIGS if RUN_MULTIPLE_EXPERTS else [EXPERT_CONFIGS[0]]):
@@ -3674,9 +3648,9 @@ def main():
                 # EXPERIMENTO DE DILUIÇÃO
                 # ═══════════════════════════════════════════════════════
                 if RUN_DILUTION and run_aux:
-                    print(f"\n>>> Experimento de Diluição: 3 hard fixos + N easy progressivos", flush=True)
-                    y_expert_dilution = expert_classify(X_e, EXPERT_W, EXPERT_CENTROIDS)
                     n_hard_fixed = 4  # 2 por classe (arredondado para par)
+                    print(f"\n>>> Experimento de Diluição: {n_hard_fixed} hard fixos + N easy progressivos", flush=True)
+                    y_expert_dilution = expert_classify(X_e, EXPERT_W, EXPERT_CENTROIDS)
                     easy_additions = DILUTION_EASY_ADDITIONS  # N easy adicionados
 
                     for dil_idx, n_easy in enumerate(easy_additions):
@@ -3742,8 +3716,8 @@ def main():
                 y_expert_order = expert_classify(X_e, EXPERT_W, EXPERT_CENTROIDS)
                 expert_acc_order = accuracy_score(y_e, y_expert_order)
 
-                # Usa n_shot=10 e estratégia "mixed" como configuração fixa
-                # para isolar o efeito da ordenação
+                # Usa os n_shot de EXAMPLE_ORDER_N_SHOTS e a estratégia "mixed"
+                # como configuração fixa para isolar o efeito da ordenação
                 ORDER_TEST_N_SHOTS = EXAMPLE_ORDER_N_SHOTS
 
                 for n_shot_order in ORDER_TEST_N_SHOTS:
@@ -3818,21 +3792,22 @@ def main():
                 print(f"  ✓ Experimento de ordem dos exemplos concluído para seed={seed}", flush=True)
 
             # ═══════════════════════════════════════════════════════════════
-            # NÃO-LINEARIDADE IMPLÍCITA: MÉTRICA R3 SOBRE RÓTULOS R2
+            # NÃO-LINEARIDADE IMPLÍCITA: MÉTRICAS R3 E R4 SOBRE RÓTULOS R2 (Problema A)
             # O LLM classifica apenas com (x1, x2). Nos bastidores, adicionamos
-            # x3 = x1*x2 e aprendemos métrica com 3 pesos. Se a fidelidade R3
-            # supera R2, o LLM adota implicitamente um critério não-linear.
+            # x3 = x1*x2 (R3) e depois x1², x2² (R4) e estimamos métricas com 3 e 4
+            # pesos. Se a fidelidade cresce com a dimensão, o LLM adota
+            # implicitamente um critério não-linear.
             # ═══════════════════════════════════════════════════════════════
 
             if RUN_R3R4_EXPERIMENT:
-                print(f"\n>>> Projeção R3: x3 = x1 * x2 (seed={seed})", flush=True)
+                print(f"\n>>> Projeção R3/R4 no Problema A: x3 = x1·x2; depois x1², x2² (seed={seed})", flush=True)
 
                 # Reutiliza classificações do LLM da Fase A (2 features)
                 # O LLM NÃO sabe da existência de x3 — queremos verificar se
                 # implicitamente ele adota não-linearidade no processo de classificação
                 cache_key_r3 = (provider, model_name, seed, "A", "B", "default")
                 if cache_key_r3 not in phase_a_cache:
-                    print("  ⚠ Cache da Fase A não disponível para esta seed, pulando R3")
+                    print("  ⚠ Cache da Fase A não disponível para esta seed, pulando R3/R4")
                 else:
                     cached_r3 = phase_a_cache[cache_key_r3]
                     y_llm_r2 = cached_r3['y_llm']
@@ -3889,8 +3864,8 @@ def main():
                             'accuracy_nnls': fid_r3_nnls, 'w_nnls': w_r3_nnls,
                             'provider': provider, 'model': model_name,
                         })
-                        results_r3_2feat.append({'accuracy': fid_r2, 'seed': seed,
-                                                 'provider': provider, 'model': model_name})
+                        results_r3_2feat.append({'accuracy': fid_r2, 'accuracy_nnls': fid_r2_nnls,
+                                                 'seed': seed, 'provider': provider, 'model': model_name})
 
                         # ─────────────────────────────────────────────────────────────
                         # R4: x3 = x1², x4 = x2² (elipse) — sanity check em problemas
@@ -3929,7 +3904,7 @@ def main():
                         if fid_r4 > fid_r3:
                             print(f"  ► R4 (elipse) supera R3 — sinal de não-linearidade quadrática isotrópica")
                         else:
-                            print(f"  ► R4 (elipse) NÃO supera R3 — problema linear, conforme esperado em A/B/C")
+                            print(f"  ► R4 (elipse) NÃO supera R3 — problema linear, conforme esperado no Problema A")
 
                         results_r3_4feat.append({
                             'accuracy': fid_r4, 'w': w_r4, 'seed': seed,
@@ -3985,7 +3960,6 @@ def main():
             # (llm_asset) evita sobrescrita entre modelos.
             for ext_provider, ext_model, ext_temp, ext_scope in MODELS_TO_TEST:
                 checkpoint_interactions(pasta_execucao)
-                client = get_client(ext_provider)
                 async_client = get_async_client(ext_provider)
                 MODEL_NAME = ext_model
                 CURRENT_PROVIDER = ext_provider
@@ -4040,7 +4014,6 @@ def main():
             # alias do modelo no nome.
             for _ml_idx, (ext_provider, ext_model, ext_temp, ext_scope) in enumerate(MODELS_TO_TEST):
                 checkpoint_interactions(pasta_execucao)
-                client = get_client(ext_provider)
                 async_client = get_async_client(ext_provider)
                 MODEL_NAME = ext_model
                 CURRENT_PROVIDER = ext_provider
@@ -4060,7 +4033,7 @@ def main():
                     if _ml_idx == 0:
                         plot_problem_overview(
                             X_ml, y_ml,
-                            title=f"Problema E — Meia-lua (sklearn.make_moons, seed={seed})",
+                            title=f"Problema D — Meia-lua (sklearn.make_moons, seed={seed})",
                             feature_names=("x1", "x2"),
                             optimal_boundary_fn=None,
                             filename=os.path.join(pasta_execucao, f"bloco1_02_problema_d_meialua_seed{seed}_overview.png"),
@@ -4088,9 +4061,10 @@ def main():
                         for k, v in ml_pipeline['llm_label_maps'].items()
                     })
 
-                    # Item 7 (reunião 20/05): superfície SVM gaussiano (RBF) vs LLM.
-                    # Usa os rótulos zero-shot do LLM (chave 'train') e a melhor
-                    # métrica diagonal aprendida para a fronteira tracejada.
+                    # Item 7 (reunião 20/05/2026): superfície SVM gaussiano (RBF) vs LLM
+                    # na meia-lua. Usa os rótulos ZERO-SHOT do LLM (chave 'train') — LLM
+                    # como fonte no Problema D, logo asset do Bloco 1 (bloco1_11) — e a
+                    # melhor métrica diagonal estimada para a fronteira tracejada.
                     try:
                         lbl = ml_pipeline['llm_label_maps'].get(
                             (f"meia_lua_seed{seed}", seed, 'x1', 'x2', 'train'))
@@ -4102,12 +4076,12 @@ def main():
                                 metric=best_metric, seed=seed,
                                 filename=llm_asset(
                                     pasta_execucao,
-                                    f"bloco23_external_svm_meialua_seed{seed}.png",
+                                    f"bloco1_11_meialua_svm_vs_llm_seed{seed}.png",
                                     ext_model,
                                 ),
                             )
                             if svm_saved:
-                                print(f"  Gráfico salvo: bloco23_external_svm_meialua_seed{seed}__{_model_alias(ext_model)}.png")
+                                print(f"  Gráfico salvo: bloco1_11_meialua_svm_vs_llm_seed{seed}__{_model_alias(ext_model)}.png")
                             else:
                                 print(f"  ⚠ Plot SVM meia-lua seed={seed} não gerado (classe única no ground truth).")
                     except Exception as exc_svm:
@@ -4122,7 +4096,7 @@ def main():
     # ═══════════════════════════════════════════════════════════════════
 
     print(f"\n[PASSO 5] Gerando visualizações finais...", flush=True)
-    print_section("BLOCO 1 — VISUALIZAÇÕES (Fases A/B/C lineares + meia-lua)", "═")
+    print_section("VISUALIZAÇÕES CONSOLIDADAS — comparação entre modelos + oráculo (Bloco 1)", "═")
 
     # Cada modelo de MODELS_TO_TEST gera o conjunto COMPLETO de visualizações
     # na raiz da execução, com seu alias (MODEL_ALIAS) no nome do asset; os
@@ -4140,7 +4114,7 @@ def main():
             filename=os.path.join(pasta_execucao, "bloco1_04_oracle_transfer.png"))
         print(f"  Gráfico salvo: bloco1_04_oracle_transfer.png")
 
-    # Item 5: oracle de aproximação da meia-lua (fidelidade vs GT por n_features)
+    # Item 5 (reunião 20/05/2026): oracle de aproximação da meia-lua (fidelidade vs GT por n_features)
     if all_results_oracle_meialua:
         plot_oracle_meialua(all_results_oracle_meialua,
             filename=os.path.join(pasta_execucao, "bloco1_04b_oracle_meialua.png"))
@@ -4173,6 +4147,7 @@ def main():
             f"(alias: {_model_alias(_viz_model)})", "═")
 
         if abc_m:
+            print_section("BLOCO 1 — VISUALIZAÇÕES (Fases A/B/C, LLM como fonte)", "─")
             fname = llm_asset(pasta_execucao, "bloco1_09_consistency_extended.png", _viz_model)
             plot_consistency_comparison_extended(abc_m, filename=fname)
             print(f"  Gráfico salvo: {os.path.basename(fname)}")
@@ -4225,7 +4200,34 @@ def main():
                 plot_prompt_variant_comparison(abc_m, filename=fname)
                 print(f"  Gráfico salvo: {os.path.basename(fname)}")
 
-        print_section("BLOCO 2 — VISUALIZAÇÕES (Fase E, LLM como aprendiz)", "═")
+        # Não-linearidade implícita: fidelidade R2 (2 pesos) vs R3 (3) vs R4 (4)
+        # no Problema A (o CSV r3r4 consolida todos os modelos)
+        r3_2feat_viz = [r for r in results_r3_2feat if r.get('model') in (None, _viz_model)]
+        r3_3feat_viz = [r for r in results_r3_3feat if r.get('model') in (None, _viz_model)]
+        r3_4feat_viz = [r for r in results_r3_4feat if r.get('model') in (None, _viz_model)]
+        if r3_2feat_viz and r3_3feat_viz:
+            fname = llm_asset(pasta_execucao, "bloco1_10_r3r4_comparison.png", _viz_model)
+            plot_r3_comparison(r3_2feat_viz, r3_3feat_viz, r3_4feat_viz or None, filename=fname)
+            print(f"  Gráfico salvo: {os.path.basename(fname)}")
+
+        # Comparação de algoritmos — Perceptron × NNLS
+        if alternative_m and abc_m:
+            perc_results = [r for r in abc_m
+                           if r.n_shot == 0 and r.nomes_classes == ("A", "B")]
+            if perc_results:
+                fname = llm_asset(pasta_execucao, "bloco1_07_algorithm_comparison.png", _viz_model)
+                plot_algorithm_comparison(perc_results, alternative_m, filename=fname)
+                print(f"  Gráfico salvo: {os.path.basename(fname)}")
+
+        # Diagnóstico da busca binária em γ (item b reunião 30/04/2026, ~520s)
+        gamma_diag_m = [d for d in PERCEPTRON_GAMMA_DIAGNOSTICS
+                        if d.get("model") in (None, _viz_model)]
+        if gamma_diag_m:
+            fname = llm_asset(pasta_execucao, "final_10_gamma_convergence.png", _viz_model)
+            plot_gamma_convergence(gamma_diag_m, filename=fname)
+            print(f"  Gráfico salvo: {os.path.basename(fname)}")
+
+        print_section("BLOCO 2 — VISUALIZAÇÕES (Fase E, LLM como aprendiz)", "─")
 
         if e_m:
             fname = llm_asset(pasta_execucao, "bloco2_04_phase_e_learning_curve.png", _viz_model)
@@ -4255,33 +4257,6 @@ def main():
 
             # Análise quantitativa do viés de ordem (recency bias)
             print_example_order_analysis(order_m)
-
-        # Não-linearidade implícita: fidelidade R2 (2 pesos) vs R3 (3 pesos)
-        # (o CSV r3r4 consolida todos os modelos)
-        r3_2feat_viz = [r for r in results_r3_2feat if r.get('model') in (None, _viz_model)]
-        r3_3feat_viz = [r for r in results_r3_3feat if r.get('model') in (None, _viz_model)]
-        if r3_2feat_viz and r3_3feat_viz:
-            fname = llm_asset(pasta_execucao, "bloco1_10_r3r4_comparison.png", _viz_model)
-            plot_r3_comparison(r3_2feat_viz, r3_3feat_viz, filename=fname)
-            print(f"  Gráfico salvo: {os.path.basename(fname)}")
-
-        # Comparação de algoritmos — Perceptron × NNLS
-        if alternative_m and abc_m:
-            perc_results = [r for r in abc_m
-                           if r.n_shot == 0 and r.nomes_classes == ("A", "B")]
-            if perc_results:
-                fname = llm_asset(pasta_execucao, "bloco1_07_algorithm_comparison.png", _viz_model)
-                plot_algorithm_comparison(perc_results, alternative_m, filename=fname)
-                print(f"  Gráfico salvo: {os.path.basename(fname)}")
-
-        # Diagnóstico da busca binária em γ (item b reunião 30/04/2026, ~520s)
-        gamma_diag_m = [d for d in PERCEPTRON_GAMMA_DIAGNOSTICS
-                        if d.get("model") in (None, _viz_model)]
-        if gamma_diag_m:
-            plot_gamma_convergence(
-                gamma_diag_m,
-                filename=llm_asset(pasta_execucao, "final_10_gamma_convergence.png", _viz_model),
-            )
 
         # ═══════════════════════════════════════════════════════════════
         # VISUALIZAÇÕES DETALHADAS POR SEED (deste modelo)
@@ -4371,7 +4346,7 @@ def main():
         print(f"  Resultados das Fases A-C salvos em: {filename_abc}")
 
     if all_results_e:
-        df_d = pd.DataFrame([
+        df_e = pd.DataFrame([
             {
                 'provider': r.provider, 'model': r.model_name, 'temperature': r.temperature,
                 'random_seed': r.random_seed, 'n_shot': r.n_shot,
@@ -4396,7 +4371,7 @@ def main():
             for r in all_results_e
         ])
         filename_e = os.path.join(pasta_execucao, f"bloco2_phase_e_{timestamp_csv}.csv")
-        df_d.to_csv(filename_e, index=False)
+        df_e.to_csv(filename_e, index=False)
         print(f"  Resultados da Fase E salvos em: {filename_e}")
 
     if all_results_abc_alternative:
@@ -4527,7 +4502,7 @@ def main():
         df_oracle.to_csv(filename_oracle, index=False)
         print(f"  Resultados da Validação do Oráculo salvos em: {filename_oracle}")
 
-    if all_results_oracle_meialua:  # Item 5: oracle de aproximação da meia-lua
+    if all_results_oracle_meialua:  # Item 5 (reunião 20/05/2026): oracle de aproximação da meia-lua
         df_oracle_ml = pd.DataFrame(all_results_oracle_meialua)
         filename_oracle_ml = os.path.join(pasta_execucao, f"bloco1_oracle_meialua_{timestamp_csv}.csv")
         df_oracle_ml.to_csv(filename_oracle_ml, index=False)
@@ -4535,9 +4510,9 @@ def main():
 
     # ─── Problemas externos não-lineares (peso×altura, meia-lua) ──────────
     # CSVs guardam TODOS os modelos; plots/sínteses são gerados POR MODELO
-    # (alias no nome do asset). _primary_model resta só como fallback de
-    # preenchimento para linhas legadas sem coluna model.
-    _primary_model = MODELS_TO_TEST[0][1]
+    # (alias no nome do asset). Não existe "modelo principal": _fallback_model
+    # serve só para preencher linhas legadas sem coluna model.
+    _fallback_model = MODELS_TO_TEST[0][1]
 
     if external_phase_a_results:
         rows_a = []
@@ -4592,15 +4567,16 @@ def main():
         print(f"  Resultados Fase A externos (peso×altura + meia-lua) salvos em: {fname_ext_a}")
 
     if external_phase_e_results:
-        df_ext_d = pd.DataFrame(external_phase_e_results)
+        df_ext_e = pd.DataFrame(external_phase_e_results)
         # converte tupla feature_names para string
-        df_ext_d['feature_names'] = df_ext_d['feature_names'].apply(lambda t: '/'.join(t) if isinstance(t, tuple) else t)
+        df_ext_e['feature_names'] = df_ext_e['feature_names'].apply(lambda t: '/'.join(t) if isinstance(t, tuple) else t)
         fname_ext_e = os.path.join(pasta_execucao, f"bloco23_external_phase_e_{timestamp_csv}.csv")
-        df_ext_d.to_csv(fname_ext_e, index=False)
+        df_ext_e.to_csv(fname_ext_e, index=False)
         print(f"  Resultados Fase E externos salvos em: {fname_ext_e}")
 
     # Tabela cruzada linear × não-linear — uma por modelo (alias no nome)
     for _ext_provider, _ext_model, _ext_temp, _ext_scope in MODELS_TO_TEST:
+        r3_2feat_m = [r for r in results_r3_2feat if r.get('model') in (None, _ext_model)]
         r3_3feat_m = [r for r in results_r3_3feat if r.get('model') in (None, _ext_model)]
         r3_4feat_m = [r for r in results_r3_4feat if r.get('model') in (None, _ext_model)]
         ext_a_m = [
@@ -4616,11 +4592,13 @@ def main():
             pasta_execucao=pasta_execucao,
             results_abc_r4=r3_4feat_m if r3_4feat_m else None,
             model_name=_ext_model,
+            results_abc_r2=r3_2feat_m if r3_2feat_m else None,
         )
         if cross_fname:
             print(f"  Comparação cruzada linear×não-linear salva em: {cross_fname}")
 
-    # Visualização ponto-a-ponto das rotulações do LLM (item G, e-mail 22:06)
+    # Visualização ponto-a-ponto das rotulações do LLM (item 7 da reunião
+    # 30/04/2026, e-mail 22:06) → final_08_llm_labels_*
     # A chave carrega o modelo e o problema — um scatter por
     # (modelo, problema, seed, features, kind).
     if external_llm_label_maps:
@@ -4702,11 +4680,11 @@ def main():
 
     if external_phase_a_results:
         # ─── Resumo consolidado no log (auxilia roteiro da apresentação) ──────
-        print_section("BLOCO 2/3 — RESUMO CONSOLIDADO: Pipeline externos (Fase A)", "═")
+        print_section("BLOCOS 1/3 — RESUMO CONSOLIDADO: Fase A externa (meia-lua D + peso×altura G)", "═")
         df_ext = pd.DataFrame(external_phase_a_results)
         if 'model' not in df_ext.columns:
-            df_ext['model'] = _primary_model
-        df_ext['model'] = df_ext['model'].fillna(_primary_model)
+            df_ext['model'] = _fallback_model
+        df_ext['model'] = df_ext['model'].fillna(_fallback_model)
         df_ext['variant'] = df_ext['feature_names'].apply(
             lambda t: '/'.join(t) if isinstance(t, tuple) else str(t)
         )
@@ -4749,16 +4727,16 @@ def main():
         )
 
     if external_phase_e_results:
-        print_section("BLOCO 2/3 — RESUMO CONSOLIDADO: Fase E externa (LLM vs Perceptron)", "═")
-        df_d = pd.DataFrame(external_phase_e_results)
-        if 'model' not in df_d.columns:
-            df_d['model'] = _primary_model
-        df_d['model'] = df_d['model'].fillna(_primary_model)
-        df_d['variant'] = df_d['feature_names'].apply(
+        print_section("BLOCOS 2/3 — RESUMO CONSOLIDADO: Fase E externa (meia-lua F + peso×altura G; LLM vs Perceptron)", "═")
+        df_e = pd.DataFrame(external_phase_e_results)
+        if 'model' not in df_e.columns:
+            df_e['model'] = _fallback_model
+        df_e['model'] = df_e['model'].fillna(_fallback_model)
+        df_e['variant'] = df_e['feature_names'].apply(
             lambda t: '/'.join(t) if isinstance(t, tuple) else str(t)
         )
-        for problem in sorted(df_d['problem_name'].unique()):
-            sub_all = df_d[df_d['problem_name'] == problem]
+        for problem in sorted(df_e['problem_name'].unique()):
+            sub_all = df_e[df_e['problem_name'] == problem]
             for model_sum in sorted(sub_all['model'].unique()):
                 sub = sub_all[sub_all['model'] == model_sum]
                 for variant in sorted(sub['variant'].unique()):

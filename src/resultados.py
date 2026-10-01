@@ -1,4 +1,5 @@
-"""Dataclasses de resultado dos experimentos (Blocos 1-3).
+"""Dataclasses de resultado dos experimentos (Blocos 1 e 2; o Bloco 3 e os pipelines
+externos bloco23_* usam dicts).
 
 Extraídas de ``dissertacao_mestrado.py`` (Fase 1 da modularização) para que
 ``plots.py`` e ``relatorios.py`` possam tipar seus parâmetros sem importar o
@@ -19,8 +20,7 @@ class LearnedMetric:
 
     Nota terminológica: usamos 'estimada' ou 'inferida' (não 'aprendida') porque
     a métrica é obtida por otimização inversa a partir de decisões observadas,
-    não por aprendizado supervisionado direto. O campo w_aprendido mantém o nome
-    por compatibilidade com CSVs existentes.
+    não por aprendizado supervisionado direto.
     """
     w: np.ndarray
     centroids: np.ndarray
@@ -53,7 +53,8 @@ class ResultadoExperimento:
     f1_problema_c: float
     acuracia_llm_vs_gt_problema_c: float
     acuracia_metrica_vs_gt_problema_c: float
-    # Parâmetros aprendidos pela métrica
+    # Ŵ_LLM estimada (Perceptron) e γ ótimo. O campo mantém o nome w_aprendido
+    # por compatibilidade com os CSVs existentes (terminologia atual: 'estimada').
     w_aprendido: np.ndarray
     gamma_otimo: float
     # Distribuição das classes (número de pontos por classe)
@@ -91,7 +92,9 @@ class ResultadoPhaseEExperimento:
     temperature: float
     random_seed: int
     n_shot: int
-    example_strategy: str  # estratégia de seleção: "easy", "hard", "mixed" ou "random"
+    # Estratégia de seleção: "easy"/"hard"/"mixed"/"random" (Fase E), ou
+    # "mixed_order_<ordem>" (viés de ordem) ou "dilution_<N>hard_<M>easy" (diluição)
+    example_strategy: str
     nomes_classes: Tuple[str, str]
     repeticao: int
     # Métricas principais: LLM vs. Perito

@@ -141,6 +141,36 @@ class TestRegraRepeticao(unittest.TestCase):
             "/tmp/exec/final_08_llm_labels_seed42__gpt4mini.png",
         )
 
+    def test_asset_variant_insere_sufixo_antes_do_alias(self):
+        # Painéis individuais e cópias corrigidas: "<base>_<sufixo>__<alias>.ext",
+        # nunca "<base>__<alias>_<sufixo>.ext" (alias sempre antes da extensão).
+        self.assertEqual(
+            dm.asset_variant("/tmp/e/bloco1_06_w_distribution__gpt4mini.png", "boxplot"),
+            "/tmp/e/bloco1_06_w_distribution_boxplot__gpt4mini.png",
+        )
+        self.assertEqual(
+            dm.asset_variant("/tmp/e/final_cross_linearity__flashlite.csv", "corrigido_hm"),
+            "/tmp/e/final_cross_linearity_corrigido_hm__flashlite.csv",
+        )
+
+    def test_asset_variant_sem_alias_e_slug_longo(self):
+        self.assertEqual(
+            dm.asset_variant("/tmp/e/bloco1_03_oracle_w_recovery.png", "ratio"),
+            "/tmp/e/bloco1_03_oracle_w_recovery_ratio.png",
+        )
+        slug = dm._model_slug("org/modelo-x.1")
+        self.assertEqual(
+            dm.asset_variant(f"/tmp/e/final_05_hits_errors_seed42__{slug}.png", "problema_a"),
+            f"/tmp/e/final_05_hits_errors_seed42_problema_a__{slug}.png",
+        )
+
+    def test_asset_variant_compoe_com_llm_asset(self):
+        p = dm.llm_asset("/tmp/e", "bloco1_10_r3r4_comparison.png", "gpt-4o-mini")
+        self.assertEqual(
+            dm.asset_variant(p, "linear_vs_quadratica"),
+            "/tmp/e/bloco1_10_r3r4_comparison_linear_vs_quadratica__gpt4mini.png",
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -174,7 +174,7 @@ LLM_INTERACTIONS = []
 
 
 def _model_slug(model_name: str) -> str:
-    """Slug de nome de modelo para pastas/arquivos.
+    """Slug de nome de modelo para nomes de asset (fallback de ``MODEL_ALIAS``).
 
     Ex.: 'google/gemini-2.5-flash-lite' → 'google-gemini-2.5-flash-lite'.
     """
@@ -185,7 +185,8 @@ def _model_slug(model_name: str) -> str:
 # MODELS_TO_TEST DEVE ter entrada aqui (teste garante) — o fallback via
 # _model_slug existe só para modelos fora do protocolo.
 MODEL_ALIAS = {
-    "gpt-4o-mini":                  "gpt4mini",
+    "openai/gpt-4o-mini":           "gpt4mini",   # id no OpenRouter (protocolo desde 01/10/2026)
+    "gpt-4o-mini":                  "gpt4mini",   # id legado (OpenAI direto, execuções até 07/2026)
     "google/gemini-2.5-flash-lite": "flashlite",
 }
 
@@ -206,6 +207,34 @@ def llm_asset(pasta: str, filename: str, model_name: str) -> str:
     """
     base, ext = os.path.splitext(filename)
     return os.path.join(pasta, f"{base}__{_model_alias(model_name)}{ext}")
+
+
+# Sufixo de modelo no fim do stem: alias curto (MODEL_ALIAS) ou slug longo
+# (_model_slug: [a-z0-9.-]). Só é reconhecido se vier após "__".
+_ALIAS_SUFFIX_RE = re.compile(r"^(?P<stem>.+?)__(?P<alias>[a-z0-9][a-z0-9.-]*)$")
+
+
+def asset_variant(path: str, suffix: str) -> str:
+    """Caminho de uma VARIANTE (painel individual, cópia corrigida…) de um asset.
+
+    Mantém a regra "alias sempre imediatamente antes da extensão": o sufixo da
+    variante entra ANTES do ``__<alias>`` quando ele existe.
+
+      'p/bloco1_06_w_distribution__gpt4mini.png', 'boxplot'
+          → 'p/bloco1_06_w_distribution_boxplot__gpt4mini.png'
+      'p/bloco1_03_oracle_w_recovery.png', 'ratio'        (asset sem alias)
+          → 'p/bloco1_03_oracle_w_recovery_ratio.png'
+      'p/final_cross_linearity__flashlite.csv', 'corrigido_hm'
+          → 'p/final_cross_linearity_corrigido_hm__flashlite.csv'
+    """
+    pasta, filename = os.path.split(path)
+    stem, ext = os.path.splitext(filename)
+    m = _ALIAS_SUFFIX_RE.match(stem)
+    if m:
+        new_stem = f"{m.group('stem')}_{suffix}__{m.group('alias')}"
+    else:
+        new_stem = f"{stem}_{suffix}"
+    return os.path.join(pasta, new_stem + ext)
 
 
 def checkpoint_interactions(pasta_execucao: str) -> None:

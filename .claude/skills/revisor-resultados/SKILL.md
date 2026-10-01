@@ -72,7 +72,8 @@ Siga em ordem e registre o resultado de cada etapa:
 
 ### 4. Nomenclatura dos assets
 - **Sufixo obrigatório:** assets derivados de UM LLM levam `__<alias>` antes da
-  extensão (`gpt4mini`, `flashlite`, `scout`, `dsflash`). Ache violações: asset de LLM
+  extensão (`gpt4mini`, `flashlite`). Painéis individuais e variantes levam o sufixo
+  ANTES do alias: `<base>_<painel>__<alias>.png` (nunca `<base>__<alias>_<painel>`). Ache violações: asset de LLM
   SEM sufixo, sufixo com alias errado, slug longo (`_model_slug`) indicando modelo sem
   entrada em `MODEL_ALIAS`.
 - **Sufixo proibido:** dados sintéticos, oráculos (`bloco1_03/04/04b`), perito

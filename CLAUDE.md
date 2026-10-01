@@ -14,96 +14,121 @@ de estimação (Perceptron Estruturado, NNLS).
 **Organização em 3 blocos auto-contidos:**
 - **Bloco 1 — LLM como FONTE:** Problemas A (linear), B (linear, rotação horária ±1.5), C (linear, rotação anti-horária ±1.5), D (meia-lua não-linear). LLM rotula; aprendemos W via Perceptron+NNLS. Inclui Oracle, R2→R3→R4, vieses e variantes de prompt.
 - **Bloco 2 — LLM como APRENDIZ:** Problemas E (linear, perito W=[0.3,1.5]) e F (meia-lua, perito = ground truth). Fase E in-context; estratégias, refutação H4, baselines clássicos.
-- **Bloco 3 — Estudo de caso REAL:** peso × altura (base do orientador, fronteira elíptica). Fase A R2/R3/R4 + Fase E + paradoxo do overfitting.
+- **Bloco 3 — Estudo de caso REAL:** Problema G, peso × altura (base do orientador, fronteira elíptica). Fase A R2/R3/R4 + Fase E + paradoxo do overfitting.
 
-## Convenção de nomenclatura dos assets (a partir de 03/07/2026)
+**Letras dos problemas** (não confundir com as fases A/B/C/E): A, B, C lineares e D meia-lua
+(Bloco 1); E perito linear e F meia-lua (Bloco 2); G peso × altura (Bloco 3). A meia-lua é
+o mesmo dado em dois papéis (D: LLM fonte; F: LLM aprendiz), gerada por `create_problem_d_meialua`.
+
+## Convenção de nomenclatura dos assets (a partir de 03/07/2026; painéis desde 01/10/2026)
 
 **Assets cujos dados derivam de UM LLM específico levam o ALIAS curto do modelo antes
-da extensão**, via `llm_asset()` + `MODEL_ALIAS`: ex.
+da extensão**, via `llm_asset()` + `MODEL_ALIAS` (`src/execucao_io.py`): ex.
 `bloco1_06_w_distribution__gpt4mini.png`, `final_05_hits_errors_seed42__flashlite.png`,
 `final_cross_linearity__flashlite.csv`.
 
 | Modelo | Alias |
 |---|---|
-| `gpt-4o-mini` | `gpt4mini` |
+| `openai/gpt-4o-mini` (id no OpenRouter; `gpt-4o-mini` nas execuções até 07/2026) | `gpt4mini` |
 | `google/gemini-2.5-flash-lite` | `flashlite` |
 
 **TODOS os modelos são tratados de forma igual**: cada modelo de `MODELS_TO_TEST` gera
-o conjunto COMPLETO de gráficos por modelo (bloco1_05–09, bloco2_04–07/09, bloco23_*,
-final_02–08, final_10, cross-linearity) **na raiz da execução** — não existe mais a
-subpasta `modelos_extras/` nem o conceito de "modelo principal" para plots. Modelo fora
-do protocolo sem entrada em `MODEL_ALIAS` cai no slug longo (`_model_slug`); teste em
-`tests/test_selecao_exemplos.py` garante a cobertura dos 2.
+o conjunto COMPLETO de gráficos por modelo (bloco1_05–14b incluindo bloco1_11,
+bloco2_04–07/09, bloco23_*, final_02–08, final_10, `final_cross_linearity__<alias>.csv`)
+**na raiz da execução** — não existe subpasta por modelo nem o conceito de "modelo
+principal". Modelo fora do protocolo sem entrada em `MODEL_ALIAS` cai no slug longo
+(`_model_slug`); teste em `tests/test_selecao_exemplos.py` garante a cobertura dos 2.
+
+**Painéis individuais e variantes de um asset** (`asset_variant()`): o sufixo do painel
+entra ANTES do alias, para o alias ficar sempre imediatamente antes da extensão:
+`bloco1_06_w_distribution_boxplot__gpt4mini.png`,
+`final_04_dataset_overview_seed42_problema_e__flashlite.png`,
+`final_cross_linearity_corrigido_hm__gpt4mini.csv`. (Nunca `<base>__<alias>_<painel>`.)
+Execuções anteriores a 01/10/2026 foram migradas por `src/renomear_assets_legado.py`.
 
 **NÃO levam sufixo de modelo:**
 - Assets sem dados de LLM: dados sintéticos (`bloco1_01`, `bloco1_02`, `bloco3_01`,
   `dados_sinteticos_*`), oráculos (`bloco1_03/04/04b`, `bloco1_oracle_*`), perito
   (`bloco2_01`, `bloco2_03`) e baselines clássicos (`bloco2_classical_baselines_*.csv`).
 - Assets consolidados multi-modelo, identificados pela coluna `provider`/`model` no
-  conteúdo: todos os demais CSVs, `llm_interactions*.json`, `log_execucao.txt` e
-  `final_09_model_comparison.png`.
+  conteúdo: todos os CSVs com timestamp, `llm_interactions*.json`, `log_execucao*.txt` e
+  `final_09_model_comparison.png`. Única exceção entre os CSVs:
+  `final_cross_linearity__<alias>.csv` é gerado UM por modelo (leva alias).
 
 (A lista de arquivos abaixo mostra os nomes-base; aplicar mentalmente o sufixo
-`__<alias>` aos derivados de LLM — um arquivo por modelo.)
+`__<alias>` aos derivados de LLM — um arquivo por modelo — e `_<painel>` antes dele.)
 
 ## Estrutura de Pastas
 
 ```
 mestrado/
 ├── src/
-│   ├── dissertacao_mestrado.py       # Runner principal (~4700 linhas): config, fases, coleta LLM, main()
-│   ├── plots.py                      # TODAS as visualizações (plot_*/visualize_*, ~2800 linhas)
+│   ├── dissertacao_mestrado.py       # Runner principal (~4850 linhas): config, fases, coleta LLM, main()
+│   ├── plots.py                      # TODAS as visualizações (plot_*/visualize_*, ~2900 linhas)
 │   ├── relatorios.py                 # Relatórios de texto: print_*, bootstrap_ci, summarize_cross_linearity
-│   ├── execucao_io.py                # Tee (log), chunking de log/JSON, checkpoint, MODEL_ALIAS/llm_asset
-│   ├── resultados.py                 # Dataclasses de resultado (ResultadoExperimento etc.)
-│   ├── protocolo.py                  # Constantes compartilhadas (EXPERT_W, EXAMPLE_STRATEGIES)
-│   ├── llm_client.py                 # Factories de cliente de API por provedor + pins OpenRouter
-│   ├── llm_parser.py                 # Parser de 8 camadas das respostas do LLM
+│   ├── execucao_io.py                # Tee (log), chunking de log/JSON, checkpoint, MODEL_ALIAS/llm_asset/asset_variant
+│   ├── resultados.py                 # Dataclasses de resultado (ResultadoExperimento, ResultadoPhaseEExperimento, LearnedMetric)
+│   ├── protocolo.py                  # Constantes compartilhadas (EXPERT_W, EXPERT_CENTROIDS, EXAMPLE_STRATEGIES, PERCEPTRON_PARAMS)
+│   ├── llm_client.py                 # Factory de cliente (OpenRouter, provedor único) + pins por modelo
+│   ├── llm_parser.py                 # Parser de 8 camadas (0–7) das respostas do LLM
 │   ├── metrics.py                    # d_W, centróides, augmentação R3/R4, métricas de consistência
 │   ├── data_problems.py              # Geradores dos problemas sintéticos + base real
-│   ├── audit_interactions.py         # Auditoria offline (malformadas, flip de T=0)
+│   ├── audit_interactions.py         # Auditoria offline (malformadas, flip de T=0, breakdown por modelo)
 │   ├── relaxed_perceptron.py         # Perceptron Estruturado com Relaxação de Margem
 │   ├── least_squares_inverse.py      # Mínimos Quadrados Não-Negativos (NNLS)
 │   ├── classical_baselines.py        # Baselines clássicos (k-NN, LR, SVM)
-│   └── arquivado/
-│       └── max_margin_lp_inverse.py  # ARQUIVADO — LP Max-Margin removido (plano_trabalho item 12)
+│   ├── gerar_amostras_homem_mulher.py       # Amostras X/T/R da base peso×altura (pedido do orientador, 25/08/2026)
+│   ├── corrigir_mapeamento_homem_mulher.py  # Correção offline H/M do Bloco 3 → *_corrigido_hm__<alias>.csv
+│   ├── renomear_assets_legado.py     # Migra assets de execuções antigas p/ a convenção atual (dry-run padrão)
+│   └── animacao_perceptron/          # Animação HTML do Perceptron (gerar.py, template.html, core.js)
+├── tests/                        # unittest (parser, métricas, estimadores, plots, --apenas, renomeação, auditoria)
+├── dados_reais/homem_mulher/     # Base real peso × altura (peso_altura.csv) + amostras X/T/R
 ├── requirements.txt              # Dependências Python
 ├── CLAUDE.md                     # Este arquivo
+├── README.md                     # Como reproduzir
+├── glossario.md                  # Glossário dos termos do trabalho
+├── roteiro_apresentacao.txt      # Índice mestre dos slides (fonte de verdade das apresentações)
 ├── .env                          # Chaves de API (carregadas via python-dotenv)
 ├── .venv/                        # Ambiente virtual Python
 ├── .claude/
-│   └── settings.local.json       # Configurações locais do Claude Code
+│   ├── settings.local.json       # Configurações locais do Claude Code
+│   └── skills/                   # 13 skills ativas (cópia canônica; skills/ na raiz é só documentação)
 ├── reunioes_orientador/           # Transcrições e planos de reuniões com orientador
 ├── artigos_referenciados/         # PDFs de artigos citados
 ├── trabalhos_referencias.txt      # Lista consolidada de referências bibliográficas
-└── execucao_YYYY-MM-DD_HH-MM-SS_{completa|smoke}/ # Pasta criada a cada execução
+└── execucao_YYYY-MM-DD_HH-MM-SS_{completa|smoke|apenas-<blocos>[_smoke]}/ # Pasta criada a cada execução
     #   sufixo `_completa` = execução cheia (fonte para o trabalho);
-    #   sufixo `_smoke` = execução `--rapido` (NUNCA usar como fonte de números)
-    ├── dados_sinteticos_seed{seed}/       # CSVs dos datasets por seed (A, B, C, D, A_r3)
+    #   sufixo `_smoke` = execução `--rapido` (NUNCA usar como fonte de números);
+    #   sufixo `_apenas-<blocos>` = execução parcial (`--apenas`; nunca `_completa`).
+    #   (As pastas execucao_* são COMMITADAS por decisão do projeto.)
+    ├── dados_sinteticos_seed{seed}/       # CSVs por seed: problem_{A,B,C,E,A_r3,A_r4}.csv
+    #   (problem_E.csv = perito linear do Bloco 2; antes de 01/10/2026 gravado como problem_D.csv)
     # === BLOCO 1 — LLM como FONTE (otim. inversa) ===
     ├── bloco1_01_problemas_lineares.png       # + painéis _problema_{a,b,c}.png
     ├── bloco1_02_problema_d_meialua_seed*_overview.png
-    ├── bloco1_03_oracle_w_recovery.png        # Oracle: recuperação de W conhecido
-    ├── bloco1_04_oracle_transfer.png          # Oracle: transferência entre geometrias
-    ├── bloco1_05_fase_a_errors_seed*.png      # por seed (mapa de erros)
-    ├── bloco1_06_w_distribution.png           # + boxplot, ratio, scatter
-    ├── bloco1_07_algorithm_comparison.png     # Perceptron × NNLS
+    ├── bloco1_03_oracle_w_recovery.png        # Oracle: recuperação de W conhecido (+ _w_scatter/_ratio/_cosseno/_fidelidade)
+    ├── bloco1_04_oracle_transfer.png          # Oracle: transferência entre geometrias (+ painel por expert)
+    ├── bloco1_04b_oracle_meialua.png          # Oracle: aproximação da meia-lua em R2/R3/R4 (0 chamadas)
+    ├── bloco1_05_fase_a_errors_seed*.png      # por seed (mapa de erros; + _mapa_erros/_erros_por_margem)
+    ├── bloco1_06_w_distribution.png           # + _boxplot, _ratio, _scatter
+    ├── bloco1_07_algorithm_comparison.png     # Perceptron × NNLS (+ _w_scatter/_fidelidade/_fase_b/_fase_c)
     ├── bloco1_08_seed_comparison.png
     ├── bloco1_09_consistency_extended.png     # + painéis por métrica
-    ├── bloco1_10_r3r4_comparison.png          # R2/R3/R4 em lineares + meia-lua
+    ├── bloco1_10_r3r4_comparison.png          # R2→R3→R4 no Problema A (+ _linear_vs_quadratica/_algoritmos_r3r4)
+    ├── bloco1_11_meialua_svm_vs_llm_seed*.png # SVM RBF vs rótulos zero-shot do LLM na meia-lua (Problema D)
     ├── bloco1_12_class_order_bias.png
     ├── bloco1_13_prompt_variants.png
     ├── bloco1_14a_class_names_effect.png
     ├── bloco1_14b_feature_names_effect.png
     # === BLOCO 2 — LLM como APRENDIZ (Fase E) ===
-    ├── bloco2_01_problema_e_expert.png        # + painéis fronteira/ground_truth/margem
+    ├── bloco2_01_problema_e_expert.png        # + painéis _ground_truth/_fronteira_perito/_margem_perito
     ├── bloco2_03_phase_e_strategies.png       # + painéis por estratégia
-    ├── bloco2_04_phase_e_learning_curve.png   # + painéis por métrica
-    ├── bloco2_05_phase_e_strategy_comparison.png  # + painéis por n_shot
+    ├── bloco2_04_phase_e_learning_curve.png   # + painéis por métrica (perito principal aniso_x2)
+    ├── bloco2_05_phase_e_strategy_comparison.png  # + painéis por n_shot (perito principal)
     ├── bloco2_06_dilution.png
     ├── bloco2_07_example_order.png            # recency bias
-    ├── bloco2_09_classical_baselines.png      # k-NN, LR, SVM × LLM
-    # === BLOCO 3 — Estudo de caso REAL ===
+    ├── bloco2_09_classical_baselines.png      # k-NN, LR, SVM × LLM (perito principal)
+    # === BLOCO 3 — Estudo de caso REAL (Problema G) ===
     ├── bloco3_01_peso_altura_overview.png
     # === BLOCO 2/3 — Pipelines externos (meia-lua + peso×altura) ===
     ├── bloco23_external_learning_curve.png
@@ -111,17 +136,19 @@ mestrado/
     ├── bloco23_external_decision_boundary.png
     ├── bloco23_external_llm_vs_perceptron.png
     # === FECHAMENTO (visualizações por seed) ===
-    ├── final_02_confusion_matrices_seed*.png
+    ├── final_02_confusion_matrices_seed*.png  # + _problema_{a,b,c}
     ├── final_03_dashboard_seed*.png
-    ├── final_04_dataset_overview_seed*.png
-    ├── final_05_hits_errors_seed*.png
-    ├── final_06_w_algorithms_seed*.png
-    ├── final_07_margin_analysis_seed*.png
-    ├── final_08_llm_labels_*.png              # scatter LLM-labels por config
-    ├── final_09_model_comparison.png
-    # === CSVs por bloco ===
+    ├── final_04_dataset_overview_seed*.png    # A/B/C + E (perito); + _problema_{a,b,c,e}
+    ├── final_05_hits_errors_seed*.png         # + _problema_{a,b,c}
+    ├── final_06_w_algorithms_seed*.png        # + _perceptron/_nnls/_barras
+    ├── final_07_margin_analysis_seed*.png     # + _histograma/_taxa_erro/_mapa_confianca/_violin
+    ├── final_08_llm_labels_{meia_lua|homem_mulher}_seed*_{x1_x2|peso_altura}_{n_shot|train}.png
+    ├── final_09_model_comparison.png          # único asset de fechamento SEM alias (compara todos)
+    ├── final_10_gamma_convergence.png         # diagnóstico da busca binária em γ (Fase A, Problema A)
+    # === CSVs por bloco (consolidam todos os modelos; sem alias) ===
     ├── bloco1_phases_abc_{timestamp}.csv
     ├── bloco1_oracle_validation_{timestamp}.csv
+    ├── bloco1_oracle_meialua_{timestamp}.csv
     ├── bloco1_algorithm_comparison_{timestamp}.csv
     ├── bloco1_r3r4_comparison_{timestamp}.csv
     ├── bloco2_phase_e_{timestamp}.csv
@@ -130,9 +157,10 @@ mestrado/
     ├── bloco2_classical_baselines_{timestamp}.csv
     ├── bloco23_external_phase_a_{timestamp}.csv
     ├── bloco23_external_phase_e_{timestamp}.csv
-    ├── final_cross_linearity.csv
-    ├── llm_interactions_parte{NNN}.json  # Log de prompts/respostas do LLM (particionado ~10 MB/bloco)
-    └── log_execucao.txt
+    ├── final_cross_linearity__<alias>.csv     # UM por modelo (exceção: CSV com alias)
+    ├── *_corrigido_hm[__<alias>].csv          # cópias corrigidas offline (corrigir_mapeamento_homem_mulher.py)
+    ├── llm_interactions_parte{NNN}.json  # Log de prompts/respostas (particionado em 10 MiB; arquivo único se couber)
+    └── log_execucao.txt                  # (log_execucao_parte{NNN}.txt se passar de 10 MiB)
 ```
 
 ## Regras para Apresentações
@@ -211,9 +239,8 @@ source .venv/bin/activate
 pip install -r requirements.txt
 
 # Configurar chaves de API em um arquivo .env (carregado via python-dotenv)
-# OPENAI_API_KEY=sk-...
 # OPENROUTER_API_KEY=sk-or-...   (necessário p/ o Gemini via OpenRouter)
-# GOOGLE_API_KEY=...             (opcional — só se ativar Gemini direto)
+# (provedor único desde 01/10/2026: nenhuma outra chave é necessária)
 
 # Executar o experimento completo (todos os modelos de MODELS_TO_TEST)
 python src/dissertacao_mestrado.py
@@ -228,14 +255,25 @@ python src/dissertacao_mestrado.py --apenas bloco2 bloco3 --modelo gpt
 python src/dissertacao_mestrado.py --apenas oraculo               # 0 chamadas de API
 ```
 
+```bash
+# Ferramentas offline (0 chamadas de API):
+python src/audit_interactions.py                       # auditoria da última _completa
+python src/corrigir_mapeamento_homem_mulher.py         # correção H/M do Bloco 3 (*_corrigido_hm__<alias>.csv)
+python src/renomear_assets_legado.py [--aplicar --docs] # migra assets antigos p/ a convenção (dry-run padrão)
+python src/animacao_perceptron/gerar.py                # animação HTML do Perceptron
+```
+
 A execução cria automaticamente uma pasta `execucao_YYYY-MM-DD_HH-MM-SS_completa/`
 (ou `..._smoke/` quando rodada com `--rapido`) com todos os outputs.
 Com `--apenas`, a pasta recebe `..._apenas-<blocos>/` (ex.: `_apenas-bloco3`, ou
 `_apenas-bloco3_smoke` se combinada com `--rapido`) e **nunca** `_completa`: é uma
 execução parcial e não serve de fonte para o trabalho inteiro. `--apenas` força as flags
 `RUN_*` de topo dos blocos escolhidos (`BLOCOS_APENAS` em `dissertacao_mestrado.py`) e
-desliga as dos demais; as sub-flags (vieses, R3/R4, diluição, baselines, A/B, oráculo
+desliga as dos demais; as sub-flags (vieses, diluição, baselines, A/B, oráculo
 meia-lua) continuam valendo o que está no código, pois já são gateadas pelo bloco-pai.
+`RUN_R3R4_EXPERIMENT` é flag de topo do bloco1 (depende do cache da Fase A) e
+`RUN_PROBLEM_MEIALUA` pertence a bloco1 E bloco2 (Problema D e F); `oraculo` é chave
+própria (0 chamadas), embora seus assets sejam `bloco1_03/04/04b`.
 As chamadas à API do LLM são **assíncronas com concorrência limitada**
 (`asyncio.Semaphore(MAX_CONCURRENCY)`), acelerando substancialmente a coleta de decisões.
 
@@ -247,17 +285,20 @@ Constantes no topo de `src/dissertacao_mestrado.py`:
 |---|---|---|
 | `RANDOM_SEED` | `42` | Semente padrão |
 | `RANDOM_SEEDS` | `[42, 123, 7]` | 3 seeds para robustez estatística (grid completo) |
-| `EXTRA_SEEDS_CORE` | `[]` (desativado) | Seeds extras do pipeline central do modelo principal; protocolo atual = 3 seeds uniformes em tudo. Reativar com `[2025, 314, 611]` habilita Wilcoxon pareado por seed no central |
+| `EXTRA_SEEDS_CORE` | `[]` (desativado) | Seeds extras do pipeline central dos modelos `scope="full"`; protocolo atual = 3 seeds uniformes em tudo. Reativar com `[2025, 314, 611]` habilita Wilcoxon pareado por seed no central |
 | `BIAS_N_SHOTS` | `[0, 10]` | Âncoras dos experimentos de viés (nomes de classe, variantes de prompt) — efeitos comparáveis entre si |
 | `N_SAMPLES_PROBLEM_A` | `150` | Amostras no Problema A |
 | `N_SAMPLES_PROBLEM_B/C` | `100` | Amostras nos Problemas B e C |
-| `N_SAMPLES_PROBLEM_D` | `150` | Amostras no Problema D |
-| `FEW_SHOT_SIZES` | `[0, 4, 10, 20, 40]` | Tamanhos few-shot fases B e C (todos pares: balanço exato de classes no prompt) |
-| `FEW_SHOT_SIZES_PHASE_E` | `[0, 4, 10, 20, 40]` | Tamanhos few-shot fase D (todos pares) |
+| `N_SAMPLES_PROBLEM_E` | `150` | Amostras no Problema E (perito linear); a meia-lua (D/F) usa `N_SAMPLES_PROBLEM_A` |
+| `FEW_SHOT_SIZES` | `[0, 4, 10, 20, 40]` | Tamanhos few-shot do Bloco 1 (Fases A/B/C; todos pares: balanço exato de classes no prompt) |
+| `FEW_SHOT_SIZES_PHASE_E` | `[0, 4, 10, 20, 40]` | Tamanhos few-shot da Fase E (todos pares) |
+| `DILUTION_EASY_ADDITIONS` | `[0, 2, 4, 10, 16, 20]` | Easy adicionados aos 4 hard fixos na diluição |
+| `EXAMPLE_ORDER_N_SHOTS` | `[4, 10, 20]` | n_shot do viés de ordem dos exemplos |
+| `PERCEPTRON_PARAMS` | `eta=0.001, C=1.0, delta_gamma=0.05, max_epochs=50, tol=1e-4` | Hiperparâmetros do Perceptron (ponto único, `protocolo.py`) |
 | `N_REPETICOES` | `3` | Repetições ONDE HÁ SORTEIO de exemplos (regra única em `reps_para`) |
 | `MAX_CONCURRENCY` | `10` | Chamadas paralelas à API do LLM |
 | `MAX_FORMAT_RETRIES` | `5` | Reenvios para respostas malformadas |
-| `EXAMPLE_STRATEGIES` | `["easy","hard","mixed","random"]` | Estratégias fase D |
+| `EXAMPLE_STRATEGIES` | `["easy","hard","mixed","random"]` | Estratégias da Fase E |
 | `EXPERT_W` | `[0.3, 1.5]` | Pesos do especialista padrão (x2 dominante) |
 | `EXPERT_CENTROIDS` | `[[-1.5, 1.0], [1.5, -1.0]]` | Centróides do especialista (Fase E) |
 
@@ -274,14 +315,15 @@ Controlam quais experimentos rodar sem precisar comentar/descomentar código:
 | `RUN_DILUTION` | `True` | Experimento de diluição |
 | `RUN_R3R4_EXPERIMENT` | `True` | Augmentação R3 (x1·x2) e R4 (x1², x2²) p/ detectar não-linearidade |
 | `RUN_MULTIPLE_EXPERTS` | `True` | Múltiplas configs de expert na Fase E |
-| `RUN_ALGORITHM_COMPARISON` | `True` | Comparação dos 3 algoritmos de otim. inversa |
-| `RUN_ORACLE_VALIDATION` | `True` | **NOVO:** Validação: algoritmos recuperam W conhecido? |
+| `RUN_ALGORITHM_COMPARISON` | `True` | Comparação Perceptron × NNLS |
+| `RUN_ORACLE_VALIDATION` | `True` | Validação: algoritmos recuperam W conhecido? |
 | `RUN_ORACLE_MEIALUA` | `True` | Sub-flag do oráculo: aproximação da meia-lua em R2/R3/R4 (0 chamadas LLM) |
 | `RUN_EXAMPLE_ORDER_BIAS` | `True` | Teste de viés de ordem dos exemplos few-shot |
 | `RUN_PROMPT_VARIANTS` | `True` | Teste de múltiplas variantes de prompt |
 | `RUN_CLASSICAL_BASELINES` | `True` | Comparação com baselines clássicos (k-NN, LR, SVM) |
-| `RUN_PROBLEM_E` | `True` | **NOVO:** Problema E (meia-lua) — não-linearidade explícita |
-| `RUN_HOMEM_MULHER` | `True` | **NOVO:** Estudo de caso real peso×altura (homem/mulher, elipse) |
+| `RUN_PROBLEM_MEIALUA` | `True` | Meia-lua — Problema D (Bloco 1) e F (Bloco 2): não-linearidade explícita |
+| `RUN_HOMEM_MULHER` | `True` | Estudo de caso real peso×altura (Problema G; homem/mulher, elipse) |
+| `RUN_HM_CLASS_NAMES_AB` | `True` | Sub-flag do Bloco 3: variante neutra de nomes de classe (A/B) no peso×altura |
 
 ### Configurações de Experts Múltiplos (Fase E)
 
@@ -296,10 +338,12 @@ EXPERT_CONFIGS = [
 ### Configurações Anisotrópicas para Oracle Validation
 
 ```python
+# O W verdadeiro é implícito nos desvios por eixo (W_i ∝ 1/σ_i²); os rótulos do
+# oráculo vêm da regra do centróide mais próximo sob esse W.
 ORACLE_ANISO_CONFIGS = [
-    {"name": "x2_dom",       "w": [0.3, 1.5], "desc": "x2 dominante"},
-    {"name": "x1_dom",       "w": [1.5, 0.3], "desc": "x1 dominante"},
-    {"name": "forte_aniso",  "w": [0.1, 2.0], "desc": "anisotropia extrema"},
+    {"name": "x2_dom",      "centers": [(-2.0, 0.5), (2.0, -0.5)], "std": [0.5, 2.0], "desc": "x1 preciso, x2 ruidoso"},
+    {"name": "x1_dom",      "centers": [(-0.5, 2.0), (0.5, -2.0)], "std": [2.0, 0.5], "desc": "x1 ruidoso, x2 preciso"},
+    {"name": "forte_aniso", "centers": [(-1.5, 1.0), (1.5, -1.0)], "std": [0.3, 1.5], "desc": "anisotropia forte"},
 ]
 ```
 
@@ -327,12 +371,15 @@ PROMPT_VARIANTS = {
 **Modelos** (`MODELS_TO_TEST`, formato `(provider, model, temperature, scope)`):
 - Protocolo atual: **2 modelos com `scope="full"`** — o grid COMPLETO de
   experimentos roda em ambos, com 3 seeds uniformes:
-  `gpt-4o-mini` (OpenAI, principal) e `google/gemini-2.5-flash-lite` via
-  **OpenRouter** (`OPENROUTER_API_KEY`; `extra_body` com `allow_fallbacks=False`).
+  `openai/gpt-4o-mini` e `google/gemini-2.5-flash-lite`, AMBOS via **OpenRouter**,
+  provedor único (`OPENROUTER_API_KEY`; `extra_body` com `allow_fallbacks=False`).
+  Os provedores diretos (OpenAI, Gemini, Anthropic) foram removidos de `llm_client.py`
+  em 01/10/2026: para usar outro modelo, acrescente-o a `MODELS_TO_TEST` com o id do
+  OpenRouter (`<org>/<modelo>`), um alias em `MODEL_ALIAS` e um pin em `MODEL_PROVIDER_PIN`.
 - **Pinagem de provedor de inferência POR MODELO** (`MODEL_PROVIDER_PIN` em
   `src/llm_client.py`): fixa qual infraestrutura serve cada modelo no OpenRouter
   (mesmo model-ID pode ser servido por empresas/quantizações distintas). Valor
-  observado no smoke de 02/07/2026: Gemini → `Google`.
+  observado no smoke de 02/07/2026: Gemini → `Google`; GPT-4o-mini → `OpenAI`.
   Se o provedor pinado cair, as chamadas falham visivelmente (fallback resiliente +
   auditoria) em vez de migrar em silêncio — comportamento desejado p/ reprodutibilidade.
 - `scope="core"` continua disponível para reduzir um modelo ao pipeline central
@@ -354,96 +401,93 @@ não-determinismo por consulta (flip a T=0) é quantificado pela auditoria offli
 
 ## Arquitetura do Código
 
-### Estruturas de Dados Principais
+### Estruturas de Dados Principais (`src/resultados.py`)
 
 ```python
 @dataclass
-class ResultadoExperimento        # Resultado das fases A-C
-    # consistencia, kappa, f1 para Problemas B e C
-    # pesos aprendidos (w, w_nnls, w_lp), gamma (perceptron e LP)
-    # fidelidades (perceptron, NNLS, LP) no Problema A
-    # consistencia_{nnls,lp}_problema_b/c, kappa_{nnls,lp}_problema_b/c
-    # w_cosine_sim_{nnls,lp,nnls_lp} (similaridade entre algoritmos)
-    # w_ratio, w_direction, feature_names, prompt_variant
+class ResultadoExperimento        # Resultado das Fases A-C (Bloco 1)
+    # provider, model_name, temperature, random_seed, n_shot, nomes_classes, repeticao
+    # consistencia/kappa/f1 nos Problemas B e C; consistencia_euclidiana_{b,c}
+    # acuracia_{llm,metrica}_vs_gt_problema_{a,b,c}
+    # w_aprendido (Ŵ_LLM estimada, Perceptron), gamma_otimo
+    # fidelidade_perceptron, fidelidade_nnls, w_cosine_sim_nnls
+    # w_ratio, w_direction, feature_names, prompt_variant, diagonal_limitation_flag
+    # n_classe_*, n_disagreements_*, n_malformed_responses
 
 @dataclass
-class ResultadoPhaseDExperimento  # Resultado da fase D
-    # acurácia LLM vs. especialista, kappa, f1
-    # estratégia de exemplos, ordem (para recency bias)
-    # expert_name, baseline classicas opcionais
+class ResultadoPhaseEExperimento  # Resultado da Fase E (Bloco 2)
+    # accuracy/kappa/f1 LLM vs. perito; accuracy_expert_vs_gt, accuracy_llm_vs_gt
+    # example_strategy: "easy"/"hard"/"mixed"/"random", ou "mixed_order_<ordem>"
+    #   (viés de ordem) ou "dilution_<N>hard_<M>easy" (diluição)
+    # expert_w, expert_name (aniso_x2 | aniso_x1 | euclidean)
 
 @dataclass
-class LearnedMetric               # Métrica Mahalanobis aprendida
-    # vetor w, centroides, gamma, problema de origem
+class LearnedMetric               # Métrica Mahalanobis estimada
+    # vetor w, centroids, gamma, source_problem
 ```
+
+O Bloco 3 e os pipelines externos (`bloco23_*`) usam dicts (ver `run_external_problem_pipeline`).
 
 ### Funções Críticas
 
 | Função | Propósito |
 |---|---|
-| `create_problem_{a,b,c,d}()` | Gera dados sintéticos 2D para cada problema |
+| `create_problem_{a,b,c}()` | Gera dados sintéticos 2D lineares (`data_problems.py`) |
+| `create_problem_e_expert()` | Problema E (perito linear do Bloco 2) |
+| `create_problem_d_meialua()` | Meia-lua (`sklearn.make_moons`) — Problema D (Bloco 1) / F (Bloco 2) |
+| `create_problem_homem_mulher()` | Carrega base real peso×altura (Problema G, ~100 amostras, elipse) |
 | `create_anisotropic_problem()` | Gera dados para Oracle Validation (W conhecido) |
-| `llm_classify_point()` / `async_llm_classify_point()` | Chama API do LLM (sync/async) |
-| `async_collect_llm_decisions()` | Coleta paralela com `asyncio.Semaphore` |
-| `parse_llm_response()` | Parser de 8 camadas (0–7) para respostas do LLM; fallback por hash MD5 determinístico (substitui aritmética modular para evitar viés geométrico) |
-| `audit_interactions.audit()` | **NOVO:** Auditoria offline dos `llm_interactions_parte*.json` — taxa de malformadas (fallback) e taxa de flip de `T=0` (não-determinismo), sem chamar a API |
-| `train_relaxed_perceptron()` | Perceptron Estruturado com relaxação de margem |
+| `async_llm_classify_point()` / `async_llm_classify_point_openai()` | Chamam a API (OpenRouter, endpoint compatível com OpenAI) |
+| `async_collect_llm_decisions()` / `collect_llm_decisions()` | Coleta paralela com `asyncio.Semaphore` (+ wrapper síncrono) |
+| `parse_llm_response()` | Parser de 8 camadas (0–7) (`llm_parser.py`); camada 6 usa padrões com a classe explícita; fallback por hash MD5 determinístico |
+| `audit_interactions.audit()` | Auditoria offline dos `llm_interactions*.json` — malformadas, flip de `T=0`, breakdown por modelo |
+| `train_relaxed_perceptron()` | Perceptron Estruturado com relaxação de margem (`**PERCEPTRON_PARAMS`) |
 | `train_least_squares_inverse()` | NNLS via scipy (mínimos quadrados não-negativos) |
-| `create_problem_e_meia_lua()` | **NOVO:** Problema E (sklearn.make_moons) — fronteira não-linear |
-| `create_problem_homem_mulher()` | **NOVO:** carrega base real peso×altura (~100 amostras, elipse) |
-| `compute_consistency_metrics()` | Mede consistência LLM vs. métrica aprendida |
+| `compute_consistency_metrics()` | Mede consistência LLM vs. métrica estimada |
 | `phase_a_learn_metric()` | Fase A: retorna 2 métricas (Perceptron, NNLS) simultâneas |
-| `phase_a_multifeature()` | **NOVO:** Fase A parametrizada por `n_features ∈ {2,3,4}`; reporta fidelidade vs LLM **e** acurácia vs rótulo real |
-| `phase_consistency_test()` | Fases B/C: testa consistência em novos problemas |
+| `phase_a_multifeature()` | Fase A parametrizada por `n_features ∈ {2,3,4}`; fidelidade vs LLM **e** acurácia vs rótulo real |
+| `phase_consistency_test()` | Fases B/C: testa consistência em novos problemas (retorna também `X_test`) |
 | `phase_e_llm_as_learner()` | Fase E: LLM aprendendo do especialista |
-| `run_external_problem_pipeline()` | **NOVO:** pipeline completo para problemas externos (peso×altura, meia-lua) — combina variantes de prompt × `n_features` × seeds, identifica melhor métrica e roda Fase E |
-| `summarize_cross_linearity()` | **NOVO:** tabela cruzada linear × não-linear (ganhos 2→3→4 features) |
-| `plot_llm_labels_per_problem()` | **NOVO:** scatter ponto-a-ponto das rotulações do LLM (e-mail 22:06) |
-| `run_oracle_validation()` | Validação em dados sintéticos com W conhecido |
+| `run_external_problem_pipeline()` | Pipeline dos problemas externos (meia-lua, peso×altura): variantes de prompt × `n_features` × seeds → melhor métrica → Fase E |
+| `run_oracle_validation()` / `run_oracle_meialua()` | Validação em dados sintéticos com W conhecido / aproximação da meia-lua em R2/R3/R4 |
 | `_oracle_algorithms()` / `_append_oracle_result()` | Helpers da Oracle Validation |
-| `select_examples_by_strategy()` | Estratégias de seleção (easy/hard/mixed/random) |
+| `select_examples_by_strategy()` / `select_confident_examples()` | Estratégias de seleção (easy/hard/mixed/random) / seleção por margem (Fases B/C) |
 | `select_examples_dilution()` | Seleção para experimento de diluição |
 | `reorder_examples()` | Reordena exemplos para teste de recency bias |
-| `augment_to_r3()` | Projeção R3: adiciona x3 = x1 * x2 (hipérbole) |
-| `augment_to_r4()` | **NOVO:** Projeção R4: adiciona x1², x2² (elipse — classificador ótimo do peso×altura) |
-| `augment_features()` | **NOVO:** Wrapper para `n_features ∈ {2,3,4}` |
-| `build_prompt_zero_shot{,_variant}()` | Prompts zero-shot (padrão e variantes) |
-| `build_prompt_few_shot{,_variant}()` | Prompts few-shot (padrão e variantes) |
-| `print_error_analysis_by_region()` | Análise dos erros por região do plano |
-| `print_hyperparameter_sensitivity()` | Sensibilidade a eta/C/delta_gamma |
-| `print_example_order_analysis()` | Sumariza viés de ordem dos exemplos |
-| `print_statistical_summary()` | Bootstrap CI, Wilcoxon, Cohen's d |
-| `bootstrap_ci()` | IC 95% via bootstrap (10k reamostragens) |
-| `Tee` | Duplica stdout para terminal + buffer (→ log_execucao.txt) |
+| `augment_to_r3()` / `augment_to_r4()` / `augment_features()` | Projeções R3 (x1·x2), R4 (x1², x2²) e wrapper por `n_features` (`metrics.py`) |
+| `build_prompt_zero_shot{,_variant}()` / `build_prompt_few_shot{,_variant}()` | Prompts (padrão e variantes) |
+| `reps_para()` | Regra única de repetição (1 coleta onde a seleção é determinística) |
+| `flags_para_apenas()` / `sufixo_apenas()` | CLI `--apenas`: flags por bloco e sufixo da pasta |
+| `summarize_cross_linearity()` | Tabela cruzada linear (Problema A, R2/R3/R4) × não-linear → `final_cross_linearity__<alias>.csv` |
+| `print_error_analysis_by_region()` / `print_hyperparameter_sensitivity()` / `print_example_order_analysis()` / `print_statistical_summary()` / `bootstrap_ci()` | Relatórios do log (`relatorios.py`) |
+| `plot_llm_labels_per_problem()` / `plot_meialua_svm_vs_llm()` / `plot_gamma_convergence()` / `plot_oracle_meialua()` | `final_08`, `bloco1_11`, `final_10`, `bloco1_04b` (`plots.py`) |
+| `llm_asset()` / `asset_variant()` / `_model_alias()` | Nomes de asset com alias e painéis (`execucao_io.py`) |
+| `Tee` | Duplica stdout/stderr para terminal + buffer (→ log_execucao.txt) |
 
-### Fluxo de Execução (v4.0)
+### Fluxo de Execução (ordem real do `main()`)
 
 ```
- 1. Criar pasta de execução (timestamp); carregar .env
- 2. Gerar dados sintéticos (4 problemas) + salvar CSVs em dados_sinteticos_seed{seed}/
- 3. Visualização inicial (scatter plots dos 3 problemas)
- 4. FASE A: LLM classifica sem exemplos → aprende Ŵ_LLM com 2 algoritmos (Perceptron + NNLS)
- 5. FASE B: Testa Ŵ_LLM em Problema B (geometria diferente)
- 6. FASE C: Testa Ŵ_LLM em Problema C (rotação anti-horária dos centróides — orientação oposta a B)
- 7. [RUN_CLASS_ORDER_BIAS] Teste com classes invertidas (B/A, 1/0, etc.)
- 8. [RUN_FEATURE_NAMES] Teste com nomes semânticos nas features
- 9. [RUN_ALGORITHM_COMPARISON] Perceptron × NNLS lado a lado
-10. [RUN_ORACLE_VALIDATION] Validação: algoritmos recuperam W conhecido?
-11. FASE E: LLM aprende métrica do(s) especialista(s) externo(s)
-12. [RUN_MULTIPLE_EXPERTS] Itera sobre 3 configs de expert
-13. [RUN_DILUTION] Experimento de diluição (hard fixos + easy progressivos)
-14. [RUN_PROMPT_VARIANTS] Teste de variantes de prompt (sensibilidade)
-15. [RUN_CLASSICAL_BASELINES] Baselines clássicos na Fase E (k-NN, LR, SVM)
-16. [RUN_EXAMPLE_ORDER_BIAS] Viés de ordem dos exemplos few-shot
-17. [RUN_R3R4_EXPERIMENT] Augmentação R3 (x1·x2) e R4 (x1², x2²) — comparação 2/3/4 features em A/B/C lineares + meia-lua
-18. **[RUN_HOMEM_MULHER] Pipeline peso × altura:** Fase A com 2/3/4 features (variantes prompt x1/x2 vs peso/altura) → identifica melhor métrica → Fase E com ela
-19. **[RUN_PROBLEM_E] Pipeline meia-lua:** mesma estrutura para meia-lua sintética (`sklearn.make_moons`)
-20. Tabela cruzada linear × não-linear (`summarize_cross_linearity`)
-21. Visualizações ponto-a-ponto das rotulações do LLM (`24_llm_labels_*.png`)
-22. Análises estatísticas (bootstrap CI, Wilcoxon, Cohen's d)
-23. Gerar 20+ gráficos (muitos com painéis individuais e por seed)
-24. Exportar CSVs (incluindo `results_external_phase_a_*.csv`, `bloco23_external_phase_e_*.csv`, `results_cross_linearity.csv`) e llm_interactions.json
-25. Salvar log completo da execução
+ 1. Criar pasta de execução (timestamp + sufixo); carregar .env; validar chaves de API
+ 2. Por (modelo, seed): gerar A, B, C, E + salvar dados_sinteticos_seed{seed}/ (problem_{A,B,C,E}.csv)
+ 3. [seed0/model0] bloco1_01 (A/B/C), bloco2_01 (perito), bloco2_03 (estratégias)
+ 4. [RUN_PHASES_ABC] BLOCO 1 — FASE A (zero-shot → Ŵ_LLM Perceptron + NNLS) e Fases B/C
+    (few-shot por margem), p/ cada nome de classe; dentro: [RUN_CLASS_ORDER_BIAS]
+    nomes invertidos, [RUN_PROMPT_VARIANTS] variantes (BIAS_N_SHOTS), [RUN_FEATURE_NAMES]
+    nomes semânticos, [RUN_ALGORITHM_COMPARISON] Perceptron × NNLS
+ 5. [RUN_ORACLE_VALIDATION] oráculo (model0): recuperação/transferência de W; [RUN_ORACLE_MEIALUA]
+ 6. [RUN_PHASE_E] BLOCO 2 — Fase E (perito principal; [RUN_MULTIPLE_EXPERTS] 3 peritos);
+    [RUN_CLASSICAL_BASELINES] k-NN/LR/SVM (model0); [RUN_DILUTION]; [RUN_EXAMPLE_ORDER_BIAS]
+ 7. [RUN_R3R4_EXPERIMENT] R3/R4 sobre os rótulos zero-shot do Problema A (problem_A_r3/r4.csv)
+ 8. [RUN_HOMEM_MULHER] BLOCO 3 — pipeline externo peso×altura (Fase A 2/3/4 atributos × variantes
+    de prompt → melhor métrica → Fase E); [RUN_HM_CLASS_NAMES_AB] variante A/B
+ 9. [RUN_PROBLEM_MEIALUA] pipeline externo meia-lua (Problema D/F) + bloco1_02 + bloco1_11 (SVM vs LLM)
+10. Visualizações consolidadas: final_09 (se >1 modelo), bloco1_03/04/04b (oráculo)
+11. Por modelo: BLOCO 1 (bloco1_09, 14a, 08, 06, 05, 12, 14b, 13, 10, 07, final_10) →
+    BLOCO 2 (bloco2_04, 05, 09, 06, 07) → FECHAMENTO por seed (final_04, 05, 06, 02, 07, 03) →
+    análises de texto (print_phase_e_analysis, print_statistical_summary, …)
+12. Exportar CSVs por bloco (bloco1_*, bloco2_*, bloco23_*), final_cross_linearity__<alias>.csv
+13. final_08_llm_labels_* (ponto-a-ponto) e bloco23_external_* (curvas/fronteiras externas)
+14. Resumos consolidados dos pipelines externos no log; salvar llm_interactions (partes) e log
 ```
 
 ## Algoritmos de Otimização Inversa
@@ -453,11 +497,12 @@ para demonstrar robustez e permitir comparação de similaridade (cosseno entre 
 
 | Algoritmo | Arquivo | Formulação | Hiperparâmetros |
 |---|---|---|---|
-| **Perceptron Estruturado** | `relaxed_perceptron.py` | Relaxação de margem + busca binária em γ | eta=0.001 (padrão; `PERCEPTRON_PARAMS`), C, delta_gamma, max_iterations |
+| **Perceptron Estruturado** | `relaxed_perceptron.py` | Relaxação de margem + busca binária em γ | `PERCEPTRON_PARAMS` (`protocolo.py`): eta=0.001, C=1.0, delta_gamma=0.05, max_epochs=50, tol=1e-4 |
 | **NNLS (Mínimos Quadrados)** | `least_squares_inverse.py` | `min ‖Aw - b‖²  s.t. w ≥ 0`, via `scipy.optimize.nnls` | nenhum |
 
 O LP Max-Margin foi **removido** do trabalho (decisão da reunião 30/04/2026 — bug
-da restrição de convexidade não respeitada; módulo arquivado em `src/arquivado/`).
+da restrição de convexidade não respeitada; o módulo foi apagado do repositório, não
+existe pasta `src/arquivado/`).
 Dois algoritmos congruentes (Perceptron + NNLS) já bastam para demonstrar robustez
 do método de estimação.
 
@@ -465,30 +510,34 @@ do método de estimação.
 
 | Hipótese | Descrição |
 |---|---|
-| **H1** (Consistência) | O LLM mantém o mesmo critério decisório implícito. A métrica Ŵ_LLM **estimada** prevê classificações nos Problemas B e C (Kappa > 0.7). |
+| **H1** (Consistência) | O LLM mantém o mesmo critério decisório implícito. A métrica Ŵ_LLM **estimada** prevê classificações nos Problemas B e C com concordância ao menos moderada (Kappa > 0,4, piso de Landis & Koch 1977 — limiar do artigo; 0,7 seria "domínio", não "existência" do critério). |
 | **H2** (Few-shot amplifica) | Exemplos rotulados pela métrica W aumentam a concordância LLM-métrica. |
 | **H3** (LLM como aprendiz) | O LLM consegue aprender o critério de um perito externo via few-shot. |
 | **H4** (Exemplos difíceis) | **REFUTADA.** Hipótese a priori: "hard" > "easy". Dados mostram o oposto — exemplos "easy" (alta margem) superam "hard" consistentemente. Interpretação: exemplos prototípicos funcionam como âncoras de classe; ambíguos não fornecem sinal claro. |
-| **H5** (Estabilidade) | O comportamento é reproduzível entre execuções (3 sementes × múltiplas repetições). |
+| **H5** (Estabilidade) | O comportamento é reproduzível entre execuções (3 sementes; 3 repetições onde há sorteio de exemplos, regra `reps_para`). |
 
 ## Fases Experimentais
 
-### Fase A — Aprendizado de Métrica (Zero-Shot)
-O LLM classifica 150 pontos 2D sem exemplos. A partir dessas classificações, aprende-se
-uma **métrica de Mahalanobis diagonal** (Ŵ_LLM) com **três algoritmos simultaneamente**
-(Perceptron, NNLS, LP). A fidelidade de cada algoritmo no Problema A e a similaridade
-de cosseno entre os Ws estimados são registradas.
+### Fase A — Estimação da Métrica (Zero-Shot)
+O LLM classifica 150 pontos 2D sem exemplos. A partir dessas classificações, estima-se
+uma **métrica de Mahalanobis diagonal** (Ŵ_LLM) com **dois algoritmos simultaneamente**
+(Perceptron Estruturado e NNLS). A fidelidade de cada algoritmo no Problema A e a
+similaridade de cosseno entre os Ws estimados são registradas. Nos pipelines externos
+(Problema D meia-lua, Problema G peso×altura) a Fase A roda com 2/3/4 atributos (R2/R3/R4).
 
 ### Fase B — Teste de Consistência 1
-Aplica Ŵ_LLM aprendida na Fase A ao Problema B (centroides deslocados verticalmente).
-Testa se o LLM mantém consistência em distribuições não vistas.
+Aplica Ŵ_LLM estimada na Fase A ao Problema B (centróides rotacionados no sentido
+horário, ±1.5). Testa se o LLM mantém consistência em distribuições não vistas.
 
 ### Fase C — Teste de Consistência 2
-Similar à Fase B, com distorção geométrica mais severa.
+Similar à Fase B, com rotação anti-horária dos centróides (mesma magnitude, orientação
+oposta à de B).
 
 ### Fase E — LLM como Aprendiz
-**Papel invertido:** especialista externo com métrica W_expert conhecida rotula os dados.
-O LLM recebe exemplos do especialista (few-shot) e deve aprender a reproduzir as classificações.
+**Papel invertido:** especialista externo com métrica W_expert conhecida rotula os dados
+(Problema E; na meia-lua, Problema F, o "perito" é o ground truth; no Problema G, a
+melhor métrica da Fase A externa). O LLM recebe exemplos do especialista (few-shot) e
+deve aprender a reproduzir as classificações.
 
 Estratégias de seleção de exemplos:
 - **Easy:** Pontos longe da fronteira de decisão (alta margem)
@@ -496,16 +545,19 @@ Estratégias de seleção de exemplos:
 - **Mixed:** 50% easy + 50% hard
 - **Random:** Baseline sem estratégia
 
-Múltiplos experts testados (quando `RUN_MULTIPLE_EXPERTS=True`):
+Múltiplos experts testados (quando `RUN_MULTIPLE_EXPERTS=True`; os gráficos `bloco2_04/05/09`
+e o dashboard mostram o perito principal `aniso_x2`; o log e o CSV cobrem os 3):
 - **aniso_x2:** W=[0.3, 1.5] — x2 dominante (original)
 - **aniso_x1:** W=[1.5, 0.3] — x1 dominante (invertido)
 - **euclidean:** W=[1.0, 1.0] — pesos iguais
 
 ### Experimentos Auxiliares
 
-#### Oracle Validation (NOVO)
-Gera dados sintéticos com W conhecido (ex.: `[0.1, 2.0]`) e verifica se os três algoritmos
-recuperam esse W a partir de rótulos corretamente rotulados pelo próprio W.
+#### Oracle Validation
+Gera dados sintéticos com W conhecido (`ORACLE_ANISO_CONFIGS`: W implícito nos desvios por
+eixo, ex. `std=[0.3, 1.5]`) e verifica se os dois algoritmos recuperam esse W a partir de
+rótulos atribuídos pelo próprio W. `RUN_ORACLE_MEIALUA` acrescenta a aproximação da
+meia-lua em R2/R3/R4 (`bloco1_04b`, `bloco1_oracle_meialua_*.csv`).
 Responde: "os algoritmos funcionam quando o oráculo realmente existe?"
 
 Também testa **transferência**: aprende W em uma configuração anisotrópica e aplica em
@@ -521,12 +573,16 @@ Testa se usar "altura"/"peso" ao invés de "x1"/"x2" altera os pesos aprendidos.
 Fixa 4 exemplos hard e adiciona easy progressivamente (0, 2, 4, 10, 16, 20).
 Verifica se em algum ponto os fáceis "diluem" os difíceis e a performance deteriora.
 
-#### Projeção R3 (Kernel Quadrático)
-Cria terceira feature x3 = x1 * x2. Compara: LLM com 2 features vs LLM com 3 features
-vs Métrica com 3 features. Detecta se o LLM captura interação implícita.
+#### Projeções R3 e R4 (Kernel Quadrático)
+Sobre os MESMOS rótulos zero-shot do Problema A (o LLM só viu x1, x2), estima a métrica
+com 3 pesos (R3: x3 = x1·x2, hipérbole) e 4 pesos (R4: x1², x2², elipse). Se a fidelidade
+cresce com a dimensão, o LLM adota implicitamente um critério não-linear; em problema
+linear espera-se ganho ~nulo (`bloco1_10`, `bloco1_r3r4_comparison_*.csv`). Nos pipelines
+externos (D e G) a mesma comparação 2/3/4 atributos vai para `bloco23_external_features_comparison`.
 
 #### Variantes de Prompt (Sensibilidade)
-4 variantes (default, geometric, cot, tabular) rodam Fases A-C completas em todas as seeds.
+3 variantes extras (geometric, cot, tabular) rodam Fases A-C com `BIAS_N_SHOTS=[0, 10]`
+em todas as seeds, comparadas à `default` do grid principal.
 Painel principal: scatter de W aprendidos — se W muda entre variantes, o prompt confunde a medição.
 
 #### Viés de Ordem dos Exemplos Few-Shot (Recency Bias)
@@ -536,7 +592,7 @@ Usa os mesmos exemplos (estratégia "mixed") com 4 ordenações diferentes:
 - **shuffled:** ordem aleatória
 - **alternating:** 0, 1, 0, 1, ...
 
-Testado com n_shot = [4, 10, 20, 40].
+Testado com n_shot = `EXAMPLE_ORDER_N_SHOTS = [4, 10, 20]`.
 
 #### Baselines Clássicos (k-NN, Logistic Regression, SVM)
 Treina classificadores clássicos nos mesmos exemplos few-shot da Fase E e avalia no mesmo
@@ -546,7 +602,7 @@ conjunto de teste. Responde: "O LLM faz algo que um classificador trivial não f
 - **SVM:** kernel RBF
 
 #### Comparação de Algoritmos
-Perceptron × NNLS × LP lado a lado nas Fases A-C. Demonstra que os resultados são robustos
+Perceptron × NNLS lado a lado nas Fases A-C. Demonstra que os resultados são robustos
 ao método de estimação e reporta similaridade de cosseno entre os Ws estimados.
 
 ## Outputs por Execução
@@ -565,12 +621,14 @@ Muitos gráficos são salvos tanto como **figura combinada** quanto como **pain�
 | `bloco1_02_problema_d_meialua_seed*_overview.png` | Problema D meia-lua (por seed) |
 | `bloco1_03_oracle_w_recovery.png` | Sanity: recuperação de W conhecido |
 | `bloco1_04_oracle_transfer.png` | Sanity: transferência entre geometrias |
+| `bloco1_04b_oracle_meialua.png` | Sanity: aproximação da meia-lua em R2/R3/R4 |
 | `bloco1_05_fase_a_errors_seed*.png` | Erros da métrica vs LLM (por seed) |
 | `bloco1_06_w_distribution.png` | Distribuição de Ŵ_LLM entre seeds (boxplot, ratio, scatter) |
 | `bloco1_07_algorithm_comparison.png` | Perceptron × NNLS (fidelidade, fases B/C, scatter de W) |
 | `bloco1_08_seed_comparison.png` | Robustez entre seeds |
 | `bloco1_09_consistency_extended.png` | Consistência, Kappa, F1 em B/C |
-| `bloco1_10_r3r4_comparison.png` | R2→R3→R4 em lineares e meia-lua |
+| `bloco1_10_r3r4_comparison.png` | R2→R3→R4 no Problema A (painéis `_linear_vs_quadratica`, `_algoritmos_r3r4`) |
+| `bloco1_11_meialua_svm_vs_llm_seed*.png` | SVM RBF vs rótulos zero-shot do LLM na meia-lua (Problema D) |
 | `bloco1_12_class_order_bias.png` | Viés de ordem/posição das classes |
 | `bloco1_13_prompt_variants.png` | Comparação de variantes de prompt |
 | `bloco1_14a_class_names_effect.png` | Efeito do nome de classes |
@@ -588,7 +646,7 @@ Muitos gráficos são salvos tanto como **figura combinada** quanto como **pain�
 | `bloco2_07_example_order.png` | Viés de ordem dos exemplos (recency bias) |
 | `bloco2_09_classical_baselines.png` | LLM vs k-NN, LR, SVM |
 
-**BLOCO 3 — Estudo de caso REAL**
+**BLOCO 3 — Estudo de caso REAL (Problema G)**
 
 | Arquivo | Conteúdo |
 |---|---|
@@ -609,36 +667,39 @@ Muitos gráficos são salvos tanto como **figura combinada** quanto como **pain�
 |---|---|
 | `final_02_confusion_matrices_seed*.png` | Matrizes de confusão por seed |
 | `final_03_dashboard_seed*.png` | Dashboard consolidado por seed |
-| `final_04_dataset_overview_seed*.png` | Visão geral dos 4 problemas por seed |
+| `final_04_dataset_overview_seed*.png` | Visão geral dos 4 datasets sintéticos (A, B, C, E) por seed |
 | `final_05_hits_errors_seed*.png` | Mapa de acertos/erros por problema, por seed |
 | `final_06_w_algorithms_seed*.png` | Scatter de W por algoritmo, por seed |
 | `final_07_margin_analysis_seed*.png` | Análise de margem por seed |
 | `final_08_llm_labels_*.png` | Scatter LLM-labels por configuração |
-| `final_09_model_comparison.png` | Comparação entre modelos LLM (quando aplicável) |
+| `final_09_model_comparison.png` | Comparação entre modelos LLM (quando aplicável; sem alias) |
+| `final_10_gamma_convergence.png` | Diagnóstico da busca binária em γ do Perceptron (Fase A, Problema A) |
 
 ### CSVs por bloco
 - `bloco1_phases_abc_{timestamp}.csv` — Bloco 1: fases A/B/C (30+ colunas; algoritmo, w_ratio, feature_names, prompt_variant)
 - `bloco1_oracle_validation_{timestamp}.csv` — Bloco 1: recuperação/transferência de W conhecido
+- `bloco1_oracle_meialua_{timestamp}.csv` — Bloco 1: oráculo da meia-lua em R2/R3/R4
 - `bloco1_algorithm_comparison_{timestamp}.csv` — Bloco 1: comparação Perceptron × NNLS
-- `bloco1_r3r4_comparison_{timestamp}.csv` — Bloco 1: R2/R3/R4 em lineares
+- `bloco1_r3r4_comparison_{timestamp}.csv` — Bloco 1: R2/R3/R4 no Problema A
 - `bloco2_phase_e_{timestamp}.csv` — Bloco 2: Fase E (inclui expert_name)
 - `bloco2_dilution_{timestamp}.csv` — Bloco 2: experimento de diluição
 - `bloco2_example_order_{timestamp}.csv` — Bloco 2: viés de ordem dos exemplos
 - `bloco2_classical_baselines_{timestamp}.csv` — Bloco 2: baselines clássicos
 - `bloco23_external_phase_a_{timestamp}.csv` — Bloco 2/3: Fase A pipelines externos
 - `bloco23_external_phase_e_{timestamp}.csv` — Bloco 2/3: Fase E pipelines externos
-- `final_cross_linearity.csv` — Síntese cruzada R2→R4 nos 3 blocos
+- `final_cross_linearity__<alias>.csv` — Síntese cruzada R2→R4 nos 3 blocos (UM por modelo; linhas sintéticas rotuladas `A_linear`)
+- `*_corrigido_hm[__<alias>].csv` — cópias corrigidas offline do Bloco 3 (`corrigir_mapeamento_homem_mulher.py`)
 
 ### Outros Artefatos
-- `log_execucao.txt` — Transcript completo com detalhes algorítmicos e métricas
+- `log_execucao.txt` — Transcript completo com detalhes algorítmicos e métricas (particionado em `log_execucao_parte{NNN}.txt` se passar de 10 MiB)
 - `llm_interactions_parte{NNN}.json` — Log estruturado de **todas** as chamadas à API
   (prompt, `point`, `raw_response`, `parsed_label`, `model`, `model_resolved` — snapshot
   datado devolvido pela API, p/ reprodutibilidade —, `inference_provider` — provedor de
   inferência no OpenRouter —, `temperature`, `format_retries`,
-  `malformed`), **particionado** em blocos de ~10 MB (`_parte001.json`, `_parte002.json`, …)
-  para evitar um único arquivo gigante. Execuções antigas usam o arquivo único legado
-  `llm_interactions.json` — o auditor aceita ambos os esquemas.
-- `dados_sinteticos_seed{seed}/problem_{A,B,C,D,A_r3}.csv` — Datasets por seed (reprodutibilidade)
+  `malformed`), **particionado** em blocos de 10 MiB (`_parte001.json`, `_parte002.json`, …)
+  para evitar um único arquivo gigante. Execuções pequenas (smoke, `--apenas`) e execuções
+  antigas gravam o arquivo único `llm_interactions.json` — o auditor aceita ambos os esquemas.
+- `dados_sinteticos_seed{seed}/problem_{A,B,C,E,A_r3,A_r4}.csv` — Datasets por seed (reprodutibilidade; `problem_E.csv` = perito linear)
 
 ### Auditoria Offline das Interações (`src/audit_interactions.py`)
 Verifica, **sem chamar a API**, duas propriedades que sustentam a credibilidade de
@@ -664,21 +725,25 @@ O teste `tests/test_audit_interactions.py` roda esta auditoria na execução mai
 
 **IMPORTANTE:** Antes de responder qualquer pergunta sobre resultados ou análise, leia sempre
 os arquivos da **última execução COMPLETA disponível** — somente pastas com sufixo
-`_completa`; pastas `_smoke` são smoke tests `--rapido` e NUNCA servem de fonte.
+`_completa`; pastas `_smoke` e `_apenas-*` NUNCA servem de fonte.
 
 A última execução completa está em: `execucao_2026-07-05_12-34-52_completa/`
 
-O padrão de nome das pastas é `execucao_YYYY-MM-DD_HH-MM-SS_{completa|smoke}/`. Se houver
-pastas `_completa` mais recentes, leia a de timestamp mais alto. (Pastas legadas sem sufixo:
-confirme no `log_execucao.txt` que não são `--rapido`.)
+O padrão de nome das pastas é `execucao_YYYY-MM-DD_HH-MM-SS_{completa|smoke|apenas-<blocos>}/`.
+Se houver pastas `_completa` mais recentes, leia a de timestamp mais alto. (Pastas legadas
+sem sufixo: confirme no `log_execucao.txt` que não são `--rapido`.)
 
 Arquivos prioritários para leitura:
 1. `log_execucao.txt` — visão completa dos resultados
-2. `results_phases_abc_v4_{timestamp}.csv` — métricas fases A-C
-3. `results_phase_e_v4_{timestamp}.csv` — métricas fase D
-4. `results_oracle_validation_{timestamp}.csv` — validação dos algoritmos
-5. `results_algorithm_comparison_v4_{timestamp}.csv` — comparação dos 3 algoritmos
-6. `results_dilution_v4_{timestamp}.csv` — métricas do experimento de diluição
+2. `bloco1_phases_abc_{timestamp}.csv` — métricas das Fases A-C (Bloco 1)
+3. `bloco2_phase_e_{timestamp}.csv` — métricas da Fase E (Bloco 2; coluna `expert_name`)
+4. `bloco1_oracle_validation_{timestamp}.csv` / `bloco1_oracle_meialua_*.csv` — validação dos algoritmos
+5. `bloco1_algorithm_comparison_{timestamp}.csv` — comparação Perceptron × NNLS
+6. `bloco1_r3r4_comparison_{timestamp}.csv` — R2/R3/R4 no Problema A
+7. `bloco2_dilution_*.csv`, `bloco2_example_order_*.csv`, `bloco2_classical_baselines_*.csv` — auxiliares do Bloco 2
+8. `bloco23_external_phase_a_*.csv`, `bloco23_external_phase_e_*.csv` — pipelines externos (meia-lua, peso×altura);
+   para o Bloco 3 (`problem_name == homem_mulher`) use as cópias `*_corrigido_hm*.csv`
+9. `final_cross_linearity__<alias>.csv` — síntese cruzada por modelo
 
 ## Referencias bibliograficas
 
@@ -690,8 +755,7 @@ PDFs de artigos citados estão em `artigos_referenciados/`.
 ## Dependências
 
 ```
-openai          # API OpenAI (GPT-4o-mini) — sync + async
-anthropic       # SDK Claude (integração opcional)
+openai          # SDK (endpoint compatível) usado para o OpenRouter — sync + async
 python-dotenv   # Carrega .env com chaves de API
 numpy           # Álgebra linear
 matplotlib      # Visualizações
@@ -703,8 +767,8 @@ scipy           # nnls (NNLS), stats (Wilcoxon)
 ## Notas de Design
 
 - **Métrica diagonal:** Simplificação proposital para tratabilidade (O(d) parâmetros vs O(d²))
-- **Dados 2D sintéticos:** Permite visualização; próximo passo: 3D e dados reais (Iris)
-- **Dois algoritmos de otimização inversa:** Perceptron (com hiperparâmetros) + NNLS (sem) — garante robustez do método de estimação. LP Max-Margin foi removido (ver `reunioes_orientador/reuniao_30_04_2026/plano_trabalho.md` item 12).
+- **Dados 2D sintéticos:** Permitem visualização; a dimensionalidade extra vem das projeções R3/R4 e o caso real é o peso × altura (Problema G)
+- **Dois algoritmos de otimização inversa:** Perceptron (com hiperparâmetros) + NNLS (sem) — garante robustez do método de estimação. LP Max-Margin foi removido (ver `reunioes_orientador/reuniao_2026_04_30/plano_trabalho.md` item 12).
 - **Oracle Validation:** Dá um piso de sanidade — se os algoritmos falharem em recuperar W sintético conhecido, qualquer achado sobre o LLM fica comprometido
 - **Concorrência assíncrona (MAX_CONCURRENCY=10):** Reduz tempo de coleta do LLM em ~10× via `asyncio.Semaphore`
 - **Fallback por hash MD5:** Respostas malformadas após retries são mapeadas via `hashlib.md5` de coordenadas (substituiu aritmética modular para não introduzir viés geométrico)
@@ -713,9 +777,9 @@ scipy           # nnls (NNLS), stats (Wilcoxon)
 - **Nomes de classe invertidos:** `["B"/"A", "1"/"0", ...]` — detecta viés de posição/ordem
 - **Nomes de features semânticos:** `["altura"/"peso", "feature_1"/"feature_2"]` — detecta viés semântico nas variáveis
 - **Parser de 8 camadas (0–7):** Estratégia robusta para lidar com respostas malformadas do LLM
-- **3 sementes aleatórias × 3 repetições:** Garante robustez estatística
+- **3 sementes aleatórias (× 3 repetições onde há sorteio de exemplos, `reps_para`):** Garante robustez estatística
 - **Análise estatística:** Bootstrap CI (10k reamostragens), Wilcoxon signed-rank, Cohen's d
-- **Projeção R3:** x3=x1*x2 simula kernel quadrático sem sair do mundo linear
-- **Painéis individuais:** cada figura combinada também é salva como PNGs separados, úteis para apresentações
+- **Projeções R3/R4:** x3=x1·x2 (R3) e x1², x2² (R4) simulam kernel quadrático sem sair do mundo linear
+- **Painéis individuais:** cada figura combinada também é salva como PNGs separados (`<base>_<painel>__<alias>.png`), úteis para apresentações
 - **Dados por seed salvos em CSV:** reprodutibilidade bit-a-bit independente do código
 - **Terminologia:** Usar "Ŵ_LLM estimada/inferida" (não "W aprendida") para a métrica da Fase A

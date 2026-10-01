@@ -69,7 +69,7 @@ class TestAuditIntegracao(unittest.TestCase):
         cls.exec_dir = find_latest_execution(ROOT, allow_rapido=False)
         if cls.exec_dir is None:
             raise unittest.SkipTest(
-                "nenhuma execução completa com llm_interactions_parte*.json encontrada"
+                "nenhuma execução completa com llm_interactions_parte*.json (ou llm_interactions.json) encontrada"
             )
         cls.stats = audit(load_interactions(cls.exec_dir))
 

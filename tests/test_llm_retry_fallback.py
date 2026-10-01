@@ -78,7 +78,7 @@ class TestRetryFallback(unittest.TestCase):
         dm.INITIAL_BACKOFF = 0          # backoff 0 * 2^n = 0: sem espera real
         dm.async_client = object()      # nunca tocado: o dublê intercepta antes
         dm.MODEL_NAME = "modelo-teste"
-        dm.CURRENT_PROVIDER = "openai"  # client_type "openai" → caminho async
+        dm.CURRENT_PROVIDER = "openrouter"  # provedor único (caminho async)
         dm.CURRENT_TEMPERATURE = 0.0
         dm.LLM_INTERACTIONS.clear()
 
@@ -244,7 +244,7 @@ class TestFreioGlobalRateLimit(unittest.TestCase):
             dm.INITIAL_BACKOFF = 0.01
             dm.async_client = object()
             dm.MODEL_NAME = "modelo-teste"
-            dm.CURRENT_PROVIDER = "openai"
+            dm.CURRENT_PROVIDER = "openrouter"
             dm.CURRENT_TEMPERATURE = 0.0
             dm.LLM_INTERACTIONS.clear()
             dm.async_llm_classify_point_openai = _FakeOpenAI([
@@ -282,7 +282,7 @@ class TestFreioGlobalRateLimit(unittest.TestCase):
             dm.INITIAL_BACKOFF = 0.01
             dm.async_client = object()
             dm.MODEL_NAME = "modelo-teste"
-            dm.CURRENT_PROVIDER = "openai"
+            dm.CURRENT_PROVIDER = "openrouter"
             dm.CURRENT_TEMPERATURE = 0.0
             dm.LLM_INTERACTIONS.clear()
             dm.async_llm_classify_point_openai = _FakeOpenAI([

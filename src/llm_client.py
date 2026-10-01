@@ -1,46 +1,32 @@
-"""Fábrica de clientes de API de LLM por provedor (OpenAI, Gemini, Anthropic).
+"""Fábrica de clientes de API de LLM — provedor único: OpenRouter.
 
-Isola a criação dos clientes SDK — registro de provedores + factories — do runner
-principal. Cada factory lê a chave de API da variável de ambiente configurada em
-``PROVIDER_CONFIG`` (nunca hardcoded) e devolve o cliente já configurado.
+Todo modelo do protocolo é acessado pelo OpenRouter (endpoint compatível com a API
+da OpenAI), inclusive os da OpenAI (``openai/gpt-4o-mini``): um só provedor, uma só
+chave (``OPENROUTER_API_KEY``) e a pinagem do provedor de inferência por modelo
+(``MODEL_PROVIDER_PIN``) para reprodutibilidade. Para usar outro modelo, basta
+acrescentá-lo a ``MODELS_TO_TEST`` com o id do OpenRouter (``<org>/<modelo>``), dar
+um alias em ``MODEL_ALIAS`` e, se quiser fixar a infraestrutura, um pin aqui.
 
-Extraído de ``dissertacao_mestrado.py`` para permitir testes de unidade do roteamento
-de provedor (base_url, tipo de cliente, provedor inexistente) sem tocar no runner —
-ver ``tests/test_llm_client.py``. Não carrega o ``.env``: quem consome (o runner
-principal) é responsável por chamar ``load_dotenv()`` antes de usar as factories; as
-chaves são lidas via ``os.getenv`` no momento da chamada.
+Os provedores diretos (OpenAI, Gemini, Anthropic) foram removidos em 01/10/2026;
+``PROVIDER_CONFIG`` mantém o formato de registro para que o runner e os testes
+continuem genéricos.
 
-Nota: este módulo NÃO depende de ``dissertacao_mestrado`` (evita import circular).
+Não carrega o ``.env``: quem consome (o runner principal) chama ``load_dotenv()``
+antes de usar as factories; a chave é lida via ``os.getenv`` no momento da chamada.
+Este módulo NÃO depende de ``dissertacao_mestrado`` (evita import circular).
 """
 import os
-from typing import Optional, Union
+from typing import Optional
 
-import anthropic
 from openai import OpenAI, AsyncOpenAI
 
 
-# URLs base e variáveis de ambiente com chaves de API por provedor.
-# Gemini é acessado pelo endpoint compatível com a API da OpenAI.
+# Registro de provedores: URL base e variável de ambiente com a chave de API.
 PROVIDER_CONFIG = {
-    "openai": {
-        "base_url": None,
-        "api_key_env": "OPENAI_API_KEY",
-        "client_type": "openai",
-    },
-    "gemini": {
-        "base_url": "https://generativelanguage.googleapis.com/v1beta/openai/",
-        "api_key_env": "GEMINI_API_KEY",
-        "client_type": "openai",
-    },
-    "anthropic": {
-        "base_url": None,
-        "api_key_env": "ANTHROPIC_API_KEY",
-        "client_type": "anthropic",
-    },
     "openrouter": {
         "base_url": "https://openrouter.ai/api/v1",
         "api_key_env": "OPENROUTER_API_KEY",
-        "client_type": "openai",
+        "client_type": "openai",  # SDK da OpenAI (endpoint compatível)
     },
 }
 
@@ -53,13 +39,17 @@ PROVIDER_EXTRA_BODY = {
 
 # Pinagem do provedor de inferência POR MODELO (OpenRouter) — fixa quem serve cada
 # modelo, para que o não-determinismo medido seja do modelo e não da mistura de
-# infraestruturas/quantizações. Valores observados no smoke test de 02/07/2026
+# infraestruturas/quantizações. Gemini: valor observado no smoke test de 02/07/2026
 # (campo ``inference_provider`` da auditoria offline). Se o provedor pinado ficar
 # indisponível, as chamadas FALHAM visivelmente (malformadas + auditoria) em vez de
 # migrar em silêncio — comportamento correto para reprodutibilidade.
 MODEL_PROVIDER_PIN = {
+    "openai/gpt-4o-mini":           {"order": ["OpenAI"], "allow_fallbacks": False},
     "google/gemini-2.5-flash-lite": {"order": ["Google"], "allow_fallbacks": False},
 }
+
+_TIMEOUT = 60.0     # previne requisição travada bloqueando o semaphore indefinidamente
+_MAX_RETRIES = 2    # retries do SDK; os retries de formato/rate-limit ficam no runner
 
 
 def get_extra_body(provider: str, model_name: Optional[str] = None) -> dict:
@@ -73,55 +63,23 @@ def get_extra_body(provider: str, model_name: Optional[str] = None) -> dict:
     return PROVIDER_EXTRA_BODY.get(provider, {})
 
 
-def get_client(provider: str) -> Union[OpenAI, anthropic.Anthropic]:
-    """Cria o cliente de API para o provedor especificado (OpenAI, Anthropic ou Gemini).
-
-    Aplica os mesmos timeout=60s e max_retries=2 do cliente assíncrono, para que uma
-    requisição travada no caminho síncrono (Anthropic/fallback) não bloqueie sem teto.
-    """
+def get_client(provider: str) -> OpenAI:
+    """Cliente síncrono do provedor (``KeyError`` para provedor não registrado)."""
     config = PROVIDER_CONFIG[provider]
-
-    if config["client_type"] == "anthropic":
-        return anthropic.Anthropic(
-            api_key=os.getenv(config["api_key_env"]),
-            timeout=60.0,
-            max_retries=2,
-        )
-    else:
-        if config["base_url"]:
-            return OpenAI(
-                api_key=os.getenv(config["api_key_env"]),
-                base_url=config["base_url"],
-                timeout=60.0,
-                max_retries=2,
-            )
-        else:
-            return OpenAI(
-                api_key=os.getenv(config["api_key_env"]),
-                timeout=60.0,
-                max_retries=2,
-            )
+    return OpenAI(
+        api_key=os.getenv(config["api_key_env"]),
+        base_url=config["base_url"],
+        timeout=_TIMEOUT,
+        max_retries=_MAX_RETRIES,
+    )
 
 
-def get_async_client(provider: str) -> Optional[AsyncOpenAI]:
-    """Cria o cliente assíncrono para chamadas concorrentes (apenas OpenAI/Gemini).
-
-    Timeout de 60s previne que uma única requisição travada bloqueie o semaphore
-    indefinidamente (causa observada: terminal parou silenciosamente em run anterior).
-    """
+def get_async_client(provider: str) -> AsyncOpenAI:
+    """Cliente assíncrono para as chamadas concorrentes (``asyncio.Semaphore``)."""
     config = PROVIDER_CONFIG[provider]
-    if config["client_type"] == "anthropic":
-        return None
-    if config["base_url"]:
-        return AsyncOpenAI(
-            api_key=os.getenv(config["api_key_env"]),
-            base_url=config["base_url"],
-            timeout=60.0,
-            max_retries=2,
-        )
-    else:
-        return AsyncOpenAI(
-            api_key=os.getenv(config["api_key_env"]),
-            timeout=60.0,
-            max_retries=2,
-        )
+    return AsyncOpenAI(
+        api_key=os.getenv(config["api_key_env"]),
+        base_url=config["base_url"],
+        timeout=_TIMEOUT,
+        max_retries=_MAX_RETRIES,
+    )

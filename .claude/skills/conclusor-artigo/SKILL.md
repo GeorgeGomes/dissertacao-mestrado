@@ -52,9 +52,9 @@ para os achados, e dos achados para o fechamento.
 2. **Leia a evidência, nesta ordem:**
    - `log_execucao.txt` (visão geral; note a **auditoria do parser** — se a taxa de
      fallback > 0, as métricas podem estar poluídas e a conclusão deve ressalvar);
-   - os CSVs por bloco (`bloco1_*`, `bloco2_*`, `bloco23_external_*`, `final_cross_linearity.csv`)
+   - os CSVs por bloco (`bloco1_*`, `bloco2_*`, `bloco23_external_*`, `final_cross_linearity__<alias>.csv`)
      para os números exatos por hipótese;
-   - `llm_interactions.json` só se precisar auditar chamadas específicas.
+   - `llm_interactions_parte*.json` só se precisar auditar chamadas específicas.
 3. **Leia o código** (`src/dissertacao_mestrado.py` e módulos) para saber **o que
    realmente rodou**: flags `RUN_*` ativas, `RANDOM_SEEDS`, `N_REPETICOES`, `FEW_SHOT_SIZES`,
    quais blocos/fases. A conclusão descreve o experimento **executado**, não o planejado.

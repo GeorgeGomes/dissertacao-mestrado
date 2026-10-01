@@ -24,6 +24,38 @@ import dissertacao_mestrado as dm  # noqa: E402
 parse = dm.parse_llm_response
 
 
+class TestParserCamada6Padroes(unittest.TestCase):
+    """Camada 6 (padrões "class X", "belongs to X"…): a classe vem da TUPLA do padrão.
+
+    Regressão de 01/10/2026: a decisão por substring do nome dentro do padrão
+    fazia "A" casar dentro de "CLASS" ("Class B" → A) e "B" dentro de "BELONGS".
+    """
+
+    def test_padrao_class_x_com_nomes_de_uma_letra(self):
+        self.assertEqual(parse("Between A and B, I choose Class B", "A", "B"), ("B", True))
+        self.assertEqual(parse("Between A and B, I choose Class A", "A", "B"), ("A", True))
+
+    def test_padrao_com_ordem_invertida(self):
+        self.assertEqual(parse("A or B? It belongs to A", "B", "A"), ("A", True))
+        self.assertEqual(parse("A or B? It belongs to B", "B", "A"), ("B", True))
+
+    def test_dois_padroes_declarativos_e_ambiguo(self):
+        # A ordem dos padrões não decide: duas classes em padrões → malformada.
+        self.assertEqual(parse("Class A ... Class B", "A", "B"), (None, False))
+        self.assertEqual(parse("The answer is B, not Class A", "A", "B"), (None, False))
+
+    def test_padrao_nao_casa_nome_que_e_prefixo_de_outro(self):
+        self.assertEqual(parse("0 or 10? Class 10", "0", "10"), ("10", True))
+        self.assertEqual(parse("1 or 10? Class 1", "1", "10"), ("1", True))
+
+    def test_padroes_para_todos_os_pares_do_protocolo(self):
+        pares = list(dm.NOMES_CLASSES) + list(dm.NOMES_CLASSES_INVERTIDAS) + [("Mulher", "Homem")]
+        for c0, c1 in pares:
+            with self.subTest(c0=c0, c1=c1):
+                self.assertEqual(parse(f"{c0} or {c1}? Classified as {c1}", c0, c1), (c1, True))
+                self.assertEqual(parse(f"{c0} or {c1}? Classified as {c0}", c0, c1), (c0, True))
+
+
 class TestParserCasosValidos(unittest.TestCase):
     """Cada camada do parser deve reconhecer corretamente a classe pretendida."""
 

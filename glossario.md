@@ -10,7 +10,7 @@
 | **Centroide** | Ponto medio de um grupo de pontos. Media de todas as coordenadas dos pontos de uma classe |
 | **Norma (L2)** | "Tamanho" de um vetor: ‖w‖ = raiz(w1^2 + w2^2 + ...). Mede a magnitude |
 | **Vetor** | Lista ordenada de numeros. Ex: W = [0.3, 1.5] e um vetor de pesos |
-| **Projecao R3** | Transformar dados de 2D para 3D adicionando x3 = x1 * x2. Simula um kernel quadratico |
+| **Projecao R3 / R4** | Transformar dados de 2D para 3D adicionando x3 = x1 * x2 (hiperbole), ou para 4D adicionando x1^2 e x2^2 (elipse). Simulam um kernel quadratico sem sair do mundo linear |
 | **Kernel** | Tecnica que captura relacoes nao-lineares entre variaveis sem calcular explicitamente |
 | **Espaco de Features** | O "mundo" onde os dados vivem. R2 = 2 dimensoes, R3 = 3 dimensoes |
 
@@ -124,7 +124,7 @@
 | **Repeticao** | Rodar o mesmo experimento varias vezes para medir variabilidade |
 | **Cross-Problem** | Entre problemas diferentes. "Os centroides do Problema A transferem para B?" |
 
-## Estrategias de Selecao de Exemplos (Fase D)
+## Estrategias de Selecao de Exemplos (Fase E)
 
 | Termo | O que e |
 |---|---|
@@ -132,7 +132,7 @@
 | **Hard (Dificeis)** | Pontos perto da fronteira. Baixa margem. Ambiguos, mas muito informativos |
 | **Mixed (Mistos)** | 50% faceis + 50% dificeis. Equilibrio |
 | **Random (Aleatorio)** | Sem estrategia. Baseline para comparacao |
-| **Expert (Perito)** | Classificador externo com W conhecido. Na Fase D o LLM tenta aprender o criterio do expert |
+| **Expert (Perito)** | Classificador externo com W conhecido. Na Fase E o LLM tenta aprender o criterio do expert |
 
 ## Fases do Experimento
 
@@ -140,5 +140,8 @@
 |---|---|---|
 | **A** | LLM classifica 150 pontos sem exemplos -> aprende W | "Qual criterio o LLM usa?" |
 | **B** | Aplica W_A em dados com geometria diferente | "O criterio se mantem em dados novos?" |
-| **C** | Aplica W_A em dados com distorcao mais severa | "E em dados ainda mais diferentes?" |
-| **D** | LLM recebe exemplos de um expert e tenta aprender | "O LLM consegue aprender um criterio externo?" |
+| **C** | Aplica W_A em dados com rotacao anti-horaria dos centroides (orientacao oposta a B) | "E em dados virados para o outro lado?" |
+| **E** | LLM recebe exemplos de um expert (Problema E) e tenta aprender | "O LLM consegue aprender um criterio externo?" |
+
+Letras dos PROBLEMAS (nao confundir com as fases): A, B, C lineares e D meia-lua (Bloco 1);
+E perito linear e F meia-lua (Bloco 2); G = base real peso x altura (Bloco 3).

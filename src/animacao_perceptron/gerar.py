@@ -41,7 +41,10 @@ from metrics import compute_centroids  # noqa: E402
 from dissertacao_mestrado import PERCEPTRON_PARAMS  # noqa: E402
 from data_problems import create_problem_d_meialua, create_problem_homem_mulher  # noqa: E402
 
-MODELOS = [("gpt-4o-mini", "gpt4mini"), ("google/gemini-2.5-flash-lite", "flashlite")]
+# (modelo como gravado na coluna `model` dos CSVs, alias do asset). "gpt-4o-mini" é o id
+# legado (OpenAI direto); desde 01/10/2026 o protocolo usa "openai/gpt-4o-mini" via OpenRouter.
+MODELOS = [("gpt-4o-mini", "gpt4mini"), ("openai/gpt-4o-mini", "gpt4mini"),
+           ("google/gemini-2.5-flash-lite", "flashlite")]
 SEEDS = [42, 123, 7]
 
 
@@ -120,8 +123,12 @@ def extrair_datasets(execucao: str):
                     r = b1[(b1.model == modelo) & (b1.random_seed == seed)]
                     w_csv = [float(r.w_0.iloc[0]), float(r.w_1.iloc[0])] if len(r) else None
                 cand.append((f"{p}_seed{seed}_{alias}", p, f"{G[p].split(' (')[0]}, seed {seed}, {modelo}", modelo, X, ("A", "B", "x1", "B"), w_csv))
-        # problem_D.csv guarda o Problema E (perito linear do Bloco 2; create_problem_e_expert)
-        X = ler_csv(os.path.join(base, "problem_D.csv"))
+        # problem_E.csv = Problema E (perito linear do Bloco 2; create_problem_e_expert).
+        # Execuções anteriores a 01/10/2026 gravavam esse mesmo conteúdo como problem_D.csv.
+        csv_e = os.path.join(base, "problem_E.csv")
+        if not os.path.exists(csv_e):
+            csv_e = os.path.join(base, "problem_D.csv")
+        X = ler_csv(csv_e)
         for modelo, alias in MODELOS:
             cand.append((f"E_seed{seed}_{alias}", "E", f"Problema E, seed {seed}, {modelo}", modelo, X, ("A", "B", "x1", "B"), None))
         Xd = treino_70(create_problem_d_meialua(n_samples=150, random_state=seed)[0].tolist(), seed)

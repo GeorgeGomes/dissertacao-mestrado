@@ -1,4 +1,4 @@
-"""Baselines clássicos para comparação com o LLM na Fase D.
+"""Baselines clássicos para comparação com o LLM na Fase E (Bloco 2).
 
 Treina classificadores supervisionados nos mesmos exemplos few-shot fornecidos ao LLM
 e avalia no mesmo conjunto de teste. Responde à pergunta: "O LLM faz algo que um

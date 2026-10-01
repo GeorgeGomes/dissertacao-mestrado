@@ -1,7 +1,7 @@
 """Auditoria offline das interações com o LLM de uma execução.
 
 Lê os arquivos ``llm_interactions_parte*.json`` (ou ``llm_interactions.json``) de uma
-pasta ``execucao_*/`` e verifica, SEM chamar a API, duas propriedades que sustentam a
+pasta ``execucao_*/`` e verifica, SEM chamar a API, três propriedades que sustentam a
 credibilidade das métricas de κ/consistência do trabalho:
 
 1. **Taxa de fallback do parser** — fração de respostas ``malformed=True`` que caíram no
@@ -11,10 +11,12 @@ credibilidade das métricas de κ/consistência do trabalho:
    devolver a mesma resposta. ``temperature=0.0`` NÃO garante isso: mede-se a fração de
    pares idênticos cuja resposta divergiu entre repetições ("taxa de flip"). Reportar
    esse número é honestidade experimental, não é falha do código.
+3. **Breakdown por (provider, modelo)** — fallback e flip por modelo, mais os snapshots
+   ``model_resolved`` e os provedores de inferência observados (OpenRouter).
 
 Uso:
     python src/audit_interactions.py                 # audita a execução completa mais recente
-    python src/audit_interactions.py execucao_2026-06-30_23-46-58
+    python src/audit_interactions.py execucao_2026-07-05_12-34-52_completa
     python src/audit_interactions.py --json          # saída em JSON (para CI/log)
 
 Código de saída: 0 se a taxa de malformadas <= --max-malformed (padrão 5%); 1 caso
@@ -83,8 +85,8 @@ def find_latest_execution(root: str = ".", allow_rapido: bool = False) -> Option
     conclusões finais, mas a auditoria ainda funciona nelas se allow_rapido=True.
 
     O contrato principal é o SUFIXO no nome da pasta: ``_completa`` (execução
-    cheia) vs ``_smoke`` (--rapido). Pastas legadas sem sufixo caem no fareja-log
-    ``is_rapido`` (compatibilidade).
+    cheia) vs ``_smoke`` (--rapido) vs ``_apenas-<blocos>`` (parcial). Pastas legadas
+    sem sufixo caem no fareja-log ``is_rapido`` (compatibilidade).
     """
     dirs = sorted(glob.glob(os.path.join(root, "execucao_*")), reverse=True)
     for d in dirs:
@@ -94,7 +96,8 @@ def find_latest_execution(root: str = ".", allow_rapido: bool = False) -> Option
             continue
         nome = os.path.basename(os.path.normpath(d))
         if not allow_rapido:
-            if nome.endswith("_smoke"):
+            # `_smoke` (--rapido) e `_apenas-<blocos>` (parcial) nunca são fonte.
+            if nome.endswith("_smoke") or "_apenas-" in nome:
                 continue
             # Legado sem sufixo: decide pelo cabeçalho do log.
             if not nome.endswith("_completa") and is_rapido(d):

@@ -1,6 +1,6 @@
 """Todas as visualizações (PNGs) dos Blocos 1-3 e do fechamento.
 
-Extraído de ``dissertacao_mestrado.py`` (Fase 1 da modularização): ~30 funções
+Extraído de ``dissertacao_mestrado.py`` (Fase 1 da modularização): 36 funções
 ``plot_*``/``visualize_*`` que recebem listas de resultados/arrays e salvam
 PNGs na pasta de execução. São consumidores puros — não chamam a API nem mutam
 estado do runner. Única exceção de acoplamento: ``plot_phase_e_example_locations``
@@ -17,6 +17,7 @@ import pandas as pd
 import seaborn as sns
 from sklearn.metrics import accuracy_score
 
+from execucao_io import asset_variant
 from data_problems import (
     PROBLEM_A_CENTERS, PROBLEM_A_STD, PROBLEM_B_CENTERS, PROBLEM_B_STD,
     PROBLEM_C_CENTERS, PROBLEM_C_STD, PROBLEM_E_CENTERS,
@@ -34,18 +35,36 @@ def _save_panels_individually(panels, combined_filename, dpi=150):
             - sufixo: string adicionada ao nome do arquivo (ex: "problema_a")
             - draw_func: callable(ax) que desenha em um único eixo
             - figsize: (largura, altura) da figura individual
-        combined_filename: caminho completo do arquivo combinado (ex: "pasta/01_all.png")
+        combined_filename: caminho completo do arquivo combinado
+            (ex: "pasta/bloco1_06_w_distribution__gpt4mini.png"); o painel vira
+            "pasta/bloco1_06_w_distribution_<sufixo>__gpt4mini.png" (asset_variant)
         dpi: resolução das imagens individuais
     """
     if not combined_filename:
         return
-    base, ext = os.path.splitext(combined_filename)
     for suffix, draw_func, figsize in panels:
         fig_ind, ax_ind = plt.subplots(1, 1, figsize=figsize)
         draw_func(ax_ind)
         fig_ind.tight_layout()
-        fig_ind.savefig(f"{base}_{suffix}{ext}", dpi=dpi, bbox_inches='tight')
+        fig_ind.savefig(asset_variant(combined_filename, suffix), dpi=dpi, bbox_inches='tight')
         plt.close(fig_ind)
+
+
+def _grouped_bar_offsets(n_series: int, bar_width: float) -> np.ndarray:
+    """Deslocamentos centrados no tick para ``n_series`` barras agrupadas."""
+    return (np.arange(n_series) - (n_series - 1) / 2.0) * bar_width
+
+def _main_expert(results_e):
+    """Filtra os resultados da Fase E para UM perito (o primeiro que aparece, que é o
+    principal ``aniso_x2`` no protocolo). Com RUN_MULTIPLE_EXPERTS há 3 peritos e
+    misturá-los numa curva única diluiria o sinal. Retorna (lista, nome_do_perito)."""
+    if not results_e:
+        return results_e, None
+    name = getattr(results_e[0], 'expert_name', None)
+    if name is None:
+        return results_e, None
+    return [r for r in results_e if getattr(r, 'expert_name', name) == name], name
+
 
 
 def visualize_all_problems(
@@ -477,6 +496,7 @@ def plot_phase_e_learning_curve(
     - Eixo Y: concordância LLM vs. Perito
     - Linhas: uma por estratégia (easy, hard, mixed, random)
     """
+    results_e, expert_label = _main_expert(results_e)
     df = pd.DataFrame([
         {
             'model': f"{r.provider}/{r.model_name}",
@@ -538,6 +558,8 @@ def plot_phase_e_learning_curve(
     fig, axes = plt.subplots(1, 3, figsize=(18, 5))
     for i, (metric_col, metric_name) in enumerate(metrics_config):
         _draw_metric(axes[i], metric_col, metric_name)
+    fig.suptitle(f'Fase E: curva de aprendizado por estratégia (perito {expert_label})',
+                 fontsize=13, fontweight='bold')
     plt.tight_layout()
     if filename:
         plt.savefig(filename, dpi=150, bbox_inches='tight')
@@ -560,6 +582,7 @@ def plot_phase_e_strategy_comparison(
     Compara estratégias em cada nível de n_shot usando gráficos de barras agrupadas.
     Permite verificar qual estratégia de seleção de exemplos é mais eficaz para cada quantidade de shots.
     """
+    results_e, expert_label = _main_expert(results_e)
     df = pd.DataFrame([
         {
             'n_shot': r.n_shot,
@@ -612,7 +635,7 @@ def plot_phase_e_strategy_comparison(
     axes = axes[0]
     for ax_idx, n in enumerate(n_shots):
         _draw_n_shot(axes[ax_idx], n)
-    plt.suptitle('Fase E: Comparação de Estratégias por Número de Exemplos',
+    plt.suptitle(f'Fase E: Comparação de Estratégias por Número de Exemplos (perito {expert_label})',
                  fontsize=13, fontweight='bold')
     plt.tight_layout()
     if filename:
@@ -700,10 +723,15 @@ def plot_phase_e_example_locations(
 
 
 def plot_w_distribution(resultados: List[ResultadoExperimento], filename: str = None):
-    """Distribuição do vetor W estimado entre sementes e repetições (pedido do orientador)."""
+    """Distribuição de Ŵ_LLM entre sementes e nomes de classe (pedido do orientador).
+
+    Só a configuração base: zero-shot (W é estimado apenas na Fase A), prompt
+    `default` e atributos x1/x2 — as variantes de prompt e de nomes de atributo
+    têm gráficos próprios (bloco1_13, bloco1_14b) e contaminariam a dispersão."""
     data = []
     for r in resultados:
-        if r.n_shot == 0:  # W é aprendido apenas no zero-shot (Fase A)
+        if (r.n_shot == 0 and r.prompt_variant == "default"
+                and tuple(r.feature_names) == ("x1", "x2")):
             data.append({
                 'seed': r.random_seed,
                 'w0': r.w_aprendido[0],
@@ -913,7 +941,7 @@ def plot_class_order_bias(resultados: List[ResultadoExperimento], filename: str 
 
 
 def plot_feature_names_effect(resultados: List[ResultadoExperimento], filename: str = None):
-    """Compara métricas e pesos aprendidos entre diferentes nomes de features."""
+    """Compara métricas e Ŵ_LLM estimada entre diferentes nomes de atributos."""
     # Filtra resultados que têm feature_names não-padrão ou padrão para comparação
     feat_results = [r for r in resultados if r.feature_names != ("x1", "x2")
                     or (r.n_shot == 0 and r.nomes_classes == ("A", "B") and r.prompt_variant == "default")]
@@ -975,7 +1003,7 @@ def plot_feature_names_effect(resultados: List[ResultadoExperimento], filename: 
                label='w[1]', color='darkorange', capsize=3, edgecolor='black')
         ax.set_xticks(x); ax.set_xticklabels(df_grouped['features'], rotation=30, ha='right')
         ax.set_ylabel('Peso W')
-        ax.set_title('Pesos Aprendidos por Nome de Feature', fontweight='bold')
+        ax.set_title('Ŵ_LLM estimada por nome de atributo', fontweight='bold')
         ax.legend()
 
     # Figura combinada
@@ -1011,6 +1039,11 @@ def plot_classical_baselines_comparison(
     """
     if not results_e or not results_baselines:
         return
+
+    # Um perito só (o principal), tanto no LLM quanto nos baselines
+    results_e, expert_label = _main_expert(results_e)
+    results_baselines = [b for b in results_baselines
+                         if b.get('expert_name', expert_label) == expert_label]
 
     # Filtra LLM: apenas estratégia mixed (a mais balanceada) para comparação justa
     df_llm = pd.DataFrame([{
@@ -1094,7 +1127,7 @@ def plot_classical_baselines_comparison(
     fig, axes = plt.subplots(1, 3, figsize=(20, 6))
     for i, (llm_col, bl_col, title) in enumerate(metrics_config):
         _draw_baseline_metric(axes[i], llm_col, bl_col, title)
-    plt.suptitle('LLM vs. Baselines Clássicos (mesmos exemplos few-shot, estratégia mixed)\n'
+    plt.suptitle(f'LLM vs. Baselines Clássicos (mesmos exemplos few-shot, estratégia mixed, perito {expert_label})\n'
                  'O LLM faz algo diferente de um classificador trivial?',
                  fontsize=13, fontweight='bold')
     plt.tight_layout()
@@ -1112,7 +1145,7 @@ def plot_classical_baselines_comparison(
 
 
 def plot_prompt_variant_comparison(resultados: List[ResultadoExperimento], filename: str = None):
-    """Compara métricas e W aprendidos entre diferentes variantes de prompt.
+    """Compara métricas e Ŵ_LLM estimada entre diferentes variantes de prompt.
 
     Testa se o prompt confunde a medição de consistência do LLM.
     """
@@ -1296,8 +1329,25 @@ def plot_example_order_bias(results_order: List[ResultadoPhaseEExperimento], fil
     _save_panels_individually(panels, filename)
 
 
+def _dilution_reference(df: pd.DataFrame):
+    """(n_hard, linhas de referência "hard puros") a partir de ``example_strategy``.
+
+    O nome da estratégia é ``dilution_<N>hard_<M>easy`` (runner); a referência são as
+    coletas com M = 0. Fallback (nomes fora do padrão): N = menor ``n_shot`` observado.
+    """
+    m = df['strategy'].astype(str).str.extract(r'dilution_(\d+)hard_(\d+)easy').astype(float)
+    n_hard_col, n_easy_col = m[0], m[1]
+    if n_hard_col.notna().any():
+        n_hard = int(n_hard_col.dropna().iloc[0])
+        ref = df[n_easy_col == 0]
+    else:
+        n_hard = int(df['n_shot'].min())
+        ref = df[df['n_shot'] == n_hard]
+    return n_hard, ref
+
+
 def plot_dilution_experiment(results_dilution: List[ResultadoPhaseEExperimento], filename: str = None):
-    """Gráfico do experimento de diluição: 3 hard fixos + N easy progressivos."""
+    """Gráfico do experimento de diluição: N hard fixos + M easy progressivos."""
     if not results_dilution:
         return
 
@@ -1311,7 +1361,8 @@ def plot_dilution_experiment(results_dilution: List[ResultadoPhaseEExperimento],
     df_acc = df.groupby('n_shot').agg({'accuracy': ['mean', 'std']}).reset_index()
     df_acc.columns = ['n_shot', 'mean', 'std']
     df_acc = df_acc.sort_values('n_shot')
-    ref_3hard = df[df['n_shot'] == 3]
+    n_hard, ref_hard = _dilution_reference(df)
+    xlabel = f'Total de Exemplos ({n_hard} hard + N easy)'
 
     df_kappa = df.groupby('n_shot').agg({'kappa': ['mean', 'std']}).reset_index()
     df_kappa.columns = ['n_shot', 'mean', 'std']
@@ -1320,10 +1371,10 @@ def plot_dilution_experiment(results_dilution: List[ResultadoPhaseEExperimento],
     def _draw_dilution_accuracy(ax):
         ax.errorbar(df_acc['n_shot'], df_acc['mean'], yerr=df_acc['std'],
                     marker='o', linewidth=2, markersize=8, capsize=4, color='#e74c3c')
-        if len(ref_3hard) > 0:
-            ax.axhline(y=ref_3hard['accuracy'].mean(), color='gray', linestyle='--',
-                       alpha=0.7, label=f'3 hard puros ({ref_3hard["accuracy"].mean():.1%})')
-        ax.set_xlabel('Total de Exemplos (3 hard + N easy)')
+        if len(ref_hard) > 0:
+            ax.axhline(y=ref_hard['accuracy'].mean(), color='gray', linestyle='--',
+                       alpha=0.7, label=f'{n_hard} hard puros ({ref_hard["accuracy"].mean():.1%})')
+        ax.set_xlabel(xlabel)
         ax.set_ylabel('Concordância LLM vs. Perito')
         ax.set_title('Experimento de Diluição: Acurácia', fontweight='bold')
         ax.legend(); ax.grid(True, alpha=0.3); ax.set_ylim(0, 1.05)
@@ -1331,7 +1382,7 @@ def plot_dilution_experiment(results_dilution: List[ResultadoPhaseEExperimento],
     def _draw_dilution_kappa(ax):
         ax.errorbar(df_kappa['n_shot'], df_kappa['mean'], yerr=df_kappa['std'],
                     marker='s', linewidth=2, markersize=8, capsize=4, color='#3498db')
-        ax.set_xlabel('Total de Exemplos (3 hard + N easy)')
+        ax.set_xlabel(xlabel)
         ax.set_ylabel('Kappa de Cohen')
         ax.set_title('Experimento de Diluição: Kappa', fontweight='bold')
         ax.grid(True, alpha=0.3); ax.set_ylim(-0.1, 1.05)
@@ -1354,62 +1405,76 @@ def plot_dilution_experiment(results_dilution: List[ResultadoPhaseEExperimento],
     _save_panels_individually(panels, filename)
 
 
-def plot_r3_comparison(results_r2: List, results_r3: List, filename: str = None):
-    """Compara fidelidade com 2 pesos vs 3 pesos (projeção R3) usando as mesmas
-    classificações do LLM (que viu apenas x1, x2). Se a fidelidade R3 > R2,
-    há evidência de não-linearidade implícita no processo decisório do LLM."""
+def plot_r3_comparison(results_r2: List, results_r3: List, results_r4: Optional[List] = None,
+                       filename: str = None):
+    """Fidelidade da métrica com 2, 3 e 4 pesos (R2 → R3 → R4) sobre as MESMAS
+    classificações zero-shot do LLM no Problema A (que viu apenas x1, x2).
+
+    R3 acrescenta x3 = x1·x2 (hipérbole); R4 acrescenta x1², x2² (elipse). Se a
+    fidelidade cresce com a dimensão, há evidência de não-linearidade implícita no
+    critério do LLM; em um problema linear espera-se ganho ~nulo. ``results_r4`` é
+    opcional (execuções antigas só têm R3)."""
     if not results_r2 or not results_r3:
         return
 
-    r2_means = np.mean([r['accuracy'] for r in results_r2])
-    r2_stds = np.std([r['accuracy'] for r in results_r2])
-    r3_means = np.mean([r['accuracy'] for r in results_r3])
-    r3_stds = np.std([r['accuracy'] for r in results_r3])
-    has_nnls = any('accuracy_nnls' in r for r in results_r3)
+    spaces = [('2 pesos\n($w_1$, $w_2$)', results_r2),
+              ('3 pesos\n$x_3 = x_1 \\cdot x_2$', results_r3)]
+    if results_r4:
+        spaces.append(('4 pesos\n$x_3 = x_1^2$, $x_4 = x_2^2$', results_r4))
+    space_short = ['R2', 'R3', 'R4'][:len(spaces)]
+    space_colors = ['steelblue', 'coral', 'seagreen'][:len(spaces)]
 
-    algo_data = [('Perceptron', [r['accuracy'] for r in results_r3], 'steelblue')]
-    if has_nnls:
-        algo_data.append(('NNLS', [r.get('accuracy_nnls', np.nan) for r in results_r3], 'coral'))
+    def _stats(rs, key):
+        vals = [r[key] for r in rs if r.get(key) is not None and not np.isnan(r[key])]
+        return (float(np.mean(vals)), float(np.std(vals))) if vals else (np.nan, 0.0)
+
+    means = [_stats(rs, 'accuracy')[0] for _, rs in spaces]
+    stds = [_stats(rs, 'accuracy')[1] for _, rs in spaces]
+    algo_list = [('Perceptron', 'accuracy', 'steelblue'), ('NNLS', 'accuracy_nnls', 'coral')]
 
     def _draw_r3_comparison(ax):
-        labels_r3 = ['2 pesos\n($w_1$, $w_2$)', '3 pesos\n($w_1$, $w_2$, $w_3$)\n$x_3 = x_1 \\cdot x_2$']
-        means = [r2_means, r3_means]
-        stds = [r2_stds, r3_stds]
-        bars = ax.bar(labels_r3, means, yerr=stds, color=['steelblue', 'coral'],
+        bars = ax.bar([lbl for lbl, _ in spaces], means, yerr=stds, color=space_colors,
                       edgecolor='black', capsize=5, alpha=0.8)
         ax.set_ylabel('Fidelidade (métrica vs. LLM)')
-        ax.set_title('Perceptron: Métrica Linear vs. Quadrática', fontweight='bold')
+        ax.set_title('Perceptron: fidelidade por dimensão da métrica (R2 → R3 → R4)',
+                     fontweight='bold')
         ax.set_ylim(0, 1.1)
         ax.axhline(y=0.5, color='red', linestyle='--', alpha=0.5)
         for bar, mean in zip(bars, means):
-            ax.text(bar.get_x() + bar.get_width()/2., bar.get_height() + 0.02,
+            ax.text(bar.get_x() + bar.get_width() / 2., bar.get_height() + 0.02,
                     f'{mean:.1%}', ha='center', va='bottom', fontsize=11, fontweight='bold')
-        delta = means[1] - means[0]
-        ax.text(0.5, 0.05, f'$\\Delta$ = {delta:+.1%}', ha='center', va='bottom',
-                transform=ax.transAxes, fontsize=10, style='italic',
-                color='green' if delta > 0 else 'gray')
+        for i in range(1, len(means)):
+            delta = means[i] - means[i - 1]
+            ax.text(i - 0.5, 0.05, f'$\\Delta$ = {delta:+.1%}', ha='center', va='bottom',
+                    fontsize=10, style='italic', color='green' if delta > 0 else 'gray')
 
-    def _draw_r3_algo(ax):
-        x_pos = np.arange(len(algo_data))
-        for i, (name, accs, color) in enumerate(algo_data):
-            accs_clean = [a for a in accs if not np.isnan(a)]
-            m = np.mean(accs_clean) if accs_clean else 0
-            s = np.std(accs_clean) if len(accs_clean) > 1 else 0
-            ax.bar(i, m, yerr=s, color=color, edgecolor='black', capsize=5, alpha=0.8)
-            ax.text(i, m + 0.02, f'{m:.1%}', ha='center', va='bottom', fontsize=11, fontweight='bold')
-        ax.set_xticks(x_pos); ax.set_xticklabels([d[0] for d in algo_data])
-        ax.set_ylabel('Fidelidade R3 (3 pesos)')
-        ax.set_title('R3: Fidelidade por Algoritmo', fontweight='bold')
+    def _draw_r3r4_algo(ax):
+        n_alg = len(algo_list)
+        bar_width = 0.8 / n_alg
+        x_pos = np.arange(len(spaces))
+        offsets = _grouped_bar_offsets(n_alg, bar_width)
+        for j, (name, key, color) in enumerate(algo_list):
+            m = [_stats(rs, key)[0] for _, rs in spaces]
+            sd = [_stats(rs, key)[1] for _, rs in spaces]
+            ax.bar(x_pos + offsets[j], m, bar_width, yerr=sd, color=color,
+                   edgecolor='black', capsize=4, alpha=0.8, label=name)
+            for k, v in enumerate(m):
+                if not np.isnan(v):
+                    ax.text(x_pos[k] + offsets[j], v + 0.02, f'{v:.1%}', ha='center',
+                            va='bottom', fontsize=9, fontweight='bold')
+        ax.set_xticks(x_pos); ax.set_xticklabels(space_short)
+        ax.set_ylabel('Fidelidade (métrica vs. LLM)')
+        ax.set_title('Fidelidade por algoritmo em R2 / R3 / R4', fontweight='bold')
         ax.set_ylim(0, 1.1)
         ax.axhline(y=0.5, color='red', linestyle='--', alpha=0.5)
-        ax.grid(True, alpha=0.3, axis='y')
+        ax.legend(); ax.grid(True, alpha=0.3, axis='y')
 
     # Figura combinada
     fig, axes = plt.subplots(1, 2, figsize=(14, 5))
     _draw_r3_comparison(axes[0])
-    _draw_r3_algo(axes[1])
-    plt.suptitle('Não-linearidade Implícita: Fidelidade com 2 vs 3 pesos\n'
-                 '(LLM viu apenas $x_1$, $x_2$ — $x_3 = x_1 \\cdot x_2$ adicionado nos bastidores)',
+    _draw_r3r4_algo(axes[1])
+    plt.suptitle('Não-linearidade implícita: fidelidade com 2, 3 e 4 pesos (Problema A)\n'
+                 '(LLM viu apenas $x_1$, $x_2$ — atributos extras adicionados nos bastidores)',
                  fontsize=12, fontweight='bold')
     plt.tight_layout()
     if filename:
@@ -1419,14 +1484,16 @@ def plot_r3_comparison(results_r2: List, results_r3: List, filename: str = None)
     # Figuras individuais
     panels = [
         ("linear_vs_quadratica", _draw_r3_comparison, (7, 5)),
-        ("algoritmos_r3", _draw_r3_algo, (7, 5)),
+        ("algoritmos_r3r4", _draw_r3r4_algo, (7, 5)),
     ]
     _save_panels_individually(panels, filename)
 
 
+
+
 def plot_algorithm_comparison(results_perceptron: List, results_alternative: List,
                               filename: str = None):
-    """Compara W aprendido por Perceptron vs NNLS em todas as fases (A, B, C)."""
+    """Compara Ŵ_LLM estimada por Perceptron vs NNLS em todas as fases (A, B, C)."""
     if not results_perceptron or not results_alternative:
         return
 
@@ -1709,18 +1776,20 @@ def plot_oracle_transfer(oracle_results: List[dict], filename: str = None):
         subset = [r for r in oracle_results if r['expert_name'] == ename]
         probs_for_expert = list(dict.fromkeys(r['problem'] for r in subset))
         true_w_str = f"[{subset[0]['true_w_0']}, {subset[0]['true_w_1']}]"
-        bar_width = 0.25
+        algos = ['perceptron', 'nnls']
+        bar_width = 0.3
         x_pos = np.arange(len(probs_for_expert))
-        for j, algo in enumerate(['perceptron', 'nnls']):
+        offsets = _grouped_bar_offsets(len(algos), bar_width)  # barras centradas no tick
+        for j, algo in enumerate(algos):
             values = []
             for prob in probs_for_expert:
                 r_match = [r for r in subset if r['algorithm'] == algo and r['problem'] == prob]
                 values.append(r_match[0]['fidelity'] * 100 if r_match else 0)
-            ax.bar(x_pos + bar_width * (j - 1), values, bar_width,
+            ax.bar(x_pos + offsets[j], values, bar_width,
                    color=colors_algo[algo], edgecolor='k', alpha=0.7,
                    label=algo.upper())
             for k, v in enumerate(values):
-                ax.text(x_pos[k] + bar_width * (j - 1), v + 1, f'{v:.1f}%',
+                ax.text(x_pos[k] + offsets[j], v + 1, f'{v:.1f}%',
                         ha='center', va='bottom', fontsize=7)
         ax.axhline(y=90, color='green', linestyle='--', alpha=0.5, label='90%')
         ax.set_xticks(x_pos)
@@ -1745,17 +1814,17 @@ def plot_oracle_transfer(oracle_results: List[dict], filename: str = None):
 
     # Figuras individuais por expert
     if filename:
-        base, ext = os.path.splitext(filename)
         for ename in expert_names:
             fig_ind, ax_ind = plt.subplots(1, 1, figsize=(6, 5))
             _draw_expert(ax_ind, ename)
             fig_ind.tight_layout()
-            fig_ind.savefig(f"{base}_{ename}{ext}", dpi=150, bbox_inches='tight')
+            fig_ind.savefig(asset_variant(filename, ename), dpi=150, bbox_inches='tight')
             plt.close(fig_ind)
 
 
 def plot_dataset_overview(data: dict, seed: int, filename: str = None):
-    """Visão completa dos 4 datasets: ground truth vs classificação LLM."""
+    """Visão completa dos 4 datasets sintéticos (A, B, C lineares + E, perito linear):
+    ground truth vs classificação LLM (o E não tem rótulo do LLM na Fase A)."""
     colors_gt = {0: '#3498db', 1: '#e74c3c'}
     colors_llm = {0: '#2980b9', 1: '#c0392b'}
 
@@ -1763,7 +1832,7 @@ def plot_dataset_overview(data: dict, seed: int, filename: str = None):
         ('A', data['X_a'], data['y_gt_a'], data.get('y_llm_a')),
         ('B', data['X_b'], data['y_gt_b'], data.get('y_llm_b')),
         ('C', data['X_c'], data['y_gt_c'], data.get('y_llm_c')),
-        ('D', data['X_e'], data['y_gt_e'], None),
+        ('E', data['X_e'], data['y_gt_e'], None),  # Problema E = perito linear (Bloco 2)
     ]
 
     def _draw_problem(axes_pair, name, X, y_gt, y_llm):
@@ -1807,13 +1876,12 @@ def plot_dataset_overview(data: dict, seed: int, filename: str = None):
 
     # Figuras individuais por problema (GT + LLM)
     if filename:
-        base, ext = os.path.splitext(filename)
         for name, X, y_gt, y_llm in problems:
             fig_ind, axes_ind = plt.subplots(2, 1, figsize=(6, 10))
             _draw_problem((axes_ind[0], axes_ind[1]), name, X, y_gt, y_llm)
             fig_ind.suptitle(f'Problema {name} — Seed {seed}', fontsize=13, fontweight='bold')
             fig_ind.tight_layout()
-            fig_ind.savefig(f"{base}_problema_{name.lower()}{ext}", dpi=150, bbox_inches='tight')
+            fig_ind.savefig(asset_variant(filename, f"problema_{name.lower()}"), dpi=150, bbox_inches='tight')
             plt.close(fig_ind)
 
 
@@ -1888,18 +1956,17 @@ def plot_hits_and_errors(data: dict, seed: int, filename: str = None):
 
     # Figuras individuais por problema (1×3: acertos, fronteira, confiança)
     if filename:
-        base, ext = os.path.splitext(filename)
         for name, X, y_llm, y_metric in problems:
             fig_ind, axes_ind = plt.subplots(1, 3, figsize=(18, 5))
             _draw_problem_row(axes_ind, name, X, y_llm, y_metric)
             fig_ind.suptitle(f'Acertos e Erros: Problema {name} — Seed {seed}', fontsize=13, fontweight='bold')
             fig_ind.tight_layout()
-            fig_ind.savefig(f"{base}_problema_{name.lower()}{ext}", dpi=150, bbox_inches='tight')
+            fig_ind.savefig(asset_variant(filename, f"problema_{name.lower()}"), dpi=150, bbox_inches='tight')
             plt.close(fig_ind)
 
 
 def plot_w_comparison_algorithms(data: dict, seed: int, filename: str = None):
-    """Comparação visual dos W aprendidos: Perceptron vs NNLS."""
+    """Comparação visual das Ŵ_LLM estimadas: Perceptron vs NNLS."""
     learned_metric = data.get('learned_metric')
     w_nnls = data.get('w_nnls')
     X = data['X_a']
@@ -1983,24 +2050,23 @@ def plot_w_comparison_algorithms(data: dict, seed: int, filename: str = None):
 
     # Figuras individuais
     if filename:
-        base, ext = os.path.splitext(filename)
         # Fronteira Perceptron
         fig_ind, ax_ind = plt.subplots(1, 1, figsize=(7, 6))
         plot_boundary(ax_ind, X, y_llm, w_perc, centroids_perc, 'Perceptron Estruturado')
         fig_ind.tight_layout()
-        fig_ind.savefig(f"{base}_perceptron{ext}", dpi=150, bbox_inches='tight')
+        fig_ind.savefig(asset_variant(filename, "perceptron"), dpi=150, bbox_inches='tight')
         plt.close(fig_ind)
         if has_nnls:
             fig_ind, ax_ind = plt.subplots(1, 1, figsize=(7, 6))
             plot_boundary(ax_ind, X, y_llm, w_nnls, centroids_nnls, 'NNLS (Mín. Quadrados)')
             fig_ind.tight_layout()
-            fig_ind.savefig(f"{base}_nnls{ext}", dpi=150, bbox_inches='tight')
+            fig_ind.savefig(asset_variant(filename, "nnls"), dpi=150, bbox_inches='tight')
             plt.close(fig_ind)
         # Bar chart
         fig_ind, ax_ind = plt.subplots(1, 1, figsize=(7, 6))
         _draw_bar_chart(ax_ind)
         fig_ind.tight_layout()
-        fig_ind.savefig(f"{base}_barras{ext}", dpi=150, bbox_inches='tight')
+        fig_ind.savefig(asset_variant(filename, "barras"), dpi=150, bbox_inches='tight')
         plt.close(fig_ind)
 
 
@@ -2056,13 +2122,12 @@ def plot_confusion_matrices_detailed(data: dict, seed: int, filename: str = None
 
     # Figuras individuais por problema (2×1: LLM vs Métrica + LLM vs GT)
     if filename:
-        base, ext = os.path.splitext(filename)
         for name, y_llm, y_metric, y_gt in problems:
             fig_ind, axes_ind = plt.subplots(2, 1, figsize=(6, 10))
             _draw_problem_col((axes_ind[0], axes_ind[1]), name, y_llm, y_metric, y_gt)
             fig_ind.suptitle(f'Matrizes de Confusão: Problema {name} — Seed {seed}', fontsize=13, fontweight='bold')
             fig_ind.tight_layout()
-            fig_ind.savefig(f"{base}_problema_{name.lower()}{ext}", dpi=150, bbox_inches='tight')
+            fig_ind.savefig(asset_variant(filename, f"problema_{name.lower()}"), dpi=150, bbox_inches='tight')
             plt.close(fig_ind)
 
 
@@ -2169,12 +2234,12 @@ def plot_experiment_summary_dashboard(data: dict, seed: int,
     learned_metric = data.get('learned_metric')
     colors = {0: '#3498db', 1: '#e74c3c'}
 
-    # ─── BLOCO 1 (topo): 4 datasets com ground truth ───
+    # ─── LINHA 1 (topo): 4 datasets com ground truth ───
     for col, (name, X, y_gt) in enumerate([
         ('A', data['X_a'], data['y_gt_a']),
         ('B', data['X_b'], data['y_gt_b']),
         ('C', data['X_c'], data['y_gt_c']),
-        ('D', data['X_e'], data['y_gt_e']),
+        ('E', data['X_e'], data['y_gt_e']),  # Problema E = perito linear (Bloco 2)
     ]):
         ax = fig.add_subplot(gs[0, col])
         for c in [0, 1]:
@@ -2184,7 +2249,7 @@ def plot_experiment_summary_dashboard(data: dict, seed: int,
         ax.grid(True, alpha=0.2)
         ax.tick_params(labelsize=7)
 
-    # ─── BLOCO 2: Fase A — acertos/erros + fronteira ───
+    # ─── LINHA 2: Fase A — acertos/erros + fronteira ───
     y_llm_a = data.get('y_llm_a')
     y_metric_a = data.get('y_metric_a')
     X_a = data['X_a']
@@ -2242,7 +2307,7 @@ def plot_experiment_summary_dashboard(data: dict, seed: int,
         ax_w.legend(fontsize=7)
     ax_w.grid(True, alpha=0.2, axis='y')
 
-    # ─── BLOCO 3: Fases B/C ───
+    # ─── LINHA 3: Fases B/C ───
     for col_offset, (name, X, y_llm, y_metric) in enumerate([
         ('B', data['X_b'], data.get('y_llm_b'), data.get('y_metric_b')),
         ('C', data['X_c'], data.get('y_llm_c'), data.get('y_metric_c')),
@@ -2294,26 +2359,27 @@ def plot_experiment_summary_dashboard(data: dict, seed: int,
         ax_fid.legend(fontsize=7)
     ax_fid.grid(True, alpha=0.2)
 
-    # ─── BLOCO 4: Fase E ───
-    seed_d = [r for r in results_e if r.random_seed == seed]
-    ax_d1 = fig.add_subplot(gs[3, 0:2])
-    if seed_d:
+    # ─── LINHA 4: Fase E (perito principal) ───
+    results_e_main, expert_label = _main_expert(results_e)
+    seed_e = [r for r in results_e_main if r.random_seed == seed]
+    ax_e1 = fig.add_subplot(gs[3, 0:2])
+    if seed_e:
         for strategy in ['easy', 'hard', 'mixed', 'random']:
-            strat_results = [r for r in seed_d if r.example_strategy == strategy]
+            strat_results = [r for r in seed_e if r.example_strategy == strategy]
             if strat_results:
                 by_nshot = {}
                 for r in strat_results:
                     by_nshot.setdefault(r.n_shot, []).append(r.accuracy_llm_vs_expert)
                 nshots = sorted(by_nshot.keys())
                 means = [np.mean(by_nshot[n]) for n in nshots]
-                ax_d1.plot(nshots, means, 'o-', label=strategy)
-        ax_d1.set_xlabel('n_shot')
-        ax_d1.set_ylabel('Acurácia LLM vs Expert')
-        ax_d1.set_title('Fase E: Learning Curve por Estratégia', fontweight='bold', fontsize=9)
-        ax_d1.legend(fontsize=8)
+                ax_e1.plot(nshots, means, 'o-', label=strategy)
+        ax_e1.set_xlabel('n_shot')
+        ax_e1.set_ylabel('Acurácia LLM vs Expert')
+        ax_e1.set_title(f'Fase E: Learning Curve por Estratégia (perito {expert_label})', fontweight='bold', fontsize=9)
+        ax_e1.legend(fontsize=8)
     else:
-        ax_d1.text(0.5, 0.5, 'Fase E não executada', ha='center', va='center', transform=ax_d1.transAxes, color='gray')
-    ax_d1.grid(True, alpha=0.2)
+        ax_e1.text(0.5, 0.5, 'Fase E não executada', ha='center', va='center', transform=ax_e1.transAxes, color='gray')
+    ax_e1.grid(True, alpha=0.2)
 
     # Confusion matrix A (LLM vs Métrica)
     ax_cm = fig.add_subplot(gs[3, 2])
@@ -2378,7 +2444,7 @@ def plot_meialua_svm_vs_llm(
     "régua" de fronteira não-linear, mudando apenas os rótulos que ele ajusta:
       (1) SVM RBF treinado no GROUND TRUTH — a fronteira não-linear de referência.
       (2) SVM RBF treinado nos RÓTULOS DO LLM — a fronteira efetiva do LLM; por
-          cima, em tracejado verde, a fronteira da métrica diagonal aprendida.
+          cima, em tracejado verde, a fronteira da métrica diagonal estimada.
 
     Em AMBOS os painéis os pontos são coloridos pelo GROUND TRUTH (reunião
     21/07/2026, ~639s): com as classes corretas no painel 2, os erros do LLM
@@ -2445,7 +2511,7 @@ def plot_meialua_svm_vs_llm(
         ax.set_ylabel('x2')
         ax.grid(True, alpha=0.3)
 
-    # Sobrepõe a fronteira da métrica diagonal aprendida (tracejada) no painel 2
+    # Sobrepõe a fronteira da métrica diagonal estimada (tracejada) no painel 2
     if metric is not None:
         try:
             n_feat = metric['n_features']

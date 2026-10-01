@@ -1,7 +1,8 @@
 """Teste de regressão DOURADO da cadeia numérica, sem chamar a API.
 
 Reconstrói os rótulos da Fase A (seed 42, config default) a partir do
-`llm_interactions_parte001.json` da última execução completa e verifica que a
+`llm_interactions_parte001.json` de uma execução completa de REFERÊNCIA fixa
+(`EXEC_REF`, não necessariamente a mais recente) e verifica que a
 cadeia determinística dados -> centróides -> NNLS reproduz EXATAMENTE o W e a
 fidelidade registrados no `bloco1_algorithm_comparison_*.csv` daquela execução.
 

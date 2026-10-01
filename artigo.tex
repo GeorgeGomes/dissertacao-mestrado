@@ -1121,7 +1121,7 @@ portanto, o caso real do Bloco 3.
 
 \begin{figure}[ht]
 \centering
-\includegraphics[width=0.95\textwidth]{bloco23_external_svm_meialua_seed42__gpt4mini_gt.png}
+\includegraphics[width=0.95\textwidth]{bloco1_11_meialua_svm_vs_llm_seed42_gt__gpt4mini.png}
 \caption{Problema F (meia-lua, seed $42$, \texttt{gpt-4o-mini}): superfície de separação do
 SVM RBF treinado no \emph{ground truth} (esq.) vs.\ treinado nos rótulos zero-shot do LLM
 (dir.). Em ambos os painéis os pontos aparecem nas classes \emph{corretas}
@@ -1174,7 +1174,7 @@ diferem por poucos pontos percentuais).}
 % (classe 1 = Homem, conforme `male?` = +1 em Hghtwght_desired.txt; antes o codigo tratava
 % a classe 0 como "Homem"). Todas as metricas "vs rotulo real" desta secao foram
 % recalculadas offline (troca exata 1 - valor, ver src/corrigir_mapeamento_homem_mulher.py)
-% a partir de execucao_2026-07-05_12-34-52_completa/*_corrigido_hm.csv. Fidelidade,
+% a partir de execucao_2026-07-05_12-34-52_completa/*corrigido_hm*.csv. Fidelidade,
 % kappa e W nao mudam. PENDENTE: (i) recoletar a Fase E do Bloco 3 (tab:real_e) com a
 % convencao corrigida, pois os exemplos few-shot foram mostrados ao LLM com os nomes
 % trocados; (ii) regerar as figuras bloco23_external_* que exibem acuracia vs real;

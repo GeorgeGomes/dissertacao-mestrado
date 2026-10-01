@@ -3,7 +3,14 @@ ROTEIRO DA APRESENTACAO — Dissertacao de Mestrado
 Total: 86 slides (77 corpo principal + 9 apendice tecnico)
 =====================================================
 
-FONTE DOS NUMEROS: execucao_2026-06-30_23-46-58 (migracao 01/07/2026).
+FONTE DOS NUMEROS: execucao_2026-07-05_12-34-52_completa (ultima _completa).
+  NOMENCLATURA atualizada em 01/10/2026 (assets com sufixo __gpt4mini; paineis
+  <base>_<painel>__<alias>.png; SVM da meia-lua = bloco1_11_*; problem_E.csv).
+  ATENCAO (pendencia): os numeros abaixo ainda sao da migracao 01/07/2026
+  (execucao 2026-06-30, grid few-shot [0,5,10,20,40]); o protocolo atual usa
+  [0,4,10,20,40] e a execucao 07-05 TEM o aprendiz na meia-lua coletado
+  (final_08_llm_labels_meia_lua_seed*_x1_x2_{0,4,10,20,40}__gpt4mini.png) —
+  re-extrair tabelas e reformular os slides marcados antes de gerar os .tex.
   119.713 chamadas LLM | fallback do parser = 0,00% | flip T=0 = 4,753% | 3 seeds x 3 reps.
   Mudancas desta execucao vs. 14-15/05:
     - Fidelidade Problema A subiu p/ 81,3% (era 75%); acc LLM vs real caiu p/ 33%.
@@ -31,7 +38,7 @@ ORGANIZACAO EM 3 BLOCOS AUTO-CONTIDOS (refactor 14/05/2026, slides 15/05/2026):
     Problema F — meia-lua sintetica (perito = ground truth)
 
   BLOCO 3 — Estudo de caso REAL
-    Problema G (Problema G (peso x altura)) (base do orientador, fronteira eliptica)
+    Problema G — peso x altura (base do orientador, fronteira eliptica)
 
 Cada bloco apresenta SEUS problemas, roda SEUS experimentos e fecha
 antes do proximo bloco comecar. Experimentos transversais distribuidos:
@@ -371,7 +378,7 @@ Oq fazer: Tabela com W (w_1, w_2) por algoritmo; fidelidade ~81% (media 3
 seeds, 81,3% +/- 4,4 p.p.); LLM ancora mais em x_2 (razao w_1/w_2 ~ 0,25).
 Acuracia do LLM vs rotulo real so ~33% (inverte classes) — a metrica ainda
 reproduz ~81% das decisoes, ilustrando consistencia interna != corretude.
-Imagem: bloco1_05_fase_a_errors_seed42.png.
+Imagem: bloco1_05_fase_a_errors_seed42__gpt4mini.png.
 
 Slide 22 — Problema A: erros por regiao + distribuicao de W entre seeds
 Mostrar: Texto, tabela e grafico
@@ -379,13 +386,13 @@ Oq fazer: Decomposicao dos erros (print_error_analysis_by_region):
 60% perto da fronteira, 30% media, 10% longe. LLM e metrica concentram
 erros nas mesmas regioes — evid. indireta de que a metrica modela o LLM.
 Distribuicao de W entre seeds qualitativamente estavel (cosseno > 0.97).
-Imagem: bloco1_06_w_distribution.png.
+Imagem: bloco1_06_w_distribution__gpt4mini.png.
 
 Slide 23 — Problema A: comparacao Perceptron x NNLS + sensibilidade
 Mostrar: Texto, tabela e grafico
 Oq fazer: Cosseno entre W's > 0.97. Sensibilidade do Perceptron a eta,
 C, delta_gamma — fidelidade varia 80-85%, razao w_1/w_2 estavel.
-Robustez ao metodo de estimacao. Imagem: bloco1_07_algorithm_comparison.png.
+Robustez ao metodo de estimacao. Imagem: bloco1_07_algorithm_comparison__gpt4mini.png.
 
 Slide 24 — Nossa medida: consistencia interna, nao corretude
 Mostrar: Texto
@@ -403,7 +410,7 @@ esta OBJETIVAMENTE CORRETO. Um LLM pode inverter classes e ainda assim
 ser internamente consistente — saber se o criterio e "certo" e ortogonal
 a pergunta de pesquisa.
 
-Excecao: Bloco 3 (Problema G (peso x altura)) reportara acuracia vs rotulo real,
+Excecao: Bloco 3 (Problema G, peso x altura) reportara acuracia vs rotulo real,
 porque o orientador solicitou explicitamente no e-mail 22:04, ponto 4.
 La ha ground truth significativo (homem/mulher) e classificador otimo
 bayesiano (eliptico) conhecido — comparacao com a metrica aprendida
@@ -477,7 +484,7 @@ HORARIA) na seed 42 (representativa da media), em tamanho grande.
 Verde = concorda com o LLM, vermelho = discorda. Cons ~68%, kappa ~0,29.
 
 Imagem:
-  - final_05_hits_errors_seed42_problema_b.png (B, Cons ~68%, kappa ~0,29)
+  - final_05_hits_errors_seed42_problema_b__gpt4mini.png (B, Cons ~68%, kappa ~0,29)
 
 Leitura: erros em B concentram-se na faixa central (regiao de
 sobreposicao das gaussianas rotacionadas), evidenciando que a metrica
@@ -490,7 +497,7 @@ HORARIA de mesma magnitude), na seed 42, em tamanho grande. Cons ~90%,
 kappa ~0,79.
 
 Imagem:
-  - final_05_hits_errors_seed42_problema_c.png (C, Cons ~90%, kappa ~0,79)
+  - final_05_hits_errors_seed42_problema_c__gpt4mini.png (C, Cons ~90%, kappa ~0,79)
 
 Leitura: em C os erros sao esparsos e isolados, sem concentracao.
 Comparando os dois slides, visualiza-se geometricamente por que
@@ -502,7 +509,7 @@ Mostrar: Apenas tabela
 Oq fazer: Tabela por seed apenas com Problema A (linear, 3 seeds) e
 meia-lua (nao-linear, dataset com 1 seed disponivel). B e C omitidos
 porque sao tambem lineares (mesma natureza que A) — augmentacao R3/R4
-seria redundante. Problema G (Problema G (peso x altura)) NAO aparece aqui — fica no Bloco 3.
+seria redundante. Problema G (peso x altura) NAO aparece aqui — fica no Bloco 3.
 
 Fidelidade da metrica W vs y_LLM no proprio problema (in-sample).
 R2 = (x1, x2); R3 acrescenta x1*x2; R4 acrescenta x1^2, x2^2.
@@ -558,7 +565,7 @@ mas nao e dominante. Letras e numeros (0/1) e rotulos semanticos
 Slide 31 — Vies de ordem das classes: grafico
 Mostrar: Apenas grafico
 Oq fazer: Mesmo conteudo do slide 29 em forma visual.
-Imagem: bloco1_12_class_order_bias.png.
+Imagem: bloco1_12_class_order_bias__gpt4mini.png.
 
 Slide 32 — Variantes de prompt: exemplos
 Mostrar: 4 blocos de texto (prompts literais)
@@ -618,7 +625,7 @@ Sensibilidade ao prompt e real — default adotado como referencia.
 Slide 34 — Variantes de prompt: grafico
 Mostrar: Apenas grafico
 Oq fazer: Mesmo conteudo do slide 31 em forma visual.
-Imagem: bloco1_13_prompt_variants.png.
+Imagem: bloco1_13_prompt_variants__gpt4mini.png.
 
 Slide 35 — Nomes semanticos de classes e features: tabela
 Mostrar: Apenas tabela
@@ -648,8 +655,8 @@ Slide 36 — Nomes semanticos de classes e features: graficos
 Mostrar: 2 imagens lado a lado
 Oq fazer: Painel visual complementar a tabela do slide 34.
 Imagens:
-  - bloco1_14a_class_names_effect.png (efeito nome de classe)
-  - bloco1_14b_feature_names_effect.png (efeito nome de feature)
+  - bloco1_14a_class_names_effect__gpt4mini.png (efeito nome de classe)
+  - bloco1_14b_feature_names_effect__gpt4mini.png (efeito nome de feature)
 
 Visualmente fica claro: impacto em features (b) e bem maior que em
 classes (a). Argumenta a decisao metodologica de usar nomes neutros
@@ -758,19 +765,19 @@ Oq fazer:
   prompt sem augmenta\c{c}\~ao, o LLM precisa capturar a fronteira em S
   apenas a partir de exemplos rotulados.
 
-Slide 43 — Problema E no Problema E: descricao
+Slide 43 — Fase E no Problema E: descricao
 Mostrar: Texto e grafico
 Oq fazer:
   1. Perito (W_expert) rotula os 150 pontos.
   2. Divide em treino/teste.
-  3. Para cada n_shot in [0,5,10,20,40]: seleciona exemplos via estrategia.
+  3. Para cada n_shot in [0,4,10,20,40]: seleciona exemplos via estrategia.
   4. Envia exemplos + ponto de teste em prompt few-shot.
   5. Mede acuracia, Kappa, F1 do LLM vs rotulos do perito.
   Imagem: bloco2_01_problema_e_expert.png.
 
-Slide 44 — Problema E: tabela de resultados
+Slide 44 — Fase E (Problema E): tabela de resultados
 Mostrar: Apenas tabela
-Oq fazer: Tabela consolidada dos resultados da Problema E (LLM aprende
+Oq fazer: Tabela consolidada dos resultados da Fase E (LLM aprende
 com perito linear W=[0,3, 1,5], x2 dominante). Acuracia e Kappa do
 LLM vs expert, por estrategia x n_shot, media 3 seeds x 3 reps.
 
@@ -793,11 +800,11 @@ Mostrar: Texto e grafico
 Oq fazer: 4 estrategias: easy (alta margem), hard (baixa margem), mixed,
 random (baseline). Imagem: bloco2_03_phase_e_strategies.png.
 
-Slide 46 — Problema E: curvas de aprendizado
+Slide 46 — Fase E (Problema E): curvas de aprendizado
 Mostrar: Texto e grafico
 Oq fazer: Curvas de acuracia vs n_shot para cada estrategia. LLM melhora
 em todas — H3 SUSTENTADA. Ganho forte 0->5-shot, depois desacelera.
-Imagem: bloco2_04_phase_e_learning_curve.png.
+Imagem: bloco2_04_phase_e_learning_curve__gpt4mini.png.
 
 Slide 47 — Refutacao H4: significancia estatistica
 Mostrar: Texto e tabela
@@ -823,7 +830,7 @@ Slide 49 — Experimento de diluicao
 Mostrar: Texto e grafico
 Oq fazer: 4 hard fixos + easy progressivos (0, 2, 4, 10, 16, 20). Curva
 monotonica crescente — adicionar easy ajuda sempre, nao ha diluicao.
-Reforca achado da H4. Imagem: bloco2_06_dilution.png.
+Reforca achado da H4. Imagem: bloco2_06_dilution__gpt4mini.png.
 
 Slide 50 — Vies de ordem dos exemplos few-shot: tabela
 Mostrar: Apenas tabela
@@ -849,7 +856,7 @@ robusto a ordem.
 
 Slide 51 — Vies de ordem dos exemplos few-shot: grafico
 Mostrar: Apenas grafico
-Oq fazer: Imagem bloco2_07_example_order.png complementando a tabela
+Oq fazer: Imagem bloco2_07_example_order__gpt4mini.png complementando a tabela
 do slide 49.
 
 Slide 52 — Problema F (meia-lua): por que o aprendiz nao foi coletado
@@ -865,7 +872,7 @@ treinado no GROUND TRUTH (a "regua" de fronteira nao-linear que o
 orientador pediu); painel 2 = rotulos do LLM em zero-shot: CLASSE UNICA,
 sem fronteira alguma a comparar — o colapso visualizado. (Figura tambem
 gerada para seeds 123 e 7, mesmo colapso.)
-Imagem: bloco23_external_svm_meialua_seed42.png.
+Imagem: bloco1_11_meialua_svm_vs_llm_seed42__gpt4mini.png.
 
 Slide 53 — Problema F meia-lua: teste-oraculo (metrica vs verdade)
 Mostrar: Texto e grafico
@@ -889,7 +896,7 @@ no MESMO conjunto de teste (perito linear, Problema E). Acuracia media:
 Achado (honesto): no perito LINEAR os baselines classicos SUPERAM o LLM
 em TODOS os n_shot — a Regressao Logistica (que casa com o perito linear)
 lidera. O LLM NAO faz melhor que um classificador trivial quando o
-criterio e linear. Imagem: bloco2_09_classical_baselines.png.
+criterio e linear. Imagem: bloco2_09_classical_baselines__gpt4mini.png.
 
 Slide 55 — LLM vs Perceptron baseline (Bloco 2)
 Mostrar: Texto e grafico
@@ -899,7 +906,7 @@ meia-lua (Problema F) colapsou nesta execucao, a comparacao LLM vs
 Perceptron aparece na base REAL peso x altura (Bloco 3, slide 66),
 antecipada aqui como preview: na base real o LLM SUPERA o Perceptron
 baseline em todos os n_shot (+2,2 a +10,7 p.p.) — resultado revertido
-em relacao a execucoes anteriores. Imagem: bloco23_external_llm_vs_perceptron.png.
+em relacao a execucoes anteriores. Imagem: bloco23_external_llm_vs_perceptron__gpt4mini.png.
 
 Slide 56 — Resumo Bloco 2
 Mostrar: Texto (3-5 bullets)
@@ -962,7 +969,7 @@ Oq fazer: Aprende W em 3 configuracoes em Problema G (peso x altura):
   - R3: (x_1, x_2, x_1*x_2)
   - R4: (x_1, x_2, x_1^2, x_2^2)  <- forma da fronteira otima
 Tabela com fidelidade (vs LLM) e acuracia (vs real) por config x prompt
-variante. Imagem: bloco23_external_features_comparison.png.
+variante. Imagem: bloco23_external_features_comparison__gpt4mini.png.
 Tabela do W estimado (item 3, reuniao 20/05) — R2, prompt semantico,
 por seed (42/123/7), ordem (peso, altura):
   Perceptron: (0,871; 0,903) | (0,911; 0,884) | (0,890; 0,848)
@@ -971,7 +978,7 @@ por seed (42/123/7), ordem (peso, altura):
               anisotropico, dominado por ALTURA.
 Leitura: os dois estimadores atingem acc real proxima, mas com W's de
 direcoes distintas (W identificavel a menos de escala; comparar razoes).
-Fonte: bloco23_external_phase_a_20260701_030559.csv (w_perc_*, w_nnls_*).
+Fonte: bloco23_external_phase_a_20260705_153049.csv (w_perc_*, w_nnls_*).
 
 Slide 61 — Problema G: acuracia vs rotulo REAL (e-mail 22:04 + item 15/20-05)
 Mostrar: Texto e tabela (com coluna de ERROS ABSOLUTOS, n_treino=70)
@@ -1033,14 +1040,14 @@ recebe: acc vs metrica-alvo sobe 0,744 (0-shot) -> 0,957 (40-shot),
 enquanto acc vs real fica ~0,15 (a metrica-alvo herdou a convencao
 invertida da Fase A); o baseline Perceptron treinado nos MESMOS exemplos
 acompanha (~0,11-0,19) — consistencia entre aprendizes, nao defeito do LLM.
-Fonte: bloco23_external_phase_a/e_20260701_030559.csv
+Fonte: bloco23_external_phase_a/e_20260705_153049.csv
 (problem_name=homem_mulher_classesAB).
 
-Slide 65 — Problema E: curvas por variante de prompt
+Slide 65 — Fase E no Problema G: curvas por variante de prompt
 Mostrar: Texto e grafico
 Oq fazer: Curvas de aprendizado separadas por variante (x_1/x_2 vs
 peso/altura), com 2 paineis: LLM_vs_metric e LLM_vs_real.
-Imagem: bloco23_external_learning_curve.png (filtro Problema G (peso x altura)).
+Imagem: bloco23_external_learning_curve__gpt4mini.png (filtro Problema G, peso x altura).
 
 Slide 66 — LLM vs Perceptron baseline na base real
 Mostrar: Texto, tabela e grafico
@@ -1049,7 +1056,7 @@ treinar Perceptron Estruturado nos mesmos exemplos do expert. Achado
 REVERTIDO nesta execucao: em Problema G (peso x altura), o LLM SUPERA o
 Perceptron baseline em TODOS os n_shot (n5 87,4% vs 76,7% = +10,7 p.p.).
 Nao ha mais o "Perceptron 90% vs LLM 83%" das execucoes antigas.
-Imagem: bloco23_external_llm_vs_perceptron.png (filtro Problema G (peso x altura)).
+Imagem: bloco23_external_llm_vs_perceptron__gpt4mini.png (filtro Problema G, peso x altura).
 
 Slide 67 — Quando o LLM ganha?
 Mostrar: Texto e tabela
@@ -1067,9 +1074,9 @@ Slide 68 — Visualizacao ponto-a-ponto (e-mail 22:06)
 Mostrar: 2 graficos
 Oq fazer: Atende adendo do e-mail 22:06. Scatter por (problema, variante
 prompt, n_shot). Mostrar lado a lado: Problema G (peso x altura) prompt SEMANTICO vs
-NEUTRO, ambos em 5-shot da seed 42. Mesmos pontos classificados de forma
+NEUTRO, ambos em 4-shot da seed 42. Mesmos pontos classificados de forma
 muito diferente — evidencia visual mais direta do efeito do prior semantico.
-Imagens (2): final_08_llm_labels_seed42_peso_altura_5.png + final_08_llm_labels_seed42_x1_x2_5.png.
+Imagens (2): final_08_llm_labels_homem_mulher_seed42_peso_altura_4__gpt4mini.png + final_08_llm_labels_homem_mulher_seed42_x1_x2_4__gpt4mini.png.
 
 Slide 69 — Resumo Bloco 3
 Mostrar: Texto (3-5 bullets)
@@ -1094,7 +1101,7 @@ Oq fazer: Tabela com ganhos R2 -> R4 em todos os cenarios (3 blocos):
   - Problema G (real, neutro) | fid +19 p.p. / acc_real -16 p.p. | overfit
 Mensagem: R3/R4 so compensa com nao-linearidade real E dados suficientes;
 na meia-lua a metrica diagonal satura mesmo ajustada ao rotulo verdadeiro.
-Heatmap visual e tabela final. CSV: final_cross_linearity.csv.
+Heatmap visual e tabela final. CSV: final_cross_linearity__gpt4mini.csv.
 
 Slide 71 — Robustez entre seeds
 Mostrar: Texto e grafico
@@ -1104,7 +1111,7 @@ Oq fazer: Media +/- desvio entre 3 seeds (zero-shot, Perceptron):
   - Consistencia Problema C: 87.3% +/- 1.9 p.p. (kappa_C 0.73 +/- 0.04)
 Desvio <= 5 p.p. entre seeds -> H5 sustentada. Cosseno de W entre seeds
 > 0.99 (direcao estavel; razao w1/w2 mais ruidosa, CV ~54%).
-Imagem: bloco1_08_seed_comparison.png.
+Imagem: bloco1_08_seed_comparison__gpt4mini.png.
 
 Slide 72 — Testes estatisticos principais
 Mostrar: Texto e tabela
@@ -1201,7 +1208,7 @@ Oq fazer: `python src/dissertacao_mestrado.py`. Controlado por ~20
 constantes (RANDOM_SEEDS, N_REPETICOES, FEW_SHOT_SIZES, MAX_CONCURRENCY,
 flags). Tempo ~3h, custo $30-50, outputs: 30+ PNGs (bloco1_*, bloco2_*,
 bloco3_*, bloco23_*, final_*), 11 CSVs, 1 JSON com todas as interacoes.
-Mostrar grafico final_10_gamma_convergence.png como diagnostico do item
+Mostrar grafico final_10_gamma_convergence__gpt4mini.png como diagnostico do item
 b da reuniao 30/04 (~520s).
 
 Slide 86 — D2: Limitacoes de reproducibilidade

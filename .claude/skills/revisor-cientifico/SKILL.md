@@ -111,7 +111,7 @@ inferir o critério implícito como uma **métrica de Mahalanobis diagonal** —
 **"Ŵ_LLM estimada/inferida"** (terminologia fixada pelo projeto; nunca "W aprendida").
 A estimação usa **dois algoritmos congruentes**: Perceptron Estruturado com relaxação de
 margem (clip + projeção $\max(0,\mathbf{w})$, busca binária em $\gamma$) e NNLS — o LP
-Max-Margin foi removido por bug e está arquivado em `src/arquivado/`. Classificação por
+Max-Margin foi removido por bug (módulo apagado; não há pasta `src/arquivado/`). Classificação por
 centróide mais próximo sob $d_W$. Avaliação por Kappa de Cohen, F1, consistência e
 fidelidade. Posicionamento em XAI via analogia com LIME/SHAP ($w_j$ como importância).
 

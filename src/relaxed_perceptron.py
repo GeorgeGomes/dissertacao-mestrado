@@ -407,8 +407,9 @@ def train_relaxed_perceptron(
 
     Fixa os hiperparâmetros default de Coelho, Borges & Fonseca Neto (CILAMCE 2017,
     Seção 6, p. 16): "a taxa de aprendizado η = 0.001 e a constante C variou de 1 até 0.1".
-    Assim o runner chama `train_relaxed_perceptron(X, y, centroids)` sem repetir a
-    configuração do algoritmo em cada fase.
+    Os defaults daqui valem para uso avulso; o runner passa sempre `**PERCEPTRON_PARAMS`
+    (protocolo.py: delta_gamma=0.05, max_epochs=50, tol=1e-4), que é o ponto único de
+    configuração do protocolo.
 
     `random_state` semeia o RNG LOCAL do embaralhamento (default 42): garante que o mesmo
     (X, y, centroids) produza sempre o mesmo W*, independente do estado global do NumPy.

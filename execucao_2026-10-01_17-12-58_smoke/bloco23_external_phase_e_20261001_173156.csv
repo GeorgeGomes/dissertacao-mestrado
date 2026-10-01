@@ -1,0 +1,7 @@
+problem_name,seed,rep,feature_names,n_features,n_shot,accuracy_llm_vs_metric,accuracy_llm_vs_true,kappa_llm_vs_metric,f1_llm_vs_metric,accuracy_perceptron_baseline_vs_true,n_test,n_errors_llm_vs_true,n_errors_llm_vs_metric,n_malformed,provider,model
+homem_mulher_classesAB,42,0,x1/x2,2,0,0.7333333333333333,0.2,0.3513513513513513,0.5,,30,24,8,0,openrouter,openai/gpt-4o-mini
+homem_mulher_classesAB,42,0,x1/x2,2,4,0.7,0.3,0.21965317919075156,0.3076923076923077,,30,21,9,0,openrouter,openai/gpt-4o-mini
+homem_mulher_classesAB,42,0,peso/altura,4,0,0.7666666666666667,0.13333333333333333,0.4927536231884059,0.6666666666666666,,30,26,7,0,openrouter,openai/gpt-4o-mini
+homem_mulher_classesAB,42,0,peso/altura,4,4,0.6666666666666666,0.36666666666666664,0.3902439024390243,0.7058823529411765,0.3333333333333333,30,19,10,0,openrouter,openai/gpt-4o-mini
+meia_lua_seed42,42,0,x1/x2,4,0,0.7555555555555555,0.5555555555555556,0.0,0.0,,45,20,11,0,openrouter,openai/gpt-4o-mini
+meia_lua_seed42,42,0,x1/x2,4,4,0.8,0.5555555555555556,0.5759162303664922,0.7096774193548387,0.28888888888888886,45,20,9,0,openrouter,openai/gpt-4o-mini

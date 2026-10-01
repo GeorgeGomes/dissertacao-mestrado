@@ -30,7 +30,8 @@ PROBLEM_B_STD = 1.2
 PROBLEM_C_CENTERS = [(-2.0, -1.5), (2.0, 1.5)]
 PROBLEM_C_STD = 1.2
 
-# Parâmetros do Problema E (Bloco 2 — perito linear, antigo "Problema D" Fase D antiga)
+# Parâmetros do Problema E (Bloco 2 — perito linear; chamava-se "Problema D" na
+# convenção anterior a 14/05/2026, quando a meia-lua passou a ser o Problema D)
 # Geometria propositalmente distinta para que a métrica do perito não seja trivial.
 PROBLEM_E_CENTERS = [(-1.5, 1.0), (1.5, -1.0)]
 PROBLEM_E_STD = 1.3
@@ -88,8 +89,9 @@ def create_problem_c(n_samples: int = 100, random_state: int = 44) -> Tuple[np.n
 
 def create_problem_e_expert(n_samples: int = 150, random_state: int = 45) -> Tuple[np.ndarray, np.ndarray]:
     """
-    Gera o conjunto de dados do Problema E (Bloco 2 — perito linear, antigo "Problema D"
-    da Fase D antiga; agora Fase E quando o LLM atua como aprendiz via in-context learning).
+    Gera o conjunto de dados do Problema E (Bloco 2 — perito linear; na convenção
+    anterior a 14/05/2026 era o "Problema D"). Usado na Fase E, em que o LLM atua
+    como aprendiz via in-context learning.
     Usa geometria propositalmente distinta para que o LLM não possa aprender a métrica do
     perito por intuição simples — é necessário capturar o peso anisotrópico w2 >> w1.
     """
@@ -103,7 +105,8 @@ def create_problem_e_expert(n_samples: int = 150, random_state: int = 45) -> Tup
 
 
 def create_problem_d_meialua(n_samples: int = 150, random_state: int = 46) -> Tuple[np.ndarray, np.ndarray]:
-    """Gera o Problema E — meia-lua (não-linear).
+    """Gera a meia-lua (não-linear): Problema D no Bloco 1 (LLM como fonte) e
+    Problema F no Bloco 2 (LLM como aprendiz).
 
     Caso canônico de fronteira não-linear, gerado por ``sklearn.datasets.make_moons``.
     Justificativa (reunião 30/04/2026, ~2558s): o R3 atual sobre A/B/C lineares

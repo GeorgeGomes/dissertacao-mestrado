@@ -1,0 +1,3 @@
+provider,model,temperature,random_seed,n_shot,example_strategy,repetition,accuracy_llm_vs_expert,kappa_llm_vs_expert,f1_llm_vs_expert
+openrouter,openai/gpt-4o-mini,0.0,42,4,dilution_4hard_0easy,0,0.5753424657534246,0.13576475081153327,0.5753424657534247
+openrouter,openai/gpt-4o-mini,0.0,42,8,dilution_4hard_4easy,0,0.8169014084507042,0.634383046147752,0.8169014084507042

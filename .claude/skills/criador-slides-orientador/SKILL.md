@@ -51,7 +51,7 @@ rodado até o fim — com `log_execucao.txt` e os CSVs dos três blocos; ignorar
 `execucao_*_smoke`, que são smoke tests `--rapido`). Extraia dela:
 
 1. `log_execucao.txt` — visão completa e leituras qualitativas.
-2. CSVs por bloco (`bloco1_*`, `bloco2_*`, `bloco23_external_*`, `final_cross_linearity.csv`).
+2. CSVs por bloco (`bloco1_*`, `bloco2_*`, `bloco23_external_*`, `final_cross_linearity__<alias>.csv`).
 3. Os PNGs correspondentes (para as figuras de cada slide).
 
 Se houver execução mais recente que a referida no deck atual, **migre os números

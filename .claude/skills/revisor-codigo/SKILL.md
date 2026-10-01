@@ -118,7 +118,7 @@ A–G) salvando CSVs, PNGs e logs em `execucao_AAAA-MM-DD_HH-MM-SS_{completa|smo
   8 camadas), `metrics.py`, `data_problems.py` (geração de dados),
   `relaxed_perceptron.py` e `least_squares_inverse.py` (estimadores),
   `classical_baselines.py`, `audit_interactions.py` (auditoria offline) e
-  `src/arquivado/` (LP Max-Margin removido).
+  LP Max-Margin removido (módulo apagado; não existe `src/arquivado/`).
 - **Já existe suíte de testes** em `tests/` (pytest): parser, métricas, estimadores,
   cliente LLM, geração de dados, auditoria e particionamento de JSON/log.
 - Há um modo `--rapido`/`--smoke` no runner (1 repetição, seed 42, few-shot reduzido).

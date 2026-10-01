@@ -109,22 +109,28 @@ def parse_llm_response(
         if contains_1 and not contains_0:
             return nome_classe_1, True
 
-    # 6. Padrões comuns de resposta em linguagem natural
+    # 6. Padrões comuns de resposta em linguagem natural.
+    #    Cada padrão carrega a classe que representa (tupla): decidir por
+    #    substring do nome dentro do padrão quebrava com nomes de 1 letra
+    #    ("A" ⊂ "CLASS B" → classe A; "B" ⊂ "BELONGS TO A" → classe B).
+    #    Fronteira de palavra nos dois lados: sem ela, "IS A" casaria como
+    #    substring de "is ambiguous" (hedge → classe A) e "CLASS 1" casaria
+    #    "CLASS 10". Se padrões das DUAS classes casarem ("Class A … Class B"),
+    #    a camada não decide — mesma política das camadas 4 e 5.
+    templates = ["CLASS {}", "CLASSE {}", "ANSWER IS {}", "ANSWER: {}",
+                 "CLASSIFICATION: {}", "CLASSIFIED AS {}", "BELONGS TO {}", "IS {}"]
     common_patterns = [
-        f"CLASS {nome_0_upper}", f"CLASS {nome_1_upper}",
-        f"CLASSE {nome_0_upper}", f"CLASSE {nome_1_upper}",
-        f"ANSWER IS {nome_0_upper}", f"ANSWER IS {nome_1_upper}",
-        f"ANSWER: {nome_0_upper}", f"ANSWER: {nome_1_upper}",
-        f"CLASSIFICATION: {nome_0_upper}", f"CLASSIFICATION: {nome_1_upper}",
-        f"CLASSIFIED AS {nome_0_upper}", f"CLASSIFIED AS {nome_1_upper}",
-        f"BELONGS TO {nome_0_upper}", f"BELONGS TO {nome_1_upper}",
-        f"IS {nome_0_upper}", f"IS {nome_1_upper}",
+        (tpl.format(nome), classe)
+        for tpl in templates
+        for nome, classe in ((nome_0_upper, nome_classe_0), (nome_1_upper, nome_classe_1))
     ]
-    # Fronteira de palavra após o nome da classe: sem ela, o padrão "IS A"
-    # casaria como substring de "is ambiguous" e rotularia o hedge como classe A.
-    for pattern in common_patterns:
-        if re.search(re.escape(pattern) + r"\b", label_upper):
-            return (nome_classe_0 if nome_0_upper in pattern else nome_classe_1), True
+    matched = {
+        classe
+        for pattern, classe in common_patterns
+        if re.search(r"\b" + re.escape(pattern) + r"\b", label_upper)
+    }
+    if len(matched) == 1:
+        return matched.pop(), True
 
     # 7. Starts-with (a resposta começa diretamente com o nome da classe)
     if label_upper.startswith(nome_0_upper):
