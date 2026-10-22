@@ -2,7 +2,8 @@
 
 Cobre a distância métrica (`d_W`), os centróides (`compute_centroids`), a classificação
 por vizinho mais próximo sob d_W (`predict_with_metric`), a augmentação de features
-(`augment_features`) e as métricas de concordância (`compute_consistency_metrics`).
+(`augment_features`) e as métricas de avaliação da seção IV.3 (`compute_consistency_metrics`:
+acurácia/fidelidade/consistência, Cohen's kappa e F1-Macro).
 São funções puras — fáceis de testar e críticas para a corretude dos resultados.
 
 Execução:
@@ -118,6 +119,58 @@ class TestConsistencyMetrics(unittest.TestCase):
         self.assertEqual(m.n_disagreements, 1)
         self.assertEqual(m.n_agreements, 3)
         np.testing.assert_array_equal(m.disagreement_indices, [2])
+
+    # ---- F1-Macro e kappa conforme a seção IV.3 do orientador ----
+
+    def test_f1_macro_caso_binario_conhecido(self):
+        # Referência (métrica) = [0,0,1,1]; predição (LLM) = [0,1,1,1].
+        # Classe 0: VP=1, FP=0, FN=1 → P=1, R=0,5, F1=2/3.
+        # Classe 1: VP=2, FP=1, FN=0 → P=2/3, R=1, F1=0,8.
+        # F1-Macro = (2/3 + 0,8)/2 = 0,7333.
+        y_metric = np.array([0, 0, 1, 1])
+        y_llm = np.array([0, 1, 1, 1])
+        m = dm.compute_consistency_metrics(y_llm, y_metric)
+        self.assertAlmostEqual(m.f1_score, (2 / 3 + 0.8) / 2, places=6)
+        self.assertAlmostEqual(m.f1_score, 0.7333, places=4)
+
+    def test_f1_macro_difere_da_acuracia(self):
+        # Classe minoritária metade errada: acurácia 0,9, mas F1-Macro bem menor.
+        # Classe 0: VP=8, FP=1, FN=0 → F1 = 16/17. Classe 1: VP=1, FP=0, FN=1 → F1 = 2/3.
+        y_metric = np.array([0, 0, 0, 0, 0, 0, 0, 0, 1, 1])
+        y_llm = np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 1])
+        m = dm.compute_consistency_metrics(y_llm, y_metric)
+        self.assertAlmostEqual(m.accuracy, 0.9)
+        self.assertAlmostEqual(m.f1_score, (16 / 17 + 2 / 3) / 2, places=6)
+        self.assertGreater(abs(m.f1_score - m.accuracy), 0.05)
+
+    def test_f1_macro_e_simetrica(self):
+        rng = np.random.RandomState(0)
+        for _ in range(20):
+            a = rng.randint(0, 2, size=40)
+            b = rng.randint(0, 2, size=40)
+            f_ab = dm.compute_consistency_metrics(a, b).f1_score
+            f_ba = dm.compute_consistency_metrics(b, a).f1_score
+            self.assertAlmostEqual(f_ab, f_ba, places=12)
+
+    def test_kappa_igual_ao_calculo_manual(self):
+        # k = (P0 − Pe)/(1 − Pe), Pe = Σ_k p_k p'_k (p_k = marginal da métrica, p'_k = do LLM).
+        y_metric = np.array([0, 0, 1, 1, 1, 0, 1, 0, 0, 1, 1, 1])
+        y_llm = np.array([0, 1, 1, 1, 0, 0, 1, 0, 1, 1, 0, 1])
+        n = len(y_metric)
+        p0 = np.mean(y_metric == y_llm)
+        pe = sum(np.mean(y_metric == k) * np.mean(y_llm == k) for k in (0, 1))
+        kappa_manual = (p0 - pe) / (1 - pe)
+        m = dm.compute_consistency_metrics(y_llm, y_metric)
+        self.assertAlmostEqual(m.accuracy, p0)
+        self.assertAlmostEqual(m.cohen_kappa, kappa_manual, places=10)
+        self.assertEqual(n, m.n_agreements + m.n_disagreements)
+
+    def test_sem_precision_e_recall(self):
+        # Só as métricas da seção IV.3 (acurácia/fidelidade/consistência, kappa, F1-Macro)
+        # e contagens auxiliares; precision e recall foram removidas.
+        m = dm.compute_consistency_metrics(np.array([0, 1]), np.array([0, 1]))
+        self.assertFalse(hasattr(m, "precision"))
+        self.assertFalse(hasattr(m, "recall"))
 
 
 if __name__ == "__main__":

@@ -1,0 +1,23 @@
+\begin{table}[htbp]
+\centering
+\footnotesize
+\caption{Problema A (openai/gpt-4o-mini): zero-shot versus few-shot, lado a lado.}
+\label{tab:T6_zero_few_A_gpt4mini}
+\begin{tabular}{llrrrrrrrrrrr}
+\toprule
+ &  & \multicolumn{3}{c}{Fidelidade (vs LLM)} & \multicolumn{3}{c}{Acur.\ da métrica vs real} & \multicolumn{3}{c}{Acur.\ do LLM vs real} & \multicolumn{2}{c}{cos(Perc., NNLS)} \\ \cmidrule(lr){3-5} \cmidrule(lr){6-8} \cmidrule(lr){9-11} \cmidrule(lr){12-13}
+Algoritmo & Few-shot & zero & few & $\Delta$ & zero & few & $\Delta$ & zero & few & $\Delta$ & zero & few \\
+\midrule
+perceptron & 4-shot & 81,3 (78,0–85,3)† & 89,2 (84,2–94,5)† & +7,9 & 34,7 (17,3–49,3) & 86,1 (68,0–94,0) & +51,4 & 32,4 (28,0–36,7) & 81,9 (67,8–91,8) & +49,4 & 0,980 & 0,990 \\
+perceptron & 10-shot & 81,3 (78,0–85,3)† & 94,4 (90,7–98,6)† & +13,0 & 34,7 (17,3–49,3) & 93,4 (86,7–98,0) & +58,7 & 32,4 (28,0–36,7) & 89,4 (81,4–96,4) & +56,9 & 0,980 & 0,833 \\
+perceptron & 20-shot & 81,3 (78,0–85,3)† & 95,5 (92,3–97,7)† & +14,1 & 34,7 (17,3–49,3) & 93,9 (89,3–98,0) & +59,2 & 32,4 (28,0–36,7) & 90,9 (84,6–95,4) & +58,5 & 0,980 & 0,789 \\
+perceptron & 40-shot & 81,3 (78,0–85,3)† & 95,2 (90,9–98,2)† & +13,8 & 34,7 (17,3–49,3) & 93,4 (88,0–98,0) & +58,7 & 32,4 (28,0–36,7) & 91,4 (83,6–96,4) & +59,0 & 0,980 & 0,939 \\
+\midrule
+nnls & 4-shot & 84,4 (83,3–86,0) & 89,0 (86,3–94,5) & +4,5 & 23,1 (15,3–27,3) & 89,9 (69,3–96,0) & +66,7 & 32,4 (28,0–36,7) & 81,9 (67,8–91,8) & +49,4 & 0,980 & 0,990 \\
+nnls & 10-shot & 84,4 (83,3–86,0) & 93,7 (90,0–97,9) & +9,2 & 23,1 (15,3–27,3) & 94,3 (87,3–98,0) & +71,2 & 32,4 (28,0–36,7) & 89,4 (81,4–96,4) & +56,9 & 0,980 & 0,833 \\
+nnls & 20-shot & 84,4 (83,3–86,0) & 95,0 (91,5–97,7) & +10,6 & 23,1 (15,3–27,3) & 94,7 (89,3–98,0) & +71,6 & 32,4 (28,0–36,7) & 90,9 (84,6–95,4) & +58,5 & 0,980 & 0,789 \\
+nnls & 40-shot & 84,4 (83,3–86,0) & 93,9 (89,1–98,2) & +9,5 & 23,1 (15,3–27,3) & 94,8 (92,0–98,0) & +71,7 & 32,4 (28,0–36,7) & 91,4 (83,6–96,4) & +59,0 & 0,980 & 0,939 \\
+\bottomrule
+\multicolumn{13}{p{0.95\linewidth}}{\footnotesize Problema A em R$^2$, médias das sementes e repetições (mín–máx entre parênteses), em \%. $\Delta$ = few-shot $-$ zero-shot, em pontos percentuais. Few-shot: k exemplos rotulados pelo rótulo real (k/2 por classe). Acurácia (vs rótulo real) da métrica e do LLM como contexto. Em zero-shot (e com nomes de classe neutros) a correspondência entre nome e classe é arbitrária: a acurácia (vs rótulo real) do LLM pode sair abaixo de 50\%; o valor invariante à permutação é max($a$, 1 $-$ $a$). cos = cosseno entre os $\hat{W}$ do Perceptron e do NNLS na mesma coleta. † = em pelo menos uma estimativa o Perceptron devolveu $\hat{W}$ em melhor esforço ($\gamma = 0$, sem margem viável).} \\
+\end{tabular}
+\end{table}

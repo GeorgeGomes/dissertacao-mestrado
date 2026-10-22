@@ -1,0 +1,40 @@
+\begin{table}[htbp]
+\centering
+\small
+\caption{Problemas A e D, Passos 2 a 5 (openai/gpt-4o-mini): estabilidade da direção de $\hat{W}$ por regime e semente.}
+\label{tab:AD_passo4_estabilidade_W_gpt4mini}
+\begin{tabular}{lllrrrr}
+\toprule
+Prob. & Algoritmo & Regime & seed 7 & seed 42 & seed 123 & CV \\
+\midrule
+A & Perceptron & zero-shot & 0,09 & 0,19 & 0,34 & 0,49 \\
+A & Perceptron & 4-shot & 0,45 & 0,45 & 0,69 & 0,21 \\
+A & Perceptron & 10-shot & 0,52 & 0,81 & 0,84 & 0,20 \\
+A & Perceptron & 20-shot & 0,45 & 0,73 & 0,67 & 0,19 \\
+A & Perceptron & 40-shot & 0,66 & 0,99 & 0,68 & 0,19 \\
+A & Perceptron & W ajustado ao rótulo real (teto) & 0,86 & 0,46 & 0,77 & 0,25 \\
+\midrule
+A & NNLS & zero-shot & 0,30 & 0,30 & 0,30 & 0,01 \\
+A & NNLS & 4-shot & 0,58 & 1,18 & 1,00 & 0,28 \\
+A & NNLS & 10-shot & 0,66 & 1,26 & 0,53 & 0,39 \\
+A & NNLS & 20-shot & 0,62 & 1,03 & 0,89 & 0,20 \\
+A & NNLS & 40-shot & 0,71 & 1,23 & 0,72 & 0,27 \\
+A & NNLS & W ajustado ao rótulo real (teto) & 0,88 & 1,01 & 1,37 & 0,19 \\
+\midrule
+D & Perceptron & zero-shot & — & — & — & — \\
+D & Perceptron & 4-shot & 0,13 & 0,54 & 0,68 & 0,51 \\
+D & Perceptron & 10-shot & 0,31 & 0,51 & 0,22 & 0,36 \\
+D & Perceptron & 20-shot & 0,25 & 0,26 & 0,28 & 0,05 \\
+D & Perceptron & 40-shot & 0,24 & 0,26 & 0,30 & 0,10 \\
+D & Perceptron & W ajustado ao rótulo real (teto) & 0,22 & 0,24 & 0,23 & 0,04 \\
+\midrule
+D & NNLS & zero-shot & — & — & — & — \\
+D & NNLS & 4-shot & 0,16 & 0,30 & 0,19 & 0,27 \\
+D & NNLS & 10-shot & 0,25 & 0,30 & 0,27 & 0,07 \\
+D & NNLS & 20-shot & 0,26 & 0,26 & 0,29 & 0,06 \\
+D & NNLS & 40-shot & 0,22 & 0,24 & 0,27 & 0,08 \\
+D & NNLS & W ajustado ao rótulo real (teto) & 0,22 & 0,22 & 0,25 & 0,07 \\
+\bottomrule
+\multicolumn{7}{p{0.95\linewidth}}{\footnotesize Razão $w_1/w_2$ da métrica estimada (invariante de escala: só a direção importa) por semente; CV = desvio padrão / |média| entre sementes. Passos do Problema A: zero-shot = Passo 2 (o LLM rotula sem exemplos); $k$-shot = Passo 3 (o LLM rotula com $k$ exemplos do rótulo real); a métrica de cada linha é estimada no Passo 4; teto = Passo 5 (W ajustado diretamente ao rótulo real). O mesmo vale para o Problema D. ``—'' = colapso em classe única (ou quase-colapso: classe minoritária com menos de 5 pontos); na linha colapsada também a acurácia do LLM e a partição ficam como ``—''.} \\
+\end{tabular}
+\end{table}

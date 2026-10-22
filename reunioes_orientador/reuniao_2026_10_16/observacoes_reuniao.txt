@@ -1,0 +1,55 @@
+out. 16, 2026
+Reunião em 16 de out. de 2026 às 17:30 GMT-03:00
+Registros da reunião Transcrição Gravação 
+
+
+Resumo
+Definição de amostras com reestruturação de problemas e ajustes teóricos visando finalização.
+
+Amostras e Visualizacao de Dados
+Uso de 150 amostras em testes e proposta de graficos em preto e branco. Remocao do problema A devido a falhas.
+
+Metricas e Estudo de Caso
+Validacao de estimadores com correcao da tabela 7 para 61. Ajuste dinamico de metricas no problema C.
+
+Fundamentacao e Prazos
+Apresentacao de equacoes teoricas para ajuste de pesos e definicao do prazo final para sexta-feira.
+
+
+Decisões
+Alinhada
+Remoção do problema A da análise Ficou alinhada a remoção do problema A da análise por apresentar problemas no cosseno, mantendo apenas os problemas 1, 2 e 3.
+Ajuste dinâmico da métrica e pesos Ficou acordado o uso de um processo dinâmico de ajuste dos pesos W e dos centroides da métrica quando houver divergência com o rótulo do LLM no problema C, aplicando a métrica corrigida no problema D.
+
+
+Próximas etapas
+[George Gomes] Enviar Resultados: Enviar a tabela com resultados do experimento few shot para inclusão no documento.
+[George Gomes] Plotar Gaussianas: Plotar os pontos das gaussianas com marcadores distintos para melhor visualização na impressão.
+[George Gomes] Ajustar Problemas: Remover o problema A e renomear os problemas restantes como 1, 2 e 3.
+[George Gomes] Adicionar Resultados Meia Lua: Adicionar a tabela referente ao problema da meia lua no texto.
+[RAUL FONSECA NETO] Enviar Word: Enviar o arquivo Word contendo o texto do artigo para que as tabelas sejam inseridas.
+[George Gomes] Implementar Ajuste Dinâmico: Implementar o ajuste dinâmico do W e dos centroides conforme a equação de correção durante o problema C.
+[George Gomes] Validar Métrica Corrigida: Testar a métrica corrigida no problema D para verificar se há melhora na fidelidade.
+[George Gomes] Finalizar Artigo: Finalizar o artigo e incorporar todas as tabelas e ajustes solicitados até a próxima sexta feira.
+
+
+Detalhes
+Definição de Amostras e Casos de Estudo: George Gomes e RAUL FONSECA NETO discutiram a organização das quantidades de amostras e a metodologia. George Gomes confirmou que utilizou 150 amostras para o problema da meia-lua e para as gaussianas, exceto para os problemas B e C, que utilizaram 100 amostras. RAUL FONSECA NETO apontou que faltava abordar a não linearidade no estudo de caso real, ao que George Gomes respondeu já ter processado os dados referentes a R2 e R3.
+
+Experimentos com Few-Shot e Visualização de Gaussianas: RAUL FONSECA NETO solicitou os resultados dos experimentos com few-shot para o bloco 1 a fim de redigir o texto. George Gomes confirmou possuir os dados de zero-shot e few-shot com 4, 10, 20 e 40 amostras. Para a visualização, RAUL FONSECA NETO sugeriu plotar as distribuições gaussianas em R2 utilizando marcações como bolhas e cruzes em vez de cores, garantindo a visibilidade na impressão em papel.
+
+Reestruturação dos Problemas A, B e C: RAUL FONSECA NETO identificou que o problema A apresentou falhas relacionadas ao cosseno e gerou valores idênticos, determinando sua remoção e a permanência do problema B. George Gomes e RAUL FONSECA NETO acordaram em renomear os problemas para problema 1, 2 e 3, e George Gomes confirmou que já elaborou gráficos refletindo essa nova nomenclatura.
+
+Atualização de Tabelas e Transferência de Métricas: RAUL FONSECA NETO revisou a estrutura e determinou a exclusão do problema 4, validando os estimadores em seguida. Em relação à transferência de métrica, RAUL FONSECA NETO esclareceu que o processo ocorre exclusivamente nos problemas B e C de forma distinta. George Gomes informou que executou novamente a tabela 7, corrigindo valores anteriores e obtendo o novo resultado 61.
+
+Complementação do Estudo de Caso Real e Edição do Documento: RAUL FONSECA NETO solicitou demonstrações em zero-shot para evidenciar as limitações do modelo de linguagem, comparações com linhas de base e a inclusão da não linearidade do estudo de caso real. RAUL FONSECA NETO decidiu remover o texto sobre estabilidade de DLO por considerá-lo confuso. George Gomes propôs receber o documento Word de RAUL FONSECA NETO para inserir as tabelas diretamente e devolver o arquivo atualizado.
+
+Ajuste Dinâmico da Métrica no Problema C: RAUL FONSECA NETO detalhou o procedimento para o problema C, onde George Gomes comparará os rótulos do modelo de linguagem amostra por amostra com a métrica. Caso ocorra divergência, George Gomes aplicará uma equação de correção fornecida por RAUL FONSECA NETO. O objetivo é demonstrar que o processo é dinâmico e que uma métrica estática não funciona para todas as tarefas do modelo de linguagem.
+
+Fundamentação Teórica e Equações de Ajuste: RAUL FONSECA NETO apresentou equações teóricas para o ajuste de métricas em cenários de aprendizado. O mecanismo consiste em aproximar o centroide vencedor da amostra, afastar o centroide perdedor e atualizar os pesos segundo equações de correção sempre que o rótulo do modelo de linguagem diferir do centroide da métrica. George Gomes confirmou a compreensão de que tanto os centroides quanto os pesos devem ser corrigidos para aplicação no problema D.
+
+Prazos e Finalização do Artigo: RAUL FONSECA NETO orientou que enviará os arquivos em formato Word para que George Gomes conclua as inserções durante a semana. Ficou estabelecido o prazo de conclusão para a próxima sexta-feira, visando liberar o material para leitura por Yuri.
+
+
+Revise as anotações do Gemini para checar se estão corretas. Confira dicas e saiba como o Gemini faz anotações
+Como está a qualidade de destas observações? Responda a uma breve pesquisa para nos dar seu feedback, incluindo o quanto as observações foram úteis para o que você precisa.

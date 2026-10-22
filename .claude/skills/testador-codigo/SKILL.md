@@ -38,7 +38,7 @@ Siga em ordem e registre o resultado de cada etapa:
 2. **Ambiente.** Crie um ambiente isolado (venv/conda). Instale as dependências
    declaradas. Anote toda versão divergente ou dependência faltando/implícita — isso
    já é um risco de reprodutibilidade.
-3. **Smoke test.** Rode o caminho mais curto que prove que o pipeline executa de ponta
+3. **Smoke test.** Rode o caminho mais curto que prove que o experimento executa de ponta
    a ponta (mesmo que com subconjunto de dados). Capture erros de runtime.
 4. **Reprodução dos resultados-chave.** Rode os experimentos que geram os números
    reportados no trabalho. Onde for caro, rode uma versão reduzida e extrapole com
@@ -106,15 +106,19 @@ Nunca relate como validado algo que não executou.
 
 O ponto de entrada é `python src/dissertacao_mestrado.py` (o código está modularizado em
 `src/`: cliente LLM, parser, métricas, estimadores, geração de dados, auditoria). Uma
-execução completa cria `execucao_AAAA-MM-DD_HH-MM-SS_completa/` (e um `--rapido` cria
+execução completa cria `resultados/execucao_AAAA-MM-DD_HH-MM-SS_completa/` (e um `--rapido` cria
 `..._smoke/`) com CSVs por bloco, PNGs,
 `log_execucao.txt` e `llm_interactions_parte*.json`. Detalhe que muda sua estratégia:
 **reproduzir tudo é caro** (milhares de chamadas de API, custo em dinheiro e tempo,
 chave da OpenAI em `.env`). Divida a verificação em camadas:
 
 **Camada 0 — grátis e imediata (faça sempre, antes de tudo):**
-- `pytest tests/` — a suíte existente cobre parser, métricas, estimadores, cliente LLM,
-  geração de dados, auditoria e particionamento de JSON/log. Rode e reporte o resultado.
+- `python -m unittest discover -s tests` (o pytest não está nas dependências): a suíte
+  existente (361 testes em 14/10/2026) cobre parser, métricas, estimadores, cliente LLM,
+  geração de dados, auditoria, tabelas, estilo P&B, infraestrutura do runner
+  (`test_infra_main.py`: grades do `--rapido`, nome da pasta, `Tee`, roundtrip do JSON
+  particionado, ciclo de vida do cliente), regressão numérica sobre a completa de
+  05/07/2026 e particionamento de JSON/log. Rode e reporte o resultado.
 - `python src/audit_interactions.py` — audita a **última execução SEM chamar a API**:
   taxa de fallback do parser (`malformed`) e taxa de flip de $T=0$ (não-determinismo
   entre repetições idênticas). Sai com código 1 se malformadas > 5%. Esses dois números
@@ -132,7 +136,7 @@ chave da OpenAI em `.env`). Divida a verificação em camadas:
 
 **Camada 2 — depende do LLM (só com chave/orçamento; senão, ⛔ não verificável):**
 - Smoke test barato de ponta a ponta: `python src/dissertacao_mestrado.py --rapido`
-  (1 repetição, seed 42, few-shot reduzido). Prova que o pipeline roda inteiro com custo
+  (1 repetição, seed 42, few-shot reduzido). Prova que o código roda inteiro com custo
   baixo — mas **avise que ainda gasta API** e que os números de um `--rapido` não servem
   para comparação final.
 - Reprodução de números-chave em versão reduzida, com ressalva de extrapolação.
@@ -145,9 +149,9 @@ chave da OpenAI em `.env`). Divida a verificação em camadas:
 tabela de reprodução na hora:
 
 1. Extraia as afirmações quantitativas do `artigo.tex` e da apresentação mais recente
-   (`execucao_*/apresentacao/`).
+   (`resultados/execucao_*/apresentacao/`).
 2. Compare cada uma com os CSVs e o `log_execucao.txt` da **última execução completa**
-   (pasta `execucao_*` de timestamp mais alto; ignore execuções `--rapido` como fonte de
+   (pasta `resultados/execucao_*` de timestamp mais alto; ignore execuções `--rapido` como fonte de
    números finais).
 3. Para o que exigir re-execução com API sem orçamento disponível, marque
    **⛔ não verificável (sem chave/orçamento)** em vez de assumir.

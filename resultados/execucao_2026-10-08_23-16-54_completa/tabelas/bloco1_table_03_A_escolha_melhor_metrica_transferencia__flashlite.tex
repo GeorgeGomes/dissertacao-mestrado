@@ -1,0 +1,18 @@
+\begin{table}[htbp]
+\centering
+\small
+\caption{Escolha da melhor métrica do Problema A para a transferência (google/gemini-2.5-flash-lite).}
+\label{tab:T7_escolha_flashlite}
+\begin{tabular}{lrrrrrrrl}
+\toprule
+Métrica de origem (A) & Fid.\ (vs LLM) no A & Acur.\ vs real (A) & cos(Perc., NNLS) & Consist.\ B & $\kappa$ B & Consist.\ C & $\kappa$ C & Eleição \\
+\midrule
+zero-shot† & 81,3 (78,7–83,3) & 17,6 (15,3–21,3) & 0,998 & 72,7 & 0,263 & 92,3 & 0,846 &  \\
+4-shot† & 93,8 (63,0–99,3) & 92,6 (83,3–98,0) & 0,926 & 70,9 & 0,257 & 91,6 & 0,830 &  \\
+10-shot† & 97,5 (87,1–100,0) & 94,7 (88,7–98,0) & 0,837 & 69,6 & 0,249 & 91,4 & 0,828 &  \\
+20-shot† & 97,9 (95,4–100,0) & 95,4 (92,7–98,0) & 0,815 & 69,8 & 0,249 & 91,3 & 0,826 &  \\
+\textbf{40-shot†} & \textbf{99,0 (95,5–100,0)} & \textbf{95,3 (92,7–98,0)} & \textbf{0,858} & \textbf{69,6} & \textbf{0,242} & \textbf{91,3} & \textbf{0,826} & \textbf{eleita} \\
+\bottomrule
+\multicolumn{9}{p{0.95\linewidth}}{\footnotesize Critério de eleição: maior fidelidade média no Problema A (Perceptron, R$^2$, sem colapso) entre o zero-shot e cada k few-shot; o teto não concorre. Eleição lida da coluna melhor\_metrica\_a de bloco1\_transferencia\_bc (regra única do runner). Acur.\ vs real (A) = acurácia (vs rótulo real) da métrica, contexto. Consistência e $\kappa$ em B e C: rótulos zero-shot do LLM contra a métrica de origem (Perceptron, só $\hat{W}$ transferido, centróides recalculados pelos rótulos do LLM). $\kappa$ = Cohen's $\kappa$ (faixas de Landis e Koch, 1977). † = em pelo menos uma estimativa o Perceptron devolveu $\hat{W}$ em melhor esforço ($\gamma = 0$, sem margem viável). Em negrito: a métrica eleita para a transferência.} \\
+\end{tabular}
+\end{table}

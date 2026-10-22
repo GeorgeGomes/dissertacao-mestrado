@@ -1,0 +1,28 @@
+\begin{table}[htbp]
+\centering
+\footnotesize
+\caption{Problema D, meia-lua (openai/gpt-4o-mini): zero-shot versus few-shot por espaço.}
+\label{tab:bloco1_D_zero_vs_fewshot_comparacao_gpt4mini}
+\begin{tabular}{llrrrrrrrrr}
+\toprule
+ &  & \multicolumn{3}{c}{Fidelidade (vs LLM)} & \multicolumn{3}{c}{Acur.\ da métrica vs real} & \multicolumn{3}{c}{Acur.\ do LLM vs real} \\ \cmidrule(lr){3-5} \cmidrule(lr){6-8} \cmidrule(lr){9-11}
+Espaço & Few-shot & zero & few & $\Delta$ & zero & few & $\Delta$ & zero & few & $\Delta$ \\
+\midrule
+R$^2$ & 4-shot & 66,7 & 89,1 (75,3–95,9) & +22,5 & 63,3 (62,7–64,0) & 81,0 (76,0–85,3) & +17,7 & 50,7 & 81,4 (68,5–91,8) & +30,7 \\
+R$^2$ & 10-shot & 66,7 & 91,4 (80,0–97,1) & +24,8 & 63,3 (62,7–64,0) & 83,9 (77,3–86,0) & +20,5 & 50,7 & 89,0 (81,4–97,1) & +38,3 \\
+R$^2$ & 20-shot & 66,7 & 92,6 (91,5–94,6) & +26,0 & 63,3 (62,7–64,0) & 84,9 (82,7–87,3) & +21,6 & 50,7 & 90,4 (86,2–95,4) & +39,8 \\
+R$^2$ & 40-shot & 66,7 & 91,3 (88,2–92,7) & +24,6 & 63,3 (62,7–64,0) & 86,1 (84,7–88,0) & +22,7 & 50,7 & 91,9 (87,3–96,4) & +41,3 \\
+\midrule
+R$^3$ & 4-shot & 71,0 (70,7–71,3) & 89,8 (78,8–95,9) & +18,8 & 63,0 (62,7–63,3) & 81,9 (80,0–84,7) & +18,9 & 50,7 & 81,4 (68,5–91,8) & +30,7 \\
+R$^3$ & 10-shot & 71,0 (70,7–71,3) & 91,7 (80,0–97,1) & +20,7 & 63,0 (62,7–63,3) & 84,1 (78,7–86,7) & +21,1 & 50,7 & 89,0 (81,4–97,1) & +38,3 \\
+R$^3$ & 20-shot & 71,0 (70,7–71,3) & 92,3 (90,0–95,4) & +21,3 & 63,0 (62,7–63,3) & 84,6 (82,7–86,0) & +21,6 & 50,7 & 90,4 (86,2–95,4) & +39,8 \\
+R$^3$ & 40-shot & 71,0 (70,7–71,3) & 90,7 (87,3–93,6) & +19,7 & 63,0 (62,7–63,3) & 85,3 (83,3–87,3) & +22,3 & 50,7 & 91,9 (87,3–96,4) & +41,3 \\
+\midrule
+R$^4$ & 4-shot & 72,7 (70,7–74,7) & 93,5 (89,0–97,9) & +20,8 & 63,3 (62,7–64,0) & 81,5 (76,0–86,7) & +18,1 & 50,7 & 81,4 (68,5–91,8) & +30,7 \\
+R$^4$ & 10-shot & 72,7 (70,7–74,7) & 92,4 (79,3–96,4) & +19,7 & 63,3 (62,7–64,0) & 84,5 (78,0–87,3) & +21,2 & 50,7 & 89,0 (81,4–97,1) & +38,3 \\
+R$^4$ & 20-shot & 72,7 (70,7–74,7) & 93,0 (90,8–96,2) & +20,3 & 63,3 (62,7–64,0) & 85,5 (84,0–88,0) & +22,1 & 50,7 & 90,4 (86,2–95,4) & +39,8 \\
+R$^4$ & 40-shot & 72,7 (70,7–74,7) & 91,7 (89,1–93,6) & +19,1 & 63,3 (62,7–64,0) & 86,1 (84,0–87,3) & +22,8 & 50,7 & 91,9 (87,3–96,4) & +41,3 \\
+\bottomrule
+\multicolumn{11}{p{0.95\linewidth}}{\footnotesize Meia-lua, Perceptron. Fidelidade (vs LLM); acurácia (vs rótulo real) da métrica e do LLM como contexto. Colapsos (e quase-colapsos) do zero-shot não entram em nenhuma média, nem na acurácia do LLM (``—'' quando todas as sementes colapsaram; detalhe na bloco1\_table\_10). Em zero-shot (e com nomes de classe neutros) a correspondência entre nome e classe é arbitrária: a acurácia (vs rótulo real) do LLM pode sair abaixo de 50\%; o valor invariante à permutação é max($a$, 1 $-$ $a$). $\Delta$ = few-shot $-$ zero-shot.} \\
+\end{tabular}
+\end{table}

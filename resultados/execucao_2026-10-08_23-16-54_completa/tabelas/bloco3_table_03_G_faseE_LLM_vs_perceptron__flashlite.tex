@@ -1,0 +1,21 @@
+\begin{table}[htbp]
+\centering
+\footnotesize
+\caption{Problema G (google/gemini-2.5-flash-lite): LLM versus Perceptron treinado nos mesmos exemplos, acurácia contra o rótulo real.}
+\label{tab:bloco3_G_faseE_LLM_vs_perceptron_flashlite}
+\begin{tabular}{lllrrrrrrrrrr}
+\toprule
+ &  &  & \multicolumn{5}{c}{Acur.\ LLM vs real (\%)} & \multicolumn{5}{c}{Acur.\ Perceptron vs real (\%)} \\ \cmidrule(lr){4-8} \cmidrule(lr){9-13}
+Subproblema & Classes & Atributos & n=0 & n=4 & n=10 & n=20 & n=40 & n=0 & n=4 & n=10 & n=20 & n=40 \\
+\midrule
+G1 (normalizado) & Mulher / Homem & peso/altura & 31,1 & 19,6 & 21,9 & 14,4 & 10,4 & — & 16,1 & 12,9 & 11,5 & 11,5 \\
+G1 (normalizado) & Mulher / Homem & x1/x2 & 43,3 & 68,9 & 70,0 & 61,5 & 59,6 & — & 66,0 & 70,0 & 68,1 & 68,9 \\
+G1 (normalizado) & A / B & peso/altura & 30,0 & 23,3 & 18,1 & 24,8 & 24,1 & — & 26,0 & 24,4 & 24,8 & 26,3 \\
+G1 (normalizado) & A / B & x1/x2 & 15,6 & 17,8 & 16,3 & 12,2 & 12,6 & — & 16,7 & 12,9 & 15,6 & 17,4 \\
+\textbf{G2 (kg e m)} & \textbf{Mulher / Homem} & \textbf{peso\_kg/altura\_m} & \textbf{86,7} & \textbf{78,5} & \textbf{88,5} & \textbf{87,8} & \textbf{87,4} & \textbf{—} & \textbf{83,9} & \textbf{88,1} & \textbf{86,3} & \textbf{84,8} \\
+G2 (kg e m) & Mulher / Homem & x1/x2 & 56,7 & 73,3 & 70,0 & 74,1 & 74,8 & — & 76,7 & 76,7 & 82,1 & 85,2 \\
+G2 (kg e m) & A / B & peso\_kg/altura\_m & 34,4 & 33,0 & 23,3 & 18,9 & 20,7 & — & 24,2 & 15,2 & 14,4 & 11,5 \\
+\bottomrule
+\multicolumn{13}{p{0.95\linewidth}}{\footnotesize Fase E nas 30 amostras de teste; o especialista é a melhor métrica da Fase A externa. Perceptron = Perceptron diagonal treinado nos mesmos n exemplos, no mesmo espaço R$^n$ da melhor métrica (R$^2$ quando a eleita tem 2 atributos; se a Fase A externa colapsou, sem melhor métrica, a Fase E de G não roda e a linha não existe). Acurácia (vs rótulo real) do LLM e do Perceptron; médias das sementes e sorteios. Nas linhas com classes neutras A/B a acurácia literal do LLM pode sair invertida (ver bloco3\_table\_02).} \\
+\end{tabular}
+\end{table}

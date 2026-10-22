@@ -1,0 +1,19 @@
+\begin{table}[htbp]
+\centering
+\footnotesize
+\caption{Problema G (openai/gpt-4o-mini): nomes de classe semânticos versus neutros.}
+\label{tab:bloco3_G_nomes_semanticos_vs_neutros_gpt4mini}
+\begin{tabular}{llrrrrrrrr}
+\toprule
+ &  & \multicolumn{5}{c}{Acur.\ LLM vs real (\%)} & \multicolumn{3}{c}{Acur.\ métrica vs real (\%)} \\ \cmidrule(lr){3-7} \cmidrule(lr){8-10}
+Subproblema & Atributos & M/H literal & A/B literal & M/H inv.\ perm. & A/B inv.\ perm. & $\Delta$ & M/H inv.\ perm. & A/B inv.\ perm. & $\Delta$ \\
+\midrule
+G1 (normalizado) & peso/altura & — & 31,9 & — & 68,1 & — & — & 87,1 & — \\
+G1 (normalizado) & x1/x2 & — & 41,0 & — & 59,0 & — & — & 81,4 & — \\
+\midrule
+G2 (kg e m) & peso\_kg/altura\_m & 89,5 & 51,9 & 89,5 & 52,9 & +36,7 & 91,0 & 59,5 & +31,4 \\
+G2 (kg e m) & x1/x2 & 62,9 & — & 62,9 & — & — & 85,7 & — & — \\
+\bottomrule
+\multicolumn{10}{p{0.95\linewidth}}{\footnotesize Efeito do nome das classes (M/H = Mulher/Homem versus A/B) para cada par de nomes de atributo, zero-shot, R$^2$, Perceptron. Acurácia (vs rótulo real) do LLM e da métrica, contexto. Com nomes neutros (e em zero-shot) a correspondência entre nome e classe é arbitrária: a acurácia literal pode sair invertida; as colunas ``inv.\ perm.'' usam o valor invariante à permutação max($a$, 1 $-$ $a$), e $\Delta$ = semântico $-$ neutro é calculado sobre elas. ``—'' = colapso em classe única.} \\
+\end{tabular}
+\end{table}

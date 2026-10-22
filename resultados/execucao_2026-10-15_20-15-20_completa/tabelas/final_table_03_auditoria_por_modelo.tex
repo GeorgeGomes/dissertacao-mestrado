@@ -1,0 +1,15 @@
+\begin{table}[htbp]
+\centering
+\small
+\caption{Auditoria das interações por modelo, todos os problemas e Passos: malformadas e flip a $T=0$.}
+\label{tab:final_auditoria_por_modelo}
+\begin{tabular}{lrrrrrrll}
+\toprule
+Modelo & Chamadas & Malf. & Malf.\ (\%) & Repetidas & Divergentes & Flip (\%) & Snapshot & Provedor \\
+\midrule
+google/gemini-2.5-flash-lite & 111.704 & 5 & 0,004 & 2.936 & 0 & 0,00 & google/gemini-2.5-flash-lite & Google \\
+openai/gpt-4o-mini & 110.944 & 0 & 0,000 & 2.936 & 35 & 1,19 & openai/gpt-4o-mini & OpenAI \\
+\bottomrule
+\multicolumn{9}{p{0.95\linewidth}}{\footnotesize Auditoria offline de todas as interações (todos os problemas e passos com chamadas ao LLM). Flip = perguntas idênticas (prompt + ponto) cuja resposta interpretada divergiu entre repetições, mesmo com T = 0. Snapshot e provedor de inferência observados no OpenRouter.} \\
+\end{tabular}
+\end{table}

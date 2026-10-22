@@ -1,10 +1,11 @@
 """Testes de unidade da fábrica de clientes de LLM (`llm_client`).
 
-Provedor único: OpenRouter. Verifica o roteamento (cliente OpenAI-compatível com a
-URL do OpenRouter, síncrono e assíncrono), erro para provedor desconhecido, a chave
-vinda de variável de ambiente, o corpo extra (fallback de provedor desligado) e a
-pinagem de infraestrutura por modelo (`MODEL_PROVIDER_PIN`) para TODOS os modelos
-do protocolo.
+Provedor único: OpenRouter. Verifica o roteamento (cliente assíncrono
+OpenAI-compatível com a URL do OpenRouter; a fábrica síncrona `get_client` foi
+removida em 09/10/2026 porque só os testes a usavam), erro para provedor
+desconhecido, a chave vinda de variável de ambiente, o corpo extra (fallback de
+provedor desligado) e a pinagem de infraestrutura por modelo (`MODEL_PROVIDER_PIN`)
+para TODOS os modelos do protocolo.
 
 Não faz nenhuma chamada de rede: construir um cliente SDK apenas configura o objeto.
 Uma chave dummy é injetada no ambiente para o construtor não levantar exceção.
@@ -20,7 +21,7 @@ sys.path.insert(0, os.path.abspath(SRC_DIR))
 
 import llm_client as lc  # noqa: E402
 import dissertacao_mestrado as dm  # noqa: E402
-from openai import OpenAI, AsyncOpenAI  # noqa: E402
+from openai import AsyncOpenAI  # noqa: E402
 
 
 class TestClientFactory(unittest.TestCase):
@@ -36,19 +37,23 @@ class TestClientFactory(unittest.TestCase):
         else:
             os.environ["OPENROUTER_API_KEY"] = cls._saved
 
-    def test_openrouter_usa_endpoint_openai_compativel(self):
-        c = lc.get_client("openrouter")
-        self.assertIsInstance(c, OpenAI)
-        self.assertIn("openrouter.ai", str(c.base_url))
-
     def test_async_openrouter_retorna_asyncopenai_com_url(self):
         c = lc.get_async_client("openrouter")
         self.assertIsInstance(c, AsyncOpenAI)
         self.assertIn("openrouter.ai", str(c.base_url))
 
+    def test_async_client_usa_timeout_e_retries_do_modulo(self):
+        c = lc.get_async_client("openrouter")
+        self.assertEqual(c.timeout, lc._TIMEOUT)
+        self.assertEqual(c.max_retries, lc._MAX_RETRIES)
+
+    def test_fabrica_sincrona_removida(self):
+        # get_client (síncrono) saiu em 09/10/2026: a coleta é toda assíncrona.
+        self.assertFalse(hasattr(lc, "get_client"))
+
     def test_provedor_desconhecido_levanta(self):
         with self.assertRaises(KeyError):
-            lc.get_client("openai")          # provedor direto removido em 01/10/2026
+            lc.get_async_client("openai")    # provedor direto removido em 01/10/2026
         with self.assertRaises(KeyError):
             lc.get_async_client("anthropic")
 
@@ -64,7 +69,10 @@ class TestProviderConfig(unittest.TestCase):
             self.assertEqual(cfg["client_type"], "openai", provider)
 
     def test_modelos_do_protocolo_usam_openrouter_com_id_qualificado(self):
-        for prov, model, _t, _s in dm.MODELS_TO_TEST:
+        # Só os dois primeiros campos importam aqui (provider, model); o resto da
+        # tupla (temperatura, e até 09/10/2026 o scope) é do runner.
+        for entrada in dm.MODELS_TO_TEST:
+            prov, model = entrada[0], entrada[1]
             self.assertEqual(prov, "openrouter", model)
             self.assertIn("/", model, f"{model}: id do OpenRouter é <org>/<modelo>")
 
@@ -80,7 +88,8 @@ class TestExtraBody(unittest.TestCase):
     def test_todos_os_modelos_do_protocolo_tem_pin(self):
         # Reprodutibilidade: um mesmo model-ID pode ser servido por várias
         # infraestruturas no OpenRouter; todo modelo do protocolo fixa quem serve.
-        for _p, model, _t, _s in dm.MODELS_TO_TEST:
+        for entrada in dm.MODELS_TO_TEST:
+            model = entrada[1]
             self.assertIn(model, lc.MODEL_PROVIDER_PIN, model)
 
     def test_pin_fixa_provedor_de_inferencia(self):

@@ -1,0 +1,124 @@
+===== default: Padrão: enunciado direto, o ponto com seus atributos e a pergunta pela classe.
+[sistema] You are a classifier. Respond only with the class label.
+--- zero-shot ---
+You are a binary classifier for 2D points.
+
+Classify the given point as Class A or Class B.
+Answer ONLY with "A" or "B", nothing else.
+
+Point to classify:
+x1 = 1.2500
+x2 = -0.5000
+
+Your classification:
+--- few-shot (2 exemplos) ---
+You are a binary classifier for 2D points.
+
+Learn the classification pattern from the examples below, then classify the new point.
+
+Examples:
+  x1 = -2.1000, x2 = 0.3000 -> A
+  x1 = 1.9000, x2 = -0.2000 -> B
+
+Answer ONLY with "A" or "B", nothing else.
+
+Point to classify:
+x1 = 1.2500
+x2 = -0.5000
+
+Your classification:
+
+===== geometric: Geométrico: o enunciado descreve explicitamente o ponto como posição num plano cartesiano (contexto espacial).
+[sistema] You are a geometric classifier analyzing point positions in metric space. Respond only with the class label.
+--- zero-shot ---
+You are a binary classifier for 2D points in Euclidean space.
+
+Points exist in a 2D metric space. Classify the given point based on spatial proximity to cluster centers.
+
+Classify as Class A or Class B.
+Answer ONLY with "A" or "B", nothing else.
+
+Point to classify:
+x1 = 1.2500
+x2 = -0.5000
+
+Your classification:
+--- few-shot (2 exemplos) ---
+You are a binary classifier for 2D points in Euclidean space.
+
+Points exist in a 2D metric space. Learn the classification pattern from the examples below based on spatial proximity, then classify the new point.
+
+Examples:
+  x1 = -2.1000, x2 = 0.3000 -> A
+  x1 = 1.9000, x2 = -0.2000 -> B
+
+Answer ONLY with "A" or "B", nothing else.
+
+Point to classify:
+x1 = 1.2500
+x2 = -0.5000
+
+Your classification:
+
+===== cot: Chain-of-thought (cot): pede ao modelo raciocinar passo a passo antes de dar o rótulo (o rótulo é extraído do fim da resposta).
+[sistema] You are a classifier. Think step by step, then give your final answer on the last line as just the class label.
+--- zero-shot ---
+You are a binary classifier for 2D points.
+
+Classify the given point as Class A or Class B.
+
+Point to classify:
+x1 = 1.2500
+x2 = -0.5000
+
+Think step by step about which class this point belongs to, then state your final classification ("A" or "B") on the last line.
+--- few-shot (2 exemplos) ---
+You are a binary classifier for 2D points.
+
+Learn the classification pattern from the examples below, then classify the new point.
+
+Examples:
+  x1 = -2.1000, x2 = 0.3000 -> A
+  x1 = 1.9000, x2 = -0.2000 -> B
+
+Point to classify:
+x1 = 1.2500
+x2 = -0.5000
+
+Think step by step about which class this point belongs to based on the examples, then state your final classification ("A" or "B") on the last line.
+
+===== tabular: Tabular: os atributos do ponto (e dos exemplos, quando há) são apresentados numa tabela em markdown.
+[sistema] You are a classifier. Respond only with the class label.
+--- zero-shot ---
+You are a binary classifier for 2D points.
+
+Classify the given point as Class A or Class B.
+Answer ONLY with "A" or "B", nothing else.
+
+Point to classify:
+| Feature | Value |
+|---------|-------|
+| x1 | 1.2500 |
+| x2 | -0.5000 |
+
+Your classification:
+--- few-shot (2 exemplos) ---
+You are a binary classifier for 2D points.
+
+Learn the classification pattern from the examples below, then classify the new point.
+
+Examples:
+| x1 | x2 | Class |
+|---------|---------|-------|
+| -2.1000 | 0.3000 | A |
+| 1.9000 | -0.2000 | B |
+
+Answer ONLY with "A" or "B", nothing else.
+
+Point to classify:
+| Feature | Value |
+|---------|-------|
+| x1 | 1.2500 |
+| x2 | -0.5000 |
+
+Your classification:

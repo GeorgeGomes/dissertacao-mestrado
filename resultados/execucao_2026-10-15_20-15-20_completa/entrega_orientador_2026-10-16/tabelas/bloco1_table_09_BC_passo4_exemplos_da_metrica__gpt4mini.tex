@@ -1,0 +1,19 @@
+\begin{table}[htbp]
+\centering
+\small
+\caption{Problemas B e C, Passo 4 (openai/gpt-4o-mini): few-shot com exemplos rotulados pela métrica do A (H2).}
+\label{tab:bloco1_BC_passo4_exemplos_da_metrica_gpt4mini}
+\begin{tabular}{lrrlrrrlr}
+\toprule
+ & \multicolumn{4}{c}{Problema B} & \multicolumn{4}{c}{Problema C} \\ \cmidrule(lr){2-5} \cmidrule(lr){6-9}
+Regime & Consist. & $\kappa$ & Faixa & $\Delta$ & Consist. & $\kappa$ & Faixa & $\Delta$ \\
+\midrule
+zero-shot & 69,0 (67,0–73,0) & 0,320 & razoável & +0,0 & 87,0 (83,0–90,0) & 0,725 & substancial & +0,0 \\
+4-shot & 86,8 (84,4–91,7) & 0,733 & substancial & +17,8 & 94,8 (91,7–97,9) & 0,896 & quase perfeita & +7,8 \\
+10-shot & 93,7 (88,9–96,7) & 0,871 & quase perfeita & +24,7 & 93,0 (91,1–94,4) & 0,858 & quase perfeita & +6,0 \\
+20-shot & 92,9 (90,0–96,2) & 0,855 & quase perfeita & +23,9 & 93,3 (88,8–98,8) & 0,865 & quase perfeita & +6,3 \\
+40-shot & 92,8 (88,3–96,7) & 0,851 & quase perfeita & +23,8 & 93,9 (90,0–96,7) & 0,876 & quase perfeita & +6,9 \\
+\bottomrule
+\multicolumn{9}{p{0.95\linewidth}}{\footnotesize Problemas B e C, Passo 4 (hipótese H2): os k exemplos mostrados ao LLM em B e C são rotulados pela métrica zero-shot do A (seleção por margem, k/2 por classe) e o LLM classifica os demais pontos. Os exemplos few-shot de B e C são rotulados por $\hat{W}$ do A com os centróides do A; a consistência usa os centróides locais, recalculados pelos rótulos do LLM no próprio problema. Consist.\ = consistência (\%). $\kappa$ = Cohen's $\kappa$ (faixas de Landis e Koch, 1977). Médias das sementes (mín–máx); $\Delta$ em relação ao zero-shot. Perceptron, configuração base.} \\
+\end{tabular}
+\end{table}

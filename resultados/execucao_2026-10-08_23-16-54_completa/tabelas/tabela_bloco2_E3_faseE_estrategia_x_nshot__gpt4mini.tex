@@ -1,0 +1,19 @@
+\begin{table}[htbp]
+\centering
+\small
+\caption{Bloco 2, Problema E3 (openai/gpt-4o-mini): aprendizado em contexto por estratégia de seleção e n.}
+\label{tab:bloco2_E3_faseE_estrategia_x_nshot_gpt4mini}
+\begin{tabular}{lrrrrrrrr}
+\toprule
+ & \multicolumn{2}{c}{Fácil} & \multicolumn{2}{c}{Difícil} & \multicolumn{2}{c}{Mista} & \multicolumn{2}{c}{Aleatória} \\ \cmidrule(lr){2-3} \cmidrule(lr){4-5} \cmidrule(lr){6-7} \cmidrule(lr){8-9}
+n & Fácil acur. & $\kappa$ & Difícil acur. & $\kappa$ & Mista acur. & $\kappa$ & Aleatória acur. & $\kappa$ \\
+\midrule
+zero-shot (único valor) & 53,6 (50,7–55,3) & 0,096 &  &  &  &  &  &  \\
+4-shot & 76,0 (70,5–79,5) & 0,529 & 53,2 (50,0–56,2) & 0,053 & 88,8 (80,1–93,2) & 0,777 & 86,1 (71,9–93,8) & 0,724 \\
+10-shot & 75,5 (70,0–82,1) & 0,519 & 56,9 (51,4–63,6) & 0,152 & 84,8 (78,6–87,9) & 0,695 & 91,7 (88,6–95,0) & 0,833 \\
+20-shot & 80,8 (78,5–83,1) & 0,620 & 75,1 (66,9–90,8) & 0,509 & 90,0 (86,2–93,1) & 0,800 & 93,9 (88,5–99,2) & 0,879 \\
+40-shot & 83,3 (79,1–87,3) & 0,669 & 97,6 (97,3–98,2) & 0,951 & 93,6 (88,2–97,3) & 0,872 & 94,7 (89,1–99,1) & 0,895 \\
+\bottomrule
+\multicolumn{9}{p{0.95\linewidth}}{\footnotesize Especialista E3, W = [1,0; 1,0]: rotula o Problema E pelo centróide mais próximo; o LLM recebe n exemplos escolhidos pela estratégia e classifica os demais. Acurácia (mín–máx) e $\kappa$ em relação ao especialista; médias das sementes e sorteios. Em zero-shot não há exemplo a selecionar: valor único.} \\
+\end{tabular}
+\end{table}

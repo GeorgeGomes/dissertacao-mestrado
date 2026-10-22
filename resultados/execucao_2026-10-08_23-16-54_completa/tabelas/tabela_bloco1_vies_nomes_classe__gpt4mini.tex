@@ -1,0 +1,30 @@
+\begin{table}[htbp]
+\centering
+\small
+\caption{Viés de nomes de classe (openai/gpt-4o-mini): fidelidade, direção de $\hat{W}$ e consistência.}
+\label{tab:bloco1_vies_nomes_classe_gpt4mini}
+\begin{tabular}{llrrrrrrr}
+\toprule
+Variante & Regime & Fid.\ A & LLM vs real A & $w_1/w_2$ & Consist.\ B & $\kappa$ B & Consist.\ C & $\kappa$ C \\
+\midrule
+0 / 1 & zero-shot & 59,3 (57,3–62,0) & 52,7 & 0,21 & 56,0 & 0,012 & 65,7 & 0,127 \\
+1 / 0 & zero-shot & 74,9 (70,0–82,0) & 48,9 & 0,50 & 70,7 & 0,068 & 68,7 & 0,140 \\
+\textbf{A / B} & \textbf{zero-shot} & \textbf{81,3 (78,0–85,3)} & \textbf{32,4} & \textbf{0,09} & \textbf{70,7} & \textbf{0,348} & \textbf{88,0} & \textbf{0,745} \\
+Azul / Vermelho & zero-shot & 90,4 (86,7–93,3) & 18,7 & 0,21 & 79,0 & 0,576 & 92,3 & 0,846 \\
+B / A & zero-shot & 69,6 (65,3–72,0) & 41,6 & 0,31 & 78,7 & 0,568 & 63,0 & 0,219 \\
+Negativo / Positivo & zero-shot & 93,6 (91,3–96,7) & 83,1 & 0,22 & 67,3 & 0,328 & 95,3 & 0,907 \\
+Positivo / Negativo & zero-shot & 98,4 (97,3–99,3) & 12,2 & 0,22 & 81,3 & 0,625 & 95,7 & 0,913 \\
+Vermelho / Azul & zero-shot & 59,8 (54,0–65,3) & 67,1 & 0,02 & 53,7 & 0,031 & 69,3 & 0,324 \\
+\midrule
+0 / 1 & 10-shot & 59,3 (57,3–62,0) & 52,7 & 0,21 & 92,6 & 0,852 & 78,1 & 0,508 \\
+1 / 0 & 10-shot & 74,9 (70,0–82,0) & 48,9 & 0,50 & 93,3 & 0,866 & 88,1 & 0,754 \\
+\textbf{A / B} & \textbf{10-shot} & \textbf{81,3 (78,0–85,3)} & \textbf{32,4} & \textbf{0,09} & \textbf{82,2} & \textbf{0,624} & \textbf{91,9} & \textbf{0,834} \\
+Azul / Vermelho & 10-shot & 90,4 (86,7–93,3) & 18,7 & 0,21 & 76,7 & 0,524 & 96,3 & 0,926 \\
+B / A & 10-shot & 69,6 (65,3–72,0) & 41,6 & 0,31 & 96,7 & 0,933 & 95,9 & 0,918 \\
+Negativo / Positivo & 10-shot & 93,6 (91,3–96,7) & 83,1 & 0,22 & 72,2 & 0,438 & 74,8 & 0,337 \\
+Positivo / Negativo & 10-shot & 98,4 (97,3–99,3) & 12,2 & 0,22 & 79,6 & 0,585 & 91,1 & 0,819 \\
+Vermelho / Azul & 10-shot & 59,8 (54,0–65,3) & 67,1 & 0,02 & 94,8 & 0,896 & 87,8 & 0,753 \\
+\bottomrule
+\multicolumn{9}{p{0.95\linewidth}}{\footnotesize Problema A e transferência para B e C por nomes de classe; os demais fatores ficam na configuração base. Médias das sementes (fidelidade com mín–máx). $w_1/w_2$ = razão da métrica estimada (Perceptron). Em negrito: a configuração de referência. 10-shot: exemplos rotulados pela métrica (H2).} \\
+\end{tabular}
+\end{table}

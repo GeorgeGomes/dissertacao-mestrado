@@ -1,0 +1,21 @@
+\begin{table}[htbp]
+\centering
+\small
+\caption{Problema A (linear) versus Problema D (meia-lua) (google/gemini-2.5-flash-lite), por regime.}
+\label{tab:bloco1_A_vs_D_por_regime_flashlite}
+\begin{tabular}{lrrrrrr}
+\toprule
+ & \multicolumn{2}{c}{Fidelidade vs LLM} & \multicolumn{2}{c}{Acurácia da métrica vs real} & \multicolumn{2}{c}{Acurácia do LLM vs real} \\ \cmidrule(lr){2-3} \cmidrule(lr){4-5} \cmidrule(lr){6-7}
+Regime & A & D & A & D & A & D \\
+\midrule
+zero-shot & 81,3 (78,7–83,3) & 81,1 (80,0–82,7) & 17,6 (15,3–21,3) & 64,7 & 25,1 (21,3–29,3) & 55,6 (53,3–59,3) \\
+4-shot & 93,8 (63,0–99,3) & 88,1 (72,6–97,3) & 92,6 (83,3–98,0) & 78,1 (68,0–86,7) & 88,7 (57,5–98,6) & 77,9 (63,0–88,4) \\
+10-shot & 97,5 (87,1–100,0) & 94,3 (90,7–97,1) & 94,7 (88,7–98,0) & 82,9 (80,0–86,7) & 94,0 (87,1–97,9) & 86,3 (81,4–90,0) \\
+20-shot & 97,9 (95,4–100,0) & 94,4 (93,1–96,9) & 95,4 (92,7–98,0) & 84,4 (80,7–86,7) & 94,1 (88,5–97,7) & 88,5 (83,8–93,1) \\
+40-shot & 99,0 (95,5–100,0) & 93,1 (91,8–93,6) & 95,3 (92,7–98,0) & 84,4 (83,3–86,0) & 95,1 (90,9–98,2) & 90,5 (86,4–93,6) \\
+\midrule
+W ajustado ao rótulo real (teto) & 96,2 (95,3–98,0) & 85,6 (84,7–86,7) & 96,2 (95,3–98,0) & 85,6 (84,7–86,7) & — & — \\
+\bottomrule
+\multicolumn{7}{p{0.95\linewidth}}{\footnotesize Perceptron, R$^2$. Mesmo protocolo nos dois problemas (150 pontos, exemplos do rótulo real, sem split).} \\
+\end{tabular}
+\end{table}

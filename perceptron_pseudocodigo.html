@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Algoritmos 1 e 2: texto e proposta</title>
+<style>
+:root{color-scheme:light;--bg:#f8f7f3;--fg:#1d2026;--muted:#5e6472;--line:#d8d5cc;--panel:#fff;--accent:#1f5f8b;--code:#f1efe8;--add:#dff3e6;--addfg:#1f6b3d;--amb:#fbeccf;--ambfg:#7a5200;--del:#fbe3e1;--delfg:#8a1f17}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){color-scheme:dark;--bg:#15171b;--fg:#e8e6e1;--muted:#a6aab4;--line:#3a3e46;--panel:#1c1f25;--accent:#8ab4f8;--code:#20242b;--add:#1f3a2b;--addfg:#8fd9ab;--amb:#3f3119;--ambfg:#f0c674;--del:#4a2320;--delfg:#f3a69f}}
+:root[data-theme="dark"]{color-scheme:dark;--bg:#15171b;--fg:#e8e6e1;--muted:#a6aab4;--line:#3a3e46;--panel:#1c1f25;--accent:#8ab4f8;--code:#20242b;--add:#1f3a2b;--addfg:#8fd9ab;--amb:#3f3119;--ambfg:#f0c674;--del:#4a2320;--delfg:#f3a69f}
+*{box-sizing:border-box} body{margin:0;padding-block:24px 48px;padding-inline:16px;background:var(--bg);color:var(--fg);font:15px/1.55 "IBM Plex Sans",-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+main{max-width:1500px;margin:0 auto} h1{font:600 28px/1.15 Georgia,"Times New Roman",serif;margin:0 0 6px;text-wrap:balance} h2{font:600 20px/1.25 Georgia,serif;margin:28px 0 10px} p{max-width:74ch;margin:0 0 12px} .sub{color:var(--muted)}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start} @media (max-width:980px){.cols{grid-template-columns:1fr}}
+.col{border:1px solid var(--line);border-radius:10px;background:var(--panel);overflow:hidden} .col h3{margin:0;padding:10px 14px;border-bottom:1px solid var(--line);font:600 13px/1.2 "IBM Plex Sans",sans-serif;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+pre{margin:0;padding:12px 0;overflow-x:auto;font:13px/1.55 "IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;background:var(--code)}
+pre .l{display:block;padding:0 14px;white-space:pre} pre .add{background:var(--add);color:var(--addfg)} pre .amb{background:var(--amb);color:var(--ambfg)} pre .del{background:var(--del);color:var(--delfg)} pre .c{color:var(--muted);font-style:italic}
+.mark{display:inline-block;min-width:1.5em;text-align:center;font:700 11px/1.5 "IBM Plex Sans",sans-serif;background:var(--accent);color:#fff;border-radius:999px;padding:0 5px;margin-left:6px;vertical-align:1px}
+.leg{display:flex;gap:16px;flex-wrap:wrap;font-size:13px;color:var(--muted);margin:8px 0 0} .leg span::before{content:"";display:inline-block;width:14px;height:12px;border-radius:3px;margin-right:6px;vertical-align:-1px;background:var(--x)}
+.notas{display:grid;gap:10px;margin:14px 0} .nota{border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:8px;background:var(--panel);padding:10px 14px} .nota b{color:var(--accent)} .nota.amb{border-left-color:var(--ambfg)} .nota.amb b{color:var(--ambfg)}
+table{border-collapse:collapse;width:100%;font-size:14px} th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top} th{background:var(--code)}
+</style>
+</head>
+<body><main>
+<h1>Algoritmos 1 e 2 do orientador: texto e proposta, lado a lado</h1>
+<p class="sub">À esquerda, o pseudocódigo exatamente como está na Fundamentação Teórica (seção II.5, Algoritmos 1 e 2). À direita, o pseudocódigo que o código passaria a executar, na mesma notação. A regra de correção de w e de α é a do texto; o que muda é como se decide que a margem foi alcançada, a escala de w e o que se devolve quando nenhuma margem é viável.</p>
+<div class="leg"><span style="--x:var(--add)">mudança proposta agora</span><span style="--x:var(--amb)">já é assim no código hoje, diferente do texto</span><span style="--x:var(--del)">linha do texto que sai</span><span style="--x:var(--code)">igual</span></div>
+
+<h2>Algoritmo 1: Perceptron Estruturado com Relaxação de Margem</h2>
+<div class="cols">
+<div class="col"><h3>Texto do orientador</h3><pre>
+<span class="l">Entrada: Dados {(v(i), y(i)), v(i) ∈ R², y(i) ∈ {0,1}, i = 1..n}</span>
+<span class="l">         e centróides c(1) e c(2)</span>
+<span class="l">         Parâmetros: η, γ, λ, T</span>
+<span class="l">         Vetor primal w ∈ R²₊, vetor dual α ∈ Rⁿ₊</span>
+<span class="l">Saída:   w*, α*, número de iterações t</span>
+<span class="l">Início</span>
+<span class="l">  stop ← F; t ← 0;</span>
+<span class="l">  Enquanto (t ≤ T) ∧ (¬stop) Faça</span>
+<span class="l">    stop ← V;</span>
+<span class="l">    Para i ← 1 até n Faça</span>
+<span class="l">      ŷ(i) ← Arg Min_{k∈{1,2}} d_w(v(i), c(k));</span>
+<span class="l del">      Se y(i) ≠ ŷ(i) Então</span>
+<span class="l del">        Se (d_w(v(i),c(ŷ(i))) − d_w(v(i),c(y(i))) + λα_i) &lt; γ‖w‖ Então</span>
+<span class="l">          stop ← F;</span>
+<span class="l">          w ← Max{0, w(1 − ηγ/‖w‖) + η(d_I(v(i),c(ŷ(i))) − d_I(v(i),c(y(i))))};</span>
+<span class="l">          α ← α(1 − ηγ/‖w‖);</span>
+<span class="l">          α_i ← α_i + η;</span>
+<span class="l">        Fim_Se;</span>
+<span class="l del">      Fim_Se;</span>
+<span class="l">    Fim_Para;</span>
+<span class="l">    t ← t + 1;</span>
+<span class="l">  Fim_Enquanto;</span>
+<span class="l">  Retorne w;</span>
+<span class="l">Fim.</span>
+</pre></div>
+<div class="col"><h3>Proposta</h3><pre>
+<span class="l">Entrada: Dados {(v(i), y(i)), v(i) ∈ R², y(i) ∈ {0,1}, i = 1..n}</span>
+<span class="l">         e centróides c(1) e c(2)</span>
+<span class="l">         Parâmetros: η, γ, λ, T</span>
+<span class="l">         Vetor primal w ∈ R²₊, vetor dual α ∈ Rⁿ₊</span>
+<span class="l add">Saída:   w*, α*, t, viável ∈ {V,F}, w_me (melhor esforço), e_me</span>
+<span class="l">Início</span>
+<span class="l add">  stop ← F; t ← 0; e_me ← ∞;</span>
+<span class="l">  Enquanto (t ≤ T) ∧ (¬stop) Faça</span>
+<span class="l add">    stop ← V; erros ← 0;</span>
+<span class="l">    Para i ← 1 até n Faça</span>
+<span class="l">      ŷ(i) ← Arg Min_{k∈{1,2}} d_w(v(i), c(k));</span>
+<span class="l add">      k ← rival de y(i)  <span class="c">(o outro centróide)</span></span>
+<span class="l add">      Δ_i ← d_w(v(i),c(k)) − d_w(v(i),c(y(i)));      <span class="c">margem bruta, sem α</span><span class="mark">A</span></span>
+<span class="l add">      Se Δ_i &lt; γ‖w‖ Então stop ← F; Fim_Se;            <span class="c">viabilidade pela margem bruta</span></span>
+<span class="l add">      Se y(i) ≠ ŷ(i) Então erros ← erros + 1; Fim_Se;</span>
+<span class="l amb">      Se (Δ_i + λα_i) &lt; γ‖w‖ Então                      <span class="c">correção com a folga, para qualquer ponto</span><span class="mark">1</span></span>
+<span class="l">        w ← Max{0, w(1 − ηγ/‖w‖) + η(d_I(v(i),c(k)) − d_I(v(i),c(y(i))))};</span>
+<span class="l">        α ← α(1 − ηγ/‖w‖);</span>
+<span class="l">        α_i ← α_i + η;</span>
+<span class="l">      Fim_Se;</span>
+<span class="l">    Fim_Para;</span>
+<span class="l add">    w ← w/‖w‖; α ← α/‖w‖;                               <span class="c">escala fixa, mesma direção</span><span class="mark">B</span></span>
+<span class="l add">    Se erros &lt; e_me Então w_me ← w; e_me ← erros; Fim_Se;<span class="mark">C</span></span>
+<span class="l">    t ← t + 1;</span>
+<span class="l">  Fim_Enquanto;</span>
+<span class="l add">  viável ← stop;                                       <span class="c">V só se Δ_i ≥ γ‖w‖ para todo i</span></span>
+<span class="l add">  Retorne w, α, t, viável, w_me, e_me;</span>
+<span class="l">Fim.</span>
+</pre></div>
+</div>
+
+<div class="notas">
+<div class="nota"><b>A · Dois testes com papéis diferentes.</b> No texto, a mesma desigualdade (com λα_i) decide duas coisas: se o ponto corrige w e se a margem foi alcançada (stop). Na proposta, a correção continua usando a folga, mas o stop passa a depender só da margem bruta Δ_i. É isso que impede o algoritmo de "parar com sucesso" quando w encolheu e a folga está cobrindo pontos do lado errado.</div>
+<div class="nota"><b>B · Normalização por época.</b> O fator (1 − ηγ/‖w‖) encolhe w a cada correção; com w pequeno a exigência γ‖w‖ some. Dividir w e α por ‖w‖ ao fim de cada época preserva a direção (a única coisa que a regra do centróide mais próximo usa) e mantém a exigência de margem com tamanho fixo.</div>
+<div class="nota"><b>C · Melhor esforço explícito.</b> O texto não diz o que devolver quando nenhum γ é viável. O código já devolvia um "melhor esforço", mas escolhido pela época com menos violações com folga, o que premia as épocas em que w evaporou. A proposta guarda w_me, o w da época com menos pontos mal classificados.</div>
+<div class="nota amb"><b>1 · Já era assim no código.</b> O texto só corrige quando y(i) ≠ ŷ(i) e a margem relaxada falha; o código corrige qualquer ponto cuja margem relaxada falhe, mesmo bem classificado (é o Perceptron de margem do CILAMCE 2017). Mantive o comportamento do código; a revisão de 15/10 mostrou que a variante do texto colapsa ainda mais (w = [0, 0]). Fica para o senhor decidir qual das duas vai para o texto.</div>
+</div>
+
+<h2>Algoritmo 2: estratégia incremental com pesquisa binária</h2>
+<div class="cols">
+<div class="col"><h3>Texto do orientador</h3><pre>
+<span class="l">Entrada: fator de incremento da margem Δ, máximo de iterações T,</span>
+<span class="l">         tolerância ε</span>
+<span class="l">Saída:   w* ∈ R²₊</span>
+<span class="l">Início</span>
+<span class="l">  γ ← 0; t ← 0; w* ← [1,1]; α* ← 0;</span>
+<span class="l">  Enquanto t ≤ T Faça</span>
+<span class="l">    w ← w*; α ← α*;</span>
+<span class="l">    Algoritmo1(γ, t, w, α);</span>
+<span class="l">    Se t ≤ T Então            <span class="c">terminou antes do limite = viável</span></span>
+<span class="l">      γ_ini ← γ; w* ← w; α* ← α;</span>
+<span class="l">      γ ← γ · Δ;</span>
+<span class="l">    Senão</span>
+<span class="l">      γ_fim ← γ;</span>
+<span class="l">    Fim_Se;</span>
+<span class="l">  Fim_Enquanto;</span>
+<span class="l">  Enquanto (γ_fim − γ_ini) &gt; ε Faça</span>
+<span class="l">    γ ← (γ_ini + γ_fim)/2;</span>
+<span class="l">    w ← w*; α ← α*;</span>
+<span class="l">    Algoritmo1(γ, t, w, α);</span>
+<span class="l">    Se t &gt; T Então γ_fim ← γ Senão γ_ini ← γ Fim_Se;</span>
+<span class="l">    w* ← w; α* ← α;</span>
+<span class="l">  Fim_Enquanto;</span>
+<span class="l">  Retorne w*, α*;</span>
+<span class="l">Fim.</span>
+</pre></div>
+<div class="col"><h3>Proposta</h3><pre>
+<span class="l">Entrada: incremento da margem δ, máximo de iterações T,</span>
+<span class="l">         tolerância ε</span>
+<span class="l add">Saída:   w* ∈ R²₊, γ*, viável, margem_mínima</span>
+<span class="l">Início</span>
+<span class="l amb">  γ ← γ₀ (0,1); t ← 0; w* ← [1,1]; α* ← 0; viável_alguma ← F;<span class="mark">2</span></span>
+<span class="l">  Enquanto t ≤ T Faça</span>
+<span class="l">    w ← w*; α ← α*;</span>
+<span class="l add">    (w, α, _, viável, w_me, e_me) ← Algoritmo1(γ, w, α);</span>
+<span class="l add">    guardar w_me se e_me for o menor até agora;               <span class="c">melhor esforço global</span><span class="mark">C</span></span>
+<span class="l add">    Se viável Então                <span class="c">margem bruta ≥ γ‖w‖ em todos os pontos</span><span class="mark">A</span></span>
+<span class="l add">      γ_ini ← γ; w* ← w; α* ← α; viável_alguma ← V;</span>
+<span class="l amb">      γ ← γ + δ (ou o ponto médio se γ_fim já for conhecido);<span class="mark">2</span></span>
+<span class="l">    Senão</span>
+<span class="l">      γ_fim ← γ;</span>
+<span class="l amb">      γ ← (γ_ini + γ_fim)/2; w ← w*; α ← α*;         <span class="c">bisseção já aqui</span><span class="mark">3</span></span>
+<span class="l">    Fim_Se;</span>
+<span class="l">    Se (γ_fim − γ_ini) ≤ ε Então sair; Fim_Se;</span>
+<span class="l">  Fim_Enquanto;</span>
+<span class="l add">  margem_mínima ← min_i Δ_i / ‖w*‖;                          <span class="c">gravada no CSV</span><span class="mark">D</span></span>
+<span class="l add">  Se viável_alguma Então Retorne w*, γ_ini, V, margem_mínima;</span>
+<span class="l add">  Senão Retorne w_me, 0, F, margem_mínima;                  <span class="c">melhor esforço, marcado com †</span></span>
+<span class="l">Fim.</span>
+</pre></div>
+</div>
+
+<div class="notas">
+<div class="nota"><b>A · "Viável" vem do Algoritmo 1 novo.</b> No texto a viabilidade é "o Algoritmo 1 terminou antes de T", e ele termina quando a margem relaxada passa para todos. Na proposta termina quando a margem bruta passa para todos; o resto da busca é igual.</div>
+<div class="nota"><b>D · Diagnóstico.</b> Além de γ, o CSV ganha a margem mínima bruta dividida por ‖w*‖. Negativa significa que a régua devolvida não separa os rótulos, e as tabelas marcam † nesses casos e no melhor esforço.</div>
+<div class="nota amb"><b>2 · Já era assim no código.</b> O texto parte de γ = 0 e multiplica por Δ; o código parte de γ₀ = 0,1 e soma δ = 0,05. Não proponho mudar isso agora; é uma diferença a registrar no texto.</div>
+<div class="nota amb"><b>3 · Já era assim no código.</b> O texto faz a fase incremental inteira e só depois a bisseção; o código entra na bisseção no primeiro γ inviável e restaura w* (o texto guarda w mesmo quando inviável). O código é o mais defensável aqui; diferença a registrar no texto.</div>
+</div>
+
+<h2>Resumo das diferenças</h2>
+<table><thead><tr><th>Ponto</th><th>Texto do orientador</th><th>Código hoje</th><th>Proposta</th></tr></thead><tbody>
+<tr><td>Quando w é corrigido</td><td>y ≠ ŷ e margem relaxada falha</td><td>margem relaxada falha (qualquer ponto)</td><td>igual ao código hoje (nota 1)</td></tr>
+<tr><td>Quando a margem γ é dada por alcançada</td><td>margem relaxada ≥ γ‖w‖ em todos</td><td>idem</td><td><b>margem bruta ≥ γ‖w‖ em todos</b> (A)</td></tr>
+<tr><td>Escala de w</td><td>livre</td><td>livre (encolhe até ~0)</td><td><b>‖w‖ = 1 ao fim de cada época</b> (B)</td></tr>
+<tr><td>Nenhum γ viável</td><td>não tratado</td><td>w da época com menos violações relaxadas, γ = 0</td><td><b>w da época com menos pontos mal classificados</b>, γ = 0 (C)</td></tr>
+<tr><td>Início e incremento de γ</td><td>γ = 0, γ ← γ·Δ</td><td>γ = 0,1, γ ← γ + 0,05</td><td>igual ao código hoje (nota 2)</td></tr>
+<tr><td>Bisseção</td><td>após a fase incremental; guarda w mesmo inviável</td><td>no primeiro γ inviável; restaura w*</td><td>igual ao código hoje (nota 3)</td></tr>
+<tr><td>Diagnóstico gravado</td><td>—</td><td>γ, histórico da busca</td><td><b>+ margem mínima bruta/‖w‖</b>, † por margem negativa (D)</td></tr>
+</tbody></table>
+<p class="sub">Semente 42 do gpt no Problema A, completa de 15/10/2026: hoje w = [0; 0,0006], γ = 0,05 "viável", fidelidade 75 %, 37 pontos do lado errado; proposta w = [0,13; 0,87], γ = 0 (melhor esforço), fidelidade 85 %, 21 pontos do lado errado; NNLS nos mesmos rótulos 85 %.</p>
+</main></body></html>

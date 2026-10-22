@@ -1,0 +1,18 @@
+\begin{table}[htbp]
+\centering
+\small
+\caption{Problema A, Passo 6 (google/gemini-2.5-flash-lite): escolha da melhor métrica para a transferência.}
+\label{tab:A_passo6_eleicao_flashlite}
+\begin{tabular}{lrrrrrrrl}
+\toprule
+Métrica de origem (A) & Fid.\ (vs LLM) no A & Acur.\ vs real (A) & cos(Perc., NNLS) & Consist.\ B & $\kappa$ B & Consist.\ C & $\kappa$ C & Eleição \\
+\midrule
+zero-shot† & 88,2 (87,3–88,7) & 14,2 (7,3–20,0) & 0,994 & 72,3 & 0,258 & 92,7 & 0,852 &  \\
+4-shot† & 95,4 (85,6–100,0) & 93,2 (66,0–98,0) & 0,897 & 66,7 & 0,209 & 91,4 & 0,828 &  \\
+\textbf{10-shot†} & \textbf{98,1 (94,3–100,0)} & \textbf{96,0 (93,3–98,0)} & \textbf{0,910} & \textbf{67,4} & \textbf{0,206} & \textbf{91,7} & \textbf{0,832} & \textbf{eleita} \\
+20-shot† & 97,8 (94,6–100,0) & 96,8 (94,7–98,0) & 0,947 & 68,4 & 0,230 & 91,8 & 0,834 &  \\
+40-shot† & 98,0 (94,5–100,0) & 96,9 (96,0–98,0) & 0,939 & 69,0 & 0,235 & 91,9 & 0,837 &  \\
+\bottomrule
+\multicolumn{9}{p{0.95\linewidth}}{\footnotesize Critério de eleição: maior fidelidade média no Problema A (Perceptron, R$^2$, sem colapso) entre o zero-shot e cada k few-shot; o teto não concorre. Eleição lida da coluna eleita\_passo6 de bloco1\_bc\_passo3\_consistencia (regra única do runner). Acur.\ vs real (A) = acurácia (vs rótulo real) da métrica, contexto. Consistência e $\kappa$ em B e C: rótulos zero-shot do LLM contra a métrica de origem (Perceptron, só $\hat{W}$ transferido, centróides recalculados pelos rótulos do LLM). $\kappa$ = Cohen's $\kappa$ (faixas de Landis e Koch, 1977). † = em pelo menos uma estimativa o Perceptron não encontrou $\hat{W}$ que separe os rótulos: melhor esforço ($\gamma = 0$) ou margem bruta mínima negativa (algum ponto do lado errado da fronteira). Passos do Problema A: zero-shot = Passo 2 (o LLM rotula sem exemplos); $k$-shot = Passo 3 (o LLM rotula com $k$ exemplos do rótulo real); a métrica de cada linha é estimada no Passo 4; teto = Passo 5 (W ajustado diretamente ao rótulo real). Em negrito: a métrica eleita para a transferência (Passo 6).} \\
+\end{tabular}
+\end{table}

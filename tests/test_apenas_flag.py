@@ -27,38 +27,41 @@ class TestFlagsParaApenas(unittest.TestCase):
     def test_bloco3_sozinho(self):
         flags = dm.flags_para_apenas(["bloco3"])
         self.assertEqual(set(flags), set(TODAS))
-        self.assertTrue(flags["RUN_HOMEM_MULHER"])
+        self.assertTrue(flags["RUN_PROBLEMA_G"])
         for flag in TODAS:
-            if flag != "RUN_HOMEM_MULHER":
+            if flag != "RUN_PROBLEMA_G":
                 self.assertFalse(flags[flag], flag)
 
-    def test_bloco1_liga_meia_lua_como_problema_d(self):
-        # A meia-lua é o Problema D do Bloco 1 (LLM como fonte, R2/R3/R4) E o
-        # Problema F do Bloco 2: a flag precisa ligar em `--apenas bloco1`.
+    def test_bloco1_liga_problema_d_e_nao_o_problema_f(self):
+        # Meia-lua: Problema D (Bloco 1, Passos 2 a 5 como o A, sem split) é
+        # RUN_PROBLEMA_D; o Problema F (aprendiz, split 70/30) fica no bloco2.
         flags = dm.flags_para_apenas(["bloco1"])
-        self.assertTrue(flags["RUN_PHASES_ABC"])
-        self.assertTrue(flags["RUN_R3R4_EXPERIMENT"])
-        self.assertTrue(flags["RUN_PROBLEM_MEIALUA"])
-        self.assertFalse(flags["RUN_PHASE_E"])
-        self.assertFalse(flags["RUN_HOMEM_MULHER"])
-        self.assertFalse(flags["RUN_ORACLE_VALIDATION"])
+        self.assertTrue(flags["RUN_PROBLEMAS_ABC"])
+        self.assertTrue(flags["RUN_A_PASSO4_R3R4"])
+        self.assertTrue(flags["RUN_PROBLEMA_D"])
+        self.assertFalse(flags["RUN_PROBLEMA_F"])
+        self.assertFalse(flags["RUN_PROBLEMA_E"])
+        self.assertFalse(flags["RUN_PROBLEMA_G"])
+        self.assertFalse(flags["RUN_ORACULO"])
 
     def test_oraculo_nao_liga_llm(self):
         flags = dm.flags_para_apenas(["oraculo"])
-        self.assertTrue(flags["RUN_ORACLE_VALIDATION"])
-        self.assertFalse(flags["RUN_PHASES_ABC"])
-        self.assertFalse(flags["RUN_PHASE_E"])
-        self.assertFalse(flags["RUN_PROBLEM_MEIALUA"])
-        self.assertFalse(flags["RUN_HOMEM_MULHER"])
+        self.assertTrue(flags["RUN_ORACULO"])
+        self.assertFalse(flags["RUN_PROBLEMAS_ABC"])
+        self.assertFalse(flags["RUN_PROBLEMA_E"])
+        self.assertFalse(flags["RUN_PROBLEMA_F"])
+        self.assertFalse(flags["RUN_PROBLEMA_D"])
+        self.assertFalse(flags["RUN_PROBLEMA_G"])
 
     def test_combinacao_de_blocos(self):
         flags = dm.flags_para_apenas(["bloco3", "bloco2"])
-        self.assertTrue(flags["RUN_PHASE_E"])
-        self.assertTrue(flags["RUN_PROBLEM_MEIALUA"])
-        self.assertTrue(flags["RUN_HOMEM_MULHER"])
-        self.assertFalse(flags["RUN_PHASES_ABC"])
-        self.assertFalse(flags["RUN_R3R4_EXPERIMENT"])
-        self.assertFalse(flags["RUN_ORACLE_VALIDATION"])
+        self.assertTrue(flags["RUN_PROBLEMA_E"])
+        self.assertTrue(flags["RUN_PROBLEMA_F"])
+        self.assertTrue(flags["RUN_PROBLEMA_G"])
+        self.assertFalse(flags["RUN_PROBLEMAS_ABC"])
+        self.assertFalse(flags["RUN_A_PASSO4_R3R4"])
+        self.assertFalse(flags["RUN_PROBLEMA_D"])
+        self.assertFalse(flags["RUN_ORACULO"])
 
     def test_todos_os_blocos_equivale_a_tudo_ligado(self):
         flags = dm.flags_para_apenas(list(dm.BLOCOS_APENAS))
@@ -73,8 +76,8 @@ class TestFlagsParaApenas(unittest.TestCase):
     def test_nao_toca_subflags(self):
         # Sub-flags gateadas pelo bloco-pai não entram no dicionário.
         flags = dm.flags_para_apenas(["bloco1"])
-        for sub in ("RUN_CLASS_ORDER_BIAS", "RUN_DILUTION", "RUN_HM_CLASS_NAMES_AB",
-                    "RUN_ORACLE_MEIALUA", "RUN_CLASSICAL_BASELINES"):
+        for sub in ("RUN_VIES_ORDEM_CLASSES", "RUN_E_PASSO4_DILUICAO", "RUN_PROBLEMA_G_CLASSES_AB",
+                    "RUN_D_PASSO5_TETO", "RUN_E_PASSO6_BASELINES"):
             self.assertNotIn(sub, flags)
 
 
@@ -106,3 +109,26 @@ class TestArgparse(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestOraculoAcumulaSementes(unittest.TestCase):
+    """13/10/2026: o acumulador do oráculo era sobrescrito a cada seed (só a última sobrevivia, em dobro).
+    A última execução `--apenas oraculo` deve ter 3 seeds × 3 problemas × 2 algoritmos = 18 linhas."""
+
+    def test_csv_do_oraculo_tem_as_tres_sementes(self):
+        import glob
+        import pandas as pd
+        pastas = sorted(glob.glob(os.path.join(os.path.dirname(__file__), "..", "resultados", "execucao_*_apenas-oraculo")))
+        if not pastas:
+            self.skipTest("nenhuma execução --apenas oraculo em resultados/")
+        csvs = glob.glob(os.path.join(pastas[-1], "bloco1_oraculo_passos_1_a_3_*.csv"))
+        if not csvs:
+            self.skipTest("execução --apenas oraculo sem CSV do oráculo")
+        df = pd.read_csv(csvs[0])
+        if "Oráculo sobre B" in set(df["problem"]):
+            self.skipTest("execução --apenas oraculo anterior a 14/10/2026 (oráculo sobre B)")
+        # 14/10/2026: os três oráculos rodam sobre as gaussianas do E (E3 = Problema 1, E1, E2)
+        self.assertEqual(set(df["problem"]), {"Oráculo sobre E3", "Oráculo sobre E1", "Oráculo sobre E2"})
+        self.assertEqual(sorted(df["random_seed"].unique().tolist()), sorted(dm.RANDOM_SEEDS))
+        self.assertEqual(len(df), len(dm.RANDOM_SEEDS) * 3 * 2)
+        self.assertFalse(df.duplicated(["random_seed", "problem", "algorithm"]).any())

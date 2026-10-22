@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Perceptron Estruturado Animado</title>
-<meta name="description" content="Animação fiel, linha a linha, do Perceptron Estruturado com Relaxação de Margem: o código implementado, o Algoritmo 1 do artigo e uma versão revisada do pseudocódigo, com os dados reais da Fase A.">
+<meta name="description" content="Animação fiel, linha a linha, do Perceptron Estruturado com Relaxação de Margem: o código implementado, o Algoritmo 1 do artigo e uma versão revisada do pseudocódigo, com os dados reais do Problema A (Passos 2 e 4).">
 <style>
   :root {
     color-scheme: light;
@@ -127,10 +127,10 @@
 <main>
 <header>
   <h1>Perceptron Estruturado com Relaxação de Margem: o algoritmo implementado, passo a passo</h1>
-  <p class="sub">Animação passo a passo de três versões do algoritmo, sobre os mesmos dados e os rótulos reais da Fase A (execução completa de 05/07/2026): o <strong>código implementado</strong> (<code>src/relaxed_perceptron.py</code>, que gerou todos os resultados), o <strong>Algoritmo 1 do artigo</strong> (versão de 02/08/2026) e uma <strong>versão revisada do Algoritmo 1</strong> (28/08/2026). O objetivo é mostrar, de forma verificável, o que o código faz em cada passo e como termina, inclusive em problemas não linearmente separáveis. Gerada em __DATA_GERACAO__.</p>
+  <p class="sub">Animação passo a passo de três versões do algoritmo, sobre os mesmos dados e os rótulos reais do Problema A, Passo 2 (execução completa de __EXECUCAO__): o <strong>código implementado</strong> (<code>src/relaxed_perceptron.py</code>, versão de 15/10/2026, que gera os resultados), o <strong>Algoritmo 1 do artigo</strong> (versão de 02/08/2026) e uma <strong>versão revisada do Algoritmo 1</strong> (28/08/2026). O objetivo é mostrar, de forma verificável, o que o código faz em cada passo e como termina, inclusive em problemas não linearmente separáveis. Gerada em __DATA_GERACAO__.</p>
   <span class="badge" id="selfcheck">Verificando se o JavaScript reproduz o Python…</span>
   <div class="card aviso">
-    <strong>Esta página usa só os rótulos dados pelo LLM.</strong> Na Fase A o algoritmo é treinado com as respostas do LLM e a pergunta é se existe um w que reproduz essas decisões. Por isso as cores dos pontos, a fidelidade e todas as comparações usam os rótulos do LLM, e o ground truth não aparece na página.
+    <strong>Esta página usa só os rótulos dados pelo LLM.</strong> No Passo 4 do Problema A o algoritmo é treinado com as respostas do LLM e a pergunta é se existe um w que reproduz essas decisões. Por isso as cores dos pontos, a fidelidade e todas as comparações usam os rótulos do LLM, e o ground truth não aparece na página.
     Comparar com o ground truth confundiria a leitura: no zero-shot o LLM não recebe exemplos e não tem como saber que lado do plano se chama "Classe A". No Problema A, por exemplo, ele inverteu os nomes das classes nas seis rodadas, então a concordância com o ground truth fica abaixo de 50% mesmo quando a métrica reproduz bem o LLM.
   </div>
 </header>
@@ -141,12 +141,14 @@
   <ol class="resposta">
     <li><strong>O código faz a suavização da margem.</strong> A restrição testada em cada ponto é
       <span class="formula">d<sub>W</sub>(x<sub>i</sub>, c<sub>k</sub>) − d<sub>W</sub>(x<sub>i</sub>, c<sub>l</sub>) + λ·α<sub>i</sub> ≥ γ·‖w‖</span>,
-      com λ = 1/C e C = 1 (linhas 159 e 242 a 248). A cada violação do ponto i, α<sub>i</sub> cresce η e todo o vetor α é encolhido pelo fator (1 − ηγ/‖w‖) (linhas 280 a 282). É a relaxação das Equações 28 e 29 do CILAMCE 2017. O Algoritmo 1 do artigo, por ser um resumo, não mostra o termo λ·α<sub>i</sub>.</li>
+      com λ = 1/C e C = 1 (linhas 162 e 245 a 251). A cada violação do ponto i, α<sub>i</sub> cresce η e todo o vetor α é encolhido pelo fator (1 − ηγ/‖w‖), truncado em [0, 1] (linhas 272 a 287). É a relaxação das Equações 28 e 29 do CILAMCE 2017. O Algoritmo 1 do artigo, por ser um resumo, não mostra o termo λ·α<sub>i</sub>.</li>
+    <li><strong>Ao fim de cada época w e α são divididos por ‖w‖ (15/10/2026, linhas 297 a 300).</strong> A restrição é homogênea em w, salvo a folga: sem isso o fator (1 − ηγ/‖w‖) encolhia w a cada correção até ‖w‖ ≈ 10<sup>−3</sup>, a exigência γ‖w‖ ficava desprezível e qualquer α<sub>i</sub> &gt; 0 satisfazia a restrição com o ponto do lado errado da fronteira (um "γ viável" degenerado). Só a direção de w define o centróide mais próximo, então o critério não muda.</li>
     <li><strong>Laço interno (γ fixo) sempre termina.</strong> Cada época percorre os m pontos em ordem aleatória e corrige w e α a cada violação. O laço para quando uma época inteira passa sem violação (γ é viável) ou ao atingir <code>max_epochs</code> = 50 épocas (γ é declarado inviável). Não existe espera por separação perfeita.</li>
     <li><strong>Laço externo (busca em γ) sempre termina.</strong> γ começa em 0,1. Se viável, γ<sub>lo</sub> = γ, w<sup>*</sup> e α<sup>*</sup> são guardados e γ cresce <code>delta_gamma</code> = 0,05. Se inviável, γ<sub>hi</sub> = γ, w e α voltam à última solução viável (ou a w = [1, 1] e α = 0 se nunca houve uma) e γ vai ao ponto médio de [γ<sub>lo</sub>, γ<sub>hi</sub>]. Para quando |γ<sub>hi</sub> − γ<sub>lo</sub>| ≤ <code>tol</code> = 10<sup>−4</sup> ou após <code>max_iterations</code> = 50 tentativas.</li>
-    <li><strong>Em problema não separável o retorno é o "melhor esforço".</strong> γ = 0,1 falha; as bisseções 0,05; 0,025; … também falham, cada uma recomeçando de w = [1, 1] com 50 épocas. Na 11ª tentativa o intervalo [0; 0,1/2<sup>10</sup>] fica abaixo da tolerância e a busca para. Como nenhum γ foi viável, a função devolve o w da época com <em>menos violações</em> entre todas as 550 épocas, com γ = 0 e um aviso no log (linhas 368 a 378, <code>use_best_effort=True</code> em todas as chamadas do runner). Não é o w da última época.</li>
+    <li><strong>Em problema não separável o retorno é o "melhor esforço".</strong> γ = 0,1 falha; as bisseções 0,05; 0,025; … também falham, cada uma recomeçando de w = [1, 1] com 50 épocas. Na 11ª tentativa o intervalo [0; 0,1/2<sup>10</sup>] fica abaixo da tolerância e a busca para. Como nenhum γ foi viável, a função devolve o w da época com <em>menos pontos mal classificados</em> (margem bruta negativa, sem a folga α; linhas 304 a 311, regra de 15/10/2026) entre todas as 550 épocas, com γ = 0 e um aviso no log (linhas 386 a 397, <code>use_best_effort=True</code> em todas as chamadas do runner). Não é o w da última época.</li>
+    <li><strong>A margem bruta mínima do w devolvido é registrada (15/10/2026, <code>_registrar_margem_minima</code>, linhas 410 a 428).</strong> É a menor diferença, entre os pontos, da distância ao centróide rival menos a distância ao centróide correto, dividida por ‖w‖, sem a folga α. Negativa = algum ponto fica do lado errado da fronteira sob o w devolvido; o runner grava o valor na coluna <code>margem_minima</code> dos CSVs e as tabelas marcam † quando γ = 0 ou a margem é negativa.</li>
   </ol>
-  <p class="small">No Problema A, que é a estimação da Fase A no artigo (2 modelos × 3 sementes), <span id="resumo-reais">…</span> <span id="resumo-todos"></span> As outras duas versões do algoritmo (abas da seção 3) terminam de outro modo: o Algoritmo 1 do artigo sempre após T épocas; a versão revisada quando uma época passa sem erro de classificação ou após T épocas.</p>
+  <p class="small">No Problema A, que é a estimação da métrica (Passo 4) no artigo (2 modelos × 3 sementes), <span id="resumo-reais">…</span> <span id="resumo-todos"></span> As outras duas versões do algoritmo (abas da seção 3) terminam de outro modo: o Algoritmo 1 do artigo sempre após T épocas; a versão revisada quando uma época passa sem erro de classificação ou após T épocas.</p>
 </div>
 
 <h2>2. As três versões lado a lado</h2>
@@ -156,13 +158,13 @@
     <thead><tr><th></th><th>Código implementado (<code>relaxed_perceptron.py</code>)</th><th>Algoritmo 1 do artigo (02/08/2026)</th><th>Versão revisada do Algoritmo 1 (28/08/2026)</th></tr></thead>
     <tbody>
       <tr><td>Quando corrige</td><td>Quando d<sub>W</sub>(x<sub>i</sub>,c<sub>k</sub>) − d<sub>W</sub>(x<sub>i</sub>,c<sub>l</sub>) + λα<sub>i</sub> &lt; γ‖w‖ (margem com folga)</td><td>Quando ŷ<sup>(i)</sup> ≠ y<sup>(i)</sup> (erro de classificação)</td><td>Quando y(i) ≠ ŷ(i) (erro de classificação)</td></tr>
-      <tr><td>Correção de w</td><td>w ← max(0, w·(1 − ηγ/‖w‖) − η·g), com o fator (1 − ηγ/‖w‖) truncado em [0, 2] e g = (x−c<sub>l</sub>)² − (x−c<sub>k</sub>)² componente a componente</td><td>w ← max(0, w − η·f·g), mesmo g, com f ∈ [0, 1] por "busca binária satisfazendo a relaxação de margem γ" (passo não detalhado; aqui f = 1 por padrão, ver aba)</td><td>w ← w·(1 − ηγ/‖w‖₂) − η·(d<sub>w</sub>(v,c<sub>ŷ</sub>) − d<sub>w</sub>(v,c<sub>y</sub>)), termo escalar, com os centróides na ordem oposta à Eq. 29</td></tr>
+      <tr><td>Correção de w</td><td>w ← max(0, w·(1 − ηγ/‖w‖) − η·g), com o fator (1 − ηγ/‖w‖) truncado em [0, 1] e g = (x−c<sub>l</sub>)² − (x−c<sub>k</sub>)² componente a componente; ao fim de cada época w e α são divididos por ‖w‖ (15/10/2026)</td><td>w ← max(0, w − η·f·g), mesmo g, com f ∈ [0, 1] por "busca binária satisfazendo a relaxação de margem γ" (passo não detalhado; aqui f = 1 por padrão, ver aba)</td><td>w ← w·(1 − ηγ/‖w‖₂) − η·(d<sub>w</sub>(v,c<sub>ŷ</sub>) − d<sub>w</sub>(v,c<sub>y</sub>)), termo escalar, com os centróides na ordem oposta à Eq. 29</td></tr>
       <tr><td>Variáveis α (suavização)</td><td>Sim: entram no teste da restrição e são atualizadas</td><td>Não existem</td><td>Atualizadas, mas não entram no teste</td></tr>
       <tr><td>Projeção w ≥ 0</td><td>Sim</td><td>Sim (max(0, ·))</td><td>Não aparece (a saída declara w ∈ R²₊)</td></tr>
       <tr><td>Ordem dos pontos</td><td>Permutação aleatória por época (RandomState(42))</td><td>i = 1, …, N</td><td>i = 1, …, n</td></tr>
       <tr><td>Parada do laço de épocas</td><td>Época sem violação, ou max_epochs = 50</td><td>T épocas fixas, sem parada antecipada</td><td>Época sem erro (flag stop), ou T épocas</td></tr>
       <tr><td>Papel de γ</td><td>Busca binária externa: cresce δ = 0,05 enquanto viável, bisseção quando inviável, tol = 10⁻⁴, até 50 tentativas</td><td>Parâmetro fixo (a busca binária é em f)</td><td>Parâmetro fixo, só no fator de encolhimento</td></tr>
-      <tr><td>Retorno em problema não separável</td><td>w da época com menos violações, γ = 0, aviso no log</td><td>w da T-ésima época</td><td>w da T-ésima época</td></tr>
+      <tr><td>Retorno em problema não separável</td><td>w da época com menos pontos mal classificados (margem bruta &lt; 0), γ = 0, aviso no log; margem bruta mínima registrada (15/10/2026)</td><td>w da T-ésima época</td><td>w da T-ésima época</td></tr>
       <tr><td>Hiperparâmetros usados aqui</td><td>η = 0,001; C = 1; γ₀ = 0,1; δ = 0,05; 50 épocas; tol 10⁻⁴; 50 tentativas (protocolo)</td><td>η = 0,001; γ = 0,1; T = 50; f = 1 (escolhidos para espelhar o código; esta versão nunca foi executada)</td><td>η = 0,001; γ = 0,1; T = 50 (idem)</td></tr>
     </tbody>
   </table>
@@ -179,7 +181,7 @@
 
 <div class="card" style="margin-top:16px">
   <div class="controls">
-    <label class="wide"><span class="lab">Conjunto de dados <span class="info" tabindex="0" data-info="São todos os conjuntos em 2 dimensões (x1, x2) que o LLM rotulou em zero-shot na execução completa, com o prompt padrão de cada experimento, nos 2 modelos e nas 3 sementes. Lineares: Problemas A, B e C (Bloco 1) e Problema E (Bloco 2, perito). Não lineares: meia-lua e peso × altura (base real), com o conjunto de treino da Fase A externa (70% dos pontos) e, no peso × altura, as quatro variantes de enunciado (classes Homem/Mulher ou A/B, atributos x1/x2 ou peso/altura). Os centróides são a média dos pontos de cada classe segundo os rótulos do LLM. No trabalho a métrica é estimada nos Problemas A, meia-lua e peso × altura; nos Problemas B, C e E ela não é estimada (B e C testam a métrica do A, e no E o LLM aprende com exemplos), e aqui o algoritmo roda sobre os rótulos zero-shot só para mostrar o seu comportamento.">i</span></span>
+    <label class="wide"><span class="lab">Conjunto de dados <span class="info" tabindex="0" data-info="São todos os conjuntos em 2 dimensões (x1, x2) que o LLM rotulou em zero-shot na execução completa, com o prompt padrão de cada experimento, nos 2 modelos e nas 3 sementes. Lineares: Problemas A, B e C (Bloco 1) e Problema E (Bloco 2, perito). Não lineares: meia-lua e peso × altura (base real), com o conjunto de treino do Passo 2 (70% dos pontos) e, no peso × altura, as quatro variantes de enunciado (classes Homem/Mulher ou A/B, atributos x1/x2 ou peso/altura). Os centróides são a média dos pontos de cada classe segundo os rótulos do LLM. No trabalho a métrica é estimada nos Problemas A, meia-lua e peso × altura; nos Problemas B, C e E ela não é estimada (B e C testam a métrica do A, e no E o LLM aprende com exemplos), e aqui o algoritmo roda sobre os rótulos zero-shot só para mostrar o seu comportamento.">i</span></span>
       <select id="dataset"></select>
     </label>
   </div>
@@ -275,11 +277,11 @@
 
 <h2>7. Fidelidade desta página ao código</h2>
 <div class="card">
-  <p>A aba "Código implementado" anima um porte linha a linha do método <code>fit</code> para JavaScript, incluindo a projeção w ≥ 0, o corte de α em [0, 10<sup>6</sup>], a restauração de w e α na bisseção, o registro de <code>gamma_history</code> e os três caminhos de retorno. O embaralhamento dos pontos a cada época usa o mesmo gerador do numpy (Mersenne Twister MT19937 com <code>RandomState(42)</code>), portanto a ordem dos pontos é a mesma do Python.</p>
+  <p>A aba "Código implementado" anima um porte linha a linha do método <code>fit</code> para JavaScript, incluindo a projeção w ≥ 0, o corte de α em [0, 10<sup>6</sup>], a normalização de w e α ao fim de cada época, a contagem de pontos mal classificados do melhor esforço, a restauração de w e α na bisseção, o registro de <code>gamma_history</code>, os três caminhos de retorno e a margem bruta mínima. O embaralhamento dos pontos a cada época usa o mesmo gerador do numpy (Mersenne Twister MT19937 com <code>RandomState(42)</code>), portanto a ordem dos pontos é a mesma do Python.</p>
   <p>Ao abrir a página, o JavaScript roda todos os conjuntos abaixo com os hiperparâmetros do protocolo e compara, bit a bit, w, γ e o histórico de γ com o resultado gravado do Python (<code>train_relaxed_perceptron</code> com <code>PERCEPTRON_PARAMS</code> e <code>use_best_effort=True</code>):</p>
   <div class="scroll"><table id="valid"><thead><tr><th>conjunto</th><th>classe 1</th><th>Python: w</th><th>Python: γ</th><th>iterações</th><th>caminho de retorno</th><th>JavaScript</th><th>w no CSV da execução</th></tr></thead><tbody></tbody></table></div>
-  <p class="small">Os rótulos "do LLM" são as respostas zero-shot reais, lidas de <code>llm_interactions_parte*.json</code>; cada conjunto usa o lote de coleta daquele experimento (mesmo modelo, prompt e semente). Os pontos vêm de <code>dados_sinteticos_seed*/problem_{A,B,C}.csv</code>, de <code>problem_E.csv</code> (Problema E, o perito linear do Bloco 2; <code>problem_D.csv</code> em execuções anteriores a 01/10/2026), de <code>create_problem_d_meialua</code> e de <code>dados_reais/homem_mulher/peso_altura.csv</code>; na meia-lua e no peso × altura, só o conjunto de treino da Fase A externa (70%, <code>RandomState(seed)</code>). O ground truth não é usado. A última coluna compara o w do Python com o w gravado nos CSVs da execução (<code>bloco1_phases_abc_*.csv</code> e <code>bloco23_external_phase_a_*.csv</code>); nos Problemas B, C e E o trabalho não estima a métrica, então não há valor gravado.</p>
-  <p class="small" id="omitidos"></p><p class="small"> Os centróides são as médias por classe desses rótulos (<code>compute_centroids</code> em <code>src/metrics.py</code>), como na Fase A.</p>
+  <p class="small">Os rótulos "do LLM" são as respostas zero-shot reais, lidas de <code>llm_interactions_parte*.json</code>; cada conjunto usa o lote de coleta daquele experimento (mesmo modelo, prompt e semente). Os pontos vêm de <code>dados_sinteticos_seed*/problema_{A,B,C}.csv</code>, de <code>problema_E.csv</code> (Problema E, o perito linear do Bloco 2; <code>problema_D.csv</code> em execuções anteriores a 01/10/2026), de <code>create_problem_d_meialua</code> e de <code>dados_reais/homem_mulher/peso_altura.csv</code>; na meia-lua e no peso × altura, só o conjunto de treino do Passo 2 (70%, <code>RandomState(seed)</code>). O ground truth não é usado. A última coluna compara o w do Python com o w gravado nos CSVs da execução (<code>bloco1_abc_passos_2_a_4_*.csv</code> e <code>bloco23_fg_passos_2_e_4_*.csv</code>); nos Problemas B, C e E o trabalho não estima a métrica, então não há valor gravado.</p>
+  <p class="small" id="omitidos"></p><p class="small"> Os centróides são as médias por classe desses rótulos (<code>compute_centroids</code> em <code>src/metrics.py</code>), como no Passo 4 do Problema A.</p>
   <p>As abas do artigo e da versão revisada são transcrições dos pseudocódigos de dois documentos Word, executadas como escritas. Onde o texto não define uma operação, a página declara a interpretação adotada no quadro da aba e oferece a alternativa como opção.</p>
 </div>
 
@@ -354,76 +356,10 @@ __CORE_JS__
   ];
   const PSEUDO_PROF_IDS = [null, null, null, null, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21];
 
-  const PSEUDO_CODIGO = [
-    'Algoritmo (código implementado, RelaxedPerceptron.fit):',
-    'Entrada: Dados {(v(i),y(i)), i=1,…,n}, v(i) ∊ R^d, y(i) ∊ {0,1} e centróides c(0) e c(1)',
-    'Parâmetros: η, C, γ₀, δ, T, P, tol, s, melhor_esforço',
-    'Saída: Vetor de pesos w ∊ R^d₊ e margem γ',
-    'Início',
-    ' 1  λ ← 1/C;',
-    ' 2  Inicializar w ← [1,…,1]; α ← 0; γ ← γ₀;',
-    ' 3  γ_inf ← 0; γ_sup ← ∞;',
-    ' 4  w* ← w; α* ← α;',
-    ' 5  w_melhor ← w; viol_min ← ∞; viável ← F;',
-    ' 6  p ← 0;',
-    ' 7  Iniciar o gerador de números aleatórios com a semente s;',
-    ' 8  Enquanto p < P Faça',
-    ' 9      p ← p + 1;',
-    '10      viol_final ← –1;',
-    '11      Para t ← 1 até T Faça',
-    '12          viol ← 0;',
-    '13          π ← permutação aleatória de (1,…,n);',
-    '14          Para cada i em π, nessa ordem, Faça',
-    '15              l ← y(i);',
-    '16              k ← Arg {Min_{j≠l} d_w(v(i),c(j))};',
-    '17              N ← Max {||w||₂, 10⁻⁹};',
-    '18              Se d_w(v(i),c(k)) – d_w(v(i),c(l)) + λ.α_i < γ.N Então',
-    '19                  viol ← viol + 1;',
-    '20                  g_j ← (v_j(i) – c_j(l))² – (v_j(i) – c_j(k))², j = 1,…,d;',
-    '21                  f ← 1 – η.γ/N;',
-    '22                  f ← Min {Max {f, 0}, 2};',
-    '23                  w ← w.f – η.g;',
-    '24                  w ← Max {0, w};',
-    '25                  α ← α.f;',
-    '26                  α_i ← α_i + η;',
-    '27                  α_q ← Min {Max {α_q, 0}, 10⁶}, q = 1,…,n;',
-    '28              Fim_Se;',
-    '29          Fim_Para;',
-    '30          viol_final ← viol;',
-    '31          Se viol < viol_min Então',
-    '32              viol_min ← viol; w_melhor ← w;',
-    '33          Fim_Se;',
-    '34          Se viol = 0 Então',
-    '35              Sair do laço Para em t;',
-    '36          Fim_Se;',
-    '37      Fim_Para;',
-    '38      Se viol_final = 0 Então',
-    '39          viável ← V; γ_inf ← γ; w* ← w; α* ← α;',
-    '40          Se γ_sup = ∞ Então',
-    '41              γ ← γ + δ;',
-    '42          Senão',
-    '43              γ ← Min {γ + δ, (γ_inf + γ_sup)/2};',
-    '44          Fim_Se;',
-    '45      Senão',
-    '46          γ_sup ← γ;',
-    '47          γ ← (γ_inf + γ_sup)/2; w ← w*; α ← α*;',
-    '48      Fim_Se;',
-    '49      Se |γ_sup – γ_inf| ≤ tol Então',
-    '50          Sair do laço Enquanto;',
-    '51      Fim_Se;',
-    '52  Fim_Enquanto;',
-    '53  Se viável Então',
-    '54      Retorne w*, γ_inf;',
-    '55  Senão Se melhor_esforço Então',
-    '56      Retorne w_melhor, 0;',
-    '57  Senão',
-    '58      Retorne w*, 0;',
-    '59  Fim_Se;',
-    'Fim.',
-  ];
-  const PSEUDO_CODIGO_IDS = [null, null, null, null, null, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, null];
-  // linha do .py que gera cada evento -> linha do pseudocódigo (mesma numeração do documento Word)
-  const PY2PSEUDO = { 199: 9, 248: 18, 272: 23, 284: 30, 296: 35, 323: 41, 325: 43, 333: 47, 338: 46, 342: 50, 365: 54, 378: 56, 388: 58 };
+  const PSEUDO_CODIGO = __PSEUDO_CODIGO__;
+  const PSEUDO_CODIGO_IDS = __PSEUDO_CODIGO_IDS__;
+  // linha do .py que gera cada evento -> linha do pseudocódigo (mesma numeração do documento Word; src/animacao_perceptron/pseudocodigo.py)
+  const PY2PSEUDO = __PY2PSEUDO__;
   let codeMode = 'pseudo';
   // mapa linha de origem (Python ou pseudocódigo) -> linha do JavaScript, lido dos comentários
   // "// Lnnn", "// Lnnn-mmm" (porte do Python) ou "// linha n" (portes dos pseudocódigos) em core.js
@@ -441,7 +377,7 @@ __CORE_JS__
       tol: 'Tolerância da busca binária. A busca termina quando a diferença entre a maior margem viável (γ_lo) e a menor inviável (γ_hi) fica abaixo deste valor. Tolerância menor dá uma margem mais precisa, com mais tentativas.',
       max_iterations: 'Máximo de tentativas de γ. Teto do laço externo: quantos valores de γ a busca pode testar. É o segundo teto de parada; no protocolo ele nunca foi atingido.',
       random_state: 'Semente do sorteio. A cada época os pontos são percorridos em ordem aleatória; a semente fixa essa ordem, para que a mesma entrada dê sempre o mesmo resultado. O valor 42 reproduz a execução do trabalho.',
-      use_best_effort: 'O que devolver se nenhum γ for viável. Marcado: devolve o w da época com menos violações, com γ = 0 e um aviso (opção usada no trabalho). Desmarcado: devolve o w inicial [1, 1], que é a distância Euclidiana.',
+      use_best_effort: 'O que devolver se nenhum γ for viável. Marcado: devolve o w da época com menos pontos mal classificados (margem bruta negativa), com γ = 0 e um aviso (opção usada no trabalho). Desmarcado: devolve o w inicial [1, 1], que é a distância Euclidiana.',
     },
     artigo: {
       eta: 'Taxa de aprendizado. Tamanho do passo de cada correção quando um ponto é classificado errado: w muda η·f vezes o gradiente.',
@@ -463,8 +399,8 @@ __CORE_JS__
     codigo: {
       titulo: 'Código implementado (Python)',
       intro: `<h3 style="margin-top:0">Código implementado: <code>RelaxedPerceptron.fit</code></h3>
-        <p>É a versão que gerou todos os resultados do trabalho. Implementa as Equações 28 a 31 do CILAMCE 2017: restrição de margem com folga λα<sub>i</sub>, correção com encolhimento (1 − ηγ/‖w‖), projeção w ≥ 0, e busca binária externa no γ máximo viável.</p>
-        <p><strong>Como termina.</strong> Laço interno: época sem violação ou <code>max_epochs</code>. Laço externo: |γ<sub>hi</sub> − γ<sub>lo</sub>| ≤ tol ou <code>max_iterations</code>. Retorno: w<sup>*</sup> e γ<sub>lo</sub> se algum γ foi viável; senão o w de menor violação com γ = 0 (<code>use_best_effort=True</code>).</p>
+        <p>É a versão que gerou todos os resultados do trabalho. Implementa as Equações 28 a 31 do CILAMCE 2017: restrição de margem com folga λα<sub>i</sub>, correção com encolhimento (1 − ηγ/‖w‖), projeção w ≥ 0, e busca binária externa no γ máximo viável. Versão de 15/10/2026 (normalização por época, melhor esforço por erros, margem bruta mínima).</p>
+        <p><strong>Como termina.</strong> Laço interno: época sem violação ou <code>max_epochs</code>. Laço externo: |γ<sub>hi</sub> − γ<sub>lo</sub>| ≤ tol ou <code>max_iterations</code>. Retorno: w<sup>*</sup> e γ<sub>lo</sub> se algum γ foi viável; senão o w da época com menos pontos mal classificados, com γ = 0 (<code>use_best_effort=True</code>). Desde 15/10/2026 w e α são divididos por ‖w‖ ao fim de cada época e a margem bruta mínima do w devolvido é registrada.</p>
         <p class="small">Com os hiperparâmetros do protocolo, o resultado final é comparado bit a bit com o do Python (seção 7).</p>`,
       schema: [NUM('eta', 'η (eta)', 0.0001), NUM('C', 'C (λ = 1/C)', 0.1), NUM('gamma_init', 'γ inicial', 0.01), NUM('delta_gamma', 'δ (delta_gamma)', 0.01), NUM('max_epochs', 'max_epochs', 1), { key: 'tol', label: 'tol', type: 'text' }, NUM('max_iterations', 'max_iterations', 1), NUM('random_state', 'random_state', 1), { key: 'use_best_effort', label: 'use_best_effort', type: 'checkbox' }],
       defaults: DEFAULT_PARAMS, make: (X, y, C, p) => fitGen(X, y, C, p),
@@ -484,7 +420,7 @@ __CORE_JS__
         { label: 'Fator (1 − ηγ/‖w‖)', get: ev => (ev.type === 'point' && ev.violated) ? ev.factor.toFixed(6) : '–' },
         { label: 'Σα, máx α, nº α>0', get: (ev, c) => c.alphaStr(ev.alpha) },
         { label: 'Fidelidade de w atual (centróide mais próximo = rótulo do LLM)', get: (ev, c) => c.fidStr(ev.w) },
-        { label: 'Mínimo global de violações', get: ev => isFinite(ev.min_global_violations) ? ev.min_global_violations : '–' },
+        { label: 'Mínimo global de pontos mal classificados', get: ev => isFinite(ev.min_global_erros) ? ev.min_global_erros : '–' },
         { label: 'w* (última solução viável)', get: ev => ev.found_feasible_solution ? fmtW(ev.w_star) : 'nenhuma ainda' },
         { label: 'w melhor esforço', get: ev => fmtW(ev.w_best_effort) },
         { label: 'Já houve γ viável?', get: ev => ev.found_feasible_solution ? 'sim' : 'não' },
@@ -496,7 +432,7 @@ __CORE_JS__
           `d<sub>W</sub>(x<sub>i</sub>,c<sub>k</sub>) − d<sub>W</sub>(x<sub>i</sub>,c<sub>l</sub>) + λα<sub>i</sub> = ${ev.d_k.toFixed(5)} − ${ev.d_l.toFixed(5)} + ${ev.lambda_alpha_i.toFixed(5)} = <b>${ev.margin.toFixed(5)}</b> ` +
           (ev.violated ? `<span class="viol">&lt;</span>` : `<span class="okv">≥</span>`) + ` γ‖w‖ = ${ev.gamma.toFixed(6)} × ${ev.norm_w.toFixed(6)} = <b>${ev.threshold.toFixed(5)}</b>` +
           (ev.violated ? `<br><span class="viol">Restrição violada</span>: g = (x<sub>i</sub>−c<sub>l</sub>)² − (x<sub>i</sub>−c<sub>k</sub>)² = ${fmtW(ev.g)}; fator = ${ev.factor.toFixed(6)}; w ← max(0, w·fator − η·g) = ${fmtW(ev.w)}; α ← α·fator, α<sub>i</sub> += η.` : `<br><span class="okv">Restrição satisfeita</span>: w e α não mudam.`);
-        if (ev.type === 'epoch_end') return `<b>Fim da época ${ev.epoch + 1}</b> da iteração ${ev.iteration}: ${ev.violations} violações. ` + (ev.converged ? `<span class="okv">Zero violações: γ = ${fmt(ev.gamma)} é viável, sai do laço interno.</span>` : (ev.epoch + 1 >= p.max_epochs ? `<span class="viol">Atingiu max_epochs = ${p.max_epochs}: γ = ${fmt(ev.gamma)} é declarado inviável.</span>` : 'Ainda há violações: próxima época com nova permutação dos pontos.')) + ` Mínimo global de violações até agora: ${ev.min_global_violations}.`;
+        if (ev.type === 'epoch_end') return `<b>Fim da época ${ev.epoch + 1}</b> da iteração ${ev.iteration}: ${ev.violations} violações; w e α divididos por ‖w‖ = ${ev.norm_fim.toFixed(6)}; ${ev.erros} pontos mal classificados sob o w normalizado. ` + (ev.converged ? `<span class="okv">Zero violações: γ = ${fmt(ev.gamma)} é viável, sai do laço interno.</span>` : (ev.epoch + 1 >= p.max_epochs ? `<span class="viol">Atingiu max_epochs = ${p.max_epochs}: γ = ${fmt(ev.gamma)} é declarado inviável.</span>` : 'Ainda há violações: próxima época com nova permutação dos pontos.')) + ` Mínimo global de pontos mal classificados até agora: ${ev.min_global_erros}.`;
         if (ev.type === 'iter_start') return `<b>Iteração ${ev.iteration}</b> da busca em γ: testando γ = ${fmt(ev.gamma)} (γ_lo = ${fmt(ev.gamma_lo)}, γ_hi = ${fmt(ev.gamma_hi)}), partindo de w = ${fmtW(ev.w)}.`;
         if (ev.type === 'iter_end') {
           const txt = { viavel_incremento: `γ viável: γ_lo ← ${fmt(ev.gamma_lo)}, w* e α* guardados; γ_hi ainda desconhecido, próximo γ = γ + δ = ${fmt(ev.gamma)}.`,
@@ -508,7 +444,7 @@ __CORE_JS__
         return `<b>fit() retornou.</b> Veja a seção 5.`;
       },
       result: (done, c) => {
-        const r = done.result; const path = { viavel: ['ok', 'Solução viável: retorna w* e γ_lo (linha 365)'], melhor_esforco: ['be', 'Nenhum γ viável: retorna o w de menor violação, γ = 0 (linha 378, use_best_effort=True)'], pesos_iniciais: ['be', 'Nenhum γ viável e use_best_effort=False: retorna os pesos iniciais, γ = 0 (linha 388)'] }[r.caminho];
+        const r = done.result; const path = { viavel: ['ok', 'Solução viável: retorna w* e γ_lo (linha 383)'], melhor_esforco: ['be', 'Nenhum γ viável: retorna o w da época com menos pontos mal classificados, γ = 0 (linha 397, use_best_effort=True)'], pesos_iniciais: ['be', 'Nenhum γ viável e use_best_effort=False: retorna os pesos iniciais, γ = 0 (linha 408)'] }[r.caminho];
         let cmp = '';
         if (c.isProtocol() && REFERENCE[c.dsKey]) {
           const ref = REFERENCE[c.dsKey]; const same = r.w.every((v, j) => v === ref.w[j]) && r.gamma === ref.gamma && ref.history.length === done.gamma_history.length;
@@ -520,9 +456,10 @@ __CORE_JS__
             <div><div class="k">γ retornado</div><div class="v big">${r.gamma.toFixed(6)}</div></div>
             <div><div class="k">w/‖w‖ e razão w1/w2</div><div class="v">${c.unitRatio(r.w)}</div></div>
             <div><div class="k">Fidelidade (centróide mais próximo sob w = rótulo do LLM)</div><div class="v">${c.fidStr(r.w)}</div></div>
-            <div><div class="k">Parada da busca em γ</div><div class="v">${done.termination === 'tolerancia' ? '|γ_hi − γ_lo| ≤ tol (linha 341)' : 'max_iterations atingido (linha 198)'}</div></div>
+            <div><div class="k">Parada da busca em γ</div><div class="v">${done.termination === 'tolerancia' ? '|γ_hi − γ_lo| ≤ tol (linha 358)' : 'max_iterations atingido (linha 201)'}</div></div>
             <div><div class="k">Iterações de γ / épocas totais</div><div class="v">${done.gamma_history.length} / ${c.totalEpochs}</div></div>
-            <div><div class="k">Mínimo global de violações</div><div class="v">${done.min_global_violations}</div></div>
+            <div><div class="k">Mínimo global de pontos mal classificados</div><div class="v">${done.min_global_erros}</div></div>
+            <div><div class="k">Margem bruta mínima do w devolvido (/‖w‖)</div><div class="v">${isFinite(r.margem_minima) ? r.margem_minima.toFixed(4) + (r.margem_minima < 0 ? ' (negativa: w não separa os rótulos; † nas tabelas)' : ' (w separa os rótulos)') : '–'}</div></div>
             <div><div class="k">Pontos avaliados</div><div class="v">${c.totalEpochs * c.X.length}</div></div>
           </div>
           ${done.warnings.length ? '<p class="small" style="margin-top:10px">Aviso emitido pelo código (<code>warnings.warn</code>, ou <code>print</code> em modo verboso):</p>' + done.warnings.map(w => `<div class="warnbox">⚠️ ${esc(w)}</div>`).join('') : '<p class="small" style="margin-top:10px">Nenhum aviso emitido.</p>'}

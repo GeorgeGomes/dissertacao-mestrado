@@ -1,0 +1,19 @@
+\begin{table}[htbp]
+\centering
+\footnotesize
+\caption{Problemas B e C, Passo 3 (openai/gpt-4o-mini): comparativo da transferência zero-shot versus métrica eleita do A.}
+\label{tab:BC_passo3_zero_vs_eleita_gpt4mini}
+\begin{tabular}{llrrrrrrllrrr}
+\toprule
+ &  & \multicolumn{3}{c}{Consistência (\%)} & \multicolumn{3}{c}{$\kappa$} & \multicolumn{2}{c}{Faixa de $\kappa$ (Landis \& Koch)} & \multicolumn{3}{c}{F1-Macro (\%)} \\ \cmidrule(lr){3-5} \cmidrule(lr){6-8} \cmidrule(lr){9-10} \cmidrule(lr){11-13}
+Prob. & Algoritmo & zero & eleita & $\Delta$ & zero & eleita & $\Delta$ & zero & eleita & zero & eleita & $\Delta$ \\
+\midrule
+B & perceptron & 69,0 & 75,3 & +6,3 & 0,320 & 0,441 & +0,122 & razoável & moderada & 64,8 & 71,3 & +6,5 \\
+B & nnls & 70,3 & 75,0 & +4,7 & 0,346 & 0,437 & +0,091 & razoável & moderada & 66,1 & 71,0 & +4,9 \\
+\midrule
+C & perceptron & 87,0 & 86,1 & $-$0,9 & 0,725 & 0,711 & $-$0,015 & substancial & substancial & 86,1 & 85,3 & $-$0,8 \\
+C & nnls & 87,7 & 85,9 & $-$1,8 & 0,739 & 0,707 & $-$0,032 & substancial & substancial & 86,8 & 85,1 & $-$1,7 \\
+\bottomrule
+\multicolumn{13}{p{0.95\linewidth}}{\footnotesize ``zero'' = métrica zero-shot do A; ``eleita'' = eleita (40-shot) do A (eleita\_passo6: maior fidelidade no A). Médias das sementes (e repetições); $\Delta$ = eleita $-$ zero. $\kappa$ = Cohen's $\kappa$ (faixas de Landis e Koch, 1977). Faixas: $<$0,2 fraca, 0,2–0,4 razoável, 0,4–0,6 moderada, 0,6–0,8 substancial, $>$0,8 quase perfeita. Passos de B e C: o LLM rotula os 100 pontos em zero-shot (Passo 2) e cada métrica do A é aplicada a esses rótulos (Passo 3).} \\
+\end{tabular}
+\end{table}

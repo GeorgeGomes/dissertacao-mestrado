@@ -55,7 +55,7 @@ class _FakeOpenAI:
         self.roteiro = list(roteiro)
         self.calls = 0
 
-    async def __call__(self, async_client, model_name, prompt, temperature, system_msg):
+    async def __call__(self, async_client, model_name, prompt, temperature, system_msg, **kwargs):
         item = self.roteiro[min(self.calls, len(self.roteiro) - 1)]
         self.calls += 1
         if isinstance(item, Exception):

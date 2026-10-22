@@ -1,0 +1,19 @@
+\begin{table}[htbp]
+\centering
+\small
+\caption{Problema E3, Passos 2 e 3 (google/gemini-2.5-flash-lite): aprendizado em contexto por estratégia de seleção e k.}
+\label{tab:bloco2_E3_passo3_estrategia_x_k_flashlite}
+\begin{tabular}{lrrrrrrrr}
+\toprule
+ & \multicolumn{2}{c}{Fácil} & \multicolumn{2}{c}{Difícil} & \multicolumn{2}{c}{Mista} & \multicolumn{2}{c}{Aleatória} \\ \cmidrule(lr){2-3} \cmidrule(lr){4-5} \cmidrule(lr){6-7} \cmidrule(lr){8-9}
+k & Acur.\ vs espec. & $\kappa$ & Acur.\ vs espec. & $\kappa$ & Acur.\ vs espec. & $\kappa$ & Acur.\ vs espec. & $\kappa$ \\
+\midrule
+zero-shot (único valor) & 44,7 (36,0–50,0) & -0,152 &  &  &  &  &  &  \\
+4-shot & 92,5 (91,8–93,8) & 0,850 & 79,7 (56,8–93,2) & 0,584 & 92,7 (87,0–97,9) & 0,853 & 91,6 (86,3–97,3) & 0,831 \\
+10-shot & 89,5 (84,3–92,9) & 0,789 & 61,2 (59,3–63,6) & 0,226 & 93,6 (91,4–95,7) & 0,871 & 94,5 (85,7–97,9) & 0,890 \\
+20-shot & 90,5 (88,5–93,1) & 0,807 & 73,3 (62,3–89,2) & 0,467 & 95,1 (92,3–96,9) & 0,902 & 94,2 (84,6–100,0) & 0,883 \\
+40-shot & 90,6 (87,3–92,7) & 0,807 & 93,6 (92,7–95,5) & 0,873 & 93,9 (92,7–95,5) & 0,877 & 95,4 (88,2–98,2) & 0,907 \\
+\bottomrule
+\multicolumn{9}{p{0.95\linewidth}}{\footnotesize Especialista E3, W = [1,0; 1,0]: rotula o Problema E pelo centróide mais próximo (Passo 1); o LLM classifica em zero-shot (Passo 2) e, no Passo 3, recebe k exemplos escolhidos pela estratégia e classifica os demais. Acur.\ vs espec.\ = acurácia (LLM vs especialista): fração dos pontos de teste em que o LLM reproduz o rótulo do especialista. Valores em \% (mín–máx); $\kappa$ = Cohen's $\kappa$ (faixas de Landis e Koch, 1977). Médias das sementes e sorteios. Em zero-shot não há exemplo a selecionar: valor único.} \\
+\end{tabular}
+\end{table}

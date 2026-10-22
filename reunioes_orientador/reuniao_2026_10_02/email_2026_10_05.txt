@@ -1,0 +1,7 @@
+Oi George, no problema G está faltando a parte da não linearidade com a 
+introdução do terceiro, x1.x2 e terceiro e quarto atributos, x1^2 e x2^2 na estimativa da métrica.
+Rodar o LLM com nomes semânticos peso/altura e homem/mulher.
+Abraços. 
+
+
+Variantes de prompt: padrão, geométrico, cot (chain-of-thought), tabular.

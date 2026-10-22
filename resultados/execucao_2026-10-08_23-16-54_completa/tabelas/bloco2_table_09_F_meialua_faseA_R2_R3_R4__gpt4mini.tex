@@ -1,0 +1,21 @@
+\begin{table}[htbp]
+\centering
+\small
+\caption{Problema F, meia-lua (openai/gpt-4o-mini): Fase A externa por semente e espaço.}
+\label{tab:bloco2_F_meialua_faseA_R2_R3_R4_gpt4mini}
+\begin{tabular}{llrrrrr}
+\toprule
+Espaço & Semente & Acur.\ LLM vs real & Fid.\ Perc. & Fid.\ NNLS & Acur.\ Perc.\ vs real & Acur.\ NNLS vs real \\
+\midrule
+R$^2$ & 42 & 48,6 & 74,3 & 68,6 & 45,7 & 57,1 \\
+\textbf{R$^2$} & \textbf{média} & \textbf{48,6} & \textbf{74,3} & \textbf{68,6} & \textbf{45,7} & \textbf{57,1} \\
+\midrule
+R$^3$ & 42 & 48,6 & 74,3 & 82,9 & 45,7 & 54,3 \\
+\textbf{R$^3$} & \textbf{média} & \textbf{48,6} & \textbf{74,3} & \textbf{82,9} & \textbf{45,7} & \textbf{54,3} \\
+\midrule
+R$^4$ & 42 & 48,6 & 75,2 & 76,2 & 60,0 & 59,0 \\
+\textbf{R$^4$} & \textbf{média} & \textbf{48,6} & \textbf{75,2} & \textbf{76,2} & \textbf{60,0} & \textbf{59,0} \\
+\bottomrule
+\multicolumn{7}{p{0.95\linewidth}}{\footnotesize Problema F (meia-lua como aprendiz, divisão 70/30): Fase A nas 105 amostras de treino, zero-shot. Fid.\ = fidelidade (vs LLM) de cada estimador; Acur.\ vs real = acurácia (vs rótulo real) do LLM e da métrica, contexto. Em zero-shot (e com nomes de classe neutros) a correspondência entre nome e classe é arbitrária: a acurácia (vs rótulo real) do LLM pode sair abaixo de 50\%; o valor invariante à permutação é max($a$, 1 $-$ $a$). Sementes ausentes = o LLM colapsou em classe única (sem métrica).} \\
+\end{tabular}
+\end{table}

@@ -1,0 +1,19 @@
+\begin{table}[htbp]
+\centering
+\footnotesize
+\caption{Problemas B e C (google/gemini-2.5-flash-lite): comparativo da transferência zero-shot versus métrica eleita do A.}
+\label{tab:T9_comp_flashlite}
+\begin{tabular}{llrrrrrrllrrr}
+\toprule
+ &  & \multicolumn{3}{c}{Consistência (\%)} & \multicolumn{3}{c}{$\kappa$} & \multicolumn{2}{c}{Faixa de $\kappa$ (Landis \& Koch)} & \multicolumn{3}{c}{F1-Macro (\%)} \\ \cmidrule(lr){3-5} \cmidrule(lr){6-8} \cmidrule(lr){9-10} \cmidrule(lr){11-13}
+Prob. & Algoritmo & zero & eleita & $\Delta$ & zero & eleita & $\Delta$ & zero & eleita & zero & eleita & $\Delta$ \\
+\midrule
+B & perceptron & 72,7 & 69,6 & $-$3,1 & 0,263 & 0,242 & $-$0,021 & razoável & razoável & 72,7 & 69,6 & $-$3,1 \\
+B & nnls & 74,0 & 65,9 & $-$8,1 & 0,286 & 0,179 & $-$0,107 & razoável & fraca & 74,0 & 65,9 & $-$8,1 \\
+\midrule
+C & perceptron & 92,3 & 91,3 & $-$1,0 & 0,846 & 0,826 & $-$0,020 & quase perfeita & quase perfeita & 92,3 & 91,3 & $-$1,0 \\
+C & nnls & 91,7 & 91,2 & $-$0,4 & 0,833 & 0,823 & $-$0,009 & quase perfeita & quase perfeita & 91,7 & 91,2 & $-$0,4 \\
+\bottomrule
+\multicolumn{13}{p{0.95\linewidth}}{\footnotesize ``zero'' = métrica zero-shot do A; ``eleita'' = eleita (40-shot) do A (melhor\_metrica\_a: maior fidelidade no A). Médias das sementes (e repetições); $\Delta$ = eleita $-$ zero. $\kappa$ = Cohen's $\kappa$ (faixas de Landis e Koch, 1977). Faixas: $<$0,2 fraca, 0,2–0,4 razoável, 0,4–0,6 moderada, 0,6–0,8 substancial, $>$0,8 quase perfeita.} \\
+\end{tabular}
+\end{table}

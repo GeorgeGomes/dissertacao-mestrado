@@ -1,18 +1,20 @@
 """Infraestrutura de I/O da execução: log, particionamento e nomes de asset.
 
-Extraído de ``dissertacao_mestrado.py`` (Fase 1 da modularização): ``Tee``
+Extraído de ``dissertacao_mestrado.py`` (etapa 1 da modularização, 2026): ``Tee``
 (stdout -> buffer p/ log_execucao.txt), particionamento de log/JSON em chunks
 de ~10 MiB, checkpoint atômico das interações e a convenção de nomes de asset
 por modelo (``MODEL_ALIAS``/``llm_asset``). Nada aqui depende do runner.
 
 ``LLM_INTERACTIONS`` é a lista global de interações com o LLM: o runner e a
 coleta apenas fazem ``append`` (nunca rebind), então importá-la preserva o
-aliasing — todos os módulos veem a MESMA lista.
+aliasing: todos os módulos veem a MESMA lista.
 """
 import json
 import os
 import re
 import sys
+import time
+from pathlib import Path
 
 
 class Tee:
@@ -20,7 +22,7 @@ class Tee:
 
     Instalar em stdout E stderr (compartilhando o MESMO buffer, na ordem de
     chegada): os avisos dos estimadores (``warnings.warn`` → stderr) e
-    tracebacks precisam constar no log_execucao.txt persistido — sem capturar
+    tracebacks precisam constar no log_execucao.txt persistido; sem capturar
     stderr, o log diria "zero avisos" falsamente (3 avisos de não-convergência
     de γ foram perdidos assim no smoke de 03/07/2026).
 
@@ -35,6 +37,10 @@ class Tee:
         self._buffer = buffer if buffer is not None else []
 
     def write(self, msg):
+        # 15/10/2026: cabeçalhos de etapa (">>> " e "[ETAPA") ganham o tempo decorrido, para o
+        # log mostrar quanto cada seção levou (API × estimação × figuras × tabelas).
+        if _T0 is not None and msg.lstrip("\n").startswith((">>> ", "[ETAPA")) and not msg.endswith("\n"):
+            msg = f"{msg}   {decorrido()}"
         self._stream.write(msg)
         self._buffer.append(msg)
 
@@ -44,6 +50,41 @@ class Tee:
     def getvalue(self):
         return ''.join(self._buffer)
 
+
+# ── Cronômetro da execução (15/10/2026) ───────────────────────────────────────
+# `iniciar_cronometro()` no começo de main(); `decorrido()` devolve "⏱ H:MM:SS (+M:SS)" com o
+# total desde o início e o intervalo desde a marca anterior. Usado por `Tee.write` nos
+# cabeçalhos ">>> "/"[ETAPA" e por `relatorios.print_section`.
+_T0 = None
+_T_MARCA = None
+
+
+def iniciar_cronometro():
+    global _T0, _T_MARCA
+    _T0 = _T_MARCA = time.time()
+
+
+def _fmt_s(seg: float) -> str:
+    seg = int(round(seg)); h, r = divmod(seg, 3600); m, s_ = divmod(r, 60)
+    return f"{h}:{m:02d}:{s_:02d}"
+
+
+def decorrido(marcar: bool = True) -> str:
+    """Tempo decorrido desde `iniciar_cronometro()`; vazio se o cronômetro não foi iniciado."""
+    global _T_MARCA
+    if _T0 is None:
+        return ""
+    agora = time.time()
+    txt = f"⏱ {_fmt_s(agora - _T0)} (+{_fmt_s(agora - _T_MARCA)})"
+    if marcar:
+        _T_MARCA = agora
+    return txt
+
+
+# Raiz das execuções (08/10/2026): toda pasta execucao_* (novas e antigas) vive em
+# <repo>/resultados/. Ferramentas offline e testes procuram aqui.
+BASE_DIR = Path(__file__).resolve().parent.parent
+RESULTADOS_DIR = BASE_DIR / "resultados"
 
 # Limite de tamanho antes de fatiar em partes (10 MiB). Vale para o log (.txt) e o JSON.
 LOG_CHUNK_LIMIT_BYTES = 10 * 1024 * 1024
@@ -140,7 +181,7 @@ def salvar_json_em_chunks(dados, pasta_execucao, nome_base="llm_interactions",
 
     Usa a mesma estratégia de agrupamento (`_agrupar_por_tamanho`) que
     `salvar_log_em_chunks`; aqui um "item" é um elemento da lista e cada parte é escrita
-    como um array JSON válido. Observação: o limite é APROXIMADO — a soma dos tamanhos
+    como um array JSON válido. Observação: o limite é APROXIMADO, pois a soma dos tamanhos
     dos itens isolados não inclui a indentação/colchetes extras do array, então uma parte
     pode passar um pouco de `limite_bytes` (irrelevante para o alvo de 10 MiB).
 
@@ -182,7 +223,7 @@ def _model_slug(model_name: str) -> str:
 
 
 # Aliases curtos por modelo para os nomes de asset (PNG/CSV). Todo modelo de
-# MODELS_TO_TEST DEVE ter entrada aqui (teste garante) — o fallback via
+# MODELS_TO_TEST DEVE ter entrada aqui (teste garante); o fallback via
 # _model_slug existe só para modelos fora do protocolo.
 MODEL_ALIAS = {
     "openai/gpt-4o-mini":           "gpt4mini",   # id no OpenRouter (protocolo desde 01/10/2026)
@@ -200,10 +241,11 @@ def llm_asset(pasta: str, filename: str, model_name: str) -> str:
     """Caminho de asset cujos dados derivam de UM LLM específico.
 
     Convenção de nomenclatura: injeta o ALIAS do modelo antes da extensão
-    (ex.: 'bloco1_06_w_distribution.png' → 'bloco1_06_w_distribution__gpt4mini.png').
-    Assets SEM dados de LLM (dados sintéticos, oráculos, perito, baselines clássicos)
+    (ex.: 'bloco1_graphic_05_A_passo4_w_distribuicao.png' → 'bloco1_graphic_05_A_passo4_w_distribuicao__gpt4mini.png';
+    o sufixo de cor ``_color``/``_gray`` entra depois, via ``com_cor``).
+    Assets SEM dados de LLM (dados sintéticos, oráculos, especialista, baselines clássicos)
     e assets consolidados multi-modelo (CSVs com coluna model, llm_interactions,
-    final_09_model_comparison) NÃO usam esta função.
+    final_graphic_08_comparacao_modelos) NÃO usam esta função.
     """
     base, ext = os.path.splitext(filename)
     return os.path.join(pasta, f"{base}__{_model_alias(model_name)}{ext}")
@@ -214,18 +256,36 @@ def llm_asset(pasta: str, filename: str, model_name: str) -> str:
 _ALIAS_SUFFIX_RE = re.compile(r"^(?P<stem>.+?)__(?P<alias>[a-z0-9][a-z0-9.-]*)$")
 
 
+CORES_ASSET = ("color", "gray")
+
+
+def com_cor(path: str, cor: str) -> str:
+    """Sufixo de cor por ÚLTIMO (09/10/2026): 'p/x__gpt4mini.png', 'gray' → 'p/x__gpt4mini_gray.png'.
+
+    Convenção dos assets gráficos e tabelas (09/10/2026):
+      <bloco>_<graphic|table>_<NN>_<assunto>[_<problema>][_seed<S>][_<painel>][__<alias>]_<color|gray>.png
+    Todo gráfico sai em `_color` e `_gray` (símbolos + − / * # @ no P&B); só as tabelas
+    saem apenas em `_gray`. `.tex` de tabela: mesmo nome sem o campo de cor.
+    """
+    if cor not in CORES_ASSET:
+        raise ValueError(f"cor inválida: {cor!r} (use {CORES_ASSET})")
+    stem, ext = os.path.splitext(path)
+    return f"{stem}_{cor}{ext}"
+
+
 def asset_variant(path: str, suffix: str) -> str:
     """Caminho de uma VARIANTE (painel individual, cópia corrigida…) de um asset.
 
     Mantém a regra "alias sempre imediatamente antes da extensão": o sufixo da
     variante entra ANTES do ``__<alias>`` quando ele existe.
 
-      'p/bloco1_06_w_distribution__gpt4mini.png', 'boxplot'
-          → 'p/bloco1_06_w_distribution_boxplot__gpt4mini.png'
-      'p/bloco1_03_oracle_w_recovery.png', 'ratio'        (asset sem alias)
-          → 'p/bloco1_03_oracle_w_recovery_ratio.png'
+      'p/bloco1_graphic_05_A_passo4_w_distribuicao__gpt4mini.png', 'boxplot'
+          → 'p/bloco1_graphic_05_A_passo4_w_distribuicao_boxplot__gpt4mini.png'
+      'p/bloco1_graphic_19_oraculo_passos_1_a_3.png', 'ratio'        (asset sem alias)
+          → 'p/bloco1_graphic_19_oraculo_passos_1_a_3_ratio.png'
       'p/final_cross_linearity__flashlite.csv', 'corrigido_hm'
           → 'p/final_cross_linearity_corrigido_hm__flashlite.csv'
+    A cor (``_color``/``_gray``) é acrescentada por ``com_cor`` DEPOIS, no salvamento.
     """
     pasta, filename = os.path.split(path)
     stem, ext = os.path.splitext(filename)

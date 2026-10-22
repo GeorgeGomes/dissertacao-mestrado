@@ -1,0 +1,16 @@
+\begin{table}[htbp]
+\centering
+\small
+\caption{Bloco 2 (google/gemini-2.5-flash-lite): média few-shot por estratégia de seleção (hipótese H4).}
+\label{tab:bloco2_E_H4_media_fewshot_por_estrategia_flashlite}
+\begin{tabular}{lrrrrlr}
+\toprule
+Especialista & Fácil & Difícil & Mista & Aleatória & Ordem & $\Delta$ difícil $-$ fácil \\
+\midrule
+E1 & 93,2 & 72,4 & 91,0 & 92,9 & Fácil > Aleatória > Mista > Difícil & $-$20,8 \\
+E2 & 96,5 & 85,1 & 93,2 & 93,6 & Fácil > Aleatória > Mista > Difícil & $-$11,4 \\
+E3 & 90,8 & 77,0 & 93,7 & 93,9 & Aleatória > Mista > Fácil > Difícil & $-$13,8 \\
+\bottomrule
+\multicolumn{7}{p{0.95\linewidth}}{\footnotesize Acurácia (LLM vs especialista), em \%, média sobre os $n$ do few-shot, sementes e sorteios. H4 (a priori: difícil > fácil) é refutada quando $\Delta$ difícil$-$fácil é negativo.} \\
+\end{tabular}
+\end{table}

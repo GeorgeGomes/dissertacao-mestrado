@@ -1,0 +1,30 @@
+\begin{table}[htbp]
+\centering
+\small
+\caption{Comparação entre os modelos: resumo dos principais resultados por problema (A, Passos 2 a 6; B e C, Passo 3; D, Passos 2 e 3; E1, Passos 2 e 3; G, Passos 2 e 4).}
+\label{tab:final_comparacao_modelos}
+\begin{tabular}{lrr}
+\toprule
+Resultado & google/gemini-2.5-flash-lite & openai/gpt-4o-mini \\
+\midrule
+A: fidelidade (vs LLM) zero-shot, Perceptron & 88,2 & 86,7 \\
+A: acurácia (vs rótulo real) do LLM, zero-shot (inv.\ perm.) & 82,4 & 73,1 \\
+A: acurácia (vs rótulo real) do LLM, 10-shot & 95,1 & 92,5 \\
+A: métrica eleita para a transferência & 10-shot & 40-shot \\
+D: acurácia (vs rótulo real) do LLM, zero-shot (inv.\ perm.) & 55,6 & — \\
+D: fidelidade (vs LLM) 10-shot, R$^2$ & 95,2 & 92,3 \\
+B: Cohen's $\kappa$ zero-shot (métrica zero-shot do A) & 0,258 & 0,320 \\
+C: Cohen's $\kappa$ zero-shot (métrica zero-shot do A) & 0,852 & 0,725 \\
+E1: acurácia (LLM vs especialista), zero-shot & 54,4 & 61,3 \\
+E1: acurácia (LLM vs especialista), média few-shot (todas as estratégias) & 87,4 & 85,6 \\
+E1: acurácia (LLM vs especialista), média few-shot, difícil & 72,4 & 77,7 \\
+G2 (kg/m, Mulher/Homem): acurácia (vs rótulo real) do LLM, zero-shot & 84,3 & 89,5 \\
+G2: acurácia (vs rótulo real) da métrica, Perceptron & 91,4 & 91,0 \\
+G1 (normalizado, Mulher/Homem): acurácia (vs rótulo real) do LLM & 35,2 & colapso \\
+Chamadas & 111.704 & 110.944 \\
+Malformadas (\%) & 0,004 & 0,000 \\
+Flip a T=0 (\%) & 0,00 & 1,19 \\
+\bottomrule
+\multicolumn{3}{p{0.95\linewidth}}{\footnotesize Resumo lado a lado dos modelos; valores em \% salvo indicação. Passos: A, Passos 2 a 6 (zero-shot = Passo 2; 10-shot = Passo 3; métrica eleita = Passo 6); B e C, Passo 3; D, Passos 2 e 3 (10-shot = Passo 3); E1, Passos 2 e 3; G, Passos 2 e 4. Métricas: fidelidade (métrica reproduz o LLM), acurácia (vs rótulo real, contexto; vs especialista no Bloco 2), Cohen's $\kappa$. ``inv.\ perm.'' = max($a$, 1 $-$ $a$), pois em zero-shot a correspondência entre nome e classe é arbitrária. Média few-shot = média das médias por (estratégia, k). Malformadas e flip são métricas de processo (auditoria). Detalhes em cada tabela por modelo.} \\
+\end{tabular}
+\end{table}

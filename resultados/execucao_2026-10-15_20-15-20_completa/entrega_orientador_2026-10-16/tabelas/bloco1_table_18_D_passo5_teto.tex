@@ -1,0 +1,19 @@
+\begin{table}[htbp]
+\centering
+\small
+\caption{Problema D, Passo 5 (teto): acurácia da métrica diagonal ajustada ao rótulo real da meia-lua, em R$^2$, R$^3$ e R$^4$.}
+\label{tab:bloco1_D_passo5_teto}
+\begin{tabular}{llrrl}
+\toprule
+Espaço & Algoritmo & Acurácia (vs rótulo real) & n erros (de 150) & $\hat{W}$ (unitário) \\
+\midrule
+R$^2$ & Perceptron & 86,9 (86,7–87,3) & 19,7 & [0,22; 0,97] \\
+R$^2$ & NNLS & 86,7 & 20,0 & [0,22; 0,97] \\
+R$^3$ & Perceptron & 87,1 (86,7–87,3) & 19,3 & [0,16; 0,69; 0,71] \\
+R$^3$ & NNLS & 86,7 & 20,0 & [0,22; 0,97; 0,00] \\
+R$^4$ & Perceptron & 87,3 (86,7–88,7) & 19,0 & [0,15; 0,71; 0,03; 0,68] \\
+R$^4$ & NNLS & 86,4 (86,0–86,7) & 20,3 & [0,22; 0,98; 0,01; 0,00] \\
+\bottomrule
+\multicolumn{5}{p{0.95\linewidth}}{\footnotesize W ajustado diretamente ao rótulo real da meia-lua (150 pontos): teto da métrica diagonal no Problema D, Passo 5 (0 chamadas; equivale ao regime ``teto'' da bloco1\_table\_10). Acurácia (vs rótulo real) da métrica ajustada; n erros = número médio de pontos errados em 150 (contagem auxiliar). R$^3$ acrescenta x1·x2, R$^4$ acrescenta x1², x2². Médias das sementes (mín–máx).} \\
+\end{tabular}
+\end{table}

@@ -1,0 +1,16 @@
+\begin{table}[htbp]
+\centering
+\small
+\caption{Bloco 2 (google/gemini-2.5-flash-lite): LLM com 40 exemplos versus classificadores clássicos.}
+\label{tab:bloco2_E_LLM_vs_baselines_40shot_flashlite}
+\begin{tabular}{lrlrrr}
+\toprule
+Especialista & LLM (mista) & LLM (melhor estratégia) & Logistic Regression & SVM (RBF) & k-NN (k=5) \\
+\midrule
+E1 & 97,6 & 97,6 (Mista) & 100,0 & 95,2 & 91,2 \\
+E2 & 98,8 & 100,0 (Difícil) & 100,0 & 95,8 & 93,3 \\
+E3 & 93,9 & 95,4 (Aleatória) & 100,0 & 99,4 & 98,2 \\
+\bottomrule
+\multicolumn{6}{p{0.95\linewidth}}{\footnotesize Acurácia em relação ao especialista com 40 exemplos. Os classificadores clássicos são treinados nos mesmos exemplos da estratégia mista e avaliados nos mesmos pontos; não dependem do LLM.} \\
+\end{tabular}
+\end{table}

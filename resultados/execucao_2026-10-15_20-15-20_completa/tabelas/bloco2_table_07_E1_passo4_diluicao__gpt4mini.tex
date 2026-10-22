@@ -1,0 +1,19 @@
+\begin{table}[htbp]
+\centering
+\small
+\caption{Problema E1, Passo 4 (openai/gpt-4o-mini): experimento de diluição.}
+\label{tab:bloco2_E1_passo4_diluicao_gpt4mini}
+\begin{tabular}{rrrrrr}
+\toprule
+k & difíceis & fáceis & Acur.\ vs espec. & $\kappa$ & F1-Macro \\
+\midrule
+4 & 4 & 0 & 62,1 (56,8–71,9) & 0,244 & 59,9 \\
+6 & 4 & 2 & 74,5 (66,0–79,2) & 0,492 & 74,0 \\
+8 & 4 & 4 & 80,8 (78,9–83,1) & 0,619 & 80,5 \\
+14 & 4 & 10 & 83,3 (80,1–85,3) & 0,669 & 83,2 \\
+20 & 4 & 16 & 84,1 (80,0–87,7) & 0,686 & 83,9 \\
+24 & 4 & 20 & 83,9 (81,7–85,7) & 0,681 & 83,7 \\
+\bottomrule
+\multicolumn{6}{p{0.95\linewidth}}{\footnotesize Problema E1, Passo 4. Exemplos difíceis fixos (menor margem) e fáceis acrescentados progressivamente. Acur.\ vs espec.\ = acurácia (LLM vs especialista): fração dos pontos de teste em que o LLM reproduz o rótulo do especialista. $\kappa$ = Cohen's $\kappa$ (faixas de Landis e Koch, 1977). F1-Macro em \%. Médias das sementes (mín–máx).} \\
+\end{tabular}
+\end{table}

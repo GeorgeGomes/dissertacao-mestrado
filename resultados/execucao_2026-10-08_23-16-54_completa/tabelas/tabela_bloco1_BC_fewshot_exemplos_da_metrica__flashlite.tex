@@ -1,0 +1,19 @@
+\begin{table}[htbp]
+\centering
+\small
+\caption{Problemas B e C (google/gemini-2.5-flash-lite): few-shot com exemplos rotulados pela métrica do A (H2).}
+\label{tab:bloco1_BC_fewshot_exemplos_da_metrica_flashlite}
+\begin{tabular}{lrrlrrrlr}
+\toprule
+ & \multicolumn{4}{c}{Problema B} & \multicolumn{4}{c}{Problema C} \\ \cmidrule(lr){2-5} \cmidrule(lr){6-9}
+Regime & Consist. & $\kappa$ & Faixa & $\Delta$ & Consist. & $\kappa$ & Faixa & $\Delta$ \\
+\midrule
+zero-shot & 72,7 (69,0–77,0) & 0,263 & razoável & +0,0 & 92,3 (92,0–93,0) & 0,846 & quase perfeita & +0,0 \\
+4-shot & 94,8 (93,8–95,8) & 0,896 & quase perfeita & +22,1 & 95,1 (94,8–95,8) & 0,902 & quase perfeita & +2,8 \\
+10-shot & 78,5 (62,2–94,4) & 0,559 & moderada & +5,9 & 95,6 (93,3–96,7) & 0,911 & quase perfeita & +3,2 \\
+20-shot & 74,2 (60,0–92,5) & 0,477 & moderada & +1,5 & 93,3 (91,2–95,0) & 0,866 & quase perfeita & +1,0 \\
+40-shot & 73,3 (58,3–90,0) & 0,466 & moderada & +0,7 & 88,3 (86,7–90,0) & 0,760 & substancial & $-$4,0 \\
+\bottomrule
+\multicolumn{9}{p{0.95\linewidth}}{\footnotesize Hipótese H2: os n exemplos mostrados ao LLM em B e C são rotulados pela métrica zero-shot do A (seleção por margem, n/2 por classe) e o LLM classifica os demais pontos. Médias das sementes (mín–máx); $\Delta$ em relação ao zero-shot. Perceptron, configuração base.} \\
+\end{tabular}
+\end{table}

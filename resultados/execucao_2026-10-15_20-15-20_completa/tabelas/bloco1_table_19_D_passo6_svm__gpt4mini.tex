@@ -1,0 +1,18 @@
+\begin{table}[htbp]
+\centering
+\small
+\caption{Problema D, meia-lua, Passo 6 (openai/gpt-4o-mini): SVM RBF treinado no rótulo real versus SVM RBF treinado nos rótulos zero-shot do LLM (Passo 2), nos 150 pontos; números da figura bloco1\_graphic\_14.}
+\label{tab:bloco1_D_passo6_svm_gpt4mini}
+\begin{tabular}{llrrrrrrcrr}
+\toprule
+ &  &  & \multicolumn{2}{c}{SVM RBF no rótulo real} & \multicolumn{3}{c}{SVM RBF nos rótulos do LLM} & \multicolumn{3}{c}{Métrica diagonal (Passo 4, maior fid.)} \\ \cmidrule(lr){4-5} \cmidrule(lr){6-8} \cmidrule(lr){9-11}
+Semente & Partição LLM (n0/n1) & Acur. LLM vs real & Acur. vs real & erros (de 150) & Fid. (vs LLM) & Acur. vs real & erros vs real & Espaço & Fid. (vs LLM) & Acur. vs real \\
+\midrule
+7 & 149/1 (colapso) & 50,7 & 97,3 & 4 & — & — & — & — & — & — \\
+42 & 150/0 (colapso) & 50,0 & 99,3 & 1 & — & — & — & — & — & — \\
+123 & 150/0 (colapso) & 50,0 & 95,3 & 7 & — & — & — & — & — & — \\
+\textbf{média} &  & \textbf{50,2} & \textbf{97,3} & \textbf{4,0} & \textbf{—} & \textbf{—} & \textbf{—} &  & \textbf{—} & \textbf{—} \\
+\bottomrule
+\multicolumn{11}{p{0.95\linewidth}}{\footnotesize SVM RBF com kernel gaussiano (gamma = `scale', C = 1), ajustado e avaliado nos mesmos 150 pontos: o treinado no rótulo real é a régua de fronteira não linear; o treinado nos rótulos do LLM é a fronteira efetiva do LLM. Fid. (vs LLM) = fração dos pontos em que o SVM reproduz o rótulo do LLM; Acur. vs real = fração de concordância com o rótulo real. A métrica diagonal é a de maior fidelidade entre R$^2$, R$^3$ e R$^4$ no zero-shot (Passo 4). Em 3 semente(s) o LLM colapsou (classe única ou minoritária com menos de 5 pontos): sem SVM nem métrica, só a régua. Acurácias vs real são literais: em zero-shot a correspondência entre nome e classe é arbitrária (o valor invariante à permutação é max($a$, 1 $-$ $a$)); a fidelidade não depende disso. Não há conjunto de teste: a figura e a tabela descrevem a separação induzida nos 150 pontos, não generalização.} \\
+\end{tabular}
+\end{table}

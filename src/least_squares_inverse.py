@@ -73,7 +73,9 @@ class LeastSquaresInverse:
 
         Constrói sistema linear: para cada ponto xi com classe yi,
             Σ_j w_j · [(xi_j - ck_j)² - (xi_j - cl_j)²] ≈ target_margin
-        onde cl é o centróide correto e ck é o centróide rival mais próximo.
+        onde cl é o centróide correto e ck é o centróide rival mais próximo
+        (escolhido pela distância EUCLIDIANA, pois w ainda não existe; com duas
+        classes o rival é único, então a escolha não muda nada).
 
         A linha i da matriz A é:  (xi - ck)² - (xi - cl)²
         O vetor b tem todas entradas = target_margin.

@@ -155,25 +155,32 @@ denso, nem elogie o deck da banca por "explicar tudo": cada um tem seu objetivo.
 ## Contexto deste deck (calibragem específica)
 
 Os decks são em **Beamer** (tema Madrid, `aspectratio=169`, fonte base **10pt** — o
-preâmbulo padrão está fixado no CLAUDE.md) e vivem em `execucao_*/apresentacao/`
+preâmbulo padrão está fixado no CLAUDE.md) e vivem em `resultados/execucao_*/apresentacao/`
 (`apresentacao.tex` + `apresentacao_guia.tex`), com o `roteiro_apresentacao.txt` na raiz
 como fonte de verdade. O trabalho: otimização inversa para explicar decisões de LLMs
-(métrica diagonal **Ŵ_LLM estimada** por Perceptron Estruturado + NNLS, Kappa de Cohen,
-**Blocos 1–3 e Problemas A–G**, GPT-4o-mini a $T=0$, 3 sementes × 3 repetições,
-hipóteses H1–H5 com H4 refutada). Ao auditar, faça estas checagens específicas:
+(métrica diagonal **Ŵ_LLM estimada** por Perceptron Estruturado + NNLS,
+**Blocos 1–3 e Problemas A–G**, gpt-4o-mini e gemini-2.5-flash-lite a $T=0$ via OpenRouter,
+3 sementes (3 repetições só onde há sorteio de exemplos), hipóteses H1–H5 com o veredito de H4 calculado por execução).
+**Cinco métricas, nomes obrigatórios (seção IV.3 do orientador, 09/10/2026):** Fidelidade
+("Fidelidade (métrica vs LLM)", Problemas A e D e a estimação em F e G), Acurácia ("Acurácia (vs
+rótulo real)" no oráculo e como contexto nos Blocos 1 e 3; "Acurácia (LLM vs especialista)"
+no Bloco 2), Consistência (B e C, centróides do novo problema), Cohen's $\kappa$ (faixas de
+Landis e Koch 1977) e F1-Macro; um slide com "F1-Score", "Kappa" solto, "concordância",
+"taxa de erro", consistência euclidiana ou precision/recall está errado. Ao auditar, faça
+estas checagens específicas:
 
 **Consistência interna dos números.** O deck repete valores em slides diferentes (visão
 geral × tabela detalhada × conclusão) — eles precisam bater entre si e no arredondamento.
 Cheque que cada $\kappa$/fidelidade citado no texto dos blocos corresponde ao da tabela
 de resultados. **Não use valores "esperados" deste arquivo como referência:** os números
 de referência são os CSVs e o `log_execucao.txt` da execução em que o deck vive (a pasta
-`execucao_*` que o contém).
+`resultados/execucao_*` que o contém).
 
 **Coerência slide ↔ trabalho ↔ código.** Confronte os números do deck com os CSVs da
 execução correspondente e com o `artigo.tex`. Divergência aqui é crítica: número no slide
 que não existe no resultado é a pior pergunta a receber. Verifique também a nomenclatura
-do projeto (Blocos 1–3, Problemas A–G, "Ŵ_LLM estimada" — nunca "W aprendida" nem
-misturar "fase" com "problema").
+do projeto (Blocos 1–3, Problemas A–G, "Ŵ_LLM estimada" — nunca "W aprendida"; passos numerados
+dentro de cada problema, nunca "fase", nome usado antes de 13/10/2026).
 
 **Densidade — depende do modo.** O deck do orientador é denso por design.
 - No **modo BANCA**, o problema mais provável: slides de pseudo-código, tabelas grandes e
@@ -190,7 +197,8 @@ misturar "fase" com "problema").
   liberados no modo orientador) — é só evitar amontoado de imagens ilegível.
 
 **Honestidade científica (a favor do autor).** Verifique que limitações e refutações
-aparecem no deck com destaque proporcional: H4 refutada (easy > hard), teto de fidelidade
+aparecem no deck com destaque proporcional: o veredito de H4 tal como o log da execução o
+calcula (easy × hard × random, por k; não "easy > hard consistentemente"), teto de fidelidade
 da métrica, $T=0$ sem determinismo estrito (a taxa de flip vem da auditoria), resultados
 onde os baselines clássicos empatam/vencem o LLM. E que nenhum slide *afirma* mais do que
 os dados da execução sustentam (hipóteses "parciais" descritas como parciais, sem

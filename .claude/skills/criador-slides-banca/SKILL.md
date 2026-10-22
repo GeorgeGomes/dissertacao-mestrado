@@ -48,8 +48,14 @@ Adapte ao tempo real, mas a espinha é esta:
 6. **Trabalhos relacionados / lacuna** (1) — onde os outros pararam, onde você entra.
 7. **Método/proposta** (3-5) — o coração. Diagrama de fluxo (os 3 blocos),
    decisões-chave justificadas. Construa em camadas se for complexo.
-8. **Experimentos** (1-2) — problemas A–G, baselines, métricas, protocolo, em
-   formato escaneável.
+8. **Experimentos** (1-2) — problemas A–G, baselines, métricas, passos de cada problema, em
+   formato escaneável. **Cinco métricas, nomes obrigatórios (seção IV.3 do orientador,
+   09/10/2026):** Fidelidade ("Fidelidade (métrica vs LLM)", Problemas A e D e a
+   estimação em F e G), Acurácia ("Acurácia (vs rótulo real)" no oráculo e como contexto nos Blocos 1
+   e 3; "Acurácia (LLM vs especialista)" no Bloco 2), Consistência (B e C, centróides do
+   novo problema), Cohen's κ (faixas de Landis e Koch 1977) e F1-Macro; nunca "F1-Score",
+   "Kappa" solto, "concordância", "taxa de erro", consistência euclidiana ou
+   precision/recall. O veredito de H4 é o calculado no log da execução.
 9. **Resultados** (2-3) — os achados que sustentam a contribuição, com a leitura
    destacada (seta, cor, negrito no número que importa). Diga o que significam.
 10. **Discussão e limitações** (1) — o que funcionou, o que não, ameaças à validade.
@@ -62,7 +68,7 @@ Adapte ao tempo real, mas a espinha é esta:
 
 - **Contribuição clara e delimitada:** a banca precisa enunciar, em uma frase, o
   que é novo. Deixe isso explícito num slide-âncora.
-- **Rigor e reprodutibilidade:** seeds, repetições, protocolo, e a ressalva de que
+- **Rigor e reprodutibilidade:** seeds, repetições, passos de cada problema, e a ressalva de que
   T=0 não garante determinismo — mostrar que o desenho controla a variância.
 - **Baselines honestos:** deixe visível onde o método NÃO vence (ex.: Regressão
   Logística iguala/supera o LLM no regime linear). Banca valoriza a sobriedade.
@@ -92,8 +98,8 @@ Adapte ao tempo real, mas a espinha é esta:
 ## Dados: sempre a última execução completa
 
 Os números vêm dos CSVs e do `log_execucao.txt` da **última execução completa**
-(pasta `execucao_YYYY-MM-DD_HH-MM-SS_completa/` de timestamp mais alto; ignorar
-as `execucao_*_smoke`, que são smoke tests `--rapido`). Se o deck de
+(pasta `resultados/execucao_YYYY-MM-DD_HH-MM-SS_completa/` de timestamp mais alto; ignorar
+as `resultados/execucao_*_smoke`, que são smoke tests `--rapido`). Se o deck de
 acompanhamento já existir para essa execução, **curadorie** dele os poucos
 resultados que entram na defesa — não recolha tudo.
 

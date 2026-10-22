@@ -1,0 +1,16 @@
+\begin{table}[htbp]
+\centering
+\small
+\caption{Problemas E1, E2 e E3, Passo 3 (google/gemini-2.5-flash-lite): média few-shot por estratégia de seleção (hipótese H4).}
+\label{tab:bloco2_E_passo3_H4_flashlite}
+\begin{tabular}{lrrrrlr}
+\toprule
+Especialista & Fácil & Difícil & Mista & Aleatória & Ordem & $\Delta$ difícil $-$ fácil \\
+\midrule
+E1 & 93,2 & 72,4 & 91,1 & 92,9 & Fácil > Aleatória > Mista > Difícil & $-$20,8 \\
+E2 & 96,5 & 85,1 & 93,2 & 93,6 & Fácil > Aleatória > Mista > Difícil & $-$11,4 \\
+E3 & 90,8 & 77,0 & 93,8 & 93,9 & Aleatória > Mista > Fácil > Difícil & $-$13,8 \\
+\bottomrule
+\multicolumn{7}{p{0.95\linewidth}}{\footnotesize Problema E, Passo 3. Acurácia (LLM vs especialista), em \%, média sobre os $k$ do few-shot, sementes e sorteios. H4 (a priori: difícil > fácil) é refutada quando $\Delta$ difícil$-$fácil é negativo.} \\
+\end{tabular}
+\end{table}

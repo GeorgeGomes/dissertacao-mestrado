@@ -59,7 +59,7 @@ a três perguntas:
 | **PDFs** | `artigos_referenciados/*.pdf` | Fontes primárias. Leia-os para verificar metadados e afirmações. |
 | **Lista validada** | `trabalhos_referencias.txt` | ~10 referências com metadados, status ("✅ Verificado") e **"Onde citar no meu trabalho?"**. É o índice curado — mas confira contra os PDFs e o estado real do texto. |
 | **Bibliografia do artigo** | `artigo.tex` | Usa `\begin{thebibliography}` **inline** (não há `.bib`), `\usepackage{cite}`, `\bibitem{chave}` + `\cite{chave}`. Chave no formato `autorTituloAno` (ex.: `gargWhatTransformers2022`). |
-| **Citações dos slides** | `execucao_*/apresentacao/apresentacao.tex` (+ `apresentacao_guia.tex`) e `roteiro_apresentacao.txt` | Citações **inline em texto** ("Brown et al. (2020)", "Min et al. (2022)"), normalmente sem entrada bibliográfica formal. |
+| **Citações dos slides** | `resultados/execucao_*/apresentacao/apresentacao.tex` (+ `apresentacao_guia.tex`) e `roteiro_apresentacao.txt` | Citações **inline em texto** ("Brown et al. (2020)", "Min et al. (2022)"), normalmente sem entrada bibliográfica formal. |
 | **Pedidos do orientador** | `reunioes_orientador/*/emails.txt` e `plano_trabalho.md` | Listas de artigos que o orientador mandou ler/citar (ex.: item 20 da reunião 20/05). Cobertura desses é obrigatória. |
 
 ## Como proceder
@@ -145,7 +145,7 @@ Use SEMPRE esta estrutura:
   *Neural Machine Translation by Jointly Learning to Align and Translate* (Bahdanau);
   *The Illusion of Thinking*. Cobertura desses é um item de placar — cruze sempre.
 - **Nomenclatura do projeto:** Problemas A–G, Blocos 1–3 (ver CLAUDE.md). Ao tabular "onde
-  citar", use essa nomenclatura, não "fase".
+  citar", use essa nomenclatura, não "fase" (nome usado antes de 13/10/2026).
 - **Não execute código nem reescreva seções inteiras.** Sua entrega é a integridade das
   referências; para texto novo encaminhe ao escritor-artigo, para mérito ao revisor-cientifico,
   para auditoria geral do artigo ao revisor-artigo.

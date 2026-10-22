@@ -1,0 +1,27 @@
+\begin{table}[htbp]
+\centering
+\small
+\caption{Problema F, meia-lua (google/gemini-2.5-flash-lite): Fase A externa por semente e espaço.}
+\label{tab:bloco2_F_meialua_faseA_R2_R3_R4_flashlite}
+\begin{tabular}{llrrrrr}
+\toprule
+Espaço & Semente & Acur.\ LLM vs real & Fid.\ Perc. & Fid.\ NNLS & Acur.\ Perc.\ vs real & Acur.\ NNLS vs real \\
+\midrule
+R$^2$ & 7 & 60,0 & 81,0 & 81,9 & 67,6 & 70,5 \\
+R$^2$ & 42 & 53,3 & 81,0 & 79,0 & 61,0 & 62,9 \\
+R$^2$ & 123 & 50,5 & 82,9 & 82,9 & 61,9 & 61,9 \\
+\textbf{R$^2$} & \textbf{média} & \textbf{54,6} & \textbf{81,6} & \textbf{81,3} & \textbf{63,5} & \textbf{65,1} \\
+\midrule
+R$^3$ & 7 & 60,0 & 85,7 & 84,8 & 68,6 & 69,5 \\
+R$^3$ & 42 & 53,3 & 86,7 & 85,7 & 55,2 & 60,0 \\
+R$^3$ & 123 & 50,5 & 82,9 & 81,9 & 61,9 & 64,8 \\
+\textbf{R$^3$} & \textbf{média} & \textbf{54,6} & \textbf{85,1} & \textbf{84,1} & \textbf{61,9} & \textbf{64,8} \\
+\midrule
+R$^4$ & 7 & 60,0 & 80,0 & 81,9 & 66,7 & 70,5 \\
+R$^4$ & 42 & 53,3 & 75,2 & 79,0 & 61,0 & 62,9 \\
+R$^4$ & 123 & 50,5 & 79,0 & 82,9 & 61,9 & 61,9 \\
+\textbf{R$^4$} & \textbf{média} & \textbf{54,6} & \textbf{78,1} & \textbf{81,3} & \textbf{63,2} & \textbf{65,1} \\
+\bottomrule
+\multicolumn{7}{p{0.95\linewidth}}{\footnotesize Problema F (meia-lua como aprendiz, divisão 70/30): Fase A nas 105 amostras de treino, zero-shot. Fid.\ = fidelidade (vs LLM) de cada estimador; Acur.\ vs real = acurácia (vs rótulo real) do LLM e da métrica, contexto. Em zero-shot (e com nomes de classe neutros) a correspondência entre nome e classe é arbitrária: a acurácia (vs rótulo real) do LLM pode sair abaixo de 50\%; o valor invariante à permutação é max($a$, 1 $-$ $a$). Sementes ausentes = o LLM colapsou em classe única (sem métrica).} \\
+\end{tabular}
+\end{table}

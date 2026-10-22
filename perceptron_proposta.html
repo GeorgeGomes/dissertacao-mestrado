@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Perceptron: hoje e proposta</title>
+<style>
+:root{color-scheme:light;--bg:#f8f7f3;--fg:#1d2026;--muted:#5e6472;--line:#d8d5cc;--panel:#fff;--accent:#1f5f8b;--code:#f1efe8;--del:#fbe3e1;--delfg:#8a1f17;--add:#dff3e6;--addfg:#1f6b3d;--note:#fff6d6;--notefg:#7a5200}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){color-scheme:dark;--bg:#15171b;--fg:#e8e6e1;--muted:#a6aab4;--line:#3a3e46;--panel:#1c1f25;--accent:#8ab4f8;--code:#20242b;--del:#4a2320;--delfg:#f3a69f;--add:#1f3a2b;--addfg:#8fd9ab;--note:#3f3119;--notefg:#f0c674}}
+:root[data-theme="dark"]{color-scheme:dark;--bg:#15171b;--fg:#e8e6e1;--muted:#a6aab4;--line:#3a3e46;--panel:#1c1f25;--accent:#8ab4f8;--code:#20242b;--del:#4a2320;--delfg:#f3a69f;--add:#1f3a2b;--addfg:#8fd9ab;--note:#3f3119;--notefg:#f0c674}
+*{box-sizing:border-box} body{margin:0;padding-block:24px 48px;padding-inline:16px;background:var(--bg);color:var(--fg);font:15px/1.55 "IBM Plex Sans",-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+main{max-width:1500px;margin:0 auto} h1{font:600 28px/1.15 Georgia,"Times New Roman",serif;margin:0 0 6px;text-wrap:balance} h2{font:600 20px/1.25 Georgia,serif;margin:28px 0 10px} p{max-width:72ch;margin:0 0 12px} .sub{color:var(--muted)}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start} @media (max-width:980px){.cols{grid-template-columns:1fr}}
+.col{border:1px solid var(--line);border-radius:10px;background:var(--panel);overflow:hidden} .col h3{margin:0;padding:10px 14px;border-bottom:1px solid var(--line);font:600 14px/1.2 "IBM Plex Sans",sans-serif;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+pre{margin:0;padding:12px 0;overflow-x:auto;font:12.5px/1.5 "IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;background:var(--code)}
+pre .l{display:block;padding:0 14px;white-space:pre} pre .del{background:var(--del);color:var(--delfg)} pre .add{background:var(--add);color:var(--addfg)} pre .n{display:inline-block;width:2.2em;color:var(--muted);user-select:none} pre .c{color:var(--muted)}
+.mark{display:inline-block;min-width:1.5em;text-align:center;font:700 11px/1.5 "IBM Plex Sans",sans-serif;background:var(--accent);color:#fff;border-radius:999px;padding:0 5px;margin-left:6px;vertical-align:1px}
+.notas{display:grid;gap:10px;margin:14px 0} .nota{border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:8px;background:var(--panel);padding:10px 14px} .nota b{color:var(--accent)}
+table{border-collapse:collapse;width:100%;font-size:14px} th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top} th{background:var(--code)}
+.leg{display:flex;gap:16px;flex-wrap:wrap;font-size:13px;color:var(--muted);margin:8px 0 0} .leg span::before{content:"";display:inline-block;width:14px;height:12px;border-radius:3px;margin-right:6px;vertical-align:-1px;background:var(--x)}
+code{font:13px "IBM Plex Mono",ui-monospace,Menlo,monospace;background:var(--code);padding:1px 4px;border-radius:3px}
+</style>
+</head>
+<body><main>
+<h1>Perceptron Estruturado: o código de hoje e a proposta</h1>
+<p class="sub">Trechos reais de <code>src/relaxed_perceptron.py</code> (método <code>fit</code>), reduzidos ao essencial, lado a lado com a versão proposta. A regra de correção de W (Algoritmo 1 do orientador) não muda; mudam o teste de viabilidade, a escala de W, o melhor esforço e o que é gravado como diagnóstico.</p>
+<div class="leg"><span style="--x:var(--del)">linha que sai ou muda</span><span style="--x:var(--add)">linha nova ou alterada</span><span style="--x:var(--code)">inalterada</span></div>
+
+<h2>1. O laço interno (uma época, γ fixo)</h2>
+<div class="cols">
+<div class="col"><h3>Hoje</h3><pre>
+<span class="l"><span class="n">1</span>for epoch in range(self.max_epochs):</span>
+<span class="l"><span class="n">2</span>    violations = 0</span>
+<span class="l"><span class="n">3</span>    for i in self._rng.permutation(m):</span>
+<span class="l"><span class="n">4</span>        xi, l = X[i], int(y[i])            <span class="c"># l = centróide correto</span></span>
+<span class="l"><span class="n">5</span>        k = rival mais próximo sob w       <span class="c"># k ≠ l</span></span>
+<span class="l"><span class="n">6</span>        norm_w = max(||w||, 1e-9)</span>
+<span class="l"><span class="n">7</span>        margin = d_W(xi,ck) - d_W(xi,cl) + lambda_ * alpha[i]</span>
+<span class="l del"><span class="n">8</span>        if margin &lt; gamma * norm_w:        <span class="c"># teste COM a folga α</span></span>
+<span class="l"><span class="n">9</span>            violations += 1</span>
+<span class="l"><span class="n">10</span>            g = (xi-cl)**2 - (xi-ck)**2</span>
+<span class="l"><span class="n">11</span>            factor = clip(1 - eta*gamma/norm_w, 0, 1)</span>
+<span class="l"><span class="n">12</span>            w = max(0, w*factor - eta*g)      <span class="c"># correção + projeção w ≥ 0</span></span>
+<span class="l"><span class="n">13</span>            alpha = alpha*factor; alpha[i] += eta</span>
+<span class="l"><span class="n">14</span>    final_violations = violations</span>
+<span class="l del"><span class="n">15</span>    if violations &lt; min_global_violations:  <span class="c"># melhor esforço: menos</span></span>
+<span class="l del"><span class="n">16</span>        min_global_violations = violations   <span class="c"># violações COM folga</span></span>
+<span class="l del"><span class="n">17</span>        w_best_effort = w.copy()</span>
+<span class="l del"><span class="n">18</span>    if violations == 0:                   <span class="c"># "viável" = 0 violações COM folga</span></span>
+<span class="l"><span class="n">19</span>        break</span>
+</pre></div>
+<div class="col"><h3>Proposta</h3><pre>
+<span class="l"><span class="n">1</span>for epoch in range(self.max_epochs):</span>
+<span class="l add"><span class="n">2</span>    violations = violations_brutas = erros = 0</span>
+<span class="l"><span class="n">3</span>    for i in self._rng.permutation(m):</span>
+<span class="l"><span class="n">4</span>        xi, l = X[i], int(y[i])</span>
+<span class="l"><span class="n">5</span>        k = rival mais próximo sob w</span>
+<span class="l"><span class="n">6</span>        norm_w = max(||w||, 1e-9)</span>
+<span class="l add"><span class="n">7</span>        bruta = d_W(xi,ck) - d_W(xi,cl)       <span class="c"># margem SEM folga</span><span class="mark">A</span></span>
+<span class="l add"><span class="n">8</span>        if bruta &lt; gamma * norm_w: violations_brutas += 1</span>
+<span class="l add"><span class="n">9</span>        if bruta &lt; 0: erros += 1              <span class="c"># ponto do lado errado</span></span>
+<span class="l"><span class="n">10</span>        margin = bruta + lambda_ * alpha[i]   <span class="c"># a folga continua na CORREÇÃO</span></span>
+<span class="l"><span class="n">11</span>        if margin &lt; gamma * norm_w:</span>
+<span class="l"><span class="n">12</span>            violations += 1</span>
+<span class="l"><span class="n">13</span>            g = (xi-cl)**2 - (xi-ck)**2</span>
+<span class="l"><span class="n">14</span>            factor = clip(1 - eta*gamma/norm_w, 0, 1)</span>
+<span class="l"><span class="n">15</span>            w = max(0, w*factor - eta*g)      <span class="c"># igual ao Algoritmo 1</span></span>
+<span class="l"><span class="n">16</span>            alpha = alpha*factor; alpha[i] += eta</span>
+<span class="l add"><span class="n">17</span>    nw = ||w||                             <span class="mark">B</span></span>
+<span class="l add"><span class="n">18</span>    if nw &gt; 0: w = w/nw; alpha = alpha/nw    <span class="c"># mesma direção, escala fixa</span></span>
+<span class="l add"><span class="n">19</span>    final_violations = violations_brutas</span>
+<span class="l add"><span class="n">20</span>    if erros &lt; min_global_erros:           <span class="c"># melhor esforço: menos</span><span class="mark">C</span></span>
+<span class="l add"><span class="n">21</span>        min_global_erros = erros           <span class="c"># pontos do lado errado</span></span>
+<span class="l add"><span class="n">22</span>        w_best_effort = w.copy()</span>
+<span class="l add"><span class="n">23</span>    if violations_brutas == 0:             <span class="c"># "viável" = 0 violações SEM folga</span></span>
+<span class="l"><span class="n">24</span>        break</span>
+</pre></div>
+</div>
+
+<div class="notas">
+<div class="nota"><b>A · Viabilidade pela margem bruta.</b> Hoje a linha 8 testa a margem já somada à folga α. Como α cresce 0,001 a cada correção e nunca diminui proporcionalmente, depois de muitas correções qualquer ponto "satisfaz" a margem, mesmo do lado errado. Na proposta, a folga continua sendo usada para decidir se W é corrigido (linha 11), que é a relaxação do orientador; mas a pergunta "esta margem γ foi alcançada?" (linha 23) é respondida sem a folga.</div>
+<div class="nota"><b>B · Escala fixa de W.</b> O fator da linha 14 encolhe W a cada correção, e a exigência γ·‖W‖ encolhe junto, até sumir. Dividindo W e α pela norma ao fim de cada época, a direção (que é tudo o que a régua usa, pois só a razão entre os pesos decide o centróide mais próximo) fica igual e a exigência de margem deixa de evaporar.</div>
+<div class="nota"><b>C · Melhor esforço pelo que importa.</b> Quando nenhuma margem é viável (o caso comum com rótulos ruidosos do LLM), o W devolvido passa a ser o da época com menos pontos do lado errado, medido sem a folga. Hoje é o da época com menos violações COM folga, que premia justamente as épocas em que W já evaporou.</div>
+</div>
+
+<h2>2. A decisão da busca em γ e o retorno</h2>
+<div class="cols">
+<div class="col"><h3>Hoje</h3><pre>
+<span class="l del"><span class="n">1</span>viable_now = (final_violations == 0)     <span class="c"># violações COM folga</span></span>
+<span class="l"><span class="n">2</span>if viable_now:</span>
+<span class="l"><span class="n">3</span>    found_feasible_solution = True</span>
+<span class="l"><span class="n">4</span>    gamma_lo = gamma; w_star = w.copy(); alpha_star = alpha.copy()</span>
+<span class="l"><span class="n">5</span>    gamma = gamma + delta_gamma (ou ponto médio do bracket)</span>
+<span class="l"><span class="n">6</span>else:</span>
+<span class="l"><span class="n">7</span>    gamma_hi = gamma; gamma = (gamma_lo + gamma_hi)/2</span>
+<span class="l"><span class="n">8</span>    w = w_star.copy(); alpha = alpha_star.copy()</span>
+<span class="l"><span class="n">9</span>if abs(gamma_hi - gamma_lo) &lt;= tol: break</span>
+<span class="l"><span class="n">10</span></span>
+<span class="l"><span class="n">11</span>if found_feasible_solution:</span>
+<span class="l del"><span class="n">12</span>    return w_star, gamma_lo                  <span class="c"># pode ser W ≈ 0 com "γ viável"</span></span>
+<span class="l"><span class="n">13</span>if use_best_effort:</span>
+<span class="l del"><span class="n">14</span>    return w_best_effort, 0.0                <span class="c"># † nas tabelas</span></span>
+</pre></div>
+<div class="col"><h3>Proposta</h3><pre>
+<span class="l add"><span class="n">1</span>viable_now = (final_violations == 0)     <span class="c"># agora: violações SEM folga</span><span class="mark">A</span></span>
+<span class="l"><span class="n">2</span>if viable_now:</span>
+<span class="l"><span class="n">3</span>    found_feasible_solution = True</span>
+<span class="l"><span class="n">4</span>    gamma_lo = gamma; w_star = w.copy(); alpha_star = alpha.copy()</span>
+<span class="l"><span class="n">5</span>    gamma = gamma + delta_gamma (ou ponto médio do bracket)</span>
+<span class="l"><span class="n">6</span>else:</span>
+<span class="l"><span class="n">7</span>    gamma_hi = gamma; gamma = (gamma_lo + gamma_hi)/2</span>
+<span class="l"><span class="n">8</span>    w = w_star.copy(); alpha = alpha_star.copy()</span>
+<span class="l"><span class="n">9</span>if abs(gamma_hi - gamma_lo) &lt;= tol: break</span>
+<span class="l add"><span class="n">10</span>self.margem_minima_ = min_i(bruta_i)/||w||  <span class="c"># diagnóstico gravado no CSV</span><span class="mark">D</span></span>
+<span class="l"><span class="n">11</span>if found_feasible_solution:</span>
+<span class="l add"><span class="n">12</span>    return w_star, gamma_lo                  <span class="c"># só com margem bruta ≥ γ·‖W‖ em todos os pontos</span></span>
+<span class="l"><span class="n">13</span>if use_best_effort:</span>
+<span class="l add"><span class="n">14</span>    return w_best_effort, 0.0                <span class="c"># † fica, mas o W é o de menos erros</span></span>
+</pre></div>
+</div>
+
+<div class="notas">
+<div class="nota"><b>D · Diagnóstico honesto no CSV.</b> Além de <code>gamma</code>, gravar <code>margem_minima</code> (a menor margem bruta dividida por ‖W‖). Se for negativa, a régua não separa os rótulos, independentemente do γ. Nas tabelas, o marcador † passa a indicar "melhor esforço ou margem mínima negativa", não só γ = 0.</div>
+</div>
+
+<h2>3. O que cada mudança faz nos números da semente 42 (gpt, Problema A)</h2>
+<table><thead><tr><th>Versão</th><th>W devolvido</th><th>γ</th><th>fidelidade (régua × LLM)</th><th>pontos do lado errado</th></tr></thead><tbody>
+<tr><td>Hoje</td><td>[0; 0,0006] (‖W‖ = 0,0006)</td><td>0,05 "viável"</td><td>75,3 %</td><td>37</td></tr>
+<tr><td>Régua neutra W = [1; 1]</td><td>[1; 1]</td><td>—</td><td>80,0 %</td><td>30</td></tr>
+<tr><td>NNLS, mesmos rótulos</td><td>[0,03; 0,09] (razão 0,31)</td><td>—</td><td>84,7 %</td><td>23</td></tr>
+<tr><td>Proposta (A + B + C)</td><td>[0,13; 0,87] (razão 0,15)</td><td>0 (melhor esforço)</td><td>85,3 %</td><td>21</td></tr>
+</tbody></table>
+
+<h2>4. O que não muda</h2>
+<p>A regra de atualização de W (linhas 13 a 16 da proposta) é a mesma do Algoritmo 1 do orientador, com a folga α e o fator de regularização. A busca de γ (incremento e bisseção) é a mesma. O NNLS não é tocado. Só mudam: o teste de viabilidade, a normalização por época, o critério do melhor esforço e o diagnóstico gravado. Na completa de 15/10 isso atinge 12 das 495 estimativas de A e D (8 no zero-shot), nenhuma do G; todas podem ser reestimadas a partir dos rótulos gravados, sem chamadas ao LLM.</p>
+
+<h2>5. Como validar</h2>
+<p>Oráculo sobre E3, E1 e E2 continua em 100 % pelo Perceptron; teto do A e do D não piora; as 12 linhas degeneradas ficam iguais ou acima do NNLS; suíte de testes passa; tabelas 01, 10 e 06 comparadas antes e depois. Se qualquer item falhar, a mudança não entra.</p>
+</main></body></html>

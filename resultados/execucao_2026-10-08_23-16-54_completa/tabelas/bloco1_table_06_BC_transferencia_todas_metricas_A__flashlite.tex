@@ -1,0 +1,38 @@
+\begin{table}[htbp]
+\centering
+\small
+\caption{Problemas B e C (google/gemini-2.5-flash-lite): transferência zero-shot contra cada métrica estimada no A.}
+\label{tab:T2_BC_flashlite}
+\begin{tabular}{llllrrr}
+\toprule
+Prob. & Métrica de origem (A) & Algoritmo & Consistência (\%) & $\kappa$ & F1-Macro (\%) & Acur.\ LLM vs real \\
+\midrule
+B & zero-shot & nnls & 74,0 (71,0–76,0) & 0,286 (0,177–0,356) & 74,0 (71,0–76,0) & 47,3 (44,0–51,0) \\
+B & zero-shot & perceptron & 72,7 (69,0–77,0) & 0,263 (0,159–0,339) & 72,7 (69,0–77,0) & 47,3 (44,0–51,0) \\
+B & 4-shot & nnls & 69,6 (59,0–78,0) & 0,222 (0,067–0,353) & 69,6 (59,0–78,0) & 47,3 (44,0–51,0) \\
+B & 4-shot & perceptron & 70,9 (60,0–81,0) & 0,257 (0,061–0,472) & 70,9 (60,0–81,0) & 47,3 (44,0–51,0) \\
+B & 10-shot & nnls & 65,3 (59,0–78,0) & 0,161 (0,061–0,353) & 65,3 (59,0–78,0) & 47,3 (44,0–51,0) \\
+B & 10-shot & perceptron & 69,6 (59,0–81,0) & 0,249 (0,056–0,472) & 69,6 (59,0–81,0) & 47,3 (44,0–51,0) \\
+B & 20-shot & nnls & 68,9 (57,0–82,0) & 0,231 (0,061–0,490) & 68,9 (57,0–82,0) & 47,3 (44,0–51,0) \\
+B & 20-shot & perceptron & 69,8 (60,0–81,0) & 0,249 (0,061–0,472) & 69,8 (60,0–81,0) & 47,3 (44,0–51,0) \\
+\textbf{B} & \textbf{40-shot} & \textbf{nnls} & \textbf{65,9 (59,0–82,0)} & \textbf{0,179 (0,061–0,490)} & \textbf{65,9 (59,0–82,0)} & \textbf{47,3 (44,0–51,0)} \\
+\textbf{B} & \textbf{40-shot} & \textbf{perceptron} & \textbf{69,6 (59,0–81,0)} & \textbf{0,242 (0,056–0,472)} & \textbf{69,6 (59,0–81,0)} & \textbf{47,3 (44,0–51,0)} \\
+B & W ajustado ao rótulo real (teto) & nnls & 71,7 (63,0–81,0) & 0,263 (0,079–0,472) & 71,7 (63,0–81,0) & 47,3 (44,0–51,0) \\
+B & W ajustado ao rótulo real (teto) & perceptron & 69,3 (60,0–76,0) & 0,216 (0,061–0,294) & 69,3 (60,0–76,0) & 47,3 (44,0–51,0) \\
+\midrule
+C & zero-shot & nnls & 91,7 (90,0–93,0) & 0,833 (0,800–0,859) & 91,7 (90,0–93,0) & 9,7 (8,0–12,0) \\
+C & zero-shot & perceptron & 92,3 (92,0–93,0) & 0,846 (0,839–0,859) & 92,3 (92,0–93,0) & 9,7 (8,0–12,0) \\
+C & 4-shot & nnls & 90,3 (87,0–92,0) & 0,806 (0,740–0,839) & 90,3 (87,0–92,0) & 9,7 (8,0–12,0) \\
+C & 4-shot & perceptron & 91,6 (90,0–93,0) & 0,830 (0,798–0,858) & 91,6 (90,0–93,0) & 9,7 (8,0–12,0) \\
+C & 10-shot & nnls & 90,2 (87,0–93,0) & 0,804 (0,740–0,857) & 90,2 (87,0–93,0) & 9,7 (8,0–12,0) \\
+C & 10-shot & perceptron & 91,4 (91,0–92,0) & 0,828 (0,818–0,840) & 91,4 (91,0–92,0) & 9,7 (8,0–12,0) \\
+C & 20-shot & nnls & 91,4 (87,0–93,0) & 0,828 (0,740–0,859) & 91,4 (87,0–93,0) & 9,7 (8,0–12,0) \\
+C & 20-shot & perceptron & 91,3 (91,0–93,0) & 0,826 (0,818–0,859) & 91,3 (91,0–93,0) & 9,7 (8,0–12,0) \\
+\textbf{C} & \textbf{40-shot} & \textbf{nnls} & \textbf{91,2 (87,0–93,0)} & \textbf{0,823 (0,740–0,859)} & \textbf{91,2 (87,0–93,0)} & \textbf{9,7 (8,0–12,0)} \\
+\textbf{C} & \textbf{40-shot} & \textbf{perceptron} & \textbf{91,3 (91,0–93,0)} & \textbf{0,826 (0,818–0,859)} & \textbf{91,3 (91,0–93,0)} & \textbf{9,7 (8,0–12,0)} \\
+C & W ajustado ao rótulo real (teto) & nnls & 92,3 (92,0–93,0) & 0,846 (0,839–0,859) & 92,3 (92,0–93,0) & 9,7 (8,0–12,0) \\
+C & W ajustado ao rótulo real (teto) & perceptron & 91,7 (91,0–93,0) & 0,832 (0,818–0,859) & 91,7 (91,0–93,0) & 9,7 (8,0–12,0) \\
+\bottomrule
+\multicolumn{7}{p{0.95\linewidth}}{\footnotesize Rótulos ZERO-SHOT do LLM em B e C (100 pontos novos cada); só $\hat{W}$ é transferido do A (R$^2$), os centróides são recalculados com os rótulos do LLM no próprio problema (consistência). $\kappa$ = Cohen's $\kappa$ (faixas de Landis e Koch, 1977). F1-Macro entre a métrica e o LLM. Acur.\ LLM vs real = acurácia (vs rótulo real) do LLM, contexto. Em zero-shot (e com nomes de classe neutros) a correspondência entre nome e classe é arbitrária: a acurácia (vs rótulo real) do LLM pode sair abaixo de 50\%; o valor invariante à permutação é max($a$, 1 $-$ $a$). Em negrito: as linhas (Perceptron e NNLS) do regime/k eleito pelo runner (coluna melhor\_metrica\_a: maior fidelidade média no A, Perceptron, R$^2$, zero ou few-shot), excluído o teto.} \\
+\end{tabular}
+\end{table}

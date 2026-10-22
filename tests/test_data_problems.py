@@ -1,7 +1,7 @@
 """Testes da geração de dados (`data_problems`).
 
 Verifica shape/rótulos dos geradores sintéticos, reprodutibilidade por semente,
-a anisotropia do gerador da Oracle Validation e a carga da base real peso×altura.
+e a carga da base real peso×altura.
 """
 import os
 import sys
@@ -16,6 +16,9 @@ import data_problems as dp  # noqa: E402
 
 CSV_REAL = os.path.join(
     os.path.dirname(__file__), "..", "dados_reais", "homem_mulher", "peso_altura.csv"
+)
+CSV_REAL_KG_M = os.path.join(
+    os.path.dirname(__file__), "..", "dados_reais", "homem_mulher", "peso_altura_kg_m.csv"
 )
 
 
@@ -45,22 +48,6 @@ class TestGeradoresSinteticos(unittest.TestCase):
         self.assertFalse(np.array_equal(X1, X2))
 
 
-class TestAnisotropico(unittest.TestCase):
-    def test_variancia_por_dimensao_reflete_std_per_dim(self):
-        centers = [(-1.5, 1.0), (1.5, -1.0)]
-        # x1 bem apertado (0.1), x2 bem espalhado (2.0)
-        X, y = dp.create_anisotropic_problem(
-            n_samples=400, centers=centers, std_per_dim=[0.1, 2.0], random_state=0
-        )
-        self.assertEqual(X.shape, (400, 2))
-        for c in (0, 1):
-            std_x1 = X[y == c, 0].std()
-            std_x2 = X[y == c, 1].std()
-            self.assertLess(std_x1, std_x2)          # anisotropia na direção certa
-        # Centróides aproximadamente respeitados (tolerância ampla por causa da variância).
-        np.testing.assert_allclose(X[y == 0].mean(axis=0), centers[0], atol=0.6)
-        np.testing.assert_allclose(X[y == 1].mean(axis=0), centers[1], atol=0.6)
-
 
 class TestConstantesGeometria(unittest.TestCase):
     def test_centros_tem_duas_classes_2d(self):
@@ -83,6 +70,22 @@ class TestBaseReal(unittest.TestCase):
         self.assertEqual(X.shape[0], y.shape[0])
         self.assertEqual(set(np.unique(y).tolist()), {0, 1})
         self.assertEqual(X.dtype, float)
+
+    @unittest.skipUnless(os.path.exists(CSV_REAL_KG_M), "CSV peso×altura em kg/m ausente")
+    def test_kg_m_alinhado_com_a_base_normalizada(self):
+        """G2: mesma base de G1 em unidades físicas, mesma ordem, mesmo rótulo, mapa linear."""
+        X, y = dp.create_problem_homem_mulher(csv_path=CSV_REAL)
+        X_fis, y_fis = dp.create_problem_homem_mulher_kg_m(csv_path=CSV_REAL_KG_M)
+        self.assertEqual(X_fis.shape, X.shape)
+        np.testing.assert_array_equal(y_fis, y)
+        # Regra de três do orientador: -1 → 45 kg / 1,50 m e +1 → 110 kg / 1,95 m
+        kg = 45.0 + (X[:, 0] + 1.0) * 65.0 / 2.0
+        m = 1.50 + (X[:, 1] + 1.0) * 0.45 / 2.0
+        np.testing.assert_allclose(X_fis[:, 0], kg, atol=0.051)   # 1 casa decimal
+        np.testing.assert_allclose(X_fis[:, 1], m, atol=0.0051)   # 2 casas decimais
+        # Classe 1 (Homem) é mais pesada e mais alta em média
+        self.assertGreater(X_fis[y == 1, 0].mean(), X_fis[y == 0, 0].mean())
+        self.assertGreater(X_fis[y == 1, 1].mean(), X_fis[y == 0, 1].mean())
 
 
 if __name__ == "__main__":

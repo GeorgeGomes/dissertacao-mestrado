@@ -1,0 +1,754 @@
+out. 2, 2026
+Reunião em 2 de out. de 2026 às 16:01 GMT-03:00 - Transcrição
+00:00:08
+
+RAUL FONSECA NETO: Bom, eu eu eu descrevi de novo aquela tabela um, tá? Com mais detalhes,
+George Gomes: Hum.
+RAUL FONSECA NETO: tá? Tá faltando aí você colocar a quantidade de amostras do meia lua.
+George Gomes: Acho que o meia lua tem, eu acho que é ou é 100 ou é 150.
+RAUL FONSECA NETO: Tá,
+George Gomes: Dou uma olhada lá.
+RAUL FONSECA NETO: mas aí tem que saber direitinho.
+George Gomes: Uhum. Sim.
+RAUL FONSECA NETO: E as galcianas que que você constrói com com a métrica do especialista, elas também eh parece que elas são com 100 amostras, né?
+George Gomes: É, elas são com 100.
+RAUL FONSECA NETO: Tá?
+George Gomes: É.
+RAUL FONSECA NETO: E quais são os centroides aí? No caso não tem se é os mesmos da da anterior,
+George Gomes: Ah,
+RAUL FONSECA NETO: entendeu? Precisa definir isso. Pode,
+George Gomes: isso é do problema.
+RAUL FONSECA NETO: pode olhar que eu olhei, eu botei centroide, botei algo de padrão, a variância, né? Botei tudo certinho.
+George Gomes: Boa.
+RAUL FONSECA NETO: É importante essas coisas ficarem bem aí.
+
+
+00:01:01
+
+RAUL FONSECA NETO: Minha lua de novo, é o mesmo problema. Se for o mesmo é a mesma quantidade a mão,
+George Gomes: Hum.
+RAUL FONSECA NETO: tá? Aí ficou bem bem definido. Eh, tá. Protocolo experimental, basicamente você já tá falando tudo aqui, não tem necessidade, eu acho, do apêndice.
+George Gomes: Tá.
+RAUL FONSECA NETO: Acabou que tá tudo no texto já, então não tem nada errado. Tá vendo?
+George Gomes: Uhum.
+RAUL FONSECA NETO: Na verdade, eu eu fui reescrevendo a coisa, explicando melhor, usando uma anotação eh eh igual para todas as coisas, pros nomes das coisas, entendeu?
+George Gomes: Uhum.
+RAUL FONSECA NETO: Eu fui botando mais no formato de artigo e membro da dissertação, tá?
+George Gomes: Boa. E e Raul, deixa eu deixa eu te tirar uma dúvida contigo. Essa questão de repetição, quantidade de repetição e quantidade de sementes, por exemplo, a gente quer colocar isso daí no artigo A1, correto? Numa revista A1, alguma coisa assim.
+RAUL FONSECA NETO: Uhum.
+George Gomes: Eh, eles têm assim para ser matematicamente aprovado, sei lá, tem uma quantidade mínima, sei lá,
+
+
+00:02:07
+
+RAUL FONSECA NETO: Não,
+George Gomes: cinco em vez de três,
+RAUL FONSECA NETO: não, não, não, não tem não. Não pode ser determinist fazer uma coisa só,
+George Gomes: tá?
+RAUL FONSECA NETO: mas não tem não.
+George Gomes: Uhum.
+RAUL FONSECA NETO: Eh, essas variantes de prompt aqui, eu queria que você explicasse, depois você manda isso para mim por e-mail, que que é o standar, que que é o geométrico? O que que é o chin ou tabular?
+George Gomes: no no no no eu acho assim, eu posso estar tá errado, mas eu acho que eu tinha colocado no apêndice cada um desses,
+RAUL FONSECA NETO: Tá, mas eu não vi o apên,
+George Gomes: mas eu vou eu eu ponho sim, fica fica tranquilo, quiser tranquilo.
+RAUL FONSECA NETO: tá? Porque eu tenho que escrever isso no texto. Eh, tá.
+George Gomes: Uhum.
+RAUL FONSECA NETO: A quantidade de exemplos. Eu entendi que o short usa 410 como especialista e tem alguns exemplos você tá usando 4 10 e 20, mas não tem problema lá no no aprendiz.
+George Gomes: Uhum.
+
+
+00:02:59
+
+RAUL FONSECA NETO: Eu também tô botando especialista em aprendiz, negócio de fonte, né?
+George Gomes: Tá.
+RAUL FONSECA NETO: Aí métrica de avaliação, eu criei uma outra que é quando você compara com o Grand Truck, eu chamei de apuraça mesmo,
+George Gomes: Ah, tá. Você tá comparando com o o GR
+RAUL FONSECA NETO: tá? Grande TR.
+George Gomes: TR?
+RAUL FONSECA NETO: Quando você compara com a Ll é fidelidade, né?
+George Gomes: Uhum.
+RAUL FONSECA NETO: Quando você compara com grand e a curácia e quando você faz a
+George Gomes: É a curaça.
+RAUL FONSECA NETO: transferência a consistência mesmo?
+George Gomes: Tá.
+RAUL FONSECA NETO: Aí corre, tá tudo bonitinho, redefinido. F1 macro, chamei de F1 macro, né? Não é F1 score,
+George Gomes: Uhum.
+RAUL FONSECA NETO: tudo certinho. Falei das projeções não lineares, tá? os atributos que são eh anexados, tá? Aí vem bloco um LLM como fonte. Posso até trocar aqui para especialista, né?
+George Gomes: É, se a gente colocar como tudo igual,
+RAUL FONSECA NETO: Que a gente tá usando especialista aprendiz.
+
+
+00:03:56
+
+RAUL FONSECA NETO: É,
+George Gomes: é,
+RAUL FONSECA NETO: senão fica falando duas coisas.
+George Gomes: eh,
+RAUL FONSECA NETO: Então é um processo. Eu tô tô sempre e eh por isso que eu falando para você esperar, eu tô sempre imprimo, releio, aí altera um negocinho aqui, outro ali, entendeu?
+George Gomes: Sì, sì,
+RAUL FONSECA NETO: É um trabalho. Então, só quando mesmo tiver tudo pronto, eu falar: "Agora você pode mandar já criar a versão em inglês também,
+George Gomes: tá.
+RAUL FONSECA NETO: ó". Aí tá tudo certinho. A melhor métrica, tá vendo? A melhor métrica que você vai fazer o full shot também,
+George Gomes: Uhum.
+RAUL FONSECA NETO: tá? É transferida para novos conjuntos, mesmo transformação, a saber, a rotação nas coordenadas do Centro Antiorária, tá? Len volta classificado moto de duas formas.
+George Gomes: Aí,
+RAUL FONSECA NETO: Primeiro do short.
+George Gomes: só só para eu tirar, só para confirmar,
+RAUL FONSECA NETO: Hum.
+George Gomes: eu vou fazer o fio shot e eu vou pegar a melhor métrica, né? Aí a melhor métrica que der,
+
+
+00:04:49
+
+RAUL FONSECA NETO: É a melhor, mas óbvio que o fichot deve dar melhor,
+George Gomes: eu transfiro.
+RAUL FONSECA NETO: né?
+George Gomes: É, é.
+RAUL FONSECA NETO: Mas aí precisa precisa fazer e botar a tabela,
+George Gomes: Quanto é quanto mais, mais vai dar melhor, né? Угуm.
+RAUL FONSECA NETO: tá? Aí como método de avaliação fidelidade consistência coeficiente K F1 macro entre a métrica estimada, né? A gente precisa botar melhor aqui de novo o LM nos problemas de AD, o Sério nação exado para D. Tá, tá faltando isso aqui. Você não fez o o trabalho completo no no na meia lua.
+George Gomes: Os testes de neonidade são realizados no problema D, no qual se aplica o mesmo protocolo associado ao problema. Ah, eu acho que eu não fiz não.
+RAUL FONSECA NETO: É, tá faltando tabela, né? Tá faltando as algumas coisas relacionad ao meia lua. E é nessa parte inicial, tá?
+George Gomes: Uhum.
+RAUL FONSECA NETO: Do bloco um. O teste oráculo até essa corretizado para rotulação em
+George Gomes: Угу.
+
+
+00:05:46
+
+RAUL FONSECA NETO: seguida essas configurações São de outro cleianas. Atrópicas comédicas, tá? Llelm como aprendiz. Nesse caso papel especial externo com uma métrica da conhecida onde o atributo X2. Aqui você usa as duas coisas tem que completar isso, tem que arrumar isso aqui. Hora você põe um x2 cinco vezes, hora você põe o x1 cinco vezes, tá? Depois eu vou arrumar essa aqui.
+George Gomes: Так.
+RAUL FONSECA NETO: Claro. O problema é o especialista agorizado de contex balista. São usados quatro estratégia de seleção. Aí botei nome em português fácil, difícil, mista e aleatório.
+George Gomes: Isso aí.
+RAUL FONSECA NETO: Com referência treino criações basilares. KNN regressão logística SVM. Tá nos mesmos exemplos para demonstração beleza. Test também para mudança de ordenação das amostras na sequência de pompes. Beleza? Aí em função lá dos resultados tem que vir arrumando alguma coisinha aqui, entendeu? Porque tem que ficar tudo batendo, entendeu,
+
+
+00:06:48
+
+George Gomes: Sim.
+RAUL FONSECA NETO: né? Tudo de caso real. Uma Esse aqui eu ainda não peguei, tá? Tá faltando pegar aqui agora nos resultados da base real, mas aí eu já detalhei mais classificador baisiano.
+George Gomes: Ah, ô, ô, Raul, deixa,
+RAUL FONSECA NETO: Hum.
+George Gomes: deixa eu te falar uma coisa que eu encontrei essa madrugada, tava olhando tudo, dando uma olhada e eu tenho que confirmar, tá? Eu não confirmei ainda, não consegui confirmar, mas eu acho que na hora que eu fui,
+RAUL FONSECA NETO: M.
+George Gomes: lá no começo, quando eu fui executar esses 50 homens e 50 mulheres, eu acho que ele trocou os rótulos, colocou mulher como homem e homem como mulher. Então eu preciso dar uma olhada aqui nesses, né,
+RAUL FONSECA NETO: Ah, não. Isso aí eu ainda tô mexendo nesse nesses resultados.
+George Gomes: nessas Ah,
+RAUL FONSECA NETO: Aí depois você você manda os corretos,
+George Gomes: boa. Só,
+RAUL FONSECA NETO: tá?
+George Gomes: só para te explicar que acho que isso daí tá tá M.
+
+
+00:07:38
+
+RAUL FONSECA NETO: Então, testa-se o viés cenâmico dos nomes de classes com variantes de nomes neutros perguntando a bem vez de homem ou mulher para isolar o próximo anônimo da mesma forma nome dos atributos com variantes neutras pequena escala do conjunto é apóse o número de erros absolutos além de ser equiv percentuais beleza para a análise da influência isso aqui você não fez ainda o a não linearidade nesse problema você ainda Não fez,
+George Gomes: para qual é o problema desse?
+RAUL FONSECA NETO: pelo menos eu não vi nos é homem,
+George Gomes: É o R3.
+RAUL FONSECA NETO: mulher.
+George Gomes: Hum.
+RAUL FONSECA NETO: Você não fez ainda não?
+George Gomes: Hum. É, acho que não. Eu eu eu aproveito, vejo se tá certo e já faço.
+RAUL FONSECA NETO: É, vai escrevendo aí tudo porque é aonde que eu acho que vai dar uma melhora melhor do que no
+George Gomes: Uhum.
+RAUL FONSECA NETO: meialua.
+George Gomes: Uhum.
+RAUL FONSECA NETO: Acho que você até fala isso uma hora, mas eu não vi esses resultados com com R3 e R.
+George Gomes: Não, mas eu não, eu acho que eu fiz.
+
+
+00:08:36
+
+George Gomes: Ô, Raul,
+RAUL FONSECA NETO: É,
+George Gomes: acho que se eu fiz.
+RAUL FONSECA NETO: mas mas não tá escrito.
+George Gomes: É, é,
+RAUL FONSECA NETO: Não vi.
+George Gomes: pode ser, pode ser, pode ser.
+RAUL FONSECA NETO: Tá aí. Fecha. Faz. Falta explicar o teste com novo esquema, tá? Esse negócio deixa para depois, então. Tá.
+George Gomes: Tá. Então,
+RAUL FONSECA NETO: Amen.
+George Gomes: o feedback imediato que a gente tava falando lá no começo,
+RAUL FONSECA NETO: Ah, deixa isso para depois,
+George Gomes: deixa para depois,
+RAUL FONSECA NETO: né? Vamos fazer o que tá faltando primeiro.
+George Gomes: tá?
+RAUL FONSECA NETO: Então, tá aí. Eu acho que você entendeu em relação à metodologia, né? Pouca coisa para consertar.
+George Gomes: Sim, sim.
+RAUL FONSECA NETO: Agora vamos nos resultados. Cara, eu fiz uma pesquisa muito detalhada dos trabalhos relacionados, tá? 17 ou 18 trabalhos e todos relacionados ao ao nosso trabalho de alguma maneira. Acho que foi muito bom.
+
+
+00:09:20
+
+George Gomes: Muito bom.
+RAUL FONSECA NETO: Isso vai vir depois, vai ser o mais difícil vai ser aquele aquele capítulo seis lá da frente lá, né?
+George Gomes: Uhum.
+RAUL FONSECA NETO: Aqui você repetiu, beleza, eu acho que não tem problema. Tudo que é tabela e figura, eu escrevi em vermelho, tá?
+George Gomes: Sim,
+RAUL FONSECA NETO: Só assim,
+George Gomes: sim. É, eu vi isso daí.
+RAUL FONSECA NETO: só para destacar aqui.
+George Gomes: Eu eu quando você mandou Uhum.
+RAUL FONSECA NETO: Então, só para destacar aqui do texto. A tabela dois apresenta a fidelidade dos dois estimadores no problema a representado por duas calcianas contraciantra. Acredito que a fidelidade aqui tá tudo muito bem explicadinho.
+George Gomes: Uhum.
+RAUL FONSECA NETO: Então falta fio shot gerar uma tabela.
+George Gomes: Sim. É isso daí. Sim. Aham. Aham.
+RAUL FONSECA NETO: Agora teria como se plotar então as amostras das galcianas flotuladas pelo Llrop igual você fez lá embaixo.
+George Gomes: Sim,
+RAUL FONSECA NETO: Tava muito interessante para mostrar que o LLM foge do Ground Troop, entendeu?
+George Gomes: sim, sim, sim.
+
+
+00:10:18
+
+George Gomes: É,
+RAUL FONSECA NETO: Tá
+George Gomes: e também para mostrar que a gente não tá procurando, né, o a gente tá procurando a consistência dela,
+RAUL FONSECA NETO: isso
+George Gomes: não acerto.
+RAUL FONSECA NETO: aqui você só usa essa proporcional, né? Ponto 3 1,5. Tá, não tem problema.
+George Gomes: É.
+RAUL FONSECA NETO: Use uma euclidiano e uma proporcional. É a tabela três. Deixa eu abrir aqui também as tabelas só para saber se não tem nada para modificar. Esse laptop aqui é antigo. Deixa aqui na universidade laptop. Que demora. Ah, eu não trago novo para cá não. Vamos lá. demora um pouquinho,
+George Gomes: Угуm.
+RAUL FONSECA NETO: Ó, tabela dois tá certinho, tá?
+George Gomes: Hm.
+RAUL FONSECA NETO: Depois a gente pode até pensar em melhorar esses títulos, entendeu? Mas assim, por enquanto não tem necessidade.
+George Gomes: Tá.
+RAUL FONSECA NETO: Mas você vai fazer uma mesma tabela agora com f shot aí.
+George Gomes: Beleza.
+
+
+00:12:14
+
+RAUL FONSECA NETO: Aí aí aí especifica que essa é zero shop, tá?
+George Gomes: Tá.
+RAUL FONSECA NETO: Aí, como você vai variar o eh seria interessante variar, né? Variar só com 10 e 20, né?
+George Gomes: É porque eu teria uma tabela.
+RAUL FONSECA NETO: Deixa usado nessa fase aqui, né? 40 não, né? É.
+George Gomes: É assim, tem que escolher, tipo,
+RAUL FONSECA NETO: Então, usar o máximo,
+George Gomes: eu poderia fazer porque eu o que
+RAUL FONSECA NETO: usar 20, não vai ficar a tabela, vai criar outra outra coluna na tabela, né?
+George Gomes: é porque eu poderia ter a a zero shot, a f shot com 10 e com 20, né?
+RAUL FONSECA NETO: Uhum.
+George Gomes: Mas eu até tem coisas, estudo eh testes aí dentro que diz que acima de cinco ou seis já não muda muito não. M.
+RAUL FONSECA NETO: É, aí você vê lá tabela três tá certinha. Vamos lá. Ah, não. Tabela três não. Tá tabela três. Caraca, só sumiu.
+
+
+00:13:45
+
+RAUL FONSECA NETO: Tá aqui. tinha fechado. Ah, não, tá PDF. É, eu não entendi aqui a diferença do problema desse A e B aqui.
+George Gomes: Humum.
+RAUL FONSECA NETO: Ô, George,
+George Gomes: Eu tô tô pensando aqui,
+RAUL FONSECA NETO: eu não tá vendo para mim é um só. E outra coisa, você você nome esses problemas, problema 1 2 3 e 4 e deixa só o o a métrica na frente.
+George Gomes: tá? Deixa eu pensar aqui.
+RAUL FONSECA NETO: Precisa es A B agora.
+George Gomes: Tabela três.
+RAUL FONSECA NETO: diferente do B. Entendi.
+George Gomes: Humumum.
+RAUL FONSECA NETO: Pois você viu ali,
+George Gomes: Teste teste oráculo conhecido é o conseno
+RAUL FONSECA NETO: ó.
+George Gomes: recuperado
+RAUL FONSECA NETO: Eu tiraria essa primeira linha aí, deixava só problema. 1, 2 e três. Ainda deu um cosseno esquisito aí, ó.
+George Gomes: tá.
+RAUL FONSECA NETO: Tira essa primeira linha fora, deixa problema euclidiano e e os dois anisotrópicos. Aí você chama de problema 1 2 e 3.
+
+
+00:15:23
+
+George Gomes: Tá bom.
+RAUL FONSECA NETO: Beleza?
+George Gomes: Tá bom.
+RAUL FONSECA NETO: Eu até falei 1 2 3 e 4, mas deixa só 1 2 e 3.
+George Gomes: Uhum. Tá bom.
+RAUL FONSECA NETO: Figura dois, validação dos estimadores. Essa figura aqui se fosse melhor, mas tudo bem. Quand não,
+George Gomes: Deixa ela. Ela tá bem ruim, né, para ver.
+RAUL FONSECA NETO: ela é importante.
+George Gomes: Uhum.
+RAUL FONSECA NETO: Falando para ajeitar ela melhor, né? Para ou quebrar em cua,
+George Gomes: Tipo,
+RAUL FONSECA NETO: sei lá.
+George Gomes: é,
+RAUL FONSECA NETO: Não sei.
+George Gomes: é quebrar em duas, né?
+RAUL FONSECA NETO: Ela tá muito eh grande.
+George Gomes: Muito pequeno, né?
+RAUL FONSECA NETO: Ô saco. Perto aqui a transferência problemas B e C. Beleza. Tabela quatro. Apresenta valor de consciência para tiên de capa. Na transferência jogam quatro exemplos. Padrão e assimétrico para zío. Beleza? Tudo certinho. Trans consistência é explicar esse CB.
+
+
+00:16:32
+
+RAUL FONSECA NETO: Você até explicou,
+George Gomes: É,
+RAUL FONSECA NETO: né?
+George Gomes: mas é melhor Tirar.
+RAUL FONSECA NETO: Tirar esse troço.
+George Gomes: É melhor tirar.
+RAUL FONSECA NETO: É isso não.
+George Gomes: É, a gente conversou lá. É melhor tirar.
+RAUL FONSECA NETO: É aí a questão da não linear, falo que sobe pouco, tá? Agora isso aqui tá um pouco contradizendo, que você tá falando que o meia lua recupera a métrica, mas lá só dá 86%.
+George Gomes: Mas é, é, é.
+RAUL FONSECA NETO: Nós vamos chegar lá,
+George Gomes: Tá.
+RAUL FONSECA NETO: alguma coisa tá,
+George Gomes: Ó, no teste oráculo,
+RAUL FONSECA NETO: né?
+George Gomes: os estimadores recuperam a médica de forma correta, mesmo em geometria curva, atingindo uma alta curácia. Percebe estruturado? 100% NLS 96. Cadê a tabela? É a C.
+RAUL FONSECA NETO: Vamos chegar lá.
+George Gomes: Uhum.
+RAUL FONSECA NETO: Pera aí. Aqui, ó. Não linear aqui, ó. Aí, 84, 86. M.
+George Gomes: aumentar. Yeah. os atributos aí.
+
+
+00:17:52
+
+George Gomes: Aí é quando você põe o R2 e o R3, né? E o R4. Quer dizer, mas não é esse o objetivo? Quando você aumenta os atributos, não era, não é para aumentar. É porque 84 não é auto alta fidelidade. Acho que acho que o texto pode estar errado, né? Alô, Caiu aí, Raul.
+RAUL FONSECA NETO: Caiu, né? Vou ter, eu vou ter que vê, vê se abriu o resultado de novo. Abriu, abriu.
+George Gomes: Se tá não transmitindo não tá transmitindo ou não?
+RAUL FONSECA NETO: Não, eu vou ter que abrir de novo. Agora abriu, tá vendo?
+George Gomes: Agora sim. Não tá, tá carregando. Pera aí. tá mostrando a tela do Windows.
+RAUL FONSECA NETO: É a tabela seis.
+George Gomes: Não, mas eu não tô vendo não. Tá aparecendo só a tela do Windows.
+RAUL FONSECA NETO: Já compartilhei.
+George Gomes: Quer quer compartilhar de novo? não parar e compartilhar.
+RAUL FONSECA NETO: Não tá compartilhado.
+George Gomes: É que aqui eu tô vendo só o só o logo do Windows, sabe?
+
+
+00:20:34
+
+RAUL FONSECA NETO: Como assim?
+George Gomes: Ó, vou te, ó, vou mandar aí no chat para você ver como é que eu tô vendo. Так.
+RAUL FONSECA NETO: Não, não, mas tem coisa estranha aqui. Ja.
+George Gomes: Agora ligo a câmera.
+RAUL FONSECA NETO: Ah, compartilhar de novo. Aí tava mostrando a outra tela,
+George Gomes: Ah, tá.
+RAUL FONSECA NETO: a tela dois. Por isso agora apareceu,
+George Gomes: Vamos, vamos ver agora. Sim.
+RAUL FONSECA NETO: tá? Tá vendo essa tabela seis? Esse nome de atributo altura e peso aqui tá errado aqui, ó.
+George Gomes: Eu
+RAUL FONSECA NETO: E aqui esse aqui é atributo lá do problema real. Você ficou de arrumar isso já?
+George Gomes: acho que é eu eu acho que eu já tinha
+RAUL FONSECA NETO: Não arrumou. Faz sentido.
+George Gomes: sim não,
+RAUL FONSECA NETO: X1, X2, filtro um, filtro do azul, vermelho. Tá.
+George Gomes: então eu já eu já tinha arrumado isso daí.
+RAUL FONSECA NETO: Ah, tá. Porque esse aqui é antigo.
+
+
+00:22:21
+
+George Gomes: Isso daí, isso daí deve ser antigo. Eu já tinha arrumado.
+RAUL FONSECA NETO: É, esse é antigo. É, esse é antigo. Bom, mas de qualquer forma eu mostrei, tá?
+George Gomes: É. Não, mas eu entendi, eu entendi.
+RAUL FONSECA NETO: Tá. Então, transferência de métrica, problema B e C. tá explicado a questão da não linearidade, né, que a gente tá querendo ver.
+George Gomes: Uhum.
+RAUL FONSECA NETO: Aqui para cima, ó.
+George Gomes: É aí, ó.
+RAUL FONSECA NETO: Ah, tá K no meia lua aqui, ó. Aqui no meia lua, um teste oráculo que ajusta a métrica diagonal diretamente ao rótulo verdadeiro da meia lua satura em 86,7.
+George Gomes: por
+RAUL FONSECA NETO: E as projeções em R3, R4 não ajudam. Isso aqui não tá de acordo com que você fala lá atrás.
+George Gomes: Mas é o mesmo problema.
+RAUL FONSECA NETO: É o meia lua.
+George Gomes: Problema F.
+RAUL FONSECA NETO: Aqui você até coloca aqui a rotulação da Ll, tá? Que falha. E aí você fala que se coloca mais dimensões, continua, melhora, mas não.
+
+
+00:24:29
+
+George Gomes: É assim,
+RAUL FONSECA NETO: Pois é, mas lá você fala que é 100% lá atrás e aqui você fala que não ajuda.
+George Gomes: volta lá. É porque tecnicamente não deveria ajudar, né?
+RAUL FONSECA NETO: Não pode ajudar sim. você aumentando a dimensão aí para quatro, pode ser que ele comece a ficar mais linearmente separável. Eu não sei, tem que saber direitinho, porque lá atrás você tá falando que que ajusta em 100%. Eu também acho que não, entendeu? Aqui, ó.
+George Gomes: Mas esse daí não é a tabela do problema ABC que são lineares.
+RAUL FONSECA NETO: Acho que você misturou a coisa aqui, ó. Essa tabela aqui é é Mas aí você fala aqui,
+George Gomes: Então,
+RAUL FONSECA NETO: o teste oráculo na meia lua confirma que os estimadores recuperam a métrica, mesmo em geometria curva, para 100%, ó.
+George Gomes: ah, é,
+RAUL FONSECA NETO: Eh, tem que ver isso aí,
+George Gomes: tá. Não,
+RAUL FONSECA NETO: qualquer Eu acho que eu acho que 100% é quase impossível.
+George Gomes: isso daí é 100%.
+
+
+00:25:35
+
+George Gomes: Não é não. Eu vou eu vou olhar isso daí.
+RAUL FONSECA NETO: Tem que fazer teste de novo, tá?
+George Gomes: Sim, sim.
+RAUL FONSECA NETO: Aqui, tá beleza. Aqui nos problemas e média,
+George Gomes: Uhum.
+RAUL FONSECA NETO: nos três problemas A, B, C. Beleza.
+George Gomes: Uhum.
+RAUL FONSECA NETO: Tá.
+George Gomes: Ah, esse texto aí, na verdade,
+RAUL FONSECA NETO: Agora é,
+George Gomes: que tá estranho, tá? É, entendi. Uhum.
+RAUL FONSECA NETO: eu não sei se o que tá certo é aqui ou lá.
+George Gomes: Não,
+RAUL FONSECA NETO: Aí a gente tem que consertar.
+George Gomes: não. Tá, entendi. Entendi, entendi.
+RAUL FONSECA NETO: Então, corrigir nome peso e altura já tá tabela seis já tá a variante diplometro eu já te falei que tem que explicar cada uma das quatro, né?
+George Gomes: Sim.
+RAUL FONSECA NETO: Aí você pode mandar para mim que eu tiro no texto aqui.
+George Gomes: Tá bom.
+RAUL FONSECA NETO: Tabela 7. também tá estranha porque tá dando o mesmo valor aqui de 61 nas quatro estratégias diferentes.
+
+
+00:26:47
+
+RAUL FONSECA NETO: Isso.
+George Gomes: Ah, tem coisa estranha aí. M. Tem coisa estranha.
+RAUL FONSECA NETO: nessa linha,
+George Gomes: Tem coisa estranha aí. Tem coisa estranha.
+RAUL FONSECA NETO: tá?
+George Gomes: A chance de acontecer isso é bem baixo.
+RAUL FONSECA NETO: Não é tá mudandos exemplos,
+George Gomes: Bem baixo. É. Tá.
+RAUL FONSECA NETO: tá? Então o problema é você acabou dividindo ele em quatro quatro tarefas. Não, aí já é a tabela oito. A tabela oito você vai e divide o problema.
+George Gomes: Aí isso tá mostrando a parte o hard, né?
+RAUL FONSECA NETO: Aqui são só dois. Onde está esse negócio?
+George Gomes: Tabela seis.
+RAUL FONSECA NETO: Não, não tô achando. M.
+George Gomes: A tabela, a tabela oito, ela ela só mostra o exemplo hard contra
+RAUL FONSECA NETO: Problema é seleção de exemplos. É, o problema é aqui, ele tá com dois exemplos na tabela sete, né? Yeah. Tem que explicar isso aqui melhor.
+
+
+00:30:03
+
+RAUL FONSECA NETO: Não tá com exemplo só. É o Aniso X2. Tá, tem que explicar melhor aqui que é o Anis X2.
+George Gomes: Tá.
+RAUL FONSECA NETO: Não,
+George Gomes: Угуm.
+RAUL FONSECA NETO: isso aí os textos pode deixar que eu vou arrumar comparação com os basiles nas tarefas relacionadas, tá? São duas. Ah, as variantes P3 e P4 do problema é descritas lá na tabela três. Ah, tá. lá na tabela três aqui, tá vendo? Esses dois que você tá usando bastante, P3 e P4, tá?
+George Gomes: Uhum. Uhum.
+RAUL FONSECA NETO: Agora vai ser P2 e P3, né? Vai ficar P1,
+George Gomes: Sim.
+RAUL FONSECA NETO: P2 e P3, tá? Então tá certo. Comparação classificadores baselines. Aí você compara em relação ao problema e você compara as P3. Pro outro lado, uma tarefa não linear relativa ao problema F também. A lua é que colapsa,
+George Gomes: M.
+RAUL FONSECA NETO: né?
+
+
+00:31:30
+
+George Gomes: M.
+RAUL FONSECA NETO: Tá. Segura seis. Tá. Aí eu coloquei aquilo lá que você escreveu.
+George Gomes: Uhum.
+RAUL FONSECA NETO: Eu tenho que testar de novo.
+George Gomes: Tá. Testa.
+RAUL FONSECA NETO: Digerir uma métrica mais ampla envolver numa matriz completa. Aí tá tudo certinho. Figura sete esquerda e direita. Tá aí terminou. Então, até aqui, ó, com mais 61 aqui, né? os baselines aqui, tá? Tá bem explicadinho. Só ver essa questão do meia lua então. E falta também completar o meia lua lá na primeira parte do bloco um.
+George Gomes: Sì.
+RAUL FONSECA NETO: É, você tá tudo gado Acho que dá para você arrumar tudo. Tem semana mesmo.
+George Gomes: É, não deu. Tá, tá bem explicadinho lá.
+RAUL FONSECA NETO: Essa figurinha são interessantes, entendeu?
+George Gomes: Uhum.
+RAUL FONSECA NETO: Eh, bom, então agora eu vou pegar o vou pegar o bloco três. Então, bloco três vai dar um pouquinho mais de trabalho.
+
+
+00:33:17
+
+George Gomes: Tá,
+RAUL FONSECA NETO: E eu tenho eu tenho lá do neurosolut. Tem também ele resolvido por RBF, por MLP. Aí a gente coloca esses resultados também, entendeu?
+George Gomes: tá, eu vou eu vou então a primeira coisa que eu vou fazer é confirmar os o os resultados desse homem homem e mulher aí do Neurosolution,
+RAUL FONSECA NETO: Ah, não. Tá,
+George Gomes: né,
+RAUL FONSECA NETO: tá
+George Gomes: para você não não começar aí e ter os dados errados, tá?
+RAUL FONSECA NETO: tranquilo.
+George Gomes: E e Raul, deixa eu te fazer uma pergunta. Você conseguiu ver a aquela questão do algoritmo?
+RAUL FONSECA NETO: Não, não, não. Eu assim, eh, você não tá usando flexibil sua eh suavização da margem, né?
+George Gomes: Ó, você consegue abrir aquele HTML que eu te passei no e-mail?
+RAUL FONSECA NETO: Porque, ó, eu vou abrir aqui o algoritmo. Tem um negócio também importante pra gente ver aqui, que é o seguinte, ó. Abrind no Word aqui. Abriu aqui. Essa primeira parte do algoritmo é só o não é não é que incrementa não, tá?
+
+
+00:34:37
+
+RAUL FONSECA NETO: Então, ó, essa distância aqui, quando você corrige o W, aqui é menos, tá? E essa distância aqui não é W, aqui é o clidiano. Deixa, deixa eu abrir o aqui. Tá uma m****. Deixa eu abrir o PDF. Gente, eu já tinha esse fundamentação teórica aqui. Tinha ele em PDF, eu hein? sumiu. Gerar um PDF dele aqui rapidinho. Esse capítulo tá maior de Twitch. demorar um pouquinho. M.
+George Gomes: Você você conseguiu abrir aquele animado lá?
+RAUL FONSECA NETO: Não, não, não é abinda, não. Pera aí. Vamos, vou mostrar aqui para destacar o cara que tá demorando. M. Aqui.
+George Gomes: Você
+RAUL FONSECA NETO: Aqui, ó. Então essa distância aqui na hora de testar o
+George Gomes: me mandou essa fundamentação teórica ou não?
+RAUL FONSECA NETO: mandei. Eu vou mandar de novo. mandar ela que eu já mexi numas coisinhas aqui.
+
+
+00:37:56
+
+RAUL FONSECA NETO: Tá vendo? Essa essa suavização aqui você não faz, tá vendo? Que é conversou do
+George Gomes: Qual?
+RAUL FONSECA NETO: é você deixa errar um pouquinho, entendeu?
+George Gomes: M.
+RAUL FONSECA NETO: El vai começar a formar agora o PD. Ih, tá valendo de tudo aqui.
+George Gomes: M. Угу.
+RAUL FONSECA NETO: Vai dar certo não, mas eu tinha tirado só fundamentação teórica. Vamos aqui dá para ver, ó. Tá vendo? Aqui é a distância plidiana.
+George Gomes: E o que eu não faço? Eu não faço a sua avisação. É isso?
+RAUL FONSECA NETO: Hein?
+George Gomes: Eu não faço a sua.
+RAUL FONSECA NETO: Essa suização aqui, a correção desse alfa você não faz, ele entra aqui, entendeu? Suavizando a margem igual não tem no FM, margem flexível,
+George Gomes: É, mas aí vai ter que ter, né? Porque o o algoritmo
+RAUL FONSECA NETO: não, porque aí ele termina no problema no alinhamento separável, entendeu? No seu caso, você deve est terminando por um número máximo de de iterações,
+
+
+00:40:54
+
+George Gomes: é exatamente,
+RAUL FONSECA NETO: alguma
+George Gomes: são 50 interações e 50 épocas em cada interação.
+RAUL FONSECA NETO: coisa
+George Gomes: Então, quando não é linearmente separável, ele fica tentando achar o melhor. quando dá isso, ele ele retorna o que o que tiver menos com a menor quantidade de
+RAUL FONSECA NETO: É,
+George Gomes: violações.
+RAUL FONSECA NETO: por que que eu usei D de L aqui? Ah, identidade. A métrica aqui é identidade que eu chamei, entendeu? E a métrica obligiana aí identidade de uns,
+George Gomes: M.
+RAUL FONSECA NETO: entendeu? Eu chamei de d de de ímparo, entendeu? É identidade.
+George Gomes: Угу.
+RAUL FONSECA NETO: Então aqui é identidade, é a distância euclidiana normal, tá? Na hora de corrigir, acho que você fez assim. E aqui é mais. Aqui é mais. Então, basicamente é isso. E aqui é a suavização, se quiser fazer, entendeu?
+George Gomes: Угу.
+RAUL FONSECA NETO: Esse parâmetro aqui é um parâmetro do algoritmo.
+
+
+00:42:13
+
+RAUL FONSECA NETO: Põe um qu é igual aquele do SLM lá, o C, entendeu?
+George Gomes: Угу.
+RAUL FONSECA NETO: Então, que você mandou. Deixa eu abrir ele aqui agora. Eu chamou ele de quê?
+George Gomes: Abre o Vai, sobe aí,
+RAUL FONSECA NETO: Não, não botei aqui.
+George Gomes: sobe ali,
+RAUL FONSECA NETO: Aqui,
+George Gomes: ó.
+RAUL FONSECA NETO: ó.
+George Gomes: Esse esse é o que tá implementado em Python aqui e rodou os testes todos aí, entendeu?
+RAUL FONSECA NETO: Mas tomar que ele esteja certinho.
+George Gomes: Tomara.
+RAUL FONSECA NETO: Ah, você usa o o aqui, o alfo.
+George Gomes: É,
+RAUL FONSECA NETO: Ah, então você tá usando a sua visação.
+George Gomes: é, então é por isso que eu não entendi.
+RAUL FONSECA NETO: É,
+George Gomes: Esse daí é que é o que tá funcionando.
+RAUL FONSECA NETO: você tá usando,
+George Gomes: É, mas assim, de qualquer forma, mesmo usando sua avisação, se eu não colocar uma repetição lá,
+RAUL FONSECA NETO: tá?
+George Gomes: ele nunca acaba.
+RAUL FONSECA NETO: Você tá, você tá fazendo certinho aqui. Você tá pegando a métrica, a distância, a diferença euclidiana das distância euclidianas,
+
+
+00:43:31
+
+George Gomes: Hum. Угу.
+RAUL FONSECA NETO: né? E tá usando aqui que tem que ver, ó. Você tá fazendo menos e menos você tá fazendo menos a taxa vezes g. Aí é mais, mas aí depende se você põe na frente o K ou o L, tá? vai variar. No caso aqui eu coloco o K na frente. No caso seu aqui você coloca o L na frente. Então tá certinho, entendeu?
+George Gomes: Uhum. Ah, tá.
+RAUL FONSECA NETO: Porque se trocar aqui, o sinal troca aqui,
+George Gomes: Sim, sim.
+RAUL FONSECA NETO: entendeu?
+George Gomes: Aham.
+RAUL FONSECA NETO: Então, tá certinho. Tá certinho. Tá certinho. Tá fazendo sua avisação. É, essa parte também do gama deve tá certinha.
+George Gomes: Bom, é isso. É só porque eu fiquei,
+RAUL FONSECA NETO: Aí você se baseou então no que eu mandei para você. Então, mais ou menos.
+George Gomes: então,
+RAUL FONSECA NETO: foi.
+George Gomes: é tudo aí tá baseado no no algoritmo, no se lance lá, naquele artigo seu, você lembra do do áudio?
+
+
+00:45:03
+
+RAUL FONSECA NETO: Ah, tá. É,
+George Gomes: Tá tudo Tudo.
+RAUL FONSECA NETO: é só que é só que eu fiz aqui do jeito que eu fiz aqui, tá bem interessante, tá? Tá, tá mais eh essa parte do do gam, vamos dizer assim, ela tá tá um algoritmo aqui, tá vendo?
+George Gomes: Sabe qual que tá sendo a diferença dos dos
+RAUL FONSECA NETO: Aqui eu até de incrementar hora hora hora faz algum a pesquisa binária, hora não faz. Tá aqui tá muito certinho,
+George Gomes: Isso?
+RAUL FONSECA NETO: tá? Eh, depois que ele sai fora,
+George Gomes: É isso aí.
+RAUL FONSECA NETO: aí aí ele faz a pesquisa binária entre o o, né, o os dois, o que explodiu e o outro, né, até achar.
+George Gomes: Uhum.
+RAUL FONSECA NETO: É, deixa isso aqui no no artigo, entendeu? E tá tá tá bem certinho.
+George Gomes: É,
+RAUL FONSECA NETO: E aqui também é,
+George Gomes: foi esse que foi que foi executado.
+RAUL FONSECA NETO: pode deixar, pode deixar esse aqui, esse seu outro código que ele tá bem, ele tá bem eh também ele tá bem assim escrito assim as coisas,
+
+
+00:46:07
+
+George Gomes: Uhum.
+RAUL FONSECA NETO: entendeu? Conforme já a anotação do texto, entendeu?
+George Gomes: Sim.
+RAUL FONSECA NETO: Toda toda essa simbologia é a mesma que tá explicado anteriormente, então fica mais fácil, entendeu? Tá vendo?
+George Gomes: Uhum.
+RAUL FONSECA NETO: A pessoa entender,
+George Gomes: Угуm.
+RAUL FONSECA NETO: tá vendo? Já tá tudo é bem explicado anteriormente. Vou passar então esse fundamento para você. O chato aqui é o seguinte. Chegou aqui, eu tinha que mandar imprimir só até a página 20. Aqui continua, tá vendo o restante? Tá vendo? Eu não tirei daqui. Isso que ficou aquele monstro. Na verdade é só até a página 17 aqui. 17. Tá vendo? Vamos andar imprimir de novo aqui. 1 a 17. Qual vai ser mais rápido? Aí tá a bibliografia tá no final. Tô sempre botando no final. Na verdade vai de 1 a 16, né?
+
+
+00:47:26
+
+RAUL FONSECA NETO: Só esse pedacinho aqui. Agora foi bem mais rápida, né? Não, que tava cheio de figura, né? cheio de graça,
+George Gomes: Sim. Угу.
+RAUL FONSECA NETO: meu trabalho tá ficando muito bom, tá? Vamos mandar pro Yuri aí, vamos ver que se faz um paper, uma conferência depois paraa revista e e o que que ele tá pensando em fazer além disso, né? que eh dentro da da ideia da otimização inversa, a gente começou pelo caso mais simples, né, que é uma hipótese linear, né, problemas, né, em R2 mais, né, isso vai ser ampliado agora para coisas mais complexas, né?
+George Gomes: E você acha que a gente consegue um uma uma Yeah. Aí, ô, ô, Raul.
+RAUL FONSECA NETO: Ah, esse artigo aqui não tem nada, ele não deve nada aos aos 17 que eu todos ONIPs é é só conferência f***, entendeu? Ele não deve nada. Você pode ler os trabalhos relacionados, você vai ver. Não, ele não deve.
+George Gomes: Boa.
+RAUL FONSECA NETO: Termos de base teórica,
+
+
+00:48:42
+
+George Gomes: Да.
+RAUL FONSECA NETO: eu acho que essa ideia também de trabalhar o problema inverso, passar pra predição estruturada e passar paraa pridade métrica e aí criar o algoritmo, isso é muito bacana também, entendeu? E criar o classificador baseado no centro de mais próximo.
+George Gomes: Uhum.
+RAUL FONSECA NETO: E foi um resultado bem interessante, né?
+George Gomes: E você tem uma expectativa de quando fazer isso, Raul?
+RAUL FONSECA NETO: É rapidinho. Eu acho que até o até dezembro a gente tem que meter um artigo aí porque já tá quase tudo
+George Gomes: Ah, tá.
+RAUL FONSECA NETO: revisado, né? Assim, pelo menos é um artigo inicial,
+George Gomes: Uhum.
+RAUL FONSECA NETO: né? Você tem quanto tempo ainda?
+George Gomes: E e de então,
+RAUL FONSECA NETO: Você tem mais tempo ou salvou? Salvou esse troço?
+George Gomes: não. Ah, eu não sei. Então,
+RAUL FONSECA NETO: Ué. Ah,
+George Gomes: so sobre o sobre o já sobre a dissertação,
+RAUL FONSECA NETO: salvou já.
+George Gomes: né?
+RAUL FONSECA NETO: Hã,
+
+
+00:49:35
+
+George Gomes: Eu acho que eu tenho que fazer até, não sei se é março ou maio do ano que vem.
+RAUL FONSECA NETO: março, né?
+George Gomes: Março do ano que vem. É.
+RAUL FONSECA NETO: Ah, ah, então tem tempoim, mas é que tá aberto aqui. Eh, mas eh que que eu ia falar? Eu vou mandar para
+George Gomes: sobre a dissertação.
+RAUL FONSECA NETO: você eh assim como tá escrevendo bastante, no final desse processo você vai ter acertação escrita praticamente.
+George Gomes: Uhum.
+RAUL FONSECA NETO: Isso vai dar mais de 50 páginas,
+George Gomes: Você acha,
+RAUL FONSECA NETO: isso vai dar mais de 60 páginas.
+George Gomes: você,
+RAUL FONSECA NETO: H,
+George Gomes: você acha que isso daí já consegue fazer a dissertação?
+RAUL FONSECA NETO: já é dissertação praticamente.
+George Gomes: Tudo já é dissertação.
+RAUL FONSECA NETO: Por isso que eu tô escrevendo com bastante detalhe. A gente vai botar bastante gráfico, figura, que já é dissertação. Aí disso é que vai enxugar para fazer um ou dois arquivos,
+George Gomes: Uhum.
+RAUL FONSECA NETO: entendeu?
+
+
+00:50:40
+
+George Gomes: Hum. Entendi.
+RAUL FONSECA NETO: Somente quando passar pro inglês,
+George Gomes: Boa.
+RAUL FONSECA NETO: entendeu?
+George Gomes: Uhum. Dissertação em português.
+RAUL FONSECA NETO: É em português, lógico, do jeito que tá indo,
+George Gomes: Uhum.
+RAUL FONSECA NETO: viu? Já já já já já já você já tá definindo sua dissertação, né?
+George Gomes: Hum.
+RAUL FONSECA NETO: Agora vai ter podem ter alterações que aí nem entra na dissertação, podem ter alterações que entre só no artigo que a gente vai fazer, entendeu?
+George Gomes: Legal. Legal.
+RAUL FONSECA NETO: Porque também eu não posso, a gente também não pode pegar e fazer um artigo assim muito polícia, entendeu?
+George Gomes: Uhum.
+RAUL FONSECA NETO: Muita coisa escrita repetidamente, detalhadamente. Aí tem que dar uma enxugada, né?
+George Gomes: Uhum. Entendi.
+RAUL FONSECA NETO: M. Eu vou mandar para você aqui agora. Vou mandar. Eu outro dia eu mandei a a aqui mandei a metodologia, mas vou mandar. Mandei a metodologia e resultados. Já tá.
+George Gomes: Uhum.
+RAUL FONSECA NETO: Agora eu vou te mandar a fundamentação teórica.
+
+
+00:51:46
+
+RAUL FONSECA NETO: Eu acho que você já recebeu o trabalho geracional, mas é um ano de novo.
+George Gomes: Não, eu é os relacionados eu já recebi.
+RAUL FONSECA NETO: Vamos mandar fundamentação teórica. A introdução também já te mandei. Aí ela vai sempre mudando uma coisinha ou outra
+George Gomes: É,
+RAUL FONSECA NETO: para ficar Não,
+George Gomes: mas tecnicamente eu não tenho que mexer em texto nenhum, né? Só nos resultados te mandar as tabelas,
+RAUL FONSECA NETO: não, não, não, não, não.
+George Gomes: né?
+RAUL FONSECA NETO: É só,
+George Gomes: É.
+RAUL FONSECA NETO: só fazer igual assim,
+George Gomes: Uhum.
+RAUL FONSECA NETO: pode ter um motrin de português, tudo isso bonito.
+George Gomes: Sim.
+RAUL FONSECA NETO: Ó, vai mais, vai dar mais trabalho. vocês, cara, é a gente fazer uma análise disso tudo, entendeu?
+George Gomes: Uhum.
+RAUL FONSECA NETO: Apesar de ter aquelas questões de de pesquisa, né,
+George Gomes: Seria a conclusão. É isso.
+RAUL FONSECA NETO: aquelas hipóteses,
+George Gomes: Seria.
+RAUL FONSECA NETO: é,
+George Gomes: Com isso. Concluímos que é.
+
+
+00:52:41
+
+RAUL FONSECA NETO: não é complicado.
+George Gomes: Então,
+RAUL FONSECA NETO: se basear muito no no no nos trabalhos relacionados, porque eles também tm umas conclusões assim, eh, ficou faltando essa parte da matemática do do do circuito do transformer, entendeu? Mas o Yuri acha que a gente não deve mexer com isso agora.
+George Gomes: é que essa matemática do Transformers Угуm.
+RAUL FONSECA NETO: Tanto que eu tirei aquela referência, até imprimi, cara, mais de 60 páginas, aquela referência do erlas, entendeu? E eu eu também tenho aquele livro dos indianos, eu nem mexi com isso por enquanto, não. Lógico que eu quero me aprofundar nisso, mas eh porque não em todos os trabalhos que eu que eu vi, ninguém chega eh eh a fundo de querer mexer na geometria do transformer, entendeu? Não tem muito disso não.
+George Gomes: É, mas é,
+RAUL FONSECA NETO: Eh,
+George Gomes: eu acho que isso, isso que é o grande problema, né? Tipo, se a gente mexer com isso agora, acho que é muito
+RAUL FONSECA NETO: ó, por exemplo, olha que bacana, ó. começa falando do Brau, tá?
+
+
+00:53:52
+
+RAUL FONSECA NETO: Aí explico o trabalho do Brau, que foi o pioneiro, né, do aprendizado de contexto.
+George Gomes: ver.
+RAUL FONSECA NETO: Aí ele cria lá os Depois vê um min, é muito importante, tá?
+George Gomes: Mhm. Угу.
+RAUL FONSECA NETO: Aí depois eu eu entro com o trabalho do sul. Isso é tudo seleção de exemplos, né? Prompt, estratégias de prompt. Aí tem o Zalo, que é a fronteira de decisão, que tem muito a ver com o nosso, né?
+George Gomes: Угуm.
+RAUL FONSECA NETO: Eh, problema em R2 de de classificação, né? Aí depois entra esse Marx e TMAR, que é um torce mais complicado, mas conseguir mais ou menos. Aí começa os trabalhos que usam regressão. Aí tem o GG e que começa a falar que o transformer é uma espécie de gradiente, entendeu?
+George Gomes: Угу.
+RAUL FONSECA NETO: Aí vem o garg, vem esse aquilo que tudo tem uma uma sequência
+George Gomes: Угу.
+RAUL FONSECA NETO: em Oswold, tá vendo? Aí eu botei mais dois, aí vem o trabalho do do ano.
+
+
+00:55:09
+
+RAUL FONSECA NETO: Depois vem o último do Zang. Ah, não. E tem o Day mais um. Aí, teoria basiana, eu falei de dois, tá? E terminei com um com aquele do shogen, né, de raciocínio. Pô, tá muito boa a a a trabal relacionada. Aí tem toda a bibliografia aí.
+George Gomes: Uhum.
+RAUL FONSECA NETO: Foi muito boa. Você lê com calma.
+George Gomes: Tá bom.
+RAUL FONSECA NETO: Valeu. Então é isso. Vamos marcar para sexta que vem de novo.
+George Gomes: Beleza.
+RAUL FONSECA NETO: Se der tempo de você fazer lá.
+George Gomes: R. Tá ótimo.
+RAUL FONSECA NETO: É, qualquer coisa você pode mandar e-mail,
+George Gomes: Vou vou com certeza vou condensar tudo
+RAUL FONSECA NETO: qualquer dúvida que você tiver, né?
+George Gomes: que a gente falou aqui. A gente vai vai conversando aí durante a semana, tá bom?
+RAUL FONSECA NETO: Então tá joia.
+George Gomes: Vou te mandando as coisas que eu vou terminando e sexta-feira a gente fala.
+RAUL FONSECA NETO: É, faz essa parte agora, deixa essa parte do do homem e mulher para depois que eu ainda não fiz,
+George Gomes: Tá bom,
+RAUL FONSECA NETO: entendeu?
+George Gomes: beleza,
+RAUL FONSECA NETO: faz isso que a gente comentou até agora.
+George Gomes: combinado.
+RAUL FONSECA NETO: Falou, então.
+George Gomes: Então, valeu,
+RAUL FONSECA NETO: Beleza.
+George Gomes: obrigado, Raul.
+RAUL FONSECA NETO: Valeu. Bor final de semana.
+George Gomes: Valeu.
+RAUL FONSECA NETO: Co?
+George Gomes: Valeu para você também.
+
+
+A transcrição foi encerrada após 00:56:29
+
+Esta transcrição editável foi gerada por computador e pode conter erros. As pessoas também podem alterar o texto depois que ele for criado.

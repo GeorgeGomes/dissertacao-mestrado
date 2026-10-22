@@ -1,0 +1,20 @@
+\begin{table}[htbp]
+\centering
+\small
+\caption{Bloco 2 (google/gemini-2.5-flash-lite): viés de ordem dos exemplos.}
+\label{tab:bloco2_E1_ordem_exemplos_flashlite}
+\begin{tabular}{lrrrrrr}
+\toprule
+ & \multicolumn{3}{c}{Acurácia (\%)} & \multicolumn{3}{c}{$\kappa$} \\ \cmidrule(lr){2-4} \cmidrule(lr){5-7}
+Ordenação & n = 4 & n = 10 & n = 20 & n = 4 & n = 10 & n = 20 \\
+\midrule
+classe 0 primeiro & 85,4 & 89,3 & 91,8 & 0,707 & 0,785 & 0,835 \\
+classe 1 primeiro & 79,5 & 84,5 & 82,3 & 0,592 & 0,692 & 0,649 \\
+embaralhada & 89,7 & 89,0 & 90,8 & 0,795 & 0,781 & 0,815 \\
+alternada & 84,5 & 90,7 & 92,6 & 0,690 & 0,814 & 0,851 \\
+\midrule
+\textbf{amplitude (máx $-$ mín)} & \textbf{10,3} & \textbf{6,2} & \textbf{10,3} &  &  &  \\
+\bottomrule
+\multicolumn{7}{p{0.95\linewidth}}{\footnotesize Mesmos exemplos (estratégia mista, especialista E1) em quatro ordenações. Acurácia e $\kappa$ vs especialista, médias das sementes.} \\
+\end{tabular}
+\end{table}

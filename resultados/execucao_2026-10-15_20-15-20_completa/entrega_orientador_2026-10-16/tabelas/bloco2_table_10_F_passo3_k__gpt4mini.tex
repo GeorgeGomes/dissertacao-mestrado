@@ -1,0 +1,19 @@
+\begin{table}[htbp]
+\centering
+\footnotesize
+\caption{Problema F, meia-lua, Passos 3 e 4 (openai/gpt-4o-mini): aprendizado em contexto por semente e número de exemplos.}
+\label{tab:bloco2_F_passo3_k_gpt4mini}
+\begin{tabular}{lrrrrrrrrrrrrrrr}
+\toprule
+ & \multicolumn{5}{c}{Acur.\ LLM vs real (\%)} & \multicolumn{5}{c}{Acur.\ LLM vs espec.\ (\%)} & \multicolumn{5}{c}{Acur.\ Perceptron vs real (\%)} \\ \cmidrule(lr){2-6} \cmidrule(lr){7-11} \cmidrule(lr){12-16}
+Semente & k=0 & k=4 & k=10 & k=20 & k=40 & k=0 & k=4 & k=10 & k=20 & k=40 & k=0 & k=4 & k=10 & k=20 & k=40 \\
+\midrule
+7 & 53,3 & 90,4 & 91,1 & 89,6 & 91,1 & 53,3 & 90,4 & 91,1 & 89,6 & 91,1 & — & 84,4 & 85,9 & 83,7 & 85,2 \\
+42 & 55,6 & 76,3 & 86,7 & 94,8 & 94,8 & 55,6 & 76,3 & 86,7 & 94,8 & 94,8 & — & 82,2 & 85,2 & 81,5 & 85,2 \\
+123 & 48,9 & 90,4 & 90,4 & 91,1 & 90,4 & 48,9 & 90,4 & 90,4 & 91,1 & 90,4 & — & 81,5 & 77,0 & 74,8 & 76,3 \\
+\midrule
+\textbf{média} & \textbf{52,6} & \textbf{85,7} & \textbf{89,4} & \textbf{91,9} & \textbf{92,1} & \textbf{52,6} & \textbf{85,7} & \textbf{89,4} & \textbf{91,9} & \textbf{92,1} & \textbf{—} & \textbf{82,7} & \textbf{82,7} & \textbf{80,0} & \textbf{82,2} \\
+\bottomrule
+\multicolumn{16}{p{0.95\linewidth}}{\footnotesize Passo 3 do Problema F nas 45 amostras de teste; o especialista do Problema F é o rótulo real (coluna especialista\_origem = rotulo\_real). Acur.\ LLM vs espec.\ = acurácia (LLM vs especialista); Acur.\ LLM vs real = acurácia (vs rótulo real) do LLM. Perceptron (Passo 4) = Perceptron diagonal treinado nos mesmos $k$ exemplos, em R$^2$ (x1, x2, os mesmos atributos que o LLM vê; a métrica do Passo 2 em R$^3$/R$^4$ serve só para medir a fidelidade), avaliado contra o rótulo real. Médias dos sorteios por semente.} \\
+\end{tabular}
+\end{table}

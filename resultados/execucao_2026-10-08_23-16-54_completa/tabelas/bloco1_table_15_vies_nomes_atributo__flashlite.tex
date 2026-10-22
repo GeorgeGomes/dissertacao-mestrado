@@ -1,0 +1,16 @@
+\begin{table}[htbp]
+\centering
+\small
+\caption{Viés de nomes de atributo (google/gemini-2.5-flash-lite): fidelidade, direção de $\hat{W}$ e consistência.}
+\label{tab:bloco1_vies_nomes_atributo_flashlite}
+\begin{tabular}{llrrrrrrr}
+\toprule
+Variante & Regime & Fid.\ A & Acur.\ LLM vs real A & $w_1/w_2$ & Consist.\ B & $\kappa$ B & Consist.\ C & $\kappa$ C \\
+\midrule
+altura / peso & zero-shot & 87,1 (84,7–88,7) & 16,2 & 0,22 & 72,0 & 0,381 & 94,7 & 0,893 \\
+feature\_1 / feature\_2 & zero-shot & 88,4 (87,3–90,0) & 26,0 & 0,25 & 82,7 & 0,644 & 95,0 & 0,900 \\
+\textbf{x1 / x2} & \textbf{zero-shot} & \textbf{81,3 (78,7–83,3)} & \textbf{25,1} & \textbf{0,29} & \textbf{72,7} & \textbf{0,263} & \textbf{92,3} & \textbf{0,846} \\
+\bottomrule
+\multicolumn{9}{p{0.95\linewidth}}{\footnotesize Problema A e transferência para B e C por nomes de atributo; os demais fatores ficam na configuração base. Médias das sementes (fidelidade com mín–máx). Fid.\ A = fidelidade (vs LLM) no A; Acur.\ LLM vs real A = acurácia (vs rótulo real) do LLM no A, contexto; $w_1/w_2$ = razão da métrica estimada (Perceptron). Fid.\ A, Acur.\ LLM vs real A e $w_1/w_2$ vêm da Fase A, sempre zero-shot. $\kappa$ = Cohen's $\kappa$ (faixas de Landis e Koch, 1977). Em negrito: a configuração de referência. Em zero-shot (e com nomes de classe neutros) a correspondência entre nome e classe é arbitrária: a acurácia (vs rótulo real) do LLM pode sair abaixo de 50\%; o valor invariante à permutação é max($a$, 1 $-$ $a$).} \\
+\end{tabular}
+\end{table}

@@ -1,0 +1,21 @@
+\begin{table}[htbp]
+\centering
+\small
+\caption{Problema A, Passos 2 a 5 (openai/gpt-4o-mini): métrica estimada em zero-shot, few-shot e pelo rótulo real.}
+\label{tab:A_passos_2_a_5_gpt4mini}
+\begin{tabular}{lrrrrlrrl}
+\toprule
+ &  &  & \multicolumn{3}{c}{Perceptron} & \multicolumn{3}{c}{NNLS} \\ \cmidrule(lr){4-6} \cmidrule(lr){7-9}
+Regime & Acur.\ LLM vs real & Partição LLM (n0/n1) & Fid.\ (vs LLM) & Acur.\ vs real & $\hat{W}$ unit. & Fid.\ (vs LLM) & Acur.\ vs real & $\hat{W}$ unit. \\
+\midrule
+zero-shot† & 26,9 (24,7–28,0) & 109/41 & 86,7 (85,3–88,0) & 19,3 (14,7–23,3) & [0,20; 0,97] & 85,3 (84,0–87,3) & 17,1 (13,3–20,7) & [0,29; 0,96] \\
+4-shot† & 85,5 (61,6–97,9) & 89/57 & 91,8 (80,8–100,0) & 90,3 (60,0–98,0) & [0,52; 0,78] & 91,4 (80,1–100,0) & 90,4 (60,7–98,0) & [0,72; 0,52] \\
+10-shot† & 92,5 (87,1–96,4) & 76/64 & 96,0 (92,1–98,6) & 95,6 (91,3–98,0) & [0,56; 0,81] & 95,5 (93,6–98,6) & 95,6 (90,7–98,0) & [0,65; 0,69] \\
+20-shot† & 92,6 (88,5–96,2) & 70/60 & 96,5 (92,3–99,2) & 95,0 (90,7–98,0) & [0,51; 0,85] & 95,6 (91,5–98,5) & 96,2 (93,3–98,0) & [0,63; 0,76] \\
+40-shot† & 93,1 (84,5–98,2) & 59/51 & 96,8 (90,9–99,1) & 95,9 (90,7–98,0) & [0,59; 0,79] & 95,6 (88,2–99,1) & 96,4 (94,0–98,0) & [0,64; 0,75] \\
+\midrule
+W ajustado ao rótulo real (teto)† & — & — & — & 97,3 (96,7–98,0) & [0,56; 0,82] & — & 96,9 (96,7–97,3) & [0,73; 0,68] \\
+\bottomrule
+\multicolumn{9}{p{0.95\linewidth}}{\footnotesize Médias das sementes e repetições, mín–máx entre parênteses, em \%. Fid.\ (vs LLM) = fidelidade: fração dos pontos em que a métrica reproduz o rótulo do LLM. Acur.\ vs real = acurácia (vs rótulo real) da métrica aplicada aos 150 pontos; Acur.\ LLM vs real = acurácia (vs rótulo real) do próprio LLM, mostrada como contexto. Few-shot: exemplos rotulados pelo rótulo real (k/2 por classe, sorteio aleatório), LLM classifica os $150-k$ restantes; fidelidade medida nesses pontos. Teto: W ajustado diretamente ao rótulo real; não tem fidelidade (não é estimado a partir do LLM), só acurácia (vs rótulo real), que não chega a 100\% pela sobreposição das gaussianas do A. Passos do Problema A: zero-shot = Passo 2 (o LLM rotula sem exemplos); $k$-shot = Passo 3 (o LLM rotula com $k$ exemplos do rótulo real); a métrica de cada linha é estimada no Passo 4; teto = Passo 5 (W ajustado diretamente ao rótulo real). Em zero-shot (e com nomes de classe neutros) a correspondência entre nome e classe é arbitrária: a acurácia (vs rótulo real) do LLM pode sair abaixo de 50\%; o valor invariante à permutação é max($a$, 1 $-$ $a$). † = em pelo menos uma estimativa o Perceptron não encontrou $\hat{W}$ que separe os rótulos: melhor esforço ($\gamma = 0$) ou margem bruta mínima negativa (algum ponto do lado errado da fronteira). ``—'' = colapso em classe única (ou quase-colapso: classe minoritária com menos de 5 pontos); na linha colapsada também a acurácia do LLM e a partição ficam como ``—''.} \\
+\end{tabular}
+\end{table}

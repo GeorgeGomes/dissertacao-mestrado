@@ -1,0 +1,32 @@
+\begin{table}[htbp]
+\centering
+\footnotesize
+\caption{Problema G (openai/gpt-4o-mini): Fase A em R$^2$, R$^3$ e R$^4$ por subproblema, nomes de classe e de atributo.}
+\label{tab:bloco3_G_faseA_R2_R3_R4_gpt4mini}
+\begin{tabular}{llllrrrrr}
+\toprule
+Subproblema & Classes & Atributos & Espaço & LLM vs real (erros) & Fid.\ Perc. & Fid.\ NNLS & Métr.\ Perc.\ vs real (erros) & Métr.\ NNLS vs real \\
+\midrule
+G1 (normalizado) & A / B & peso/altura & R$^2$ & 31,9 (47,7) & 71,4 (68,6–75,7) & 69,0 & 12,9 (61,0) & 20,0 \\
+G1 (normalizado) & A / B & peso/altura & R$^3$ & 31,9 (47,7) & 71,9 (70,0–75,7) & 72,9 & 12,4 (61,3) & 18,1 \\
+G1 (normalizado) & A / B & peso/altura & R$^4$ & 31,9 (47,7) & 72,4 (71,4–74,3) & 72,9 & 14,8 (59,7) & 24,8 \\
+\midrule
+G1 (normalizado) & A / B & x1/x2 & R$^2$ & 41,0 (41,3) & 73,8 (71,4–75,7) & 74,8 & 18,6 (57,0) & 20,5 \\
+G1 (normalizado) & A / B & x1/x2 & R$^3$ & 41,0 (41,3) & 73,8 (71,4–75,7) & 73,3 & 18,6 (57,0) & 21,9 \\
+G1 (normalizado) & A / B & x1/x2 & R$^4$ & 41,0 (41,3) & 75,2 (72,9–77,1) & 82,9 & 18,1 (57,3) & 27,6 \\
+\midrule
+\textbf{G2 (kg e m)} & \textbf{Mulher / Homem} & \textbf{peso\_kg/altura\_m} & \textbf{R$^2$} & \textbf{89,5 (7,3)} & \textbf{95,7 (94,3–97,1)} & \textbf{96,7} & \textbf{91,0 (6,3)} & \textbf{91,0} \\
+\textbf{G2 (kg e m)} & \textbf{Mulher / Homem} & \textbf{peso\_kg/altura\_m} & \textbf{R$^3$} & \textbf{89,5 (7,3)} & \textbf{96,2 (94,3–97,1)} & \textbf{96,7} & \textbf{90,5 (6,7)} & \textbf{91,0} \\
+\textbf{G2 (kg e m)} & \textbf{Mulher / Homem} & \textbf{peso\_kg/altura\_m} & \textbf{R$^4$} & \textbf{89,5 (7,3)} & \textbf{95,7 (94,3–97,1)} & \textbf{96,7} & \textbf{91,0 (6,3)} & \textbf{91,0} \\
+\midrule
+G2 (kg e m) & Mulher / Homem & x1/x2 & R$^2$ & 62,9 (26,0) & 71,4 (68,6–75,7) & 74,8 & 85,7 (10,0) & 84,3 \\
+G2 (kg e m) & Mulher / Homem & x1/x2 & R$^3$ & 62,9 (26,0) & 71,4 (70,0–74,3) & 71,9 & 86,7 (9,3) & 86,2 \\
+G2 (kg e m) & Mulher / Homem & x1/x2 & R$^4$ & 62,9 (26,0) & 71,4 (68,6–75,7) & 72,9 & 85,7 (10,0) & 84,3 \\
+\midrule
+G2 (kg e m) & A / B & peso\_kg/altura\_m & R$^2$ & 51,9 (33,7) & 81,0 (77,1–82,9) & 84,8 & 44,3 (39,0) & 51,9 \\
+G2 (kg e m) & A / B & peso\_kg/altura\_m & R$^3$ & 51,9 (33,7) & 83,3 (80,0–87,1) & 88,1 & 45,7 (38,0) & 53,3 \\
+G2 (kg e m) & A / B & peso\_kg/altura\_m & R$^4$ & 51,9 (33,7) & 84,8 (82,9–85,7) & 89,5 & 43,3 (39,7) & 46,2 \\
+\bottomrule
+\multicolumn{9}{p{0.95\linewidth}}{\footnotesize Fase A zero-shot nas 70 amostras de treino de cada semente; médias das sementes (fidelidade com mín–máx); erros = média do número de erros entre parênteses. Atributos extras (x1·x2; x1², x2²) só na estimação. Combinações ausentes = o LLM colapsou em classe única nas três sementes. Em negrito: G2 com nomes semânticos.} \\
+\end{tabular}
+\end{table}

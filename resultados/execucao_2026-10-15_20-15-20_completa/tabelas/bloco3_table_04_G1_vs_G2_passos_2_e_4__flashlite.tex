@@ -1,0 +1,18 @@
+\begin{table}[htbp]
+\centering
+\footnotesize
+\caption{Problema G, Passos 2 e 4 (google/gemini-2.5-flash-lite): valores normalizados (G1) versus kg e m (G2), zero-shot e métrica estimada.}
+\label{tab:bloco3_G1_vs_G2_passos_2_e_4_flashlite}
+\begin{tabular}{llrrrrrrrrrr}
+\toprule
+ &  & \multicolumn{5}{c}{Acur.\ LLM vs real (\%)} & \multicolumn{3}{c}{Acur.\ métrica (\%)} & \multicolumn{2}{c}{Fidelidade (\%)} \\ \cmidrule(lr){3-7} \cmidrule(lr){8-10} \cmidrule(lr){11-12}
+Classes & Atributos & G1 & G2 & $\Delta$ & G1 (inv.\ perm.) & G2 (inv.\ perm.) & G1 & G2 & $\Delta$ & G1 & G2 \\
+\midrule
+Mulher / Homem & semânticos (peso/altura; peso\_kg/altura\_m) & 35,2 & 84,3 & +49,0 & 64,8 & 84,3 & 10,5 & 91,4 & +81,0 & 71,4 & 92,9 \\
+Mulher / Homem & neutros (x1/x2) & — & — & — & — & — & — & — & — & — & — \\
+A / B & semânticos (peso/altura; peso\_kg/altura\_m) & 18,6 & 46,7 & +28,1 & 81,4 & 54,3 & 16,2 & 23,8 & +7,6 & 93,8 & 71,4 \\
+A / B & neutros (x1/x2) & 16,2 & — & — & 83,8 & — & 10,0 & — & — & 91,0 & — \\
+\bottomrule
+\multicolumn{12}{p{0.95\linewidth}}{\footnotesize Problema G, Passos 2 e 4 (zero-shot e métrica estimada sobre esses rótulos, R$^2$, Perceptron), médias das sementes. G1 mostra ao LLM os valores normalizados em $[-1, 1]$; G2 mostra os mesmos pontos em kg e m (regra de três: 45–110 kg, 1,50–1,95 m). A métrica é estimada no espaço normalizado nos dois. Acurácia (vs rótulo real) do LLM e da métrica, contexto; Fidelidade = métrica vs LLM. Acur.\ LLM vs real (inv.\ perm.) = max($a$, 1 $-$ $a$): em zero-shot e com nomes neutros (A/B) a correspondência entre nome e classe é arbitrária, e só o valor invariante à permutação compara as linhas. ``—'' = colapso em classe única (ou quase-colapso: classe minoritária com menos de 5 pontos); na linha colapsada também a acurácia do LLM e a partição ficam como ``—''.} \\
+\end{tabular}
+\end{table}

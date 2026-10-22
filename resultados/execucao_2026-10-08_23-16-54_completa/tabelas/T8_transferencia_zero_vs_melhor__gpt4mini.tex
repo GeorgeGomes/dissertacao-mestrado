@@ -1,0 +1,23 @@
+\begin{table}[htbp]
+\centering
+\footnotesize
+\caption{Problemas B e C (openai/gpt-4o-mini): transferência com a métrica zero-shot e com a melhor few-shot do A, por semente.}
+\label{tab:T8_transf_gpt4mini}
+\begin{tabular}{lllrrrrrrrrr}
+\toprule
+ &  &  & \multicolumn{4}{c}{Consistência (\%)} & \multicolumn{4}{c}{$\kappa$} &  \\ \cmidrule(lr){4-7} \cmidrule(lr){8-11}
+Prob. & Algoritmo & Métrica de origem (A) & seed 7 & seed 42 & seed 123 & média & seed 7 & seed 42 & seed 123 & média & F1 média \\
+\midrule
+B & perceptron & zero-shot & 74,0 & 69,0 & 69,0 & 70,7 & 0,421 & 0,288 & 0,334 & 0,348 & 70,7 \\
+B & perceptron & melhor few-shot (20-shot) & 78,3 & 77,3 & 69,0 & 74,9 & 0,514 & 0,473 & 0,334 & 0,440 & 74,9 \\
+B & nnls & zero-shot & 76,0 & 68,0 & 69,0 & 71,0 & 0,466 & 0,274 & 0,334 & 0,358 & 71,0 \\
+B & nnls & melhor few-shot (20-shot) & 67,0 & 58,3 & 69,0 & 64,8 & 0,293 & 0,122 & 0,334 & 0,250 & 64,8 \\
+\midrule
+C & perceptron & zero-shot & 85,0 & 90,0 & 89,0 & 88,0 & 0,681 & 0,789 & 0,764 & 0,745 & 88,0 \\
+C & perceptron & melhor few-shot (20-shot) & 86,0 & 87,0 & 89,7 & 87,6 & 0,703 & 0,731 & 0,784 & 0,739 & 87,6 \\
+C & nnls & zero-shot & 86,0 & 91,0 & 88,0 & 88,3 & 0,699 & 0,812 & 0,752 & 0,754 & 88,3 \\
+C & nnls & melhor few-shot (20-shot) & 83,3 & 83,7 & 89,3 & 85,4 & 0,652 & 0,666 & 0,777 & 0,698 & 85,4 \\
+\bottomrule
+\multicolumn{12}{p{0.95\linewidth}}{\footnotesize Rótulos zero-shot do LLM em B e C; só $\hat{W}$ vem do A, centróides recalculados pelos rótulos do LLM no próprio problema. Na origem few-shot, o valor por semente é a média das repetições (sorteios) dessa semente.} \\
+\end{tabular}
+\end{table}

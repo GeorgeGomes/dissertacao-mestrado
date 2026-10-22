@@ -1,0 +1,19 @@
+\begin{table}[htbp]
+\centering
+\footnotesize
+\caption{Problemas B e C (openai/gpt-4o-mini): comparativo da transferência zero-shot versus melhor few-shot.}
+\label{tab:T9_comp_gpt4mini}
+\begin{tabular}{llrrrrrrllrrr}
+\toprule
+ &  & \multicolumn{3}{c}{Consistência (\%)} & \multicolumn{3}{c}{$\kappa$} & \multicolumn{2}{c}{Faixa de $\kappa$ (Landis \& Koch)} & \multicolumn{3}{c}{F1 (\%)} \\ \cmidrule(lr){3-5} \cmidrule(lr){6-8} \cmidrule(lr){9-10} \cmidrule(lr){11-13}
+Prob. & Algoritmo & zero & melhor & $\Delta$ & zero & melhor & $\Delta$ & zero & melhor & zero & melhor & $\Delta$ \\
+\midrule
+B & perceptron & 70,7 & 74,9 & +4,2 & 0,348 & 0,440 & +0,093 & razoável & moderada & 70,7 & 74,9 & +4,2 \\
+B & nnls & 71,0 & 64,8 & $-$6,2 & 0,358 & 0,250 & $-$0,108 & razoável & razoável & 71,0 & 64,8 & $-$6,2 \\
+\midrule
+C & perceptron & 88,0 & 87,6 & $-$0,4 & 0,745 & 0,739 & $-$0,005 & substancial & substancial & 88,0 & 87,6 & $-$0,4 \\
+C & nnls & 88,3 & 85,4 & $-$2,9 & 0,754 & 0,698 & $-$0,056 & substancial & substancial & 88,3 & 85,4 & $-$2,9 \\
+\bottomrule
+\multicolumn{13}{p{0.95\linewidth}}{\footnotesize ``zero'' = métrica zero-shot do A; ``melhor'' = melhor few-shot (20-shot) do A (eleita pela maior fidelidade no A). Médias das sementes (e repetições); $\Delta$ = melhor $-$ zero. Faixas de $\kappa$: $<$0,2 fraca, 0,2–0,4 razoável, 0,4–0,6 moderada, 0,6–0,8 substancial, $\geq$0,8 quase perfeita.} \\
+\end{tabular}
+\end{table}

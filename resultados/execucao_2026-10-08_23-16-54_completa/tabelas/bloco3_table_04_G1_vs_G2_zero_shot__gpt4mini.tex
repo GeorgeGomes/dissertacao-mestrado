@@ -1,0 +1,18 @@
+\begin{table}[htbp]
+\centering
+\footnotesize
+\caption{Problema G (openai/gpt-4o-mini): valores normalizados (G1) versus kg e m (G2), zero-shot.}
+\label{tab:bloco3_G1_vs_G2_zero_shot_gpt4mini}
+\begin{tabular}{llrrrrrrrrrr}
+\toprule
+ &  & \multicolumn{5}{c}{Acur.\ LLM vs real (\%)} & \multicolumn{3}{c}{Acur.\ métrica (\%)} & \multicolumn{2}{c}{Fidelidade (\%)} \\ \cmidrule(lr){3-7} \cmidrule(lr){8-10} \cmidrule(lr){11-12}
+Classes & Atributos & G1 & G2 & $\Delta$ & G1 (inv.\ perm.) & G2 (inv.\ perm.) & G1 & G2 & $\Delta$ & G1 & G2 \\
+\midrule
+Mulher / Homem & semânticos (peso/altura; peso\_kg/altura\_m) & — & 89,5 & — & — & 89,5 & — & 91,0 & — & — & 95,7 \\
+Mulher / Homem & neutros (x1/x2) & — & 62,9 & — & — & 62,9 & — & 85,7 & — & — & 71,4 \\
+A / B & semânticos (peso/altura; peso\_kg/altura\_m) & 31,9 & 51,9 & +20,0 & 68,1 & 52,9 & 12,9 & 44,3 & +31,4 & 71,4 & 81,0 \\
+A / B & neutros (x1/x2) & 41,0 & — & — & 59,0 & — & 18,6 & — & — & 73,8 & — \\
+\bottomrule
+\multicolumn{12}{p{0.95\linewidth}}{\footnotesize Fase A zero-shot, R$^2$, Perceptron, médias das sementes. G1 mostra ao LLM os valores normalizados em $[-1, 1]$; G2 mostra os mesmos pontos em kg e m (regra de três: 45–110 kg, 1,50–1,95 m). A métrica é estimada no espaço normalizado nos dois. Acurácia (vs rótulo real) do LLM e da métrica, contexto; Fidelidade = métrica vs LLM. Acur.\ LLM vs real (inv.\ perm.) = max($a$, 1 $-$ $a$): em zero-shot e com nomes neutros (A/B) a correspondência entre nome e classe é arbitrária, e só o valor invariante à permutação compara as linhas. ``—'' = o LLM colapsou em classe única.} \\
+\end{tabular}
+\end{table}

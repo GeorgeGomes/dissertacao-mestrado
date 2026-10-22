@@ -1,0 +1,21 @@
+\begin{table}[htbp]
+\centering
+\small
+\caption{Teste-oráculo: recuperação de uma métrica conhecida pelos dois estimadores.}
+\label{tab:bloco1_oraculo_recuperacao_W}
+\begin{tabular}{lllllrr}
+\toprule
+Problema & W verdadeiro & Pontos & Algoritmo & W recuperado (unit.) & Cosseno & Acurácia (\%) \\
+\midrule
+Problema 1 & [1,0; 1,0] & B (100 pts) & perceptron & [0,46; 0,54] & 0,992 (0,975–1,000) & 98,3 (98,0–99,0) \\
+Problema 1 & [1,0; 1,0] & B (100 pts) & nnls & [0,44; 0,56] & 0,989 (0,971–1,000) & 97,7 (97,0–98,0) \\
+\midrule
+Problema 2 & [0,3; 1,5] & E (150 pts) & perceptron & [0,18; 0,82] & 1,000 (1,000–1,000) & 100,0 \\
+Problema 2 & [0,3; 1,5] & E (150 pts) & nnls & [0,26; 0,74] & 0,991 (0,989–0,993) & 96,7 (95,3–98,7) \\
+\midrule
+Problema 3 & [1,5; 0,3] & E (150 pts) & perceptron & [0,80; 0,20] & 0,998 (0,997–1,000) & 100,0 \\
+Problema 3 & [1,5; 0,3] & E (150 pts) & nnls & [0,73; 0,27] & 0,989 (0,987–0,990) & 98,2 (96,7–99,3) \\
+\bottomrule
+\multicolumn{7}{p{0.95\linewidth}}{\footnotesize Teste-oráculo (não há LLM): os rótulos vêm da regra do centróide mais próximo sob o W verdadeiro, e os dois estimadores tentam recuperá-lo. Problema 1 = Oráculo sobre B (W = [1; 1], pontos do Problema B); Problema 2 = Oráculo sobre E1 (W = [0,3; 1,5]) e Problema 3 = Oráculo sobre E2 (W = [1,5; 0,3]), ambos nos pontos do Problema E. W recuperado normalizado (só a direção importa). Acurácia (\%) = acurácia da métrica recuperada contra o rótulo do oráculo. Médias das sementes (mín–máx).} \\
+\end{tabular}
+\end{table}

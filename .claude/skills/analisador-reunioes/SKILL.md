@@ -54,10 +54,10 @@ e devolve uma lista acionável e priorizada, com evidência para cada veredito.
      nome de função, constante, `RUN_*`, coluna de CSV). Confirme que faz o que foi pedido.
    - **Artigo/dissertação:** procure no texto (`.tex`/`.md`) se a explicação/definição/
      seção pedida existe.
-   - **Slides:** procure em `roteiro_apresentacao.txt` e nas `execucao_*/apresentacao/*.tex`
+   - **Slides:** procure em `roteiro_apresentacao.txt` e nas `resultados/execucao_*/apresentacao/*.tex`
      se o slide/tabela/figura pedido existe.
    - **Dados:** quando o pedido for sobre um resultado, confira os CSVs/PNGs da execução
-     mais recente (`execucao_*`).
+     mais recente (`resultados/execucao_*`).
 5. **Classifique cada item** e descreva o trabalho que falta e seu tipo (código /
    re-execução / texto / slide / leitura / análise).
 
@@ -102,9 +102,9 @@ veredito sem evidência localizável não vale; prefira "não localizei" a um pa
   `progresso_implementacao.md`.
 - **Onde cruzar:** código em `src/dissertacao_mestrado.py` (procure funções, flags `RUN_*`,
   colunas de CSV, nomes de gráfico `bloco*`/`final_*`); slides em `roteiro_apresentacao.txt`
-  e `execucao_*/apresentacao/apresentacao.tex` (+ `apresentacao_guia.tex`); resultados nos
-  CSVs/PNGs da pasta `execucao_*_completa` de timestamp mais alto (nunca as
-  `execucao_*_smoke`, que são smoke tests `--rapido`).
+  e `resultados/execucao_*/apresentacao/apresentacao.tex` (+ `apresentacao_guia.tex`); resultados nos
+  CSVs/PNGs da pasta `resultados/execucao_*_completa` de timestamp mais alto (nunca as
+  `resultados/execucao_*_smoke`, que são smoke tests `--rapido`).
 - **Padrões que enganam o placar:**
   - Um item dado como "a fazer" no plano pode já estar no código (ex.: peso×altura few-shot)
     — confirme no CSV/função antes de marcar pendente.
@@ -115,4 +115,4 @@ veredito sem evidência localizável não vale; prefira "não localizei" a um pa
     figura). O tipo determina a quem encaminhar.
 - **Regra de apresentação do projeto:** se um item gera/muda slide, lembre que a ordem é
   `roteiro_apresentacao.txt` primeiro, depois os `.tex` (ver CLAUDE.md).
-- **Nomenclatura única:** Problemas A–G, Blocos 1–3 (não misturar "fase" com "problema").
+- **Nomenclatura única:** Problemas A–G, Blocos 1–3, "Problema X, Passo N" (o nome "fase", usado antes de 13/10/2026, não existe mais nem no texto nem nos identificadores de código; mapa em `renomeacao_passos_2026-10-13.md`).

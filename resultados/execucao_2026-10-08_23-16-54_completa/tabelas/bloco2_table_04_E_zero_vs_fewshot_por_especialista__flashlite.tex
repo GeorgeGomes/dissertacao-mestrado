@@ -1,0 +1,17 @@
+\begin{table}[htbp]
+\centering
+\small
+\caption{Bloco 2 (google/gemini-2.5-flash-lite): zero-shot versus few-shot por especialista.}
+\label{tab:bloco2_E_zero_vs_fewshot_por_especialista_flashlite}
+\begin{tabular}{llrrrrlrr}
+\toprule
+ &  & \multicolumn{6}{c}{Acur.\ vs espec.\ (\%)} &  \\ \cmidrule(lr){3-8}
+Especialista & W & zero-shot & média few-shot & $\Delta$ & melhor few-shot & (estratégia, n) & $\Delta$ & Acur.\ do especialista vs real \\
+\midrule
+E1 & [0,3; 1,5] & 54,4 & 87,4 & +32,9 & 97,6 & Mista, 40-shot & +43,1 & 86,4 \\
+E2 & [1,5; 0,3] & 41,1 & 92,1 & +51,0 & 100,0 & Difícil, 20-shot & +58,9 & 90,0 \\
+E3 & [1,0; 1,0] & 44,7 & 88,8 & +44,2 & 95,4 & Aleatória, 40-shot & +50,7 & 93,1 \\
+\bottomrule
+\multicolumn{9}{p{0.95\linewidth}}{\footnotesize Acurácia (LLM vs especialista), em \%. Média few-shot = média das médias por (estratégia, n), n > 0, de modo que cada célula (estratégia, n) pesa o mesmo, independentemente do número de sorteios. Melhor few-shot = maior média (estratégia, n). Última coluna: acurácia (vs rótulo real) do próprio especialista nas gaussianas do Problema E, contexto.} \\
+\end{tabular}
+\end{table}

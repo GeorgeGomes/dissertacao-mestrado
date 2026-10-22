@@ -1,0 +1,7 @@
+n_pontos,n_classe_0_llm,n_classe_1_llm,collapsed,llm_accuracy_vs_true,svm_real_accuracy_vs_true,svm_real_n_errors,svm_llm_fidelity_vs_llm,svm_llm_accuracy_vs_true,svm_llm_n_errors_vs_true,metric_n_features,metric_fidelity_vs_llm,metric_accuracy_vs_true,provider,model,random_seed
+150,86,64,0,0.5933333333333334,0.9733333333333334,4,0.8933333333333333,0.5933333333333334,61.0,3.0,0.86,0.6133333333333333,openrouter,google/gemini-2.5-flash-lite,7
+150,88,62,0,0.54,0.9933333333333333,1,0.94,0.48,78.0,3.0,0.86,0.5733333333333334,openrouter,google/gemini-2.5-flash-lite,42
+150,83,67,0,0.5333333333333333,0.9533333333333334,7,0.92,0.49333333333333335,76.0,3.0,0.84,0.6266666666666667,openrouter,google/gemini-2.5-flash-lite,123
+150,149,1,1,0.5066666666666667,0.9733333333333334,4,,,,,,,openrouter,openai/gpt-4o-mini,7
+150,150,0,1,0.5,0.9933333333333333,1,,,,,,,openrouter,openai/gpt-4o-mini,42
+150,150,0,1,0.5,0.9533333333333334,7,,,,,,,openrouter,openai/gpt-4o-mini,123

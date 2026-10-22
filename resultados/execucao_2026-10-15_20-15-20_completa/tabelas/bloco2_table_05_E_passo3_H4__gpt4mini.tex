@@ -1,0 +1,16 @@
+\begin{table}[htbp]
+\centering
+\small
+\caption{Problemas E1, E2 e E3, Passo 3 (openai/gpt-4o-mini): média few-shot por estratégia de seleção (hipótese H4).}
+\label{tab:bloco2_E_passo3_H4_gpt4mini}
+\begin{tabular}{lrrrrlr}
+\toprule
+Especialista & Fácil & Difícil & Mista & Aleatória & Ordem & $\Delta$ difícil $-$ fácil \\
+\midrule
+E1 & 88,1 & 77,7 & 86,7 & 89,9 & Aleatória > Fácil > Mista > Difícil & $-$10,4 \\
+E2 & 77,6 & 77,6 & 88,2 & 89,8 & Aleatória > Mista > Fácil > Difícil & $-$0,0 \\
+E3 & 78,1 & 71,0 & 90,2 & 91,6 & Aleatória > Mista > Fácil > Difícil & $-$7,1 \\
+\bottomrule
+\multicolumn{7}{p{0.95\linewidth}}{\footnotesize Problema E, Passo 3. Acurácia (LLM vs especialista), em \%, média sobre os $k$ do few-shot, sementes e sorteios. H4 (a priori: difícil > fácil) é refutada quando $\Delta$ difícil$-$fácil é negativo.} \\
+\end{tabular}
+\end{table}

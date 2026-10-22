@@ -1,0 +1,21 @@
+\begin{table}[htbp]
+\centering
+\small
+\caption{Problema A (linear) versus Problema D (meia-lua), Passos 2 a 5 (google/gemini-2.5-flash-lite), por regime.}
+\label{tab:bloco1_AD_por_passo_flashlite}
+\begin{tabular}{lrrrrrr}
+\toprule
+ & \multicolumn{2}{c}{Fidelidade (vs LLM)} & \multicolumn{2}{c}{Acur.\ da métrica vs real} & \multicolumn{2}{c}{Acur.\ do LLM vs real} \\ \cmidrule(lr){2-3} \cmidrule(lr){4-5} \cmidrule(lr){6-7}
+Regime & A & D & A & D & A & D \\
+\midrule
+zero-shot† & 88,2 (87,3–88,7) & 81,8 (80,0–84,0) & 14,2 (7,3–20,0) & 65,3 (64,7–66,0) & 17,6 (16,0–18,7) & 55,6 (53,3–59,3) \\
+4-shot† & 95,4 (85,6–100,0) & 88,3 (72,6–97,9) & 93,2 (66,0–98,0) & 77,9 (68,0–86,7) & 90,6 (65,8–97,9) & 77,9 (63,0–88,4) \\
+10-shot† & 98,1 (94,3–100,0) & 95,2 (90,7–97,9) & 96,0 (93,3–98,0) & 83,9 (81,3–86,7) & 95,1 (92,1–97,9) & 86,3 (81,4–90,0) \\
+20-shot† & 97,8 (94,6–100,0) & 95,7 (94,6–97,7) & 96,8 (94,7–98,0) & 85,7 (83,3–86,7) & 95,6 (92,3–98,5) & 88,5 (83,8–93,1) \\
+40-shot† & 98,0 (94,5–100,0) & 94,7 (93,6–96,4) & 96,9 (96,0–98,0) & 86,1 (84,0–88,0) & 96,1 (93,6–99,1) & 90,5 (86,4–93,6) \\
+\midrule
+W ajustado ao rótulo real (teto)† & — & — & 97,3 (96,7–98,0) & 86,9 (86,7–87,3) & — & — \\
+\bottomrule
+\multicolumn{7}{p{0.95\linewidth}}{\footnotesize Perceptron, R$^2$. Mesmos Passos 2 a 5 nos dois problemas (150 pontos, exemplos do rótulo real, sem split). Fidelidade (vs LLM); acurácia (vs rótulo real) da métrica e do LLM como contexto; o teto (W ajustado ao rótulo real) só tem acurácia. Passos do Problema A: zero-shot = Passo 2 (o LLM rotula sem exemplos); $k$-shot = Passo 3 (o LLM rotula com $k$ exemplos do rótulo real); a métrica de cada linha é estimada no Passo 4; teto = Passo 5 (W ajustado diretamente ao rótulo real). Em zero-shot (e com nomes de classe neutros) a correspondência entre nome e classe é arbitrária: a acurácia (vs rótulo real) do LLM pode sair abaixo de 50\%; o valor invariante à permutação é max($a$, 1 $-$ $a$). † = em pelo menos uma estimativa o Perceptron não encontrou $\hat{W}$ que separe os rótulos: melhor esforço ($\gamma = 0$) ou margem bruta mínima negativa (algum ponto do lado errado da fronteira). ``—'' = colapso em classe única (ou quase-colapso: classe minoritária com menos de 5 pontos); na linha colapsada também a acurácia do LLM e a partição ficam como ``—''.} \\
+\end{tabular}
+\end{table}

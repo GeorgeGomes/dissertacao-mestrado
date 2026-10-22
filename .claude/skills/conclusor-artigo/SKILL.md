@@ -44,26 +44,26 @@ para os achados, e dos achados para o fechamento.
 
 ## Procedimento
 
-1. **Localize a última execução.** Use SOMENTE pastas `execucao_AAAA-MM-DD_HH-MM-SS_completa/`
+1. **Localize a última execução.** Use SOMENTE pastas `resultados/execucao_AAAA-MM-DD_HH-MM-SS_completa/`
    — pegue a de **timestamp mais alto** (não confie no que o CLAUDE.md cita como "última";
-   verifique no disco). Pastas `execucao_*_smoke` são smoke tests `--rapido` (1 repetição,
+   verifique no disco). Pastas `resultados/execucao_*_smoke` são smoke tests `--rapido` (1 repetição,
    seed 42, few-shot [0,4]) e **nunca** servem de fonte. Em pasta legada sem sufixo,
    confirme no `log_execucao.txt` que não é `--rapido`.
 2. **Leia a evidência, nesta ordem:**
    - `log_execucao.txt` (visão geral; note a **auditoria do parser** — se a taxa de
      fallback > 0, as métricas podem estar poluídas e a conclusão deve ressalvar);
-   - os CSVs por bloco (`bloco1_*`, `bloco2_*`, `bloco23_external_*`, `final_cross_linearity__<alias>.csv`)
+   - os CSVs por bloco (`bloco1_*`, `bloco2_*`, `bloco23_fg_*`, `final_cross_linearity__<alias>.csv`)
      para os números exatos por hipótese;
    - `llm_interactions_parte*.json` só se precisar auditar chamadas específicas.
 3. **Leia o código** (`src/dissertacao_mestrado.py` e módulos) para saber **o que
-   realmente rodou**: flags `RUN_*` ativas, `RANDOM_SEEDS`, `N_REPETICOES`, `FEW_SHOT_SIZES`,
-   quais blocos/fases. A conclusão descreve o experimento **executado**, não o planejado.
+   realmente rodou**: flags `RUN_*` ativas, `RANDOM_SEEDS`, `N_REPETICOES`, `K_EXEMPLOS_ROTULO_REAL`/`K_EXEMPLOS_METRICA_BC`/`K_EXEMPLOS_APRENDIZ`,
+   quais blocos e passos de cada problema. A conclusão descreve o experimento **executado**, não o planejado.
 4. **Leia o artigo atual** (`artigo.tex`) para não contradizer o corpo e reaproveitar
    notação/termos. Se o artigo estiver dessincronizado com a execução (n de seeds,
    algoritmos, blocos), **registre a divergência** e proponha o alinhamento.
 5. **Derive os achados** — para cada hipótese/pergunta, escreva o veredito com o número
    real: confirmada / parcialmente / refutada, com a evidência (κ, fidelidade, consistência,
-   IC bootstrap, Wilcoxon). Separe **fidelidade vs LLM** (a métrica reproduz o LLM) de
+   faixa mín–máx entre sementes, diferença pareada por semente; nunca IC bootstrap, removido em 13/10/2026). Separe **fidelidade vs LLM** (a métrica reproduz o LLM) de
    **acurácia vs ground truth** — não confunda.
 6. **Feche o texto:** escreva a **Conclusão** (recapitula a contribuição sem copiar o
    abstract, lista os achados sustentados, aponta limitações reais e trabalho futuro
@@ -77,10 +77,17 @@ para os achados, e dos achados para o fechamento.
 - **Sempre a última execução** como fonte dos números (§ "Leitura de Resultados" do
   CLAUDE.md). Nunca reutilize valores de apresentações/execuções antigas na conclusão final.
 - **Terminologia fixada:** "$\hat W$ / Ŵ_LLM estimada (ou inferida)" — nunca "W aprendida"
-  — para a métrica da Fase A; respeite "Blocos 1–3", "Problemas A–G" e "Fases" conforme a
-  nomenclatura única (não misture "fase" com "problema").
-- **Métricas com definição:** ao concluir com F1 e Cohen's $\kappa$, garanta que estão
-  definidos no texto (pedido do orientador); ancore a leitura do $\kappa$ em Landis & Koch.
+  — para a métrica estimada (Passo 4 de A, D e G); respeite "Blocos 1–3", "Problemas A–G" e "Problema X, Passo N"
+  conforme a nomenclatura única de 13/10/2026 (nunca "fase", nome usado antes de 13/10/2026; tabela de equivalência no CLAUDE.md).
+- **Cinco métricas, nomes obrigatórios (seção IV.3 do orientador, 09/10/2026):**
+  Fidelidade ("Fidelidade (métrica vs LLM)", Problemas A e D e a estimação em F e G), Acurácia
+  ("Acurácia (vs rótulo real)" no oráculo e como contexto nos Blocos 1 e 3; "Acurácia (LLM vs
+  especialista)" no Bloco 2), Consistência (B e C, centróides do novo problema), Cohen's
+  $\kappa$ (faixas de Landis e Koch 1977) e F1-Macro. Nunca escreva "F1-Score", "Kappa" solto,
+  "concordância", "taxa de erro", consistência euclidiana ou precision/recall. Garanta que
+  $\kappa$ e F1-Macro estão definidos no texto (pedido do orientador).
+- **H4 vem do log:** o veredito easy × hard é calculado por execução (`texto_h4`,
+  `bloco2_table_05`); reporte o número, não a frase "easy supera hard consistentemente".
 - **Variabilidade sempre:** reporte 3 seeds × repetições, e em problemas pequenos
   (peso × altura, ~100 amostras) cite o **número absoluto de erros** além da porcentagem.
 - **Referências:** cite a partir de `trabalhos_referencias.txt` e dos PDFs em

@@ -1,0 +1,21 @@
+\begin{table}[htbp]
+\centering
+\small
+\caption{Problema A (openai/gpt-4o-mini): métrica estimada em zero-shot, few-shot e pelo rótulo real.}
+\label{tab:T1_A_gpt4mini}
+\begin{tabular}{lrrrrlrrl}
+\toprule
+ &  &  & \multicolumn{3}{c}{Perceptron} & \multicolumn{3}{c}{NNLS} \\ \cmidrule(lr){4-6} \cmidrule(lr){7-9}
+Regime & LLM vs real & Partição LLM (n0/n1) & Fid.\ vs LLM & Métr.\ vs real & $\hat{W}$ unit. & Fid.\ vs LLM & Métr.\ vs real & $\hat{W}$ unit. \\
+\midrule
+zero-shot & 32,4 (28,0–36,7) & 114/36 & 81,3 (78,0–85,3) & 34,7 (17,3–49,3) & [0,09; 0,99] & 84,4 (83,3–86,0) & 23,1 (15,3–27,3) & [0,26; 0,96] \\
+4-shot & 81,9 (67,8–91,8) & 90/56 & 89,2 (84,2–94,5) & 86,1 (68,0–94,0) & [0,18; 0,96] & 89,0 (86,3–94,5) & 89,9 (69,3–96,0) & [0,29; 0,93] \\
+10-shot & 89,4 (81,4–96,4) & 82/58 & 94,4 (90,7–98,6) & 93,4 (86,7–98,0) & [0,34; 0,89] & 93,7 (90,0–97,9) & 94,3 (87,3–98,0) & [0,62; 0,60] \\
+20-shot & 90,9 (84,6–95,4) & 72/58 & 95,5 (92,3–97,7) & 93,9 (89,3–98,0) & [0,42; 0,85] & 95,0 (91,5–97,7) & 94,7 (89,3–98,0) & [0,56; 0,62] \\
+40-shot & 91,4 (83,6–96,4) & 59/51 & 95,2 (90,9–98,2) & 93,4 (88,0–98,0) & [0,50; 0,81] & 93,9 (89,1–98,2) & 94,8 (92,0–98,0) & [0,54; 0,75] \\
+\midrule
+W ajustado ao rótulo real (teto) & — & — & 96,2 (95,3–98,0) & 96,2 (95,3–98,0) & [0,37; 0,89] & 95,3 (93,3–98,0) & 95,3 (93,3–98,0) & [0,51; 0,86] \\
+\bottomrule
+\multicolumn{9}{p{0.95\linewidth}}{\footnotesize Médias das sementes e repetições, mín–máx entre parênteses, em \%. Few-shot: exemplos rotulados pelo rótulo real (k/2 por classe, sorteio aleatório), LLM classifica os $150-k$ restantes; fidelidade medida nesses pontos, acurácia da métrica aplicada aos 150. Teto: W ajustado diretamente ao rótulo real (não dá 100\% pela sobreposição das gaussianas do A). ``—'' = colapso em classe única.} \\
+\end{tabular}
+\end{table}

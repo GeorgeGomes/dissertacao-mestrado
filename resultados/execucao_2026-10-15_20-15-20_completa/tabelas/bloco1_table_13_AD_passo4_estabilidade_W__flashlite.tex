@@ -1,0 +1,40 @@
+\begin{table}[htbp]
+\centering
+\small
+\caption{Problemas A e D, Passos 2 a 5 (google/gemini-2.5-flash-lite): estabilidade da direção de $\hat{W}$ por regime e semente.}
+\label{tab:AD_passo4_estabilidade_W_flashlite}
+\begin{tabular}{lllrrrr}
+\toprule
+Prob. & Algoritmo & Regime & seed 7 & seed 42 & seed 123 & CV \\
+\midrule
+A & Perceptron & zero-shot & 0,35 & 0,24 & 0,19 & 0,26 \\
+A & Perceptron & 4-shot & 1,60 & 1,09 & 1,08 & 0,19 \\
+A & Perceptron & 10-shot & 2,55 & 0,99 & 1,21 & 0,43 \\
+A & Perceptron & 20-shot & 1,06 & 1,07 & 1,51 & 0,18 \\
+A & Perceptron & 40-shot & 1,01 & 1,05 & 1,23 & 0,09 \\
+A & Perceptron & W ajustado ao rótulo real (teto) & 0,86 & 0,46 & 0,77 & 0,25 \\
+\midrule
+A & NNLS & zero-shot & 0,39 & 0,30 & 0,39 & 0,12 \\
+A & NNLS & 4-shot & 1,64 & 1,35 & 5,58 & 0,68 \\
+A & NNLS & 10-shot & 5,35 & 1,04 & 1,96 & 0,67 \\
+A & NNLS & 20-shot & 1,49 & 1,10 & 4,98 & 0,69 \\
+A & NNLS & 40-shot & 0,96 & 1,35 & 1,95 & 0,29 \\
+A & NNLS & W ajustado ao rótulo real (teto) & 0,88 & 1,01 & 1,37 & 0,19 \\
+\midrule
+D & Perceptron & zero-shot & 0,54 & 0,34 & 0,41 & 0,20 \\
+D & Perceptron & 4-shot & 0,65 & 0,99 & 0,60 & 0,23 \\
+D & Perceptron & 10-shot & 0,29 & 0,39 & 0,46 & 0,18 \\
+D & Perceptron & 20-shot & 0,18 & 0,27 & 0,28 & 0,20 \\
+D & Perceptron & 40-shot & 0,31 & 0,25 & 0,22 & 0,15 \\
+D & Perceptron & W ajustado ao rótulo real (teto) & 0,22 & 0,24 & 0,23 & 0,04 \\
+\midrule
+D & NNLS & zero-shot & 0,48 & 0,32 & 0,38 & 0,17 \\
+D & NNLS & 4-shot & 0,36 & 0,40 & 0,17 & 0,33 \\
+D & NNLS & 10-shot & 0,26 & 0,30 & 0,32 & 0,09 \\
+D & NNLS & 20-shot & 0,20 & 0,27 & 0,30 & 0,16 \\
+D & NNLS & 40-shot & 0,27 & 0,25 & 0,25 & 0,04 \\
+D & NNLS & W ajustado ao rótulo real (teto) & 0,22 & 0,22 & 0,25 & 0,07 \\
+\bottomrule
+\multicolumn{7}{p{0.95\linewidth}}{\footnotesize Razão $w_1/w_2$ da métrica estimada (invariante de escala: só a direção importa) por semente; CV = desvio padrão / |média| entre sementes. Passos do Problema A: zero-shot = Passo 2 (o LLM rotula sem exemplos); $k$-shot = Passo 3 (o LLM rotula com $k$ exemplos do rótulo real); a métrica de cada linha é estimada no Passo 4; teto = Passo 5 (W ajustado diretamente ao rótulo real). O mesmo vale para o Problema D. ``—'' = colapso em classe única (ou quase-colapso: classe minoritária com menos de 5 pontos); na linha colapsada também a acurácia do LLM e a partição ficam como ``—''.} \\
+\end{tabular}
+\end{table}

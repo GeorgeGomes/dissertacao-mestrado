@@ -1,0 +1,40 @@
+\begin{table}[htbp]
+\centering
+\small
+\caption{Estabilidade da direção de $\hat{W}$ (google/gemini-2.5-flash-lite) por regime e semente.}
+\label{tab:T4_W_flashlite}
+\begin{tabular}{lllrrrr}
+\toprule
+Prob. & Algoritmo & Regime & seed 7 & seed 42 & seed 123 & CV \\
+\midrule
+A & perceptron & zero-shot & 0,18 & 0,27 & 0,40 & 0,32 \\
+A & perceptron & 4-shot & 0,69 & 0,38 & 0,59 & 0,23 \\
+A & perceptron & 10-shot & 0,99 & 1,26 & 0,48 & 0,36 \\
+A & perceptron & 20-shot & 0,94 & 1,69 & 0,72 & 0,37 \\
+A & perceptron & 40-shot & 1,01 & 1,03 & 0,96 & 0,03 \\
+A & perceptron & W ajustado ao rótulo real (teto) & 0,15 & 0,98 & 0,26 & 0,79 \\
+\midrule
+A & nnls & zero-shot & 0,27 & 0,25 & 0,31 & 0,09 \\
+A & nnls & 4-shot & 0,10 & 0,37 & 0,37 & 0,45 \\
+A & nnls & 10-shot & — & 0,61 & 0,37 & 0,25 \\
+A & nnls & 20-shot & 0,69 & 0,43 & 0,34 & 0,30 \\
+A & nnls & 40-shot & 0,73 & 2,93 & 0,78 & 0,69 \\
+A & nnls & W ajustado ao rótulo real (teto) & 0,61 & 0,58 & 0,60 & 0,02 \\
+\midrule
+D & perceptron & zero-shot & 0,55 & 0,31 & 0,42 & 0,23 \\
+D & perceptron & 4-shot & 0,56 & 0,97 & 0,59 & 0,26 \\
+D & perceptron & 10-shot & 0,28 & 0,47 & 0,45 & 0,21 \\
+D & perceptron & 20-shot & 0,21 & 0,37 & 0,41 & 0,26 \\
+D & perceptron & 40-shot & 0,36 & 0,34 & 0,32 & 0,05 \\
+D & perceptron & W ajustado ao rótulo real (teto) & 0,22 & 0,23 & 0,11 & 0,30 \\
+\midrule
+D & nnls & zero-shot & 0,48 & 0,32 & 0,38 & 0,17 \\
+D & nnls & 4-shot & 0,36 & 0,40 & 0,17 & 0,33 \\
+D & nnls & 10-shot & 0,26 & 0,30 & 0,32 & 0,09 \\
+D & nnls & 20-shot & 0,20 & 0,27 & 0,30 & 0,16 \\
+D & nnls & 40-shot & 0,27 & 0,25 & 0,25 & 0,04 \\
+D & nnls & W ajustado ao rótulo real (teto) & 0,22 & 0,22 & 0,25 & 0,07 \\
+\bottomrule
+\multicolumn{7}{p{0.95\linewidth}}{\footnotesize Razão $w_1/w_2$ da métrica estimada (invariante de escala: só a direção importa) por semente; CV = desvio padrão / |média| entre sementes. ``—'' = colapso em classe única.} \\
+\end{tabular}
+\end{table}

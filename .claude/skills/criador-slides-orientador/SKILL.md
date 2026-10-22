@@ -46,12 +46,12 @@ defesa (enxuto, uma ideia por slide), este deck **explica tudo** — e por isso
 ## Dados: sempre a última execução completa
 
 Antes de gerar qualquer slide, identifique a **última execução completa**
-(pasta `execucao_YYYY-MM-DD_HH-MM-SS_completa/` de timestamp mais alto que tenha
+(pasta `resultados/execucao_YYYY-MM-DD_HH-MM-SS_completa/` de timestamp mais alto que tenha
 rodado até o fim — com `log_execucao.txt` e os CSVs dos três blocos; ignorar as
-`execucao_*_smoke`, que são smoke tests `--rapido`). Extraia dela:
+`resultados/execucao_*_smoke`, que são smoke tests `--rapido`). Extraia dela:
 
 1. `log_execucao.txt` — visão completa e leituras qualitativas.
-2. CSVs por bloco (`bloco1_*`, `bloco2_*`, `bloco23_external_*`, `final_cross_linearity__<alias>.csv`).
+2. CSVs por bloco (`bloco1_*`, `bloco2_*`, `bloco23_fg_*`, `bloco3_g_passos_2_a_5_*` (desde 13/10/2026), `final_cross_linearity__<alias>.csv`).
 3. Os PNGs correspondentes (para as figuras de cada slide).
 
 Se houver execução mais recente que a referida no deck atual, **migre os números
@@ -66,15 +66,25 @@ A espinha típica deste projeto, na ordem que flui melhor para o orientador:
 2. **Abordagem e definição matemática** (otimização inversa, métrica diagonal,
    os dois estimadores — Perceptron Estruturado e NNLS).
 3. **Configurações da execução** (modelo, T, seeds, repetições, flags).
-4. **Bloco 1 — LLM como fonte:** problemas A–D, teste-oráculo, Fase A (fidelidade
-   e W por seed/algoritmo), transferência B/C, R2/R3/R4, vieses (ordem, nomes,
+4. **Bloco 1 — LLM como fonte:** problemas A–D, teste-oráculo, Problema A Passos 2 a 6 (fidelidade
+   e W por seed/algoritmo), transferência B/C (Passos 3 e 4), R2/R3/R4, vieses (ordem, nomes,
    prompt). Cada experimento com texto + tabela + figura.
 5. **Bloco 2 — LLM como aprendiz:** Problemas E/F, estratégias, curvas, múltiplos
    peritos, diluição, ordem de exemplos, baselines clássicos.
-6. **Bloco 3 — estudo de caso real (peso × altura):** R2/R3/R4, acurácia real,
-   paradoxo do overfitting, LLM como aprendiz.
+6. **Bloco 3 — estudo de caso real (peso × altura):** Passos 2 a 5 nos 70 de treino, os
+   mesmos passos do A (zero-shot, few-shot do rótulo real k ∈ {4,10,20,40}, teto; `bloco3_table_06`,
+   `bloco3_graphic_03`, desde 13/10/2026), R2/R3/R4, acurácia real, especialista do Passo 6 eleito (Passo 5)
+   entre zero-shot e few-shot (`especialista_regime/k/rep`), paradoxo do overfitting, LLM como aprendiz.
 7. **Fechamento:** síntese cruzada, robustez entre seeds, testes estatísticos,
    veredito das hipóteses, conclusões, limitações, apêndice técnico.
+
+**Cinco métricas, nomes obrigatórios (seção IV.3 do orientador, 09/10/2026):** em
+tabelas, eixos e texto use só Fidelidade ("Fidelidade (métrica vs LLM)", Problemas A e D e
+a estimação em F e G), Acurácia ("Acurácia (vs rótulo real)" no oráculo e como contexto nos
+Blocos 1 e 3; "Acurácia (LLM vs especialista)" no Bloco 2), Consistência (B e C, centróides
+do novo problema), Cohen's κ (faixas de Landis e Koch 1977) e F1-Macro. Nunca "F1-Score",
+"Kappa" solto, "concordância", "taxa de erro", consistência euclidiana ou precision/recall.
+O veredito de H4 é o calculado no log da execução (`texto_h4`), não uma frase fixa.
 
 ## Diretrizes visuais
 
@@ -93,7 +103,7 @@ A espinha típica deste projeto, na ordem que flui melhor para o orientador:
   `roteiro_apresentacao.txt` e só então propague para `apresentacao.tex` e
   `apresentacao_guia.tex`, mantendo as três fontes com a mesma contagem de slides.
 - **Reaproveite os padrões visuais fortes** do deck do autor (diagrama TikZ do
-  pipeline, tabela de veredito das hipóteses H1–H5 com cores).
+  fluxo dos passos, tabela de veredito das hipóteses H1–H5 com cores).
 
 ## Ordem obrigatória de edição (roteiro primeiro)
 
@@ -118,7 +128,7 @@ guia usam o mesmo). Ele fixa: tema Madrid, 16:9, fonte base 10pt, sem símbolos 
 navegação e `\graphicspath{{../}}`.
 
 O `.tex` é criado **dentro da pasta da execução** (ex.:
-`execucao_YYYY-MM-DD_HH-MM-SS/apresentacao/apresentacao.tex`), junto aos PNGs e
+`resultados/execucao_YYYY-MM-DD_HH-MM-SS/apresentacao/apresentacao.tex`), junto aos PNGs e
 CSVs, para que o `\graphicspath{{../}}` aponte direto para as figuras.
 
 ## Apresentação-guia (roteiro de fala)

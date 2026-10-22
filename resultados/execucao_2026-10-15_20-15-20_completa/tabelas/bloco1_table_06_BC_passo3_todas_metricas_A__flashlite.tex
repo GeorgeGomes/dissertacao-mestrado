@@ -1,0 +1,38 @@
+\begin{table}[htbp]
+\centering
+\small
+\caption{Problemas B e C, Passo 3 (google/gemini-2.5-flash-lite): transferência zero-shot contra cada métrica estimada no A.}
+\label{tab:BC_passo3_todas_metricas_A_flashlite}
+\begin{tabular}{llllrrr}
+\toprule
+Prob. & Métrica de origem (A) & Algoritmo & Consistência (\%) & $\kappa$ & F1-Macro (\%) & Acur.\ LLM vs real \\
+\midrule
+B & zero-shot & perceptron & 72,3 (68,0–76,0) & 0,258 (0,196–0,370) & 60,1 (56,1–67,1) & 47,3 (44,0–51,0) \\
+B & zero-shot & nnls & 73,3 (70,0–76,0) & 0,279 (0,168–0,342) & 61,3 (54,8–65,3) & 47,3 (44,0–51,0) \\
+B & 4-shot & perceptron & 66,7 (57,0–81,0) & 0,209 (0,056–0,472) & 55,9 (46,0–72,8) & 47,3 (44,0–51,0) \\
+B & 4-shot & nnls & 63,9 (57,0–81,0) & 0,166 (0,056–0,472) & 53,1 (46,0–72,8) & 47,3 (44,0–51,0) \\
+\textbf{B} & \textbf{10-shot} & \textbf{perceptron} & \textbf{67,4 (60,0–81,0)} & \textbf{0,206 (0,061–0,472)} & \textbf{56,1 (46,7–72,8)} & \textbf{47,3 (44,0–51,0)} \\
+\textbf{B} & \textbf{10-shot} & \textbf{nnls} & \textbf{63,0 (57,0–76,0)} & \textbf{0,142 (0,056–0,370)} & \textbf{52,0 (46,0–67,1)} & \textbf{47,3 (44,0–51,0)} \\
+B & 20-shot & perceptron & 68,4 (59,0–81,0) & 0,230 (0,056–0,472) & 57,4 (46,0–72,8) & 47,3 (44,0–51,0) \\
+B & 20-shot & nnls & 67,0 (58,0–81,0) & 0,206 (0,056–0,472) & 55,9 (46,0–72,8) & 47,3 (44,0–51,0) \\
+B & 40-shot & perceptron & 69,0 (59,0–81,0) & 0,235 (0,056–0,472) & 57,8 (46,0–72,8) & 47,3 (44,0–51,0) \\
+B & 40-shot & nnls & 66,7 (57,0–82,0) & 0,207 (0,056–0,490) & 55,7 (46,0–73,8) & 47,3 (44,0–51,0) \\
+B & W ajustado ao rótulo real (teto) & perceptron & 73,0 (67,0–81,0) & 0,284 (0,143–0,472) & 61,3 (52,7–72,8) & 47,3 (44,0–51,0) \\
+B & W ajustado ao rótulo real (teto) & nnls & 68,0 (60,0–80,0) & 0,220 (0,061–0,455) & 56,8 (46,7–71,8) & 47,3 (44,0–51,0) \\
+\midrule
+C & zero-shot & perceptron & 92,7 (92,0–94,0) & 0,852 (0,839–0,879) & 92,6 (91,9–93,9) & 9,7 (8,0–12,0) \\
+C & zero-shot & nnls & 93,0 (92,0–95,0) & 0,859 (0,839–0,899) & 92,9 (91,9–94,9) & 9,7 (8,0–12,0) \\
+C & 4-shot & perceptron & 91,4 (90,0–93,0) & 0,828 (0,799–0,859) & 91,4 (89,9–92,9) & 9,7 (8,0–12,0) \\
+C & 4-shot & nnls & 91,0 (87,0–93,0) & 0,819 (0,740–0,857) & 90,9 (86,9–92,8) & 9,7 (8,0–12,0) \\
+\textbf{C} & \textbf{10-shot} & \textbf{perceptron} & \textbf{91,7 (89,0–93,0)} & \textbf{0,832 (0,779–0,859)} & \textbf{91,6 (88,9–92,9)} & \textbf{9,7 (8,0–12,0)} \\
+\textbf{C} & \textbf{10-shot} & \textbf{nnls} & \textbf{90,9 (89,0–93,0)} & \textbf{0,816 (0,779–0,859)} & \textbf{90,8 (88,9–92,9)} & \textbf{9,7 (8,0–12,0)} \\
+C & 20-shot & perceptron & 91,8 (91,0–93,0) & 0,834 (0,818–0,859) & 91,7 (90,8–92,9) & 9,7 (8,0–12,0) \\
+C & 20-shot & nnls & 91,6 (90,0–93,0) & 0,830 (0,799–0,859) & 91,5 (89,9–92,9) & 9,7 (8,0–12,0) \\
+C & 40-shot & perceptron & 91,9 (91,0–93,0) & 0,837 (0,818–0,859) & 91,8 (90,8–92,9) & 9,7 (8,0–12,0) \\
+C & 40-shot & nnls & 92,0 (91,0–93,0) & 0,839 (0,818–0,859) & 91,9 (90,8–92,9) & 9,7 (8,0–12,0) \\
+C & W ajustado ao rótulo real (teto) & perceptron & 92,3 (92,0–93,0) & 0,846 (0,839–0,859) & 92,3 (91,9–92,9) & 9,7 (8,0–12,0) \\
+C & W ajustado ao rótulo real (teto) & nnls & 92,3 (91,0–93,0) & 0,845 (0,818–0,859) & 92,2 (90,8–92,9) & 9,7 (8,0–12,0) \\
+\bottomrule
+\multicolumn{7}{p{0.95\linewidth}}{\footnotesize Rótulos ZERO-SHOT do LLM em B e C (100 pontos novos cada); só $\hat{W}$ é transferido do A (R$^2$), os centróides são recalculados com os rótulos do LLM no próprio problema (consistência). $\kappa$ = Cohen's $\kappa$ (faixas de Landis e Koch, 1977). F1-Macro entre a métrica e o LLM. Acur.\ LLM vs real = acurácia (vs rótulo real) do LLM, contexto. Em zero-shot (e com nomes de classe neutros) a correspondência entre nome e classe é arbitrária: a acurácia (vs rótulo real) do LLM pode sair abaixo de 50\%; o valor invariante à permutação é max($a$, 1 $-$ $a$). Em negrito: as linhas (Perceptron e NNLS) do regime/k eleito pelo runner (coluna eleita\_passo6: maior fidelidade média no A, Perceptron, R$^2$, zero ou few-shot), excluído o teto. Passos de B e C: o LLM rotula os 100 pontos em zero-shot (Passo 2) e cada métrica do A é aplicada a esses rótulos (Passo 3). A métrica de origem vem do Passo 4 do A (zero-shot = rótulos do Passo 2; $k$-shot = rótulos do Passo 3; ``W ajustado ao rótulo real (teto)'' = Passo 5 do A, que não concorre à eleição).} \\
+\end{tabular}
+\end{table}

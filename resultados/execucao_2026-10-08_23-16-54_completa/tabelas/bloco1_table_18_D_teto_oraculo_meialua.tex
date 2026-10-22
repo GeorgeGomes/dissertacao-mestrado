@@ -1,0 +1,19 @@
+\begin{table}[htbp]
+\centering
+\small
+\caption{Teto do Problema D: acurácia da métrica diagonal ajustada ao rótulo real da meia-lua, em R$^2$, R$^3$ e R$^4$.}
+\label{tab:bloco1_D_teto_oraculo_meialua}
+\begin{tabular}{llrrl}
+\toprule
+Espaço & Algoritmo & Acurácia (vs rótulo real) & n erros (de 150) & W \\
+\midrule
+R$^2$ & perceptron & 85,6 (84,7–86,7) & 21,7 & [0,18; 0,95] \\
+R$^2$ & nnls & 86,7 & 20,0 & [0,18; 0,79] \\
+R$^3$ & perceptron & 86,7 (86,0–87,3) & 20,0 & [0,20; 0,93; 1,01] \\
+R$^3$ & nnls & 86,7 & 20,0 & [0,18; 0,79; 0,00] \\
+R$^4$ & perceptron & 86,2 (85,3–87,3) & 20,7 & [0,21; 1,03; 0,05; 1,01] \\
+R$^4$ & nnls & 86,4 (86,0–86,7) & 20,3 & [0,18; 0,79; 0,00; 0,00] \\
+\bottomrule
+\multicolumn{5}{p{0.95\linewidth}}{\footnotesize W ajustado diretamente ao rótulo real da meia-lua (150 pontos): teto da métrica diagonal no Problema D (0 chamadas; equivale ao regime ``teto'' da bloco1\_table\_10). Acurácia (vs rótulo real) da métrica ajustada; n erros = número médio de pontos errados em 150 (contagem auxiliar). R$^3$ acrescenta x1·x2, R$^4$ acrescenta x1², x2². Médias das sementes (mín–máx).} \\
+\end{tabular}
+\end{table}

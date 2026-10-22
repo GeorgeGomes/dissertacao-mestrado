@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mapa dos problemas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root {
+  color-scheme: light;
+  --bg:#f8f7f3; --fg:#1d2026; --muted:#5e6472; --line:#d8d5cc; --head:#eeece6; --zebra:#f3f1ec; --code:#ebe9e2;
+  --stage:#ffffff; --panel:#ffffff; --accent:#1f5f8b; --accent-soft:#e3edf5;
+  --c0:#2b7bd6; --c1:#d2504e; --real:#2f8f5b; --llm:#6b4fbb; --regua:#d99a1a; --grid:#e6e3db; --ink-soft:#8a8f9b;
+  --font-body:"IBM Plex Sans", -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-display:"Fraunces", Georgia, "Times New Roman", serif;
+  --font-mono:"IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  color-scheme: dark;
+  --bg:#15171b; --fg:#e8e6e1; --muted:#a6aab4; --line:#3a3e46; --head:#22252b; --zebra:#1b1e23; --code:#262a31;
+  --stage:#1c1f25; --panel:#1c1f25; --accent:#8ab4f8; --accent-soft:#223243;
+  --c0:#5b9cf0; --c1:#ef7572; --real:#5fc08a; --llm:#a98ff0; --regua:#f0b94a; --grid:#2c3038; --ink-soft:#7d828e;
+} }
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg:#15171b; --fg:#e8e6e1; --muted:#a6aab4; --line:#3a3e46; --head:#22252b; --zebra:#1b1e23; --code:#262a31;
+  --stage:#1c1f25; --panel:#1c1f25; --accent:#8ab4f8; --accent-soft:#223243;
+  --c0:#5b9cf0; --c1:#ef7572; --real:#5fc08a; --llm:#a98ff0; --regua:#f0b94a; --grid:#2c3038; --ink-soft:#7d828e;
+}
+* { box-sizing:border-box; }
+html, body { margin:0; }
+body { padding-block:20px 40px; padding-inline:16px; background:var(--bg); color:var(--fg); font:15px/1.5 var(--font-body); }
+main { max-width:1700px; margin:0 auto; }
+h1 { font:500 30px/1.15 var(--font-display); margin:0 0 6px; text-wrap:balance; }
+h2 { font:600 20px/1.25 var(--font-display); margin:28px 0 10px; }
+h3 { font:600 15px/1.3 var(--font-body); margin:18px 0 6px; }
+p.intro { color:var(--muted); margin:0 0 8px; max-width:1200px; }
+.sub { color:var(--muted); margin:0 0 14px; max-width:900px; }
+/* abas */
+.abas { display:flex; gap:6px; flex-wrap:wrap; border-bottom:1px solid var(--line); margin:14px 0 18px; }
+.abas button { font:600 14px/1 var(--font-body); background:transparent; color:var(--muted); border:0; border-bottom:3px solid transparent; padding:10px 12px; cursor:pointer; border-radius:4px 4px 0 0; }
+.abas button[aria-selected="true"] { color:var(--accent); border-bottom-color:var(--accent); }
+.abas button:focus-visible { outline:2px solid var(--accent); outline-offset:-2px; }
+.painel[hidden] { display:none; }
+/* tabela */
+.tabela-wrap { overflow-x:auto; margin-top:18px; border:1px solid var(--line); border-radius:6px; }
+table { border-collapse:collapse; width:100%; min-width:1180px; font-size:13px; font-variant-numeric:tabular-nums; }
+thead th { position:sticky; top:0; background:var(--head); text-align:left; padding:10px 10px; border-bottom:2px solid var(--line); font-size:13px; }
+tbody tr:nth-child(even) { background:var(--zebra); }
+tbody th, tbody td { vertical-align:top; padding:10px 10px; border-bottom:1px solid var(--line); }
+tbody th { text-align:left; width:150px; font-weight:400; }
+.letra { display:block; font-size:18px; font-weight:700; color:var(--accent); }
+.nome { display:block; font-weight:600; margin-top:2px; }
+.bloco { display:block; color:var(--muted); font-size:12px; margin-top:4px; }
+ol.passos { margin:0; padding-left:1.4em; }
+ol.passos li { margin:0 0 4px; }
+ol.passos li::marker { font-weight:700; color:var(--accent); }
+.param { color:var(--fg); max-width:260px; }
+ul.reps, ul.assets { margin:0; padding-left:1.1em; }
+ul.reps li { margin:0 0 3px; }
+ul.assets { margin-bottom:6px; }
+ul.assets li { margin:0 0 2px; }
+code { font:12px/1.4 var(--font-mono); background:var(--code); padding:1px 4px; border-radius:3px; word-break:break-all; }
+footer { margin-top:18px; color:var(--muted); font-size:12px; max-width:1200px; }
+footer p { margin:0 0 8px; }
+/* estado */
+.estado-removida { display:grid; grid-template-columns:repeat(auto-fit, minmax(300px, 1fr)); gap:16px; align-items:start; }
+.bloco-estado { border:1px solid var(--line); border-radius:8px; padding:14px 16px; background:var(--panel); }
+.bloco-estado h3 { margin:0 0 8px; font:600 16px/1.3 var(--font-display); }
+.bloco-estado ul { margin:0; padding-left:1.1em; }
+.bloco-estado li { margin:0 0 5px; }
+.bloco-estado p { margin:0 0 8px; }
+table.mini { min-width:0; width:100%; font-size:13px; }
+table.mini th, table.mini td { padding:5px 6px; }
+table.mini thead th { position:static; }
+.tag { display:inline-block; font:600 11px/1 var(--font-body); letter-spacing:.04em; text-transform:uppercase; padding:4px 7px; border-radius:999px; background:var(--accent-soft); color:var(--accent); margin-right:4px; }
+.tag.ok { background:#dff3e6; color:#1f6b3d; } .tag.pend { background:#fbeccf; color:#8a5a00; }
+:root[data-theme="dark"] .tag.ok, :root:not([data-theme="light"]) .tag.ok { background:#1f3a2b; color:#8fd9ab; }
+:root[data-theme="dark"] .tag.pend, :root:not([data-theme="light"]) .tag.pend { background:#3f3119; color:#f0c674; }
+@media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) .tag.ok { background:#dff3e6; color:#1f6b3d; } :root:not([data-theme="dark"]) .tag.pend { background:#fbeccf; color:#8a5a00; } }
+/* animação */
+.anim { display:grid; grid-template-columns:minmax(0, 1.55fr) minmax(280px, 1fr); gap:18px; align-items:start; }
+.palco { background:var(--stage); border:1px solid var(--line); border-radius:10px; overflow:hidden; }
+.palco svg { display:block; width:100%; height:auto; aspect-ratio:1000/600; max-width:100%; }
+.controles { display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-top:10px; }
+.controles button { font:600 14px/1 var(--font-body); padding:9px 14px; border-radius:6px; border:1px solid var(--line); background:var(--panel); color:var(--fg); cursor:pointer; }
+.controles button.primario { background:var(--accent); color:#fff; border-color:var(--accent); }
+.controles button:focus-visible, .cenas button:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
+.controles label { font-size:13px; color:var(--muted); display:flex; align-items:center; gap:6px; }
+.controles select { font:14px var(--font-body); padding:6px 8px; border-radius:6px; border:1px solid var(--line); background:var(--panel); color:var(--fg); }
+.progresso { height:6px; background:var(--grid); border-radius:999px; margin-top:10px; overflow:hidden; }
+.progresso div { height:100%; width:0; background:var(--accent); border-radius:999px; transition:width .12s linear; }
+.cenas { display:flex; flex-wrap:wrap; gap:6px; margin:12px 0 0; padding:0; list-style:none; }
+.cenas button { font:600 12px/1 var(--font-body); padding:7px 10px; border-radius:999px; border:1px solid var(--line); background:var(--panel); color:var(--muted); cursor:pointer; }
+.cenas button[aria-current="true"] { background:var(--accent); color:#fff; border-color:var(--accent); }
+.narracao { border:1px solid var(--line); border-radius:10px; padding:16px 18px; background:var(--panel); position:sticky; top:12px; }
+.narracao .passo { font:600 11px/1 var(--font-body); letter-spacing:.06em; text-transform:uppercase; color:var(--accent); }
+.narracao h2 { margin:6px 0 10px; font-size:22px; }
+.narracao p { margin:0 0 10px; max-width:62ch; }
+.narracao p.analogia { color:var(--muted); font-style:italic; border-left:3px solid var(--regua); padding-left:10px; }
+.narracao details { margin-top:10px; border-top:1px dashed var(--line); padding-top:8px; }
+.narracao summary { cursor:pointer; font-weight:600; color:var(--accent); }
+.narracao details p { font-size:13px; color:var(--muted); margin-top:8px; }
+.legenda { display:flex; flex-wrap:wrap; gap:10px 16px; margin-top:12px; font-size:12px; color:var(--muted); }
+.legenda span::before { content:""; display:inline-block; width:10px; height:10px; border-radius:50%; margin-right:5px; vertical-align:-1px; background:var(--x); }
+@media (max-width:860px) { .anim { grid-template-columns:1fr; } .narracao { position:static; } }
+@media (max-width:700px) { body { padding-block:16px 32px; } table { min-width:900px; } h1 { font-size:24px; } }
+@media (prefers-reduced-motion: reduce) { .progresso div { transition:none; } }
+</style>
+</head>
+<body>
+<main>
+<h1>Mapa dos problemas do experimento</h1>
+<p class="sub">Explicando decisões de LLMs via otimização inversa. Duas abas: a tabela completa dos problemas e uma animação didática de cada passo. Atualizado em 15/10/2026, conforme o código em src/ e a execução completa de 15/10/2026.</p>
+
+<div class="abas" role="tablist" aria-label="Seções">
+  <button role="tab" id="tab-mapa" aria-controls="painel-mapa" aria-selected="true">Mapa dos problemas</button>
+  <button role="tab" id="tab-animacao" aria-controls="painel-animacao" aria-selected="false">Animação dos passos</button>
+</div>
+
+<!-- ============================ MAPA ============================ -->
+<section class="painel" id="painel-mapa" role="tabpanel" aria-labelledby="tab-mapa">
+<p class="intro">Regra de nomes: letra = problema (conjunto de dados e papel do LLM); número = subproblema (mesmos dados com outro rótulo ou outra apresentação). Cada problema tem a SUA sequência de passos, numerada de 1 em diante, só com os passos que existem nele. O oráculo não é problema: é um teste de sanidade dos estimadores "sobre" um problema. Conforme o código em src/ de 15/10/2026 e a execução completa execucao_2026-10-15_10-40-22_completa (2 modelos × 3 sementes, 222.648 chamadas, 5 respostas não interpretadas, 2 h 57; com o Problema A em (−2; −0,5) e (2; 0,5), 2, 3 e 4 atributos no prompt do Passo 6 do G, o oráculo sobre E3, E1 e E2 e as coletas em lote). Pendência da revisão de 15/10/2026: o critério de parada do Perceptron aceita soluções degeneradas em parte das estimativas zero-shot (ver revisao_codigo_2026-10-15.md); a correção está adiada.</p>
+<p class="intro">Papéis do LLM: especialista (o LLM rotula e a métrica é estimada a partir dele) e aprendiz (um especialista externo rotula e o LLM aprende em contexto). Métricas de avaliação (seção IV.3 do orientador): Fidelidade = métrica vs rótulos do LLM; Acurácia = vs rótulo real (oráculo e aprendiz; contexto nos demais); Consistência = métrica do A com centróides locais em B e C; Cohen's κ; F1-Macro. Modelos: openai/gpt-4o-mini e google/gemini-2.5-flash-lite via OpenRouter, temperatura 0.</p>
+<p class="intro">Sementes e repetições: todos os problemas rodam nas 3 sementes (42, 123, 7) e nos 2 modelos. A semente muda os dados; a repetição mantém os dados e muda só quais pontos viram exemplos no prompt (random_state = semente + repetição). Há 3 repetições apenas onde a escolha dos exemplos é um sorteio aleatório; onde ela é determinística roda-se 1 coleta. Nomes de arquivo: &lt;bloco&gt;_&lt;graphic|table&gt;_&lt;NN&gt;_&lt;assunto&gt;[_seedS][_&lt;painel&gt;][__&lt;alias&gt;]_&lt;color|gray&gt;.png; CSVs com timestamp; alias gpt4mini ou flashlite nos assets derivados de um LLM.</p>
+<div class="tabela-wrap">
+<table>
+<thead><tr>
+<th>Problema</th><th>Passos</th><th>Parâmetros</th><th>Repetições por semente</th><th>Variantes</th><th>Tabelas, figuras e CSVs</th>
+</tr></thead>
+<tbody>
+<tr>
+<th scope="row"><span class="letra">A</span><span class="nome">Gaussianas lineares (LLM como especialista)</span><span class="bloco">Bloco 1 · 3 sementes</span></th>
+<td><ol class="passos">
+<li value="1">gerar os 150 pontos.</li>
+<li value="2">o LLM rotula os 150 pontos em zero-shot.</li>
+<li value="3">o LLM rotula de novo com k exemplos do rótulo real, k ∈ {4, 10, 20, 40}.</li>
+<li value="4">estimar a métrica Ŵ (Perceptron e NNLS, R², R³ e R⁴) de cada conjunto de rótulos do LLM e medir fidelidade.</li>
+<li value="5">teto (W ajustado ao rótulo real).</li>
+<li value="6">eleger a melhor métrica (maior fidelidade média).</li>
+</ol></td>
+<td class="param">Centróides (−2; −0,5) e (2; 0,5) desde 15/10/2026 (antes (−2, 0) e (2, 0), que deixavam w2 livre); σ = 1,2; k/2 exemplos por classe; sem split; classes A/B; prompt padrão; quase-colapso (classe minoritária &lt; 5) tratado como colapso.</td>
+<td><ul class='reps'><li>Passo 2: 1.</li><li>Passo 3: 3 por k.</li><li>Passos 4 a 6: sem chamadas.</li><li>Vieses: 1 por configuração.</li></ul></td>
+<td class="param">Vieses sobre o Passo 2 do A e os Passos 3 e 4 de B/C: nomes de classe, ordem das classes, variantes de prompt com k ∈ {0, 10}; nomes de atributo só zero-shot.</td>
+<td><ul class='assets'><li><code>bloco1_graphic_01_ABC_passo1_dados</code></li><li><code>02_A_passos_2_a_4_simbolos</code></li><li><code>03_A_passo4_erros</code></li><li><code>04_AD_passos_2_a_5_curva</code></li><li><code>05_A_passo4_w_distribuicao</code></li><li><code>06_A_passo4_perceptron_vs_nnls</code></li><li><code>08_A_passo4_R2_R3_R4</code></li><li><code>09_A_passo4_gamma</code></li><li><code>15_vies_ordem_classes</code></li><li><code>16_vies_nomes_classe</code></li><li><code>17_vies_nomes_atributo</code></li><li><code>18_vies_variantes_prompt</code></li></ul>
+<ul class='assets'><li><code>bloco1_table_01_A_passos_2_a_5</code></li><li><code>02_A_passo2_vs_passo3</code></li><li><code>03_A_passo6_eleicao</code></li><li><code>04_A_passo4_R2_R3_R4</code></li><li><code>05_A_passo4_perceptron_vs_nnls</code></li><li><code>14 a 16 vieses</code></li></ul>
+<ul class='assets'><li><code>CSVs: bloco1_abc_passos_2_a_4</code></li><li><code>bloco1_ad_passos_2_a_5</code></li><li><code>bloco1_a_passo4_perceptron_vs_nnls</code></li><li><code>bloco1_a_passo4_r2_r3_r4</code></li></ul></td>
+</tr><tr>
+<th scope="row"><span class="letra">B e C</span><span class="nome">Transferência (rotação horária e anti-horária)</span><span class="bloco">Bloco 1 · 3 sementes</span></th>
+<td><ol class="passos">
+<li value="1">gerar os 100 pontos com os centróides rotacionados.</li>
+<li value="2">o LLM rotula os 100 pontos em zero-shot.</li>
+<li value="3">aplicar cada métrica do A (só o W; centróides locais) e medir consistência, Cohen&#x27;s κ e F1-Macro, destacando a métrica eleita no A.</li>
+<li value="4">o LLM rotula de novo com k exemplos rotulados pela métrica do A, k ∈ {4, 10, 20, 40}; medir se a consistência sobe (H2).</li>
+</ol></td>
+<td class="param">B: (−2, 1,5) e (2, −1,5); C: (−2, −1,5) e (2, 1,5); σ = 1,2; exemplos do Passo 4 escolhidos por margem.</td>
+<td><ul class='reps'><li>Passos 2 e 4: 1 (sem sorteio).</li><li>Passo 3: sem chamadas.</li></ul></td>
+<td class="param">Sobre os Passos 3 e 4 (k ∈ {0, 10}): nomes de classe, ordem das classes e variantes de prompt; nomes de atributo só zero-shot (as mesmas configurações do Problema A). Quando o A colapsa no Passo 2, B e C não são coletados nessa configuração.</td>
+<td><ul class='assets'><li><code>bloco1_graphic_07_BC_passo3_sementes</code></li><li><code>10_BC_passo3_consistencia</code></li><li><code>11_B_passos_2_3_simbolos</code></li><li><code>11_C_passos_2_3_simbolos</code></li><li><code>final_graphic_02_ABC_matrizes_confusao</code></li><li><code>03_ABC_acertos_erros</code></li><li><code>05_ABC_margem</code></li></ul>
+<ul class='assets'><li><code>bloco1_table_06_BC_passo3_todas_metricas_A</code></li><li><code>07_BC_passo3_por_semente</code></li><li><code>08_BC_passo3_zero_vs_eleita</code></li><li><code>09_BC_passo4_exemplos_da_metrica</code></li></ul>
+<ul class='assets'><li><code>CSVs: bloco1_bc_passo3_consistencia</code></li><li><code>bloco1_abc_passos_2_a_4</code></li></ul></td>
+</tr><tr>
+<th scope="row"><span class="letra">D</span><span class="nome">Meia-lua (LLM como especialista)</span><span class="bloco">Bloco 1 · 3 sementes</span></th>
+<td><ol class="passos">
+<li value="1">gerar os 150 pontos da meia-lua.</li>
+<li value="2">o LLM rotula em zero-shot.</li>
+<li value="3">o LLM rotula com k exemplos do rótulo real, k ∈ {4, 10, 20, 40}.</li>
+<li value="4">estimar a métrica em R², R³ e R⁴ e medir fidelidade.</li>
+<li value="5">teto.</li>
+<li value="6">SVM RBF treinado nos rótulos do LLM, para comparar a fronteira.</li>
+</ol></td>
+<td class="param">sklearn.make_moons, ruído 0,15; sem split; o LLM vê só x1, x2 (x1·x2, x1², x2² só na estimação).</td>
+<td><ul class='reps'><li>Passo 2: 1.</li><li>Passo 3: 3 por k.</li><li>Passos 4 a 6: sem chamadas.</li></ul></td>
+<td class="param">Não tem.</td>
+<td><ul class='assets'><li><code>bloco1_graphic_12_D_passo1_dados</code></li><li><code>13_D_passos_2_a_4_simbolos</code></li><li><code>14_D_passo6_svm</code></li><li><code>21_D_passo5_teto</code></li><li><code>04_AD_passos_2_a_5_curva (painéis problema_d_r2/r3/r4)</code></li></ul>
+<ul class='assets'><li><code>bloco1_table_10_D_passos_2_a_5</code></li><li><code>11_D_passo2_vs_passo3</code></li><li><code>12_AD_por_passo</code></li><li><code>13_AD_passo4_estabilidade_W</code></li><li><code>18_D_passo5_teto</code></li></ul>
+<ul class='assets'><li><code>CSVs: bloco1_ad_passos_2_a_5</code></li><li><code>bloco1_d_passo5_teto</code></li></ul></td>
+</tr><tr>
+<th scope="row"><span class="letra">E1, E2, E3</span><span class="nome">Especialista linear (LLM como aprendiz)</span><span class="bloco">Bloco 2 · 3 sementes</span></th>
+<td><ol class="passos">
+<li value="1">gerar os 150 pontos; o especialista (W conhecido) rotula todos.</li>
+<li value="2">o LLM classifica os 150 pontos em zero-shot (uma coleta, compartilhada pelos três especialistas).</li>
+<li value="3">o LLM recebe k exemplos rotulados pelo especialista, escolhidos pelas estratégias fácil, difícil, mista e aleatória, k ∈ {4, 10, 20, 40}, e classifica os 150 − k restantes.</li>
+<li value="4">diluição (4 difíceis fixos + 0 a 20 fáceis; só E1).</li>
+<li value="5">ordem dos exemplos (4 ordenações; só E1).</li>
+<li value="6">comparação com classificadores clássicos: k-NN, regressão logística e SVM-RBF treinados nos mesmos k exemplos de cada estratégia e avaliados no mesmo teste (0 chamadas ao LLM; tabela bloco2_table_06 e figura bloco2_graphic_05 mostram a mista). Na completa de 14/10, com k = 40 no E1: LLM 96,7 % (gpt) e 97,6 % (Gemini), regressão logística 100 %, SVM 95,2 %, k-NN 91,2 %.</li>
+</ol></td>
+<td class="param">Centróides (−1,5, 1,0) e (1,5, −1,0); σ = 1,3; W: E1 = [0,3; 1,5], E2 = [1,5; 0,3], E3 = [1; 1]; mista exatamente metade/metade.</td>
+<td><ul class='reps'><li>Passo 2: 1.</li><li>Passo 3: aleatória 3; fácil, difícil e mista 1.</li><li>Passos 4 e 5: 1.</li><li>Passo 6: 1, só no primeiro modelo (não usa o LLM).</li></ul></td>
+<td class="param">Subproblemas E1 (principal), E2 (x1 dominante) e E3 (euclidiano).</td>
+<td><ul class='assets'><li><code>bloco2_graphic_01_E_passo1_especialista</code></li><li><code>02_E_passo3_estrategias_exemplos</code></li><li><code>03_E1_passo3_curva</code></li><li><code>04_E1_passo3_estrategias</code></li><li><code>05_E1_passo6_baselines</code></li><li><code>06_E1_passo4_diluicao</code></li><li><code>07_E1_passo5_ordem</code></li><li><code>final_graphic_01_ABCE_passo1_dados (painel E)</code></li></ul>
+<ul class='assets'><li><code>bloco2_table_01/02/03_E{1,2,3}_passo3_estrategia_x_k</code></li><li><code>04_E_passo2_vs_passo3</code></li><li><code>05_E_passo3_H4</code></li><li><code>06_E_passo6_baselines</code></li><li><code>07_E1_passo4_diluicao</code></li><li><code>08_E1_passo5_ordem</code></li></ul>
+<ul class='assets'><li><code>CSVs: bloco2_e_passos_2_3</code></li><li><code>bloco2_e_passo4_diluicao</code></li><li><code>bloco2_e_passo5_ordem</code></li><li><code>bloco2_e_passo6_baselines</code></li></ul></td>
+</tr><tr>
+<th scope="row"><span class="letra">F</span><span class="nome">Meia-lua (LLM como aprendiz)</span><span class="bloco">Bloco 2 · 3 sementes</span></th>
+<td><ol class="passos">
+<li value="1">gerar os 150 pontos e dividir 70% de treino e 30% de teste (105 e 45 pontos).</li>
+<li value="2">o LLM rotula os 105 de treino em zero-shot; estimar a métrica em R², R³ e R⁴ só para medir a fidelidade (o Passo 3 fica em R²).</li>
+<li value="3">o LLM recebe k exemplos do treino rotulados pelo rótulo real, k ∈ {0, 4, 10, 20, 40} (k = 0 é o teste sem exemplos), e classifica os 45 de teste.</li>
+<li value="4">Perceptron treinado nos mesmos exemplos, para comparar.</li>
+</ol></td>
+<td class="param">make_moons, ruído 0,15; split 70%/30% por semente (105/45); exemplos k/2 por classe real, sorteio seed + rep; especialista = rótulo real (especialista_origem = rotulo_real); o Passo 3 roda mesmo que o Passo 2 colapse.</td>
+<td><ul class='reps'><li>Passo 2: 1.</li><li>Passo 3: zero-shot 1; few-shot 3 por k.</li><li>Passo 4: sem chamadas.</li></ul></td>
+<td class="param">Não tem.</td>
+<td><ul class='assets'><li><code>bloco23_graphic_01_FG_aprendiz_curva</code></li><li><code>02_FG_passos_2_e_4_R2_R3_R4</code></li><li><code>03_FG_fronteiras</code></li><li><code>04_FG_llm_vs_perceptron</code></li><li><code>final_graphic_07_FG_rotulos_llm_F_meia_lua_seedS_x1_x2_{passo2|passo3_k&lt;k&gt;}</code></li></ul>
+<ul class='assets'><li><code>bloco2_table_09_F_passo2_R2_R3_R4</code></li><li><code>10_F_passo3_k</code></li></ul>
+<ul class='assets'><li><code>CSVs: bloco23_fg_passos_2_e_4</code></li><li><code>bloco23_fg_aprendiz</code></li></ul></td>
+</tr><tr>
+<th scope="row"><span class="letra">G1 e G2</span><span class="nome">Peso × altura (base real; G1 normalizado, G2 em kg e m)</span><span class="bloco">Bloco 3 · 3 sementes</span></th>
+<td><ol class="passos">
+<li value="1">carregar as 100 pessoas e dividir 70 de treino e 30 de teste (mesma divisão em G1 e G2).</li>
+<li value="2">o LLM rotula os 70 de treino em zero-shot.</li>
+<li value="3">o LLM rotula os 70 com k exemplos do rótulo real, k ∈ {4, 10, 20, 40}.</li>
+<li value="4">estimar a métrica em R², R³ e R⁴ de cada conjunto de rótulos, medir fidelidade e calcular o teto.</li>
+<li value="5">eleger a melhor métrica (maior acurácia vs rótulo real no treino, entre todos os regimes).</li>
+<li value="6">o LLM recebe k exemplos do treino rotulados pela métrica eleita e classifica os 30 de teste, k ∈ {0, 4, 10, 20, 40} (os mesmos pontos nas duas variantes de nome; mesma semente do Passo 3, logo os mesmos pontos sorteados lá). Desde 14/10/2026, repetido com 2, 3 e 4 atributos no prompt (x1, x2; + x1·x2; + x1², x2²), fator independente da métrica eleita; o zero-shot é uma coleta só, repetida nas três dimensões.</li>
+<li value="7">Perceptron treinado nos mesmos exemplos e no mesmo espaço que o LLM viu.</li>
+</ol></td>
+<td class="param">100 pessoas (50 Mulher, 50 Homem); G1 em [−1, 1], G2 em 45 a 110 kg e 1,50 a 1,95 m (métrica sempre no espaço normalizado); fronteira ótima elíptica; exemplos k/2 por classe real, sorteio seed + rep; especialista_origem = metrica.</td>
+<td><ul class='reps'><li>Passo 2: 1 por variante.</li><li>Passo 3: 3 por k.</li><li>Passos 4 e 5: sem chamadas.</li><li>Passo 6: zero-shot 1 (compartilhado pelas 3 dimensões do prompt); few-shot 3 por k e por dimensão (2, 3, 4 atributos).</li><li>Passo 7: sem chamadas.</li></ul></td>
+<td class="param">4 combinações por subproblema: classes Mulher/Homem ou A/B × atributos peso/altura (G1) ou peso_kg/altura_m (G2) ou x1/x2; no Passo 6, × 3 dimensões do prompt (coluna n_features do CSV; especialista_n_features guarda a dimensão da métrica eleita).</td>
+<td><ul class='assets'><li><code>bloco3_graphic_01_G1_passo1_dados</code></li><li><code>02_G2_passo1_dados</code></li><li><code>03_G_passos_2_a_5_curva (8 painéis)</code></li><li><code>bloco23_graphic_01 a 04 (parte G)</code></li><li><code>final_graphic_07_FG_rotulos_llm_G{1,2}_homem_mulher[_classesAB]_seedS_&lt;atributos&gt;_{passo2|passo6_k&lt;k&gt;}</code></li></ul>
+<ul class='assets'><li><code>bloco3_table_01_G_passos_2_e_4_R2_R3_R4</code></li><li><code>02_G_passo6_k</code></li><li><code>03_G_passo7_LLM_vs_perceptron</code></li><li><code>04_G1_vs_G2_passos_2_e_4</code></li><li><code>05_G_nomes_semanticos_vs_neutros</code></li><li><code>06_G_passos_2_a_5</code></li></ul>
+<ul class='assets'><li><code>CSVs: bloco23_fg_passos_2_e_4</code></li><li><code>bloco23_fg_aprendiz</code></li><li><code>bloco3_g_passos_2_a_5</code></li></ul></td>
+</tr><tr>
+<th scope="row"><span class="letra">Oráculo sobre E3, E1 e E2</span><span class="nome">Validação dos estimadores (Problemas 1, 2 e 3 do orientador)</span><span class="bloco">Bloco 1 · 3 sementes</span></th>
+<td><ol class="passos">
+<li value="1">rotular as gaussianas do Problema E pelo centróide mais próximo com o W conhecido (um único conjunto, só a métrica muda).</li>
+<li value="2">rodar Perceptron e NNLS sobre esses rótulos.</li>
+<li value="3">comparar o W recuperado ao verdadeiro (acurácia e cosseno).</li>
+</ol></td>
+<td class="param">Problema 1: W = [1; 1] (E3); Problema 2: W = [0,3; 1,5] (E1); Problema 3: W = [1,5; 0,3] (E2); todos sobre os 150 pontos do E (centróides (−1,5, 1) e (1,5, −1), que diferem nas duas coordenadas); 0 chamadas ao LLM. Até 13/10/2026 o Problema 1 rodava sobre os dados do B. O Problema A de até 14/10/2026 não servia: seus centróides tinham x2 = 0 e w2 não era identificável (em 15/10/2026 o A passou a (−2; −0,5) e (2; 0,5); o oráculo segue sobre o E).</td>
+<td><ul class='reps'><li>1 (determinístico).</li></ul></td>
+<td class="param">Não tem (as gaussianas anisotrópicas extras foram removidas em 13/10/2026; o euclidiano sobre o B virou E3 sobre o E em 14/10/2026).</td>
+<td><ul class='assets'><li><code>bloco1_graphic_19_oraculo_passos_1_a_3 (painéis _w_scatter, _ratio, _cosseno, _acuracia)</code></li><li><code>bloco1_table_17_oraculo_passos_1_a_3</code></li></ul>
+<ul class='assets'><li><code>CSV: bloco1_oraculo_passos_1_a_3</code></li></ul></td>
+</tr>
+</tbody>
+</table>
+</div>
+<footer><p>Fechamento (todos os problemas): final_graphic_01_ABCE_passo1_dados, 02_ABC_matrizes_confusao, 03_ABC_acertos_erros, 04_A_w_algoritmos, 05_ABC_margem, 06_painel_resumo, 07_FG_rotulos_llm, 08_comparacao_modelos; final_table_01_linearidade_cruzada_R2_R3_R4, 02_comparacao_modelos, 03_auditoria_por_modelo, 04_auditoria_flip_por_regime; CSV final_cross_linearity__&lt;alias&gt;. Grades compartilhadas: K_EXEMPLOS_ROTULO_REAL = [4, 10, 20, 40] (Passo 3 de A, D e G); K_EXEMPLOS_METRICA_BC = [0, 4, 10, 20, 40] (Passo 4 de B e C); K_EXEMPLOS_APRENDIZ = [0, 4, 10, 20, 40] (Passo 3 de E e F, Passo 6 de G); K_VIESES = [0, 10]. Perceptron Estruturado com η = 0,001, C = 1, Δγ = 0,05, 50 épocas, tolerância 1e-4 (γ = 0 marcado com † nas tabelas); NNLS sem hiperparâmetros. Resumo estatístico: média e faixa mínimo–máximo entre sementes (e repetições), diferença pareada por semente e Cohen&#x27;s d; sem bootstrap nem Wilcoxon. Tag da auditoria: bloco|problema=|passo=|regime=|k=|rep=|seed= (+ nomes=, atributos= e, no Passo 6 do G e no Passo 3 do F, n_atributos_prompt=). Custo estimado da completa: US$ 17 na guarda de saldo (≈ 222 mil chamadas desde 14/10/2026); a completa de 14/10 levou 3 h 58 com 50 chamadas em paralelo; desde 15/10/2026 o log marca o tempo de cada seção, as coletas pequenas saem em lote e as figuras por semente são geradas em processos paralelos.</p></footer>
+</section>
+
+<!-- ============================ ANIMAÇÃO ============================ -->
+<section class="painel" id="painel-animacao" role="tabpanel" aria-labelledby="tab-animacao" hidden>
+<p class="sub">Uma história em 13 cenas, feita para quem nunca ouviu falar de métrica ou de Perceptron. Os pontos e as respostas da animação são ilustrativos, gerados na própria página; os números citados nos textos vêm da execução completa de 15/10/2026 (execucao_2026-10-15_10-40-22_completa).</p>
+<div class="anim">
+  <div>
+    <div class="palco"><svg id="palco" viewBox="0 0 1000 600" role="img" aria-label="Cena da animação"></svg></div>
+    <div class="progresso" aria-hidden="true"><div id="barra"></div></div>
+    <div class="controles">
+      <button id="bt-ant" type="button">◀ Anterior</button>
+      <button id="bt-play" type="button" class="primario">▶ Reproduzir</button>
+      <button id="bt-prox" type="button">Próxima ▶</button>
+      <label for="sel-vel">velocidade <select id="sel-vel"><option value="0.6">lenta</option><option value="1" selected>normal</option><option value="1.8">rápida</option></select></label>
+      <label><input type="checkbox" id="chk-auto" checked> avançar sozinho</label>
+    </div>
+    <ul class="cenas" id="cenas"></ul>
+    <div class="legenda">
+      <span style="--x:var(--c0)">classe 0 (A, Mulher, lado esquerdo)</span>
+      <span style="--x:var(--c1)">classe 1 (B, Homem, lado direito)</span>
+      <span style="--x:var(--llm)">resposta do LLM</span>
+      <span style="--x:var(--regua)">régua (métrica W) e centros</span>
+      <span style="--x:var(--real)">rótulo real</span>
+    </div>
+  </div>
+  <aside class="narracao" id="narracao" aria-live="polite">
+    <div class="passo" id="n-passo"></div>
+    <h2 id="n-titulo"></h2>
+    <div id="n-texto"></div>
+    <p class="analogia" id="n-analogia"></p>
+    <details><summary>Para quem quer o detalhe técnico</summary><p id="n-detalhe"></p></details>
+  </aside>
+</div>
+</section>
+
+</main>
+
+<script>
+(function(){
+'use strict';
+/* ---------- abas ---------- */
+const abas = Array.from(document.querySelectorAll('.abas [role=tab]'));
+function abrir(id, foco){
+  abas.forEach(b => { const on = b.id === id; b.setAttribute('aria-selected', on ? 'true' : 'false'); document.getElementById(b.getAttribute('aria-controls')).hidden = !on; if (on && foco) b.focus(); });
+  try { localStorage.setItem('aba', id); } catch (e) {}
+  if (id !== 'tab-animacao' && typeof pausar === 'function') pausar();
+}
+abas.forEach(b => b.addEventListener('click', () => abrir(b.id)));
+document.querySelector('.abas').addEventListener('keydown', e => {
+  const i = abas.findIndex(b => b === document.activeElement); if (i < 0) return;
+  if (e.key === 'ArrowRight') abrir(abas[(i + 1) % abas.length].id, true);
+  if (e.key === 'ArrowLeft') abrir(abas[(i - 1 + abas.length) % abas.length].id, true);
+});
+(function(){ const h = location.hash.replace('#', ''); const m = { animacao:'tab-animacao', mapa:'tab-mapa' }; let id = m[h]; /* a página abre sempre no Mapa; o #hash (animacao, mapa, estado) escolhe outra aba */ if (id && abas.some(b => b.id === id)) abrir(id); })();
+
+/* ---------- utilidades ---------- */
+function rng(seed){ let a = seed >>> 0; return function(){ a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+function normal(r){ let u = 0, v = 0; while (u === 0) u = r(); while (v === 0) v = r(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); }
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const ease = p => p < 0 ? 0 : p > 1 ? 1 : p * p * (3 - 2 * p);
+const seg = (p, a, b) => ease((p - a) / (b - a));           // progresso local entre a e b
+const fmt = v => (Math.round(v * 10) / 10).toString().replace('.', ',');
+const PX = 340, PY = 300, S = 74;                             // centro e escala do gráfico
+const X = v => PX + v * S, Y = v => PY - v * S;
+const LIM = { x: 4.3, y: 3.7 };
+function esc(s){ return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;'); }
+
+function gauss(seed, centros, sd, n){
+  const r = rng(seed), pts = [];
+  centros.forEach((c, k) => { for (let i = 0; i < n; i++) pts.push({ x: c[0] + sd * normal(r), y: c[1] + sd * normal(r), c: k }); });
+  return pts;
+}
+function luas(seed, n, ruido){
+  const r = rng(seed), pts = [];
+  for (let i = 0; i < n; i++) { const t = Math.PI * r(); pts.push({ x: 2.4 * (Math.cos(t) - 0.5), y: 2.4 * (Math.sin(t) - 0.25) + ruido * normal(r) * 2.4, c: 0 }); }
+  for (let i = 0; i < n; i++) { const t = Math.PI * r(); pts.push({ x: 2.4 * (0.5 - Math.cos(t)), y: 2.4 * (0.75 - Math.sin(t) - 0.5) + ruido * normal(r) * 2.4, c: 1 }); }
+  return pts;
+}
+function aug(p, d){ return d === 2 ? [p.x, p.y] : d === 3 ? [p.x, p.y, p.x * p.y] : [p.x, p.y, p.x * p.x, p.y * p.y]; }
+function centroides(pts, lab, d){
+  const s = [null, null], n = [0, 0];
+  pts.forEach((p, i) => { const v = aug(p, d), k = lab[i]; if (!s[k]) s[k] = v.map(() => 0); v.forEach((x, j) => s[k][j] += x); n[k]++; });
+  return s.map((v, k) => v ? v.map(x => x / n[k]) : null);
+}
+const dW = (v, c, w) => v.reduce((acc, x, j) => acc + w[j] * (x - c[j]) * (x - c[j]), 0);
+function rotular(pts, cen, w, d){ return pts.map(p => { const v = aug(p, d); return dW(v, cen[1], w) < dW(v, cen[0], w) ? 1 : 0; }); }
+function concord(a, b){ let s = 0; for (let i = 0; i < a.length; i++) if (a[i] === b[i]) s++; return s / a.length; }
+function ajustar(pts, lab, d, tentativas){            // busca aleatória do W (ilustra o estimador)
+  const cen = centroides(pts, lab, d); if (!cen[0] || !cen[1]) return null;
+  const r = rng(99); let melhor = { w: Array(d).fill(1), acc: concord(rotular(pts, cen, Array(d).fill(1), d), lab) };
+  for (let t = 0; t < tentativas; t++) {
+    const w = Array.from({ length: d }, () => Math.pow(10, 2.4 * r() - 1.2));
+    const acc = concord(rotular(pts, cen, w, d), lab);
+    if (acc > melhor.acc) melhor = { w, acc };
+  }
+  const m = Math.max(...melhor.w); return { w: melhor.w.map(x => x / m), acc: melhor.acc, cen };
+}
+function fronteira(cen, w){                           // reta a·x + b·y = c do centróide mais próximo (R²)
+  const [c0, c1] = cen, a = 2 * w[0] * (c1[0] - c0[0]), b = 2 * w[1] * (c1[1] - c0[1]);
+  const c = w[0] * (c1[0] * c1[0] - c0[0] * c0[0]) + w[1] * (c1[1] * c1[1] - c0[1] * c0[1]);
+  const pts = [];
+  if (Math.abs(b) > 1e-9) [-LIM.x, LIM.x].forEach(x => { const y = (c - a * x) / b; if (Math.abs(y) <= LIM.y + 1e-9) pts.push([x, y]); });
+  if (Math.abs(a) > 1e-9) [-LIM.y, LIM.y].forEach(y => { const x = (c - b * y) / a; if (Math.abs(x) <= LIM.x + 1e-9) pts.push([x, y]); });
+  if (pts.length < 2) return '';
+  const [p, q] = [pts[0], pts[pts.length - 1]];
+  return `<line x1="${X(p[0])}" y1="${Y(p[1])}" x2="${X(q[0])}" y2="${Y(q[1])}" stroke="${css('--regua')}" stroke-width="3" stroke-dasharray="10 6"/>`;
+}
+function mapa(pts, lab, w, d, cen){                   // mapa de decisão (células) para R³/R⁴
+  let s = '';
+  for (let gx = -LIM.x; gx < LIM.x; gx += 0.2) for (let gy = -LIM.y; gy < LIM.y; gy += 0.2) {
+    const v = aug({ x: gx + 0.1, y: gy + 0.1 }, d), k = dW(v, cen[1], w) < dW(v, cen[0], w) ? 1 : 0;
+    s += `<rect x="${X(gx)}" y="${Y(gy + 0.2)}" width="${0.2 * S}" height="${0.2 * S}" fill="${k ? css('--c1') : css('--c0')}" opacity="0.13"/>`;
+  }
+  return s;
+}
+function eixos(nx, ny){
+  return `<line x1="${X(-LIM.x)}" y1="${Y(0)}" x2="${X(LIM.x)}" y2="${Y(0)}" stroke="${css('--grid')}" stroke-width="1.5"/>
+<line x1="${X(0)}" y1="${Y(-LIM.y)}" x2="${X(0)}" y2="${Y(LIM.y)}" stroke="${css('--grid')}" stroke-width="1.5"/>
+<text x="${X(LIM.x) - 4}" y="${Y(0) - 8}" text-anchor="end" font-size="15" fill="${css('--ink-soft')}">${esc(nx || 'x1 (primeira medida)')}</text>
+<text x="${X(0) + 8}" y="${Y(LIM.y) + 44}" font-size="15" fill="${css('--ink-soft')}">${esc(ny || 'x2 (segunda medida)')}</text>`;
+}
+function ponto(p, fill, extra){ return `<circle cx="${X(p.x)}" cy="${Y(p.y)}" r="${extra && extra.r || 7}" fill="${fill}" stroke="${extra && extra.stroke || css('--stage')}" stroke-width="${extra && extra.sw || 1.5}" opacity="${extra && extra.op != null ? extra.op : 1}"/>`; }
+const corClasse = k => k === 1 ? css('--c1') : css('--c0');
+function pontos(pts, lab, n, extra){ let s = ''; const m = n == null ? pts.length : Math.round(n); for (let i = 0; i < pts.length; i++) s += ponto(pts[i], i < m ? corClasse(lab[i]) : css('--ink-soft'), extra); return s; }
+function centro(c, k, raio, w){
+  const rx = (raio || 1) / Math.sqrt(w ? w[0] : 1), ry = (raio || 1) / Math.sqrt(w ? w[1] : 1);
+  return `<ellipse cx="${X(c[0])}" cy="${Y(c[1])}" rx="${rx * S}" ry="${ry * S}" fill="none" stroke="${css('--regua')}" stroke-width="2" opacity="0.8"/>
+<circle cx="${X(c[0])}" cy="${Y(c[1])}" r="11" fill="${css('--regua')}" stroke="${css('--stage')}" stroke-width="2"/><text x="${X(c[0])}" y="${Y(c[1]) + 5}" text-anchor="middle" font-size="13" font-weight="700" fill="#1d2026">${k}</text>`;
+}
+function cartao(x, y, w, h, titulo, linhas){
+  let s = `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="12" fill="${css('--panel')}" stroke="${css('--line')}"/>`;
+  s += `<text x="${x + 16}" y="${y + 28}" font-size="13" font-weight="700" letter-spacing="1" fill="${css('--ink-soft')}">${esc(titulo).toUpperCase()}</text>`;
+  linhas.forEach((l, i) => { const cor = l.cor || css('--fg'); s += `<text x="${x + 16}" y="${y + 56 + i * 24}" font-size="${l.tam || 15}" font-weight="${l.negrito ? 600 : 400}" fill="${cor}" font-family="${l.mono ? 'IBM Plex Mono, monospace' : 'inherit'}">${esc(l.t)}</text>`; });
+  return s;
+}
+function medidor(x, y, w, rotulo, valor, cor){
+  return `<text x="${x}" y="${y - 6}" font-size="13" fill="${css('--muted')}">${esc(rotulo)}</text><rect x="${x}" y="${y}" width="${w}" height="12" rx="6" fill="${css('--grid')}"/><rect x="${x}" y="${y}" width="${Math.max(0, Math.min(1, valor)) * w}" height="12" rx="6" fill="${cor}"/><text x="${x + w + 8}" y="${y + 11}" font-size="14" font-weight="600" fill="${css('--fg')}">${fmt(valor * 100)}%</text>`;
+}
+function titulo(t){ return `<text x="20" y="34" font-size="18" font-weight="600" fill="${css('--fg')}" font-family="Fraunces, Georgia, serif">${esc(t)}</text>`; }
+function digitado(x, y, texto, p, cor){ const n = Math.round(ease(p) * texto.length); return `<text x="${x}" y="${y}" font-size="15" fill="${cor || css('--fg')}">${esc(texto.slice(0, n))}${n < texto.length ? '▍' : ''}</text>`; }
+
+/* ---------- dados ilustrativos (gerados aqui, não são os do experimento) ---------- */
+const A = gauss(11, [[-2, -0.5], [2, 0.5]], 1.15, 36);   // centros do A desde 15/10/2026
+const realA = A.map(p => p.c);
+const rA = rng(21);
+const llmZero = A.map(p => (0.75 * p.x + 0.55 * p.y + 0.9 * normal(rA)) > 0 ? 1 : 0);   // respostas sem exemplos: inclinadas e ruidosas
+const llmFew = A.map(p => (0.95 * p.x + 0.25 * p.y + 0.45 * normal(rA)) > 0 ? 1 : 0);  // com exemplos: mais perto do real
+const fitZero = ajustar(A, llmZero, 2, 400), fitFew = ajustar(A, llmFew, 2, 400), fitTeto = ajustar(A, realA, 2, 400);
+const exA = [3, 40, 9, 51];                                   // 2 exemplos por classe
+const B = gauss(12, [[-2, 1.5], [2, -1.5]], 1.15, 30), C = gauss(13, [[-2, -1.5], [2, 1.5]], 1.15, 30);
+const rB = rng(31);
+const llmB = B.map(p => (0.8 * p.x - 0.35 * p.y + 0.8 * normal(rB)) > 0 ? 1 : 0), llmC = C.map(p => (0.8 * p.x + 0.45 * p.y + 0.7 * normal(rB)) > 0 ? 1 : 0);
+const cenB = centroides(B, llmB, 2), cenC = centroides(C, llmC, 2);
+const consB = concord(rotular(B, cenB, fitZero.w, 2), llmB), consC = concord(rotular(C, cenC, fitZero.w, 2), llmC);
+const D = luas(41, 40, 0.15), realD = D.map(p => p.c);
+const fitD2 = ajustar(D, realD, 2, 300), fitD4 = ajustar(D, realD, 4, 2500);
+const E = gauss(51, [[-1.5, 1], [1.5, -1]], 1.2, 36);
+const wE = [0.3, 1.5], cenE = [[-1.5, 1], [1.5, -1]];
+const perito = rotular(E, cenE, wE, 2);
+const margemE = E.map(p => Math.abs(dW(aug(p, 2), cenE[0], wE) - dW(aug(p, 2), cenE[1], wE)));
+const ordem = E.map((p, i) => i).sort((i, j) => margemE[i] - margemE[j]);
+const dificeis = ordem.slice(0, 6), faceis = ordem.slice(-6);
+const rG = rng(61), G = [];
+for (let i = 0; i < 34; i++) G.push({ x: (60 + 7 * normal(rG) - 70) / 8, y: (1.63 + 0.06 * normal(rG) - 1.70) / 0.08, c: 0 });
+for (let i = 0; i < 34; i++) G.push({ x: (81 + 9 * normal(rG) - 70) / 8, y: (1.77 + 0.065 * normal(rG) - 1.70) / 0.08, c: 1 });
+const realG = G.map(p => p.c), treinoG = G.map((p, i) => i % 10 < 7);
+const rO = rng(71);
+const wRec = { perc: [0.29, 1.53], nnls: [0.31, 1.46] };
+const curvaE = { k: [0, 4, 10, 20, 40], facil: [61, 80, 86, 88, 89], dificil: [61, 70, 75, 78, 80], aleatoria: [61, 82, 88, 90, 91] };
+const curvaG = { k: [0, 4, 10, 20, 40], acc: [43, 78, 85, 87, 88] };
+
+/* ---------- cenas ---------- */
+const scenes = [
+{ id: 'pontos', curto: 'Os pontos', passo: 'Passo 1 (A, B, C, D, E, F, G)', titulo: 'Tudo começa com pontos num gráfico',
+  texto: ['Cada objeto do experimento é um ponto com duas medidas, como peso e altura de uma pessoa. No começo os pontos aparecem cinza: ninguém disse ainda a que grupo cada um pertence.', 'Depois revelamos o "rótulo real": metade dos pontos vem de um grupo, metade do outro, e os dois grupos se misturam um pouco na borda.'],
+  analogia: 'Pense em 150 pessoas numa quadra, cada uma parada na posição que o seu peso e a sua altura indicam.',
+  detalhe: 'Problema A: 150 pontos gerados por duas gaussianas com centros (−2; −0,5) e (2; 0,5) e desvio 1,2 (sklearn.make_blobs; até 14/10/2026 os centros eram (−2, 0) e (2, 0), o que deixava o peso de x2 indeterminado). A meia-lua (D e F) usa make_moons com ruído 0,15; o E usa centros (−1,5; 1) e (1,5; −1); o G são 100 pessoas reais, 50 de cada classe. Três sementes mudam os pontos.',
+  dur: 7,
+  draw(p){ const n = seg(p, 0, 0.5) * A.length; const cor = seg(p, 0.55, 0.9);
+    let s = titulo('Passo 1: os pontos do Problema A (150 no experimento; 72 aqui)') + eixos();
+    A.forEach((q, i) => { if (i < n) s += ponto(q, cor > 0 ? corClasse(q.c) : css('--ink-soft'), { op: cor > 0 ? 0.35 + 0.65 * cor : 1 }); });
+    if (cor > 0) s += `<g opacity="${cor}">` + fronteira([[-2, -0.5], [2, 0.5]], [1, 1]).replace(css('--regua'), css('--real')).replace('stroke-dasharray="10 6"', '') + '</g>';
+    s += cartao(690, 70, 290, 150, 'o que está na tela', [{ t: `${Math.round(n)} de ${A.length} pontos`, negrito: true }, { t: 'cinza = sem rótulo' }, { t: cor > 0 ? 'azul e vermelho = rótulo real' : '…', cor: css('--real') }, { t: cor > 0 ? 'linha verde = divisa verdadeira' : '' }]);
+    return s; } },
+
+{ id: 'zero', curto: 'Perguntar sem dicas', passo: 'Passo 2 (A, B, C, D, F, G) · zero-shot', titulo: 'Perguntamos ao LLM, ponto por ponto, sem nenhuma dica',
+  texto: ['Para cada ponto mandamos uma pergunta em texto: "este ponto tem x1 = 1,2 e x2 = −0,4; ele é da classe A ou da classe B?". O LLM responde com uma letra. Isso é o zero-shot: nenhum exemplo, só a pergunta.', 'As respostas raramente batem com o rótulo real. O LLM inventa a própria divisa, e às vezes até troca o nome das classes.'],
+  analogia: 'É como pedir a alguém que separe as pessoas da quadra em dois times sem explicar a regra: a pessoa cria uma regra própria.',
+  detalhe: 'Cada ponto é uma chamada à API (OpenRouter, temperatura 0), 150 por semente e modelo. O parser lê a letra da resposta mesmo com texto em volta; respostas sem rótulo são reenviadas e, em último caso, sorteadas por hash (5 vezes em 223 mil na completa de 15/10/2026, todas do Gemini, por timeout na variante chain-of-thought). Desde 15/10/2026 as coletas pequenas saem em lote, várias no mesmo laço assíncrono, sem mudar prompt nem tag. A tag de auditoria grava bloco, problema, passo, regime, k, rep e seed de cada chamada.',
+  dur: 9,
+  draw(p){ const n = seg(p, 0.15, 0.85) * A.length, i = Math.min(A.length - 1, Math.floor(n)), q = A[i];
+    let s = titulo('Passo 2: o LLM rotula em zero-shot') + eixos() + pontos(A, llmZero, n, {});
+    if (n < A.length) s += `<circle cx="${X(q.x)}" cy="${Y(q.y)}" r="14" fill="none" stroke="${css('--llm')}" stroke-width="3"/>`;
+    s += cartao(690, 60, 290, 210, 'pergunta ao LLM', [{ t: `Ponto: x1 = ${fmt(q.x)}, x2 = ${fmt(q.y)}` }, { t: 'É da classe A ou da classe B?' }, { t: 'Responda só com a letra.' }, { t: '' }, { t: 'LLM: ' + (llmZero[i] ? 'B' : 'A'), negrito: true, cor: css('--llm'), tam: 20 }]);
+    s += medidor(700, 320, 190, 'respondidos', n / A.length, css('--llm'));
+    if (p > 0.9) s += `<text x="690" y="400" font-size="14" fill="${css('--muted')}">concorda com o rótulo real em ${fmt(concord(llmZero, realA) * 100)}% (ilustrativo)</text>`;
+    return s; } },
+
+{ id: 'few', curto: 'Dar exemplos', passo: 'Passo 3 (A, D, G) · few-shot com o rótulo real', titulo: 'Agora damos alguns exemplos com a resposta certa',
+  texto: ['Repetimos a pergunta, mas antes mostramos k exemplos já rotulados: "este ponto é A, aquele é B". Os exemplos saem do rótulo real, metade de cada classe, e são sorteados três vezes.', 'Com exemplos, as respostas se aproximam da divisa verdadeira. Testamos k = 4, 10, 20 e 40, e o LLM classifica os pontos que não viraram exemplo.'],
+  analogia: 'É mostrar quatro pessoas já de camisa, duas de cada time, antes de pedir para separar o resto.',
+  detalhe: 'K_EXEMPLOS_ROTULO_REAL = [4, 10, 20, 40]; sorteio com RandomState(seed + rep), 3 repetições; os exemplos ficam fora da avaliação. No G o mesmo passo roda nos 70 pontos de treino; no D, nos 150 da meia-lua. No F não existe este passo.',
+  dur: 9,
+  draw(p){ const ex = seg(p, 0, 0.3), n = seg(p, 0.35, 0.9) * A.length;
+    let s = titulo('Passo 3: o LLM rotula com k = 4 exemplos do rótulo real') + eixos() + pontos(A, llmFew, n, {});
+    exA.forEach((i, j) => { if (ex * 4 > j) { const q = A[i]; s += ponto(q, corClasse(q.c), { r: 9 }) + `<circle cx="${X(q.x)}" cy="${Y(q.y)}" r="16" fill="none" stroke="${css('--real')}" stroke-width="3"/>`; } });
+    const linhas = [{ t: 'Exemplos:' }];
+    exA.forEach((i, j) => { const q = A[i]; linhas.push({ t: ex * 4 > j ? `x1 = ${fmt(q.x)}, x2 = ${fmt(q.y)} → ${q.c ? 'B' : 'A'}` : '', mono: true, cor: css('--real') }); });
+    linhas.push({ t: '' }, { t: 'E este ponto: x1 = …, x2 = …?' }, { t: n > 0 ? 'LLM: A ou B' : '', negrito: true, cor: css('--llm') });
+    s += cartao(690, 60, 290, 250, 'pergunta com exemplos', linhas);
+    s += medidor(700, 360, 190, 'respondidos', n / A.length, css('--llm'));
+    if (p > 0.92) s += `<text x="690" y="430" font-size="14" fill="${css('--muted')}">agora concorda com o real em ${fmt(concord(llmFew, realA) * 100)}%</text>`;
+    return s; } },
+
+{ id: 'regua', curto: 'Achar a régua', passo: 'Passo 4 (A, D, G) · estimar a métrica W', titulo: 'Descobrir a régua escondida que explica as respostas',
+  texto: ['Supomos que o LLM decide assim: calcula o centro de cada grupo e manda o ponto para o centro mais próximo. Mas "mais próximo" com uma régua especial, que pode dar mais peso a uma medida do que à outra.', 'Os pesos dessa régua (W) são o que estimamos. Dois algoritmos, o Perceptron Estruturado e o NNLS, giram a divisa até ela reproduzir o máximo possível das respostas do LLM. A régua não precisa acertar o rótulo real: ela só precisa imitar o LLM.'],
+  analogia: 'É como descobrir que alguém separa os times olhando muito mais para a altura do que para o peso, só vendo as escolhas que ele fez.',
+  detalhe: 'Métrica de Mahalanobis diagonal d_W(v, c) = w1 (v1 − c1)² + w2 (v2 − c2)². Os centróides vêm dos rótulos do LLM. O Perceptron (η = 0,001, C = 1, busca binária em γ, 50 épocas) e o NNLS (scipy) estimam w ≥ 0; a concordância entre os dois é medida pelo cosseno. Em R³ e R⁴ entram x1·x2 e x1², x2² só na estimação, nunca no prompt deste passo.',
+  dur: 11,
+  draw(p){ const a = seg(p, 0, 0.2), b = seg(p, 0.25, 0.85), w = [1 + (fitZero.w[0] - 1) * b, 1 + (fitZero.w[1] - 1) * b];
+    const lab = rotular(A, fitZero.cen, w, 2), fid = concord(lab, llmZero);
+    let s = titulo('Passo 4: estimar a régua (W) a partir das respostas do LLM') + eixos() + pontos(A, llmZero, null, { op: 0.9 });
+    if (a > 0) { s += centro(fitZero.cen[0], 'A', 0.9 * a, w) + centro(fitZero.cen[1], 'B', 0.9 * a, w); }
+    if (b > 0 || a >= 1) s += fronteira(fitZero.cen, w);
+    s += cartao(690, 60, 290, 120, 'régua W (pesos das medidas)', [{ t: `peso de x1: ${fmt(w[0])}`, mono: true }, { t: `peso de x2: ${fmt(w[1])}`, mono: true }]);
+    s += medidor(700, 220, 190, 'fidelidade (régua imita o LLM)', fid, css('--regua'));
+    s += `<text x="690" y="280" font-size="13" fill="${css('--muted')}">as elipses mostram o que a régua chama</text><text x="690" y="298" font-size="13" fill="${css('--muted')}">de "mesma distância" de cada centro</text>`;
+    if (p > 0.9) s += `<text x="690" y="350" font-size="14" fill="${css('--fg')}">Perceptron e NNLS acham réguas parecidas;</text><text x="690" y="370" font-size="14" fill="${css('--fg')}">o cosseno entre elas fica perto de 1.</text>`;
+    return s; } },
+
+{ id: 'fid', curto: 'Fidelidade e teto', passo: 'Passos 4 e 5 (A, D, G) · fidelidade e teto', titulo: 'Quanto a régua imita o LLM, e qual é o máximo possível',
+  texto: ['Fidelidade é a fração dos pontos em que a régua e o LLM concordam. Os pontos com um X são onde discordam.', 'O teto responde outra pergunta: se ajustarmos a régua ao rótulo real, em vez de ao LLM, quanto ela acerta? É o melhor que uma régua desse tipo consegue naquele problema. Nas gaussianas o teto é alto; na meia-lua, não.'],
+  analogia: 'O teto é a nota máxima da prova. Se o aluno (a régua) tira 82 e a prova vale 95, o problema não é a prova.',
+  detalhe: 'Colunas fidelity_vs_llm, accuracy_metric_vs_true_eval, accuracy_metric_vs_true_full e accuracy_teto_vs_true do CSV bloco1_ad_passos_2_a_5 (e bloco3_g_passos_2_a_5 no G). Linha teto nas tabelas 01, 10 e 06 do Bloco 3, com travessão na fidelidade. Quando o LLM responde uma classe só (colapso), a linha fica NaN.',
+  dur: 9,
+  draw(p){ const lab = rotular(A, fitZero.cen, fitZero.w, 2), mostra = seg(p, 0.1, 0.5), teto = seg(p, 0.6, 0.9);
+    let s = titulo('Passos 4 e 5: fidelidade da régua e teto') + eixos();
+    A.forEach((q, i) => { s += ponto(q, corClasse(llmZero[i]), { op: 0.9 }); if (lab[i] !== llmZero[i] && mostra > 0) s += `<text x="${X(q.x)}" y="${Y(q.y) + 6}" text-anchor="middle" font-size="18" font-weight="700" fill="${css('--fg')}" opacity="${mostra}">✕</text>`; });
+    s += fronteira(fitZero.cen, fitZero.w);
+    if (teto > 0) s += `<g opacity="${teto}">` + fronteira(fitTeto.cen, fitTeto.w).replace(css('--regua'), css('--real')) + '</g>';
+    s += medidor(700, 90, 190, 'fidelidade: régua × LLM', fitZero.acc * mostra, css('--regua'));
+    s += medidor(700, 150, 190, 'acurácia da régua × rótulo real', concord(lab, realA) * mostra, css('--c0'));
+    if (teto > 0) s += medidor(700, 230, 190, 'teto: régua ajustada ao real', fitTeto.acc * teto, css('--real'));
+    s += cartao(690, 290, 290, 110, 'leitura', [{ t: 'a régua copia o LLM, não a verdade;' }, { t: 'o teto diz até onde uma régua' }, { t: 'diagonal consegue ir no problema.' }]);
+    return s; } },
+
+{ id: 'transf', curto: 'Dados novos (B e C)', passo: 'Passos 3 e 4 (B e C) · transferência, H1 e H2', titulo: 'A régua aprendida em A funciona em dados novos?',
+  texto: ['Criamos os Problemas B e C girando os grupos de A: um no sentido horário, outro no anti-horário. O LLM rotula os pontos novos sem exemplos.', 'Pegamos só os pesos da régua estimada em A, recalculamos os centros nos dados novos e vemos se a régua continua prevendo o LLM. Essa concordância se chama consistência (hipótese H1). Depois mostramos ao LLM exemplos rotulados pela própria régua e medimos se a consistência sobe (H2).'],
+  analogia: 'Se eu entendi como você escolhe times aqui, eu deveria prever suas escolhas em outra quadra, com as pessoas em outras posições.',
+  detalhe: 'B: centros (−2; 1,5) e (2; −1,5); C: (−2; −1,5) e (2; 1,5). Só o vetor w é transferido; centróides locais dos rótulos do LLM em B/C. Consistência, κ e F1-Macro contra todas as métricas do A, com destaque para a eleita no Passo 6 do A (tabelas 06 a 08). No Passo 4 os exemplos são rotulados pela métrica zero-shot do A, k ∈ {4, 10, 20, 40} escolhidos por margem (tabela 09, H2). Completa de 15/10/2026 (já com o A inclinado), métrica zero-shot: κ em B 0,29 (gpt) e 0,27 (Gemini); em C 0,74 e 0,83. Em B o veredito do gpt já tinha mudado entre as completas de 13/10 (0,46) e 14/10 (0,33) com o mesmo código: o A com centróides em x2 = 0 não fixava o peso w2, que é o que B testa; por isso o A passou a (−2; −0,5) e (2; 0,5). Com o A inclinado o κ zero-shot em B continuou baixo, e a métrica eleita (10-shot) leva o gpt a 0,42. Ressalva da revisão de 15/10: em parte das estimativas zero-shot o Perceptron para numa régua degenerada, com pesos quase nulos, e a correção do estimador está pendente; os valores zero-shot do gpt no A e em B devem ser lidos com essa reserva.',
+  dur: 12,
+  draw(p){ const metade = p < 0.5 ? 0 : 1, pl = metade ? seg(p, 0.5, 1) : seg(p, 0, 0.5);
+    const P = metade ? C : B, L = metade ? llmC : llmB, cen = metade ? cenC : cenB, cons = metade ? consC : consB;
+    const morf = seg(pl, 0, 0.3), n = seg(pl, 0.3, 0.6) * P.length, reg = seg(pl, 0.65, 0.9);
+    let s = titulo(`Passo 3 de ${metade ? 'C (rotação anti-horária)' : 'B (rotação horária)'}: a régua do A nos dados novos`) + eixos();
+    P.forEach((q, i) => { const a0 = A[i % A.length]; const x = a0.x + (q.x - a0.x) * morf, y = a0.y + (q.y - a0.y) * morf; s += ponto({ x, y }, i < n ? corClasse(L[i]) : css('--ink-soft'), {}); });
+    if (reg > 0) { s += `<g opacity="${reg}">` + centro(cen[0], 'A', 0.9, fitZero.w) + centro(cen[1], 'B', 0.9, fitZero.w) + fronteira(cen, fitZero.w) + '</g>'; }
+    s += cartao(690, 60, 290, 120, 'régua trazida do A', [{ t: `peso de x1: ${fmt(fitZero.w[0])}`, mono: true }, { t: `peso de x2: ${fmt(fitZero.w[1])}`, mono: true }, { t: 'centros recalculados aqui', cor: css('--muted'), tam: 13 }]);
+    s += medidor(700, 220, 190, 'consistência (régua × LLM)', cons * reg, css('--regua'));
+    s += `<text x="690" y="280" font-size="14" fill="${css('--muted')}">H1: a consistência e o κ são ao menos</text><text x="690" y="300" font-size="14" fill="${css('--muted')}">moderados (κ > 0,4)?</text>`;
+    s += `<text x="690" y="340" font-size="14" fill="${css('--muted')}">H2 (Passo 4): exemplos rotulados pela</text><text x="690" y="360" font-size="14" fill="${css('--muted')}">régua fazem a consistência subir?</text>`;
+    return s; } },
+
+{ id: 'lua', curto: 'Meia-lua', passo: 'Passos 2 a 6 (D) · meia-lua, R² → R³ → R⁴', titulo: 'E quando a divisa é curva? A meia-lua',
+  texto: ['Na meia-lua os dois grupos se abraçam: nenhuma linha reta separa bem. Uma régua com dois pesos só sabe traçar retas.', 'O truque é dar à régua medidas novas, calculadas a partir das antigas: x1 vezes x2, e depois x1 ao quadrado e x2 ao quadrado. Com elas a divisa pode curvar. Mesmo assim o teto na meia-lua fica perto de 87 %: a forma em S exigiria uma régua maior.'],
+  analogia: 'Com uma régua reta você não contorna uma curva; com um compasso, sim, mas ainda não desenha um S.',
+  detalhe: 'ATRIBUTOS_PASSO4 = (2, 3, 4): R³ acrescenta x1·x2 (hipérbole), R⁴ acrescenta x1² e x2² (elipse). O LLM vê só x1 e x2. O mapa colorido é a decisão da régua em cada ponto do plano. No D ainda roda um SVM RBF sobre os rótulos do LLM para comparar fronteiras (bloco1_graphic_14). Teto medido (14/10/2026, independe do LLM): 85,6 a 86,7 % nas três dimensões, faixa entre sementes de 84,7 a 87,3 %.',
+  dur: 11,
+  draw(p){ const n = seg(p, 0, 0.3) * D.length, r2 = seg(p, 0.3, 0.5), r4 = seg(p, 0.6, 0.85);
+    const fit = r4 > 0 ? fitD4 : fitD2, d = r4 > 0 ? 4 : 2;
+    let s = titulo('Problema D: a meia-lua e a régua com medidas extras') + eixos();
+    if (r2 > 0) s += `<g opacity="${r4 > 0 ? r4 : r2}">` + mapa(D, realD, fit.w, d, fit.cen) + '</g>';
+    s += pontos(D, realD, n, {});
+    s += cartao(690, 60, 290, 150, r4 > 0 ? 'régua com 4 medidas (R⁴)' : 'régua com 2 medidas (R²)', [{ t: 'x1, x2' + (r4 > 0 ? ', x1², x2²' : ''), mono: true }, { t: r2 > 0 ? `acurácia × rótulo real: ${fmt(fit.acc * 100)}%` : '', negrito: true }, { t: r4 > 0 ? 'a divisa agora curva' : (r2 > 0 ? 'a divisa é uma reta' : ''), cor: css('--muted') }]);
+    s += `<text x="690" y="260" font-size="14" fill="${css('--muted')}">mapa colorido = decisão da régua</text><text x="690" y="280" font-size="14" fill="${css('--muted')}">em cada lugar do plano</text>`;
+    if (p > 0.9) s += `<text x="690" y="330" font-size="14" fill="${css('--fg')}">teto medido: ≈ 85 a 87 %.</text><text x="690" y="350" font-size="14" fill="${css('--fg')}">O S da meia-lua não cabe numa régua diagonal.</text>`;
+    return s; } },
+
+{ id: 'aprendiz', curto: 'LLM aluno (E)', passo: 'Passos 2 e 3 (E) · LLM como aprendiz, H3 e H4', titulo: 'Papéis invertidos: agora o LLM é o aluno',
+  texto: ['No Bloco 2 nós é que temos a régua. Um especialista com pesos conhecidos (a segunda medida vale cinco vezes mais que a primeira) rotula todos os pontos.', 'O LLM recebe k exemplos rotulados pelo especialista e tenta reproduzir o critério nos demais. Testamos de onde vêm os exemplos: fáceis (longe da divisa), difíceis (perto), mistos ou aleatórios. A aposta inicial (H4) era que os difíceis ensinam mais. Os dados dizem o contrário.'],
+  analogia: 'Para ensinar alguém a separar os times, é melhor mostrar primeiro os casos óbvios do que os casos duvidosos.',
+  detalhe: 'E1: W = [0,3; 1,5]; E2: [1,5; 0,3]; E3: [1; 1], centros (−1,5; 1) e (1,5; −1). Passo 2: zero-shot coletado uma vez por modelo e semente e reaproveitado. Passo 3: k ∈ {4, 10, 20, 40}, 4 estratégias; medida principal: acurácia LLM × especialista, com κ e F1-Macro. Passos 4 a 6: diluição (4 difíceis + 0 a 20 fáceis), ordem dos exemplos e baselines k-NN, regressão logística e SVM. Completa de 14/10/2026, E1: gpt fácil 87,7 %, difícil 77,9 %, mista 86,6 %, aleatória 89,9 %; Gemini fácil 93,2 %, difícil 72,4 %. H4 refutada nos dois modelos.',
+  dur: 12,
+  draw(p){ const a = seg(p, 0, 0.25), b = seg(p, 0.3, 0.55), c = seg(p, 0.6, 1);
+    let s = titulo('Problema E: o especialista rotula e o LLM aprende com exemplos') + eixos();
+    s += pontos(E, perito, a * E.length, {});
+    if (a >= 1) s += centro(cenE[0], 'A', 0.9, wE) + centro(cenE[1], 'B', 0.9, wE) + fronteira(cenE, wE);
+    if (b > 0) { faceis.forEach((i, j) => { if (b * 6 > j) s += `<circle cx="${X(E[i].x)}" cy="${Y(E[i].y)}" r="15" fill="none" stroke="${css('--real')}" stroke-width="3"/>`; }); dificeis.forEach((i, j) => { if (b * 6 > j) s += `<circle cx="${X(E[i].x)}" cy="${Y(E[i].y)}" r="15" fill="none" stroke="${css('--fg')}" stroke-width="3" stroke-dasharray="4 3"/>`; }); }
+    s += cartao(690, 50, 290, 110, 'régua do especialista', [{ t: 'peso de x1: 0,3   peso de x2: 1,5', mono: true }, { t: 'a altura (x2) decide quase tudo', cor: css('--muted'), tam: 13 }]);
+    s += `<text x="690" y="200" font-size="13" fill="${css('--real')}">○ exemplos fáceis (longe da divisa)</text><text x="690" y="220" font-size="13" fill="${css('--fg')}">◌ exemplos difíceis (perto da divisa)</text>`;
+    // curva acurácia × k
+    const gx = 700, gy = 420, gw = 260, gh = 150;
+    s += `<rect x="${gx}" y="${gy - gh}" width="${gw}" height="${gh}" fill="none" stroke="${css('--line')}"/><text x="${gx}" y="${gy + 18}" font-size="12" fill="${css('--muted')}">k = 0</text><text x="${gx + gw}" y="${gy + 18}" text-anchor="end" font-size="12" fill="${css('--muted')}">k = 40</text><text x="${gx - 6}" y="${gy - gh + 10}" text-anchor="end" font-size="12" fill="${css('--muted')}">100%</text><text x="${gx - 6}" y="${gy}" text-anchor="end" font-size="12" fill="${css('--muted')}">50%</text><text x="${gx}" y="${gy - gh - 8}" font-size="13" fill="${css('--muted')}">acurácia LLM × especialista (ilustrativo)</text>`;
+    [['facil', css('--real'), 'fáceis'], ['dificil', css('--fg'), 'difíceis'], ['aleatoria', css('--llm'), 'aleatórios']].forEach(([key, cor, nome], j) => {
+      if (c <= 0) return; const v = curvaE[key]; let d = '';
+      v.forEach((y, i) => { const t = Math.min(1, Math.max(0, c * 4 - i + 1)); if (t <= 0) return; const px = gx + (i / 4) * gw, py = gy - ((y - 50) / 50) * gh; d += (d ? ' L' : 'M') + px + ' ' + py; });
+      s += `<path d="${d}" fill="none" stroke="${cor}" stroke-width="3" stroke-dasharray="${j === 1 ? '6 4' : 'none'}"/><text x="${gx + gw + 6}" y="${gy - ((v[4] - 50) / 50) * gh + 4}" font-size="12" fill="${cor}">${nome}</text>`;
+    });
+    return s; } },
+
+{ id: 'baselines', curto: 'LLM × clássicos', passo: 'Passo 6 (E) · Passo 4 (F) · Passo 7 (G) · LLM versus classificadores clássicos', titulo: 'O LLM faz algo que um classificador comum não faria?',
+  texto: ['Para saber se o aprendizado em contexto vale alguma coisa, damos os mesmos exemplos a três classificadores clássicos, treinados do zero em cada rodada: k vizinhos mais próximos (k-NN), regressão logística e SVM com kernel RBF. Todos são avaliados nos mesmos pontos de teste, contra o mesmo especialista.', 'Com poucos exemplos o LLM compete; com 40 a regressão logística acerta tudo no Problema E, porque a fronteira do especialista é uma reta e ela só precisa de uma reta. Na meia-lua (F) e no caso real (G), o LLM é comparado ao Perceptron treinado nos mesmos exemplos, no mesmo espaço de atributos que ele viu; ali o LLM fica um pouco acima.'],
+  analogia: 'É colocar o aluno novo na mesma prova que três alunos veteranos que estudaram pelas mesmas quatro, dez ou quarenta folhas de exercício.',
+  detalhe: 'Problema E, Passo 6: k-NN (k = 3 com 4 exemplos, k = 5 nos demais), regressão logística e SVM-RBF treinados nos mesmos k exemplos de cada estratégia e avaliados no mesmo teste; a tabela bloco2_table_06 e a figura bloco2_graphic_05 mostram a estratégia mista; CSV bloco2_e_passo6_baselines, 0 chamadas ao LLM. Problema F, Passo 4, e Problema G, Passo 7: Perceptron Estruturado nos mesmos exemplos (tabelas bloco2_table_10 e bloco3_table_03, figura bloco23_graphic_04). Números da completa de 14/10/2026, gpt-4o-mini, E1 com estratégia mista: LLM 81,3 / 81,2 / 87,4 / 96,7 %, regressão logística 76,0 / 90,0 / 96,2 / 100 %, SVM 78,8 / 84,3 / 88,2 / 95,2 %, k-NN 91,8 / 89,0 / 77,9 / 91,2 % para k = 4, 10, 20, 40. F (média das 3 sementes): LLM 85,7 / 89,6 / 91,1 / 91,6 % contra Perceptron 82,0 / 82,0 / 80,0 / 83,0 %.',
+  dur: 12,
+  draw(p){ const ks = [4, 10, 20, 40];
+    const E = { 'LLM (exemplos mistos)': [81.3, 81.2, 87.4, 96.7], 'Regressão logística': [76.0, 90.0, 96.2, 100], 'SVM (RBF)': [78.8, 84.3, 88.2, 95.2], 'k-NN': [91.8, 89.0, 77.9, 91.2] };
+    const F = { 'LLM': [85.7, 89.6, 91.1, 91.6], 'Perceptron nos mesmos exemplos': [82.0, 82.0, 80.0, 83.0] };
+    const cores = { 'LLM (exemplos mistos)': css('--llm'), 'Regressão logística': css('--c0'), 'SVM (RBF)': css('--real'), 'k-NN': css('--regua'), 'LLM': css('--llm'), 'Perceptron nos mesmos exemplos': css('--regua') };
+    let s = titulo('Problema E (Passo 6) e Problema F (Passo 4): acurácia contra o especialista, gpt-4o-mini, completa de 14/10');
+    function barras(x0, y0, w, h, dados, rotulo, prog){
+      const series = Object.keys(dados), nb = series.length, gw = w / ks.length, bw = gw / (nb + 1);
+      let o = `<text x="${x0}" y="${y0 - h - 14}" font-size="14" font-weight="600" fill="${css('--fg')}">${esc(rotulo)}</text>`;
+      [50, 75, 100].forEach(v => { const y = y0 - (v - 40) / 60 * h; o += `<line x1="${x0}" y1="${y}" x2="${x0 + w}" y2="${y}" stroke="${css('--grid')}"/><text x="${x0 - 6}" y="${y + 4}" text-anchor="end" font-size="11" fill="${css('--muted')}">${v}%</text>`; });
+      ks.forEach((k, i) => { o += `<text x="${x0 + i * gw + gw / 2}" y="${y0 + 16}" text-anchor="middle" font-size="12" fill="${css('--muted')}">k = ${k}</text>`;
+        series.forEach((sname, j) => { const t = Math.min(1, Math.max(0, prog * ks.length - i)); const v = dados[sname][i]; const hh = Math.max(0, (v - 40) / 60) * h * t;
+          o += `<rect x="${x0 + i * gw + (j + 0.5) * bw}" y="${y0 - hh}" width="${bw * 0.9}" height="${hh}" fill="${cores[sname]}" rx="2"/>`;
+          if (t >= 1) o += `<text x="${x0 + i * gw + (j + 0.95) * bw}" y="${y0 - hh - 3}" text-anchor="middle" font-size="9" fill="${css('--fg')}">${v}</text>`; }); });
+      series.forEach((sname, j) => { o += `<rect x="${x0 + j * 150}" y="${y0 + 28}" width="12" height="12" fill="${cores[sname]}" rx="2"/><text x="${x0 + j * 150 + 16}" y="${y0 + 39}" font-size="11" fill="${css('--muted')}">${esc(sname)}</text>`; });
+      return o; }
+    s += barras(60, 290, 560, 200, E, 'Problema E1 (especialista linear): LLM × k-NN × regressão logística × SVM', seg(p, 0, 0.5));
+    s += barras(60, 560, 560, 160, F, 'Problema F (meia-lua): LLM × Perceptron nos mesmos exemplos', seg(p, 0.5, 0.95));
+    s += cartao(680, 70, 300, 200, 'leitura', [{ t: 'Fronteira reta (E): com 40 exemplos a' }, { t: 'regressão logística acerta 100 %;' }, { t: 'o LLM chega a 96,7 %.' }, { t: '' }, { t: 'Fronteira curva (F): o LLM fica' }, { t: '5 a 10 pontos acima do Perceptron.' }]);
+    s += cartao(680, 300, 300, 150, 'o que é igual para todos', [{ t: 'mesmos exemplos, mesmo teste,' }, { t: 'mesmo especialista como gabarito;' }, { t: 'os clássicos não usam o LLM' }, { t: '(0 chamadas à API).' }]);
+    return s; } },
+
+{ id: 'real', curto: 'Caso real (G)', passo: 'Passos 1 a 7 (G) · caso real peso × altura', titulo: 'O caso real: 100 pessoas, peso e altura',
+  texto: ['Uma base real com 50 mulheres e 50 homens. A divisa ideal aqui é uma elipse, não uma reta. Separamos 70 pessoas para treino e 30 para teste.', 'Repetimos nos 70 de treino tudo o que fizemos no Problema A: zero-shot, exemplos do rótulo real, estimar a régua, teto, e eleger a melhor régua. Depois a régua eleita vira o especialista: ela rotula os exemplos que o LLM recebe para classificar as 30 pessoas de teste. Desde hoje o prompt também é testado com 2, 3 e 4 medidas.'],
+  analogia: 'Primeiro aprendemos como o LLM pensa sobre essas pessoas; depois usamos esse retrato dele como professor numa turma nova.',
+  detalhe: 'G1 mostra os valores normalizados em [−1, 1]; G2 mostra kg e m (a régua é sempre estimada no espaço normalizado). Nomes de classe Mulher/Homem ou A/B, atributos peso/altura ou x1/x2. Passo 5: eleição pela maior acurácia vs rótulo real no treino entre zero-shot e few-shot. Passo 6: k ∈ {0, 4, 10, 20, 40}, exemplos k/2 por classe real, e desde 14/10/2026 2, 3 ou 4 atributos no prompt (fator controlado; o zero-shot é uma coleta só). Passo 7: Perceptron nos mesmos exemplos e no mesmo espaço. Completa de 14/10/2026 (gpt, G1 Mulher/Homem, peso/altura): 43,3 % sem exemplos; com 40 exemplos 87,4 % com 2 atributos no prompt, 89,6 % com 3 e 85,2 % com 4. Em kg e m (G2) o LLM fica em 75 a 78 %.',
+  dur: 14,
+  draw(p){ const a = seg(p, 0, 0.2), b = seg(p, 0.25, 0.4), c = seg(p, 0.45, 0.7), d = seg(p, 0.72, 1);
+    let s = titulo('Problema G: peso × altura (dados ilustrativos)') + eixos('peso (kg)', 'altura (m)');
+    G.forEach((q, i) => { const treino = treinoG[i]; const cor = corClasse(q.c); s += b > 0 && !treino ? `<circle cx="${X(q.x)}" cy="${Y(q.y)}" r="7" fill="none" stroke="${cor}" stroke-width="2.5"/>` : ponto(q, a > 0 ? cor : css('--ink-soft'), {}); });
+    s += `<ellipse cx="${X(-1.1)}" cy="${Y(-0.8)}" rx="${1.9 * S}" ry="${1.5 * S}" fill="none" stroke="${css('--real')}" stroke-width="3" opacity="${a}" transform="rotate(-25 ${X(-1.1)} ${Y(-0.8)})"/>`;
+    const linhas = [];
+    if (b > 0) linhas.push({ t: 'cheio = treino (70)   vazio = teste (30)' });
+    if (c > 0) linhas.push({ t: 'Passos 2 a 5 nos 70 de treino:', negrito: true }, { t: 'zero-shot, 4/10/20/40 exemplos reais,' }, { t: 'régua em R², R³, R⁴, teto, eleição.' });
+    if (d > 0) linhas.push({ t: 'Passo 6 nos 30 de teste:', negrito: true }, { t: 'exemplos rotulados pela régua eleita;' }, { t: 'prompt com 2, 3 ou 4 medidas.', cor: css('--llm') });
+    s += cartao(690, 50, 290, 60 + 24 * Math.max(1, linhas.length), 'etapas', linhas.length ? linhas : [{ t: '50 mulheres e 50 homens' }]);
+    if (d > 0) { const dim = d < 0.33 ? 2 : d < 0.66 ? 3 : 4; s += cartao(690, 300, 290, 120, `prompt com ${dim} medidas`, [{ t: 'peso, altura' + (dim >= 3 ? ', peso×altura' : '') , mono: true }, { t: dim === 4 ? '+ peso², altura²' : '', mono: true }]); }
+    const gx = 700, gy = 560, gw = 260, gh = 100;
+    if (c > 0) { s += `<text x="${gx}" y="${gy - gh - 8}" font-size="13" fill="${css('--muted')}">acurácia do LLM no teste × k (gpt, G1)</text>`; curvaG.k.forEach((k, i) => { const h = (curvaG.acc[i] / 100) * gh * Math.min(1, Math.max(0, c * 5 - i)); s += `<rect x="${gx + i * 52}" y="${gy - h}" width="36" height="${h}" fill="${css('--llm')}" rx="3"/><text x="${gx + i * 52 + 18}" y="${gy + 16}" text-anchor="middle" font-size="12" fill="${css('--muted')}">k=${k}</text><text x="${gx + i * 52 + 18}" y="${gy - h - 4}" text-anchor="middle" font-size="11" fill="${css('--fg')}">${curvaG.acc[i]}%</text>`; }); }
+    return s; } },
+
+{ id: 'oraculo', curto: 'Oráculo', passo: 'Oráculo sobre E3, E1 e E2 · Passos 1 a 3', titulo: 'O teste de sanidade: os algoritmos acham uma régua que nós mesmos escondemos?',
+  texto: ['Antes de confiar nas réguas estimadas para o LLM, fazemos uma prova com gabarito. Escolhemos uma régua conhecida, rotulamos os pontos com ela e perguntamos aos dois algoritmos: qual é a régua?', 'Se eles recuperarem os pesos certos, qualquer fidelidade baixa depois vem do LLM, não dos algoritmos. Três réguas são testadas sobre o mesmo conjunto de pontos.'],
+  analogia: 'É dar ao detetive um caso em que você já sabe o culpado, só para ver se o método dele funciona.',
+  detalhe: 'Desde 14/10/2026 as três réguas ([1; 1], [0,3; 1,5] e [1,5; 0,3], os Problemas 1, 2 e 3 do texto do orientador) rotulam as gaussianas do Problema E, cujos centros diferem nas duas coordenadas. O Problema A de até 14/10/2026 não servia: com centros (−2, 0) e (2, 0), o peso de x2 sumia da comparação; desde 15/10/2026 o A tem centros (−2; −0,5) e (2; 0,5), mas o oráculo segue sobre o E. Medidas: acurácia da régua recuperada contra o rótulo do oráculo e cosseno entre W verdadeiro e recuperado. Completa de 14/10/2026: Perceptron 100 % nos três problemas com cosseno 0,998 a 1,000; NNLS 96,7 a 99,8 % com cosseno 0,989 a 0,998. Zero chamadas ao LLM.',
+  dur: 10,
+  draw(p){ const a = seg(p, 0, 0.25), b = seg(p, 0.3, 0.6), c = seg(p, 0.65, 0.95);
+    let s = titulo('Oráculo: uma régua conhecida rotula os pontos; os algoritmos tentam recuperá-la') + eixos();
+    s += pontos(E, perito, a * E.length, {});
+    if (a >= 1) s += centro(cenE[0], 'A', 0.9, wE) + centro(cenE[1], 'B', 0.9, wE) + fronteira(cenE, wE);
+    s += cartao(690, 50, 290, 90, 'régua escondida (verdadeira)', [{ t: 'W = [0,3 ; 1,5]', mono: true, negrito: true }]);
+    if (b > 0) s += cartao(690, 160, 290, 120, 'recuperada pelos algoritmos', [{ t: `Perceptron: [${fmt(0.3 + (wRec.perc[0] - 0.3) * b)} ; ${fmt(1.5 + (wRec.perc[1] - 1.5) * b)}]`, mono: true }, { t: `NNLS:       [${fmt(0.3 + (wRec.nnls[0] - 0.3) * b)} ; ${fmt(1.5 + (wRec.nnls[1] - 1.5) * b)}]`, mono: true }, { t: b >= 1 ? 'cosseno ≈ 0,9999' : '', cor: css('--muted') }]);
+    // vetores
+    const ox = 760, oy = 470, k = 70;
+    if (c > 0) { s += `<line x1="${ox}" y1="${oy}" x2="${ox + k * 0.3 / 1.5}" y2="${oy - k}" stroke="${css('--real')}" stroke-width="4"/><line x1="${ox}" y1="${oy}" x2="${ox + k * wRec.perc[0] / 1.5 + 4}" y2="${oy - k * wRec.perc[1] / 1.5}" stroke="${css('--regua')}" stroke-width="3" stroke-dasharray="6 4" opacity="${c}"/><text x="${ox - 60}" y="${oy + 20}" font-size="13" fill="${css('--muted')}">verde: W verdadeiro; tracejado: W recuperado</text><text x="${ox - 60}" y="${oy + 40}" font-size="13" fill="${css('--muted')}">mesma direção = mesma régua (só a escala muda)</text>`; }
+    return s; } },
+
+{ id: 'medidas', curto: 'As cinco medidas', passo: 'Seção IV.3 · as cinco medidas', titulo: 'As cinco notas que usamos, e nada mais',
+  texto: ['Fidelidade: a régua concorda com o LLM? Acurácia: a régua (ou o LLM) concorda com o rótulo real ou com o especialista? Consistência: a régua de A, com centros novos, concorda com o LLM em B e C?', 'Cohen\'s κ desconta a concordância que aconteceria por sorte: 0 é sorte pura, 1 é concordância perfeita, e 0,4 é a nossa barra mínima. F1-Macro olha cada classe separadamente, para uma classe rara não se esconder atrás da outra.'],
+  analogia: 'Dois corretores que marcam "certo" em 80 % das provas podem estar só jogando moeda; o κ pergunta quanto eles concordam além da moeda.',
+  detalhe: 'Fidelidade e consistência usam a mesma fórmula (fração de concordância), mudando só o par comparado e os centróides. κ = (P0 − Pe)/(1 − Pe) com faixas de Landis e Koch (0,4 a 0,6 moderada). F1-Macro = média do F1 das duas classes. Só essas cinco medidas entram em tabelas e figuras desde 09/10/2026; cosseno, w_ratio e γ são diagnósticos dos estimadores.',
+  dur: 10,
+  draw(p){ const rows = [['Fidelidade', 'régua', 'LLM', 'A, D, F, G', css('--regua'), css('--llm')], ['Acurácia', 'régua ou LLM', 'rótulo real / especialista', 'oráculo, E, F, G; contexto nos outros', css('--llm'), css('--real')], ['Consistência', 'régua do A, centros locais', 'LLM em B e C', 'B, C', css('--regua'), css('--llm')]];
+    let s = titulo('As cinco medidas da seção IV.3');
+    rows.forEach((r, i) => { const t = seg(p, i * 0.18, i * 0.18 + 0.2), y = 80 + i * 120; if (t <= 0) return;
+      s += `<g opacity="${t}"><text x="30" y="${y}" font-size="17" font-weight="600" fill="${css('--fg')}" font-family="Fraunces, Georgia, serif">${r[0]}</text><text x="30" y="${y + 22}" font-size="13" fill="${css('--muted')}">onde: ${r[3]}</text>`;
+      for (let j = 0; j < 12; j++) { const ok = j % 5 !== 3; s += `<rect x="${260 + j * 30}" y="${y - 18}" width="24" height="24" rx="4" fill="${r[4]}" opacity="0.9"/><rect x="${260 + j * 30}" y="${y + 12}" width="24" height="24" rx="4" fill="${ok ? r[5] : css('--c1')}" opacity="0.9"/>${ok ? '' : `<text x="${272 + j * 30}" y="${y + 56}" text-anchor="middle" font-size="16" font-weight="700" fill="${css('--fg')}">✕</text>`}`; }
+      s += `<text x="640" y="${y - 2}" font-size="13" fill="${css('--muted')}">${r[1]}</text><text x="640" y="${y + 28}" font-size="13" fill="${css('--muted')}">${r[2]}</text><text x="640" y="${y + 58}" font-size="14" font-weight="600" fill="${css('--fg')}">concordam em 10 de 12 = 83 %</text></g>`; });
+    const t4 = seg(p, 0.6, 0.8), t5 = seg(p, 0.8, 1);
+    if (t4 > 0) s += `<g opacity="${t4}"><text x="30" y="470" font-size="17" font-weight="600" fill="${css('--fg')}" font-family="Fraunces, Georgia, serif">Cohen's κ</text><rect x="30" y="485" width="420" height="14" rx="7" fill="${css('--grid')}"/><rect x="30" y="485" width="${420 * 0.33}" height="14" rx="7" fill="${css('--accent')}"/><line x1="${30 + 420 * 0.4}" y1="478" x2="${30 + 420 * 0.4}" y2="506" stroke="${css('--fg')}" stroke-width="2"/><text x="30" y="525" font-size="13" fill="${css('--muted')}">0 = sorte · 0,4 = moderada (barra de H1) · 1 = perfeita · exemplo: κ = 0,33 em B (gpt, 14/10)</text></g>`;
+    if (t5 > 0) s += `<g opacity="${t5}"><text x="520" y="470" font-size="17" font-weight="600" fill="${css('--fg')}" font-family="Fraunces, Georgia, serif">F1-Macro</text><text x="520" y="495" font-size="13" fill="${css('--muted')}">F1 da classe A e F1 da classe B,</text><text x="520" y="515" font-size="13" fill="${css('--muted')}">depois a média: as duas classes pesam igual.</text></g>`;
+    return s; } },
+
+{ id: 'fim', curto: 'O que sai no fim', passo: 'Da coleta ao texto', titulo: 'O que sai no fim: números, tabelas e figuras para a dissertação',
+  texto: ['Cada passo grava suas linhas em CSV e cada chamada ao LLM fica registrada com o prompt, a resposta e uma etiqueta que diz de onde veio. Depois uma auditoria confere se alguma resposta foi sorteada e quantas vezes o LLM mudou de ideia na mesma pergunta.', 'De tudo isso saem 71 tabelas e as figuras em cor e em preto e branco, uma por modelo. O orientador escreve o texto; o sistema entrega os números.'],
+  analogia: 'É a planilha final do campeonato: cada jogo foi anotado na hora, e no fim alguém confere se todas as súmulas batem.',
+  detalhe: 'Completa de 15/10/2026: 222.648 chamadas, 5 malformadas (Gemini, variante cot, por timeout), flip de 1,46 % no gpt e 0 % no Gemini, 2 h 57, 1.716 arquivos, 71 tabelas. Saídas por bloco (bloco1_*, bloco2_*, bloco23_*, bloco3_*, final_*), CSVs com timestamp, tabelas .tex e .png, log com o tempo de cada seção e llm_interactions em 30 partes. Hipóteses: H1 (métrica zero-shot) não sustentada em B nos dois modelos e sustentada em C; H4 refutada nos dois modelos. A execução com o A inclinado é esta; o próximo passo é corrigir o critério de parada do Perceptron e reestimar as métricas sem novas chamadas.',
+  dur: 9,
+  draw(p){ const etapas = ['coleta (LLM)', 'estimação (W)', 'medidas', 'CSVs', 'tabelas e figuras', 'auditoria', 'texto do orientador'];
+    let s = titulo('Do prompt à tabela');
+    etapas.forEach((e, i) => { const t = seg(p, i * 0.13, i * 0.13 + 0.15); if (t <= 0) return; const x = 40 + (i % 4) * 240, y = i < 4 ? 120 : 300;
+      s += `<g opacity="${t}"><rect x="${x}" y="${y}" width="200" height="70" rx="12" fill="${css('--accent-soft')}" stroke="${css('--accent')}"/><text x="${x + 100}" y="${y + 42}" text-anchor="middle" font-size="16" font-weight="600" fill="${css('--fg')}">${esc(e)}</text>${i < etapas.length - 1 && i !== 3 ? `<text x="${x + 215}" y="${y + 42}" font-size="22" fill="${css('--accent')}">→</text>` : ''}</g>`; });
+    if (p > 0.95) s += `<text x="40" y="450" font-size="15" fill="${css('--fg')}">Completa de 15/10/2026: 222.648 chamadas · 5 malformadas · flip 1,46 % (gpt) e 0 % (Gemini) · 2 h 57 · 71 tabelas.</text><text x="40" y="478" font-size="15" fill="${css('--fg')}">H1 (zero-shot): não sustentada em B, sustentada em C, nos dois modelos. H4: refutada nos dois. Próximo: corrigir o Perceptron e reestimar.</text>`;
+    return s; } },
+];
+
+/* ---------- motor ---------- */
+const palco = document.getElementById('palco'), barra = document.getElementById('barra'), lista = document.getElementById('cenas');
+const btPlay = document.getElementById('bt-play'), btAnt = document.getElementById('bt-ant'), btProx = document.getElementById('bt-prox');
+const selVel = document.getElementById('sel-vel'), chkAuto = document.getElementById('chk-auto');
+const reduzido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+let i = 0, p = 0, tocando = false, ultimo = null, timer = null;
+scenes.forEach((sc, k) => { const li = document.createElement('li'); const b = document.createElement('button'); b.type = 'button'; b.textContent = (k + 1) + ' · ' + sc.curto; b.title = sc.titulo; b.addEventListener('click', () => ir(k, !reduzido)); li.appendChild(b); lista.appendChild(li); });
+function narrar(){ const sc = scenes[i]; document.getElementById('n-passo').textContent = `Cena ${i + 1} de ${scenes.length} · ${sc.passo}`; document.getElementById('n-titulo').textContent = sc.titulo; document.getElementById('n-texto').innerHTML = sc.texto.map(t => `<p>${esc(t)}</p>`).join(''); document.getElementById('n-analogia').textContent = sc.analogia; document.getElementById('n-detalhe').textContent = sc.detalhe; }
+function render(){ try { palco.innerHTML = scenes[i].draw(p); } catch (e) { palco.innerHTML = `<text x="20" y="40" fill="red">erro na cena: ${esc(e.message)}</text>`; }
+  barra.style.width = (p * 100) + '%'; btPlay.textContent = tocando ? '❚❚ Pausar' : (p >= 1 ? '↻ Repetir' : '▶ Reproduzir');
+  Array.from(lista.querySelectorAll('button')).forEach((b, k) => b.setAttribute('aria-current', k === i ? 'true' : 'false'));
+  btAnt.disabled = i === 0; btProx.disabled = i === scenes.length - 1; }
+function quadro(ts){ if (!tocando) { ultimo = null; return; } if (ultimo == null) ultimo = ts; const dt = (ts - ultimo) / 1000; ultimo = ts;
+  p += dt * parseFloat(selVel.value) / scenes[i].dur;
+  if (p >= 1) { p = 1; tocando = false; render(); if (chkAuto.checked && i < scenes.length - 1) timer = setTimeout(() => ir(i + 1, true), 1400 / parseFloat(selVel.value)); return; }
+  render(); requestAnimationFrame(quadro); }
+function tocar(){ if (p >= 1) p = 0; tocando = true; ultimo = null; render(); requestAnimationFrame(quadro); }
+function pausar(){ tocando = false; clearTimeout(timer); render(); }
+function ir(k, auto){ clearTimeout(timer); tocando = false; i = Math.max(0, Math.min(scenes.length - 1, k)); p = reduzido ? 1 : 0; narrar(); render(); if (auto && !reduzido) tocar(); try { localStorage.setItem('cena', String(i)); } catch (e) {} }
+btPlay.addEventListener('click', () => tocando ? pausar() : tocar());
+btAnt.addEventListener('click', () => ir(i - 1, true));
+btProx.addEventListener('click', () => ir(i + 1, true));
+document.addEventListener('keydown', e => { if (document.getElementById('painel-animacao').hidden) return; if (e.target.tagName === 'SELECT' || e.target.tagName === 'INPUT') return; if (e.key === 'ArrowRight') ir(i + 1, true); else if (e.key === 'ArrowLeft') ir(i - 1, true); else if (e.key === ' ') { e.preventDefault(); tocando ? pausar() : tocar(); } });
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', render);
+let inicio = 0; try { inicio = parseInt(localStorage.getItem('cena') || '0', 10) || 0; } catch (e) {}
+ir(inicio, false); p = 1; render();   // a página abre com a cena completa (estado de repouso)
+window.pausar = pausar;
+})();
+</script>
+</body>
+</html>

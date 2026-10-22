@@ -1,0 +1,19 @@
+\begin{table}[htbp]
+\centering
+\small
+\caption{Perceptron Estruturado versus NNLS (google/gemini-2.5-flash-lite): fidelidade no A e consistência em B e C, por semente.}
+\label{tab:bloco1_A_perceptron_vs_nnls_por_semente_flashlite}
+\begin{tabular}{lrrrrrrrrr}
+\toprule
+ & \multicolumn{2}{c}{Fidelidade A (\%)} &  & \multicolumn{2}{c}{Consist.\ B (\%)} & \multicolumn{2}{c}{Consist.\ C (\%)} &  &  \\ \cmidrule(lr){2-3} \cmidrule(lr){5-6} \cmidrule(lr){7-8}
+Semente & Perc. & NNLS & cos & Perc. & NNLS & Perc. & NNLS & $\kappa$ B & $\kappa$ C \\
+\midrule
+7 & 82,0 & 83,3 & 0,997 & 72,0 & 75,0 & 93,0 & 93,0 & 0,291 & 0,859 \\
+42 & 83,3 & 84,0 & 1,000 & 69,0 & 71,0 & 92,0 & 92,0 & 0,159 & 0,839 \\
+123 & 78,7 & 80,7 & 0,996 & 77,0 & 76,0 & 92,0 & 90,0 & 0,339 & 0,839 \\
+\midrule
+\textbf{média} & \textbf{81,3} & \textbf{82,7} & \textbf{0,998} & \textbf{72,7} & \textbf{74,0} & \textbf{92,3} & \textbf{91,7} & \textbf{0,263} & \textbf{0,846} \\
+\bottomrule
+\multicolumn{10}{p{0.95\linewidth}}{\footnotesize Zero-shot, configuração base (classes A/B, atributos x1/x2, prompt padrão). cos = cosseno entre os $\hat{W}$ dos dois estimadores. $\kappa$ do Perceptron.} \\
+\end{tabular}
+\end{table}

@@ -1,7 +1,7 @@
 """Auditoria offline das interações com o LLM de uma execução.
 
 Lê os arquivos ``llm_interactions_parte*.json`` (ou ``llm_interactions.json``) de uma
-pasta ``execucao_*/`` e verifica, SEM chamar a API, três propriedades que sustentam a
+pasta ``resultados/execucao_*/`` e verifica, SEM chamar a API, quatro propriedades que sustentam a
 credibilidade das métricas de κ/consistência do trabalho:
 
 1. **Taxa de fallback do parser** — fração de respostas ``malformed=True`` que caíram no
@@ -13,10 +13,14 @@ credibilidade das métricas de κ/consistência do trabalho:
    esse número é honestidade experimental, não é falha do código.
 3. **Breakdown por (provider, modelo)** — fallback e flip por modelo, mais os snapshots
    ``model_resolved`` e os provedores de inferência observados (OpenRouter).
+4. **Breakdown por regime** — a partir da ``tag`` de cada registro
+   (``bloco1|problema=D|passo=3|regime=passo3_exemplos_rotulo_real|k=10|rep=1|seed=42``): malformadas e flip
+   por (problema, regime, k). O flip é de RÓTULO (``parsed_label``); a divergência do
+   texto bruto fica em ``taxa_flip_raw_T0``.
 
 Uso:
     python src/audit_interactions.py                 # audita a execução completa mais recente
-    python src/audit_interactions.py execucao_2026-07-05_12-34-52_completa
+    python src/audit_interactions.py resultados/execucao_2026-07-05_12-34-52_completa
     python src/audit_interactions.py --json          # saída em JSON (para CI/log)
 
 Código de saída: 0 se a taxa de malformadas <= --max-malformed (padrão 5%); 1 caso
@@ -24,7 +28,7 @@ contrário. A não-determinância de ``T=0`` é apenas reportada (não afeta o c
 saída), pois é um achado esperado — a menos que ultrapasse --max-flip (padrão 100%,
 desligado), útil para detectar regressões grosseiras.
 
-Depende apenas da biblioteca padrão (json, glob, os, argparse, collections).
+Depende apenas da biblioteca padrão (json, glob, os, re, argparse, collections).
 """
 from __future__ import annotations
 
@@ -32,9 +36,12 @@ import argparse
 import glob
 import json
 import os
+import re
 import sys
 from collections import Counter, defaultdict
 from typing import Dict, List, Optional, Tuple
+
+RESULTADOS_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "resultados")
 
 Record = Dict[str, object]
 
@@ -70,7 +77,10 @@ def load_interactions(exec_dir: str) -> List[Record]:
 
 def is_rapido(exec_dir: str) -> bool:
     """True se a execução foi rodada em modo --rapido (não serve para resultados finais)."""
+    # Log único ou particionado em 10 MiB (`log_execucao_parte001.txt` é o início da execução).
     log = os.path.join(exec_dir, "log_execucao.txt")
+    if not os.path.exists(log):
+        log = os.path.join(exec_dir, "log_execucao_parte001.txt")
     if not os.path.exists(log):
         return False
     with open(log, encoding="utf-8", errors="ignore") as fh:
@@ -78,7 +88,7 @@ def is_rapido(exec_dir: str) -> bool:
     return "MODO RÁPIDO" in head or "--rapido" in head
 
 
-def find_latest_execution(root: str = ".", allow_rapido: bool = False) -> Optional[str]:
+def find_latest_execution(root: str = RESULTADOS_DIR, allow_rapido: bool = False) -> Optional[str]:
     """Retorna a pasta execucao_* mais recente que tenha JSON de interações.
 
     Por padrão pula execuções --rapido (curtas, seed única) — elas não servem para
@@ -117,14 +127,19 @@ def _stats_basicas(records: List[Record], n_exemplos: int = 5) -> Dict[str, obje
     # divergência de resposta. O modelo ENTRA na chave — sem ele, execuções
     # multi-modelo contariam divergência ENTRE modelos como "flip", inflando a
     # métrica (não-determinismo é o mesmo modelo respondendo diferente).
+    # O flip é de RÓTULO (parsed_label): "A" e "A." são a mesma decisão. A
+    # divergência do texto bruto (raw_response) é reportada à parte.
+    # (Até 08/10/2026 o flip comparava raw_response e contava formatação.)
     by_key: Dict[Tuple[str, str, str, str], List[str]] = defaultdict(list)
+    by_key_raw: Dict[Tuple[str, str, str, str], List[str]] = defaultdict(list)
     for r in records:
-        by_key[(str(r.get("provider")), str(r.get("model")),
-                _stable(r.get("prompt")), _stable(r.get("point")))].append(
-            _stable(r.get("raw_response"))
-        )
+        chave = (str(r.get("provider")), str(r.get("model")),
+                 _stable(r.get("prompt")), _stable(r.get("point")))
+        by_key[chave].append(_stable(r.get("parsed_label")))
+        by_key_raw[chave].append(_stable(r.get("raw_response")))
     repeated = {k: v for k, v in by_key.items() if len(v) > 1}
     divergent = {k: v for k, v in repeated.items() if len(set(v)) > 1}
+    divergent_raw = {k: v for k, v in by_key_raw.items() if len(v) > 1 and len(set(v)) > 1}
     repeated_calls = sum(len(v) for v in repeated.values())
 
     examples = []
@@ -143,6 +158,8 @@ def _stats_basicas(records: List[Record], n_exemplos: int = 5) -> Dict[str, obje
         "chamadas_repetidas": repeated_calls,
         "queries_divergentes": len(divergent),
         "taxa_flip_T0": (len(divergent) / len(repeated)) if repeated else 0.0,
+        "queries_divergentes_raw": len(divergent_raw),
+        "taxa_flip_raw_T0": (len(divergent_raw) / len(repeated)) if repeated else 0.0,
         "exemplos_divergencia": examples,
     }
 
@@ -173,6 +190,27 @@ def audit(records: List[Record]) -> Dict[str, object]:
         por_modelo[f"{prov}/{model}"] = m
 
     stats["por_modelo"] = por_modelo
+
+    # Breakdown por PROBLEMA, PASSO e REGIME (tag gravada pelo runner, formato de 13/10/2026:
+    # "bloco1|problema=D|passo=3|regime=passo3_exemplos_rotulo_real|k=10|rep=1|seed=42").
+    # Registros sem tag (execuções antigas sem migração, Problema E de 07/2026…) caem em
+    # "sem_tag". O flip só é mensurável onde o mesmo prompt+ponto se repete no grupo.
+    por_regime: Dict[str, Dict[str, object]] = {}
+    grupos_reg: Dict[Tuple[str, str, str, str, str, str], List[Record]] = defaultdict(list)
+    for r in records:
+        tag = str(r.get("tag") or "")
+        m_reg = re.search(r"regime=([A-Za-z0-9_]+)", tag)
+        m_k = re.search(r"\bk=(\d+)", tag)
+        m_prob = re.search(r"problema=([A-Za-z0-9_]+)", tag)
+        m_passo = re.search(r"\bpasso=(\d+)", tag)
+        regime = m_reg.group(1) if m_reg else "sem_tag"
+        k = m_k.group(1) if m_k else "-"
+        prob = m_prob.group(1) if m_prob else "-"
+        passo = m_passo.group(1) if m_passo else "-"
+        grupos_reg[(str(r.get("provider")), str(r.get("model")), prob, passo, regime, k)].append(r)
+    for (prov, model, prob, passo, regime, k), recs in sorted(grupos_reg.items()):
+        por_regime[f"{prov}/{model}|{prob}|passo={passo}|{regime}|k={k}"] = _stats_basicas(recs, n_exemplos=0)
+    stats["por_regime"] = por_regime
     return stats
 
 
@@ -216,6 +254,16 @@ def format_report(exec_dir: str, stats: Dict[str, object]) -> str:
                 L.append(f"        snapshot(s) resolvido(s): {', '.join(m['models_resolved'])}")
             if m.get("inference_providers"):
                 L.append(f"        provedor(es) de inferência: {', '.join(m['inference_providers'])}")
+    por_regime = stats.get("por_regime") or {}
+    if any(k.split("|")[3] != "sem_tag" for k in por_regime):
+        L.append("")
+        L.append("  [4] Breakdown por problema, passo e regime (tag: problema | passo | regime | k) — fallback | flip T=0")
+        L.append("      (flip só é mensurável onde o mesmo prompt+ponto se repete no grupo)")
+        for nome, m in por_regime.items():
+            L.append(
+                f"      {nome:<60} n={m['total_chamadas']:>6,}  malf={m['taxa_malformadas']:.3%}  "
+                f"rep={m['queries_repetidas']:>5,}  flip={m['taxa_flip_T0']:.3%}"
+            )
     L.append("=" * 68)
     return "\n".join(L)
 
@@ -224,7 +272,8 @@ def main(argv: Optional[List[str]] = None) -> int:
     ap = argparse.ArgumentParser(description="Auditoria offline das interações do LLM.")
     ap.add_argument("exec_dir", nargs="?", default=None,
                     help="Pasta execucao_* (padrão: a completa mais recente).")
-    ap.add_argument("--root", default=".", help="Raiz onde procurar execucao_* (padrão: .).")
+    ap.add_argument("--root", default=RESULTADOS_DIR,
+                    help="Raiz onde procurar execucao_* (padrão: <repo>/resultados).")
     ap.add_argument("--allow-rapido", action="store_true",
                     help="Permite auditar execuções em modo --rapido.")
     ap.add_argument("--max-malformed", type=float, default=0.05,

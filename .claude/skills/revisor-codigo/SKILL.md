@@ -108,7 +108,7 @@ justifique o ganho concreto — abstrair cedo demais atrapalha tanto quanto não
 O código implementa um experimento de **otimização inversa sobre decisões de LLM**:
 chama o GPT-4o-mini para classificar pontos 2D, estima uma métrica diagonal Ŵ_LLM
 (Perceptron Estruturado + NNLS) e roda um grid de experimentos (Blocos 1–3, Problemas
-A–G) salvando CSVs, PNGs e logs em `execucao_AAAA-MM-DD_HH-MM-SS_{completa|smoke}/`
+A–G) salvando CSVs, PNGs e logs em `resultados/execucao_AAAA-MM-DD_HH-MM-SS_{completa|smoke}/`
 (sufixo `_smoke` = execução `--rapido`; análises usam sempre as `_completa`).
 
 **Estado atual — verifique antes de recomendar (muita coisa já foi feita):**
@@ -119,9 +119,16 @@ A–G) salvando CSVs, PNGs e logs em `execucao_AAAA-MM-DD_HH-MM-SS_{completa|smo
   `relaxed_perceptron.py` e `least_squares_inverse.py` (estimadores),
   `classical_baselines.py`, `audit_interactions.py` (auditoria offline) e
   LP Max-Margin removido (módulo apagado; não existe `src/arquivado/`).
-- **Já existe suíte de testes** em `tests/` (pytest): parser, métricas, estimadores,
-  cliente LLM, geração de dados, auditoria e particionamento de JSON/log.
-- Há um modo `--rapido`/`--smoke` no runner (1 repetição, seed 42, few-shot reduzido).
+- **Já existe suíte de testes** em `tests/` (`unittest`, 361 testes em 14/10/2026; rode
+  `python -m unittest discover -s tests`, o pytest não está nas dependências): parser,
+  métricas, estimadores, cliente LLM, geração de dados, auditoria, tabelas, estilo P&B,
+  infraestrutura do runner (`test_infra_main.py`: grades do `--rapido`, nome da pasta, `Tee`,
+  roundtrip do JSON particionado, ciclo de vida do cliente da API), regressão numérica e
+  particionamento de JSON/log.
+- Há um modo `--rapido`/`--smoke` no runner (1 repetição, seed 42, few-shot reduzido; grades em
+  `GRADES_MODO_RAPIDO`, aplicadas por `aplicar_modo_rapido()`; pasta por `nome_pasta_execucao()`).
+- O cliente `AsyncOpenAI` é criado por coleta dentro do laço de eventos e fechado no `finally`
+  (global `async_client = None` em produção; só injeção nos testes).
 - Chaves de API vêm de `.env` via python-dotenv; chamadas assíncronas com
   `asyncio.Semaphore(MAX_CONCURRENCY)` e `MAX_FORMAT_RETRIES` para malformadas.
 
@@ -129,9 +136,9 @@ A–G) salvando CSVs, PNGs e logs em `execucao_AAAA-MM-DD_HH-MM-SS_{completa|smo
 Pontos onde a engenharia deste código ainda merece atenção:
 
 1. **O runner ainda é grande (~7500 linhas).** Avalie se vale extrair mais (plots,
-   pipelines externos, fases) — com proporcionalidade: é código de pesquisa, não
+   Problemas F e G, passos) — com proporcionalidade: é código de pesquisa, não
    produção; abstração nova precisa de ganho concreto.
-2. **Lacunas de cobertura de teste.** O que ainda NÃO está testado (funções de fase,
+2. **Lacunas de cobertura de teste.** O que ainda NÃO está testado (funções de passo,
    seleção de exemplos, reordenação, augmentação R3/R4)? Priorize o que afeta a
    corretude das métricas reportadas na dissertação.
 3. **Cliente de LLM.** Rate limit, retries com backoff, timeouts e erros transitórios
@@ -150,7 +157,7 @@ Pontos onde a engenharia deste código ainda merece atenção:
 7. **Numérica dos estimadores.** Clip, projeção $\max(0,\mathbf{w})$, condição de
    parada da busca binária em $\gamma$ e limite de épocas — loops sem convergência
    garantida precisam de teto e de log quando o teto é atingido.
-8. **Higiene do repositório.** Pastas `execucao_*` pesadas (PNGs, JSONs de ~10 MB) e
+8. **Higiene do repositório.** Pastas `resultados/execucao_*` pesadas (PNGs, JSONs de ~10 MB) e
    PDFs versionados no git; `requirements.txt` sem versões fixadas; segredos fora do
    código e do histórico; artefatos LaTeX (`.aux`, `.log`) sem `.gitignore`.
 

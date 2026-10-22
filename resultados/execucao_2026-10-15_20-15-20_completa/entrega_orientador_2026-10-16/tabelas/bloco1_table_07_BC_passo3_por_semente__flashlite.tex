@@ -1,0 +1,23 @@
+\begin{table}[htbp]
+\centering
+\footnotesize
+\caption{Problemas B e C, Passo 3 (google/gemini-2.5-flash-lite): transferência com a métrica zero-shot e com a eleita do A, por semente.}
+\label{tab:BC_passo3_por_semente_flashlite}
+\begin{tabular}{lllrrrrrrrrr}
+\toprule
+ &  &  & \multicolumn{4}{c}{Consistência (\%)} & \multicolumn{4}{c}{$\kappa$} &  \\ \cmidrule(lr){4-7} \cmidrule(lr){8-11}
+Prob. & Algoritmo & Métrica de origem (A) & seed 7 & seed 42 & seed 123 & média & seed 7 & seed 42 & seed 123 & média & F1-Macro \\
+\midrule
+B & perceptron & zero-shot & 76,0 & 73,0 & 68,0 & 72,3 & 0,370 & 0,196 & 0,208 & 0,258 & 60,1 \\
+B & perceptron & eleita (10-shot) & 75,3 & 60,0 & 67,0 & 67,4 & 0,374 & 0,061 & 0,183 & 0,206 & 56,1 \\
+B & nnls & zero-shot & 74,0 & 70,0 & 76,0 & 73,3 & 0,342 & 0,168 & 0,326 & 0,279 & 61,3 \\
+B & nnls & eleita (10-shot) & 68,0 & 59,3 & 61,7 & 63,0 & 0,250 & 0,058 & 0,120 & 0,142 & 52,0 \\
+\midrule
+C & perceptron & zero-shot & 94,0 & 92,0 & 92,0 & 92,7 & 0,879 & 0,839 & 0,839 & 0,852 & 92,6 \\
+C & perceptron & eleita (10-shot) & 90,0 & 92,3 & 92,7 & 91,7 & 0,799 & 0,844 & 0,852 & 0,832 & 91,6 \\
+C & nnls & zero-shot & 95,0 & 92,0 & 92,0 & 93,0 & 0,899 & 0,839 & 0,839 & 0,859 & 92,9 \\
+C & nnls & eleita (10-shot) & 89,3 & 91,0 & 92,3 & 90,9 & 0,786 & 0,818 & 0,846 & 0,816 & 90,8 \\
+\bottomrule
+\multicolumn{12}{p{0.95\linewidth}}{\footnotesize Rótulos zero-shot do LLM em B e C; só $\hat{W}$ vem do A, centróides recalculados pelos rótulos do LLM no próprio problema. ``eleita'' = métrica do A marcada pelo runner (eleita\_passo6). Na origem few-shot, o valor por semente é a média das repetições (sorteios) dessa semente. $\kappa$ = Cohen's $\kappa$ (faixas de Landis e Koch, 1977). F1-Macro em \%, média das sementes. Passos de B e C: o LLM rotula os 100 pontos em zero-shot (Passo 2) e cada métrica do A é aplicada a esses rótulos (Passo 3).} \\
+\end{tabular}
+\end{table}

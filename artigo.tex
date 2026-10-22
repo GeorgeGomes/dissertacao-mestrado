@@ -28,7 +28,7 @@
 % ---- Gráficos e cores ----
 \usepackage{graphicx}
 \usepackage{placeins}
-\graphicspath{{execucao_2026-07-05_12-34-52_completa/}}
+\graphicspath{{resultados/execucao_2026-07-05_12-34-52_completa/}}
 \usepackage{xcolor}
 \definecolor{myblue}{RGB}{0,70,127}
 
@@ -256,7 +256,7 @@ relacionados; a Seção~\ref{sec:metodologia} descreve a metodologia dos três b
 Seção~\ref{sec:resultados} apresenta os resultados; a Seção~\ref{sec:discussao} analisa as
 hipóteses à luz da evidência; as Seções~\ref{sec:limitacoes} e~\ref{sec:futuro} discutem
 limitações e trabalho futuro; e a Seção~\ref{sec:conclusao} conclui. O
-Apêndice~\ref{ap:protocolo} detalha o protocolo experimental de coleta.
+Apêndice~\ref{ap:coleta} detalha o protocolo experimental de coleta.
 
 % ============================================================
 \section{Fundamentação Teórica}
@@ -615,7 +615,7 @@ LLMs~\cite{atilLLMStability2024, windischOneRun2026}; o desenho usa múltiplas s
 ($s \in \{42, 123, 7\}$) e $R = 3$ repetições por configuração justamente para medir essa
 variância. Os detalhes operacionais da coleta (chamadas assíncronas, tratamento de
 respostas malformadas, grade completa de nomes de classe, nomes de atributo, variantes de
-\emph{prompt} e tamanhos \emph{few-shot}) estão descritos no Apêndice~\ref{ap:protocolo};
+\emph{prompt} e tamanhos \emph{few-shot}) estão descritos no Apêndice~\ref{ap:coleta};
 registra-se desde já que o \emph{fallback} de respostas malformadas \emph{não foi
 acionado} nesta execução ($0{,}00\%$ de $129\,868$ chamadas), de modo que as métricas de
 $\kappa$/consistência não contêm rótulos pseudo-aleatórios.
@@ -711,12 +711,13 @@ das porcentagens.
 
 \subsection{Análise Estatística}
 
-Reportam-se intervalos de confiança de $95\%$ via \emph{bootstrap} ($10^4$ reamostragens)
-e o tamanho de efeito de Cohen ($d$) para as comparações principais. A significância é
-avaliada pelo IC \emph{bootstrap} de $95\%$ não conter zero; com apenas $3$ sementes, o
-teste de Wilcoxon pareado \emph{não é aplicável} ($n<5$), e as conclusões estatísticas
-devem ser lidas como \emph{indicativas}, não confirmatórias, dado o pequeno número de
-observações independentes. A estabilidade de \West{} entre sementes é medida pela
+Cada métrica é reportada pela média e pela faixa (mínimo e máximo) observada entre as
+sementes, e as comparações principais pela diferença pareada por semente, acompanhada
+do tamanho de efeito de Cohen ($d$). Uma diferença é dita \emph{consistente} quando
+todas as sementes apontam no mesmo sentido (a faixa da diferença não contém zero). Com
+apenas $3$ sementes não se aplicam testes de hipótese formais, e as conclusões
+estatísticas devem ser lidas como \emph{indicativas}, não confirmatórias, dado o
+pequeno número de observações independentes. A estabilidade de \West{} entre sementes é medida pela
 similaridade de cosseno e pelo coeficiente de variação (CV) da razão $w_1/w_2$.
 
 % ============================================================
@@ -731,7 +732,7 @@ $R=3$, $129\,868$ chamadas). Salvo indicação explícita, os valores referem-se
 
 \subsection{Bloco 1 — Estimação e Fidelidade (Problema A)}
 
-A Tabela~\ref{tab:fase_a} apresenta a fidelidade dos dois estimadores no Problema A, agora
+A Tabela~\ref{tab:a_passos_2_a_5} apresenta a fidelidade dos dois estimadores no Problema A, agora
 discriminada pelos dois modelos avaliados. Os
 valores são \emph{modestos}, um sinal honesto de que a métrica diagonal captura o LLM apenas
 parcialmente. O NNLS supera levemente o Perceptron nos dois modelos, e os estimadores
@@ -745,7 +746,7 @@ mesmo padrão qualitativo, o que é coerente com seu papel de réplica de contra
 \centering
 \caption{Fidelidade da estimação no Problema A, por semente e por modelo (classes A/B,
 zero-shot).}
-\label{tab:fase_a}
+\label{tab:a_passos_2_a_5}
 \small
 \begin{tabular}{lrrrr}
 \toprule
@@ -766,7 +767,7 @@ zero-shot).}
 
 \begin{figure}[ht]
 \centering
-\includegraphics[width=0.92\textwidth]{bloco1_07_algorithm_comparison__gpt4mini.png}
+\includegraphics[width=0.92\textwidth]{bloco1_graphic_06_A_passo4_perceptron_vs_nnls__gpt4mini_color.png}
 \caption{Bloco 1: comparação Perceptron $\times$ NNLS (fidelidade no Problema A,
 consistência nos Problemas B/C e dispersão das direções de \West{} estimadas). Os dois
 estimadores produzem métricas quase colineares (cosseno $0{,}986$).}
@@ -776,16 +777,16 @@ estimadores produzem métricas quase colineares (cosseno $0{,}986$).}
 \subsection{Bloco 1 — Teste-Oráculo de Sanidade}
 
 Antes de interpretar a fidelidade modesta como propriedade do LLM, verifica-se que os
-estimadores \emph{funcionam quando o oráculo existe}. A Tabela~\ref{tab:oracle} confirma:
+estimadores \emph{funcionam quando o oráculo existe}. A Tabela~\ref{tab:oraculo} confirma:
 sobre dados rotulados por métricas conhecidas, a fidelidade é de $95$–$100\%$ e a direção
 recuperada tem cosseno até $0{,}9999$. Portanto, a fidelidade modesta no LLM
-(Tabela~\ref{tab:fase_a}) reflete o \emph{LLM}, não uma deficiência dos estimadores.
+(Tabela~\ref{tab:a_passos_2_a_5}) reflete o \emph{LLM}, não uma deficiência dos estimadores.
 
 \begin{table}[ht]
 \centering
 \caption{Teste-oráculo: recuperação de $W$ conhecido. ``cos'' é o cosseno entre o $W$
 recuperado e o verdadeiro.}
-\label{tab:oracle}
+\label{tab:oraculo}
 \begin{tabular}{llrrrr}
 \toprule
 \multirow{2}{*}{\textbf{Config.}} & \multirow{2}{*}{\textbf{$W$ verd.}} &
@@ -803,11 +804,11 @@ Expert aniso.\ $x_1$ & $[1{,}5;\,0{,}3]$ & 100,0 & 0,998  & 99,3 & 0,989 \\
 
 \begin{figure}[ht]
 \centering
-\includegraphics[width=0.9\textwidth]{bloco1_03_oracle_w_recovery.png}
+\includegraphics[width=0.9\textwidth]{bloco1_graphic_19_oraculo_passos_1_a_3_color.png}
 \caption{Teste-oráculo: recuperação de $W$ conhecido. Sobre dados rotulados por uma
 métrica sintética, os estimadores atingem fidelidade de $95$–$100\%$, confirmando que a
 fidelidade modesta observada no LLM reflete o modelo, não uma falha do método.}
-\label{fig:oracle}
+\label{fig:oraculo}
 \end{figure}
 
 \FloatBarrier
@@ -817,10 +818,9 @@ fidelidade modesta observada no LLM reflete o modelo, não uma falha do método.
 O ponto de partida da leitura é o próprio Problema A: a fidelidade de estimação
 \emph{in-domain} do \texttt{gpt-4o-mini} é de $84{,}0\%$ (Perceptron) a $85{,}8\%$ (NNLS)
 na média das sementes
-(Tabela~\ref{tab:fase_a}), e é contra esse patamar de origem que a transferência deve ser
-comparada. A Tabela~\ref{tab:fase_bc} apresenta consistência e $\kappa$ (com IC
-\emph{bootstrap} de
-$95\%$) nas transferências, em zero-shot e com $4$ exemplos, para os dois modelos. O
+(Tabela~\ref{tab:a_passos_2_a_5}), e é contra esse patamar de origem que a transferência deve ser
+comparada. A Tabela~\ref{tab:bc_passo3} apresenta consistência e $\kappa$ (média e faixa
+mínimo--máximo entre sementes) nas transferências, em zero-shot e com $4$ exemplos, para os dois modelos. O
 padrão é claro e
 \emph{assimétrico}: o Problema B é difícil em zero-shot ($\kappa = 0{,}33$, ``razoável''),
 enquanto o Problema C já nasce alto ($\kappa = 0{,}75$, ``substancial''). Poucos exemplos
@@ -834,19 +834,19 @@ $\kappa = 0{,}26$ no Problema B contra $0{,}85$ no C, ou seja, \emph{ambos os mo
 ficam abaixo do limiar $\kappa > 0{,}4$ de H1 no Problema B em zero-shot, e ambos o
 satisfazem com folga no C. Com $4$ exemplos, porém, o \texttt{gemini-2.5-flash-lite}
 recupera o Problema B com mais força que o \texttt{gpt-4o-mini} (consistência $0{,}948$
-contra $0{,}837$, com IC mais estreito), indicando que a re-ancoragem por exemplos é
+contra $0{,}837$, com faixa entre sementes mais estreita), indicando que a re-ancoragem por exemplos é
 ainda mais eficaz nesse modelo.
 
 \begin{table}[ht]
 \centering
-\caption{Transferência: consistência e $\kappa$ (Perceptron), IC \emph{bootstrap} $95\%$,
-por modelo.}
-\label{tab:fase_bc}
+\caption{Transferência: consistência e $\kappa$ (Perceptron), média e faixa
+mínimo--máximo entre sementes, por modelo.}
+\label{tab:bc_passo3}
 \small
 \begin{tabular}{llrr}
 \toprule
-\textbf{Problema} & \textbf{$n$-shot} & \textbf{Consistência [IC$_{95}$]} &
-\textbf{$\kappa$ [IC$_{95}$]} \\
+\textbf{Problema} & \textbf{$n$-shot} & \textbf{Consistência [mín--máx]} &
+\textbf{$\kappa$ [mín--máx]} \\
 \midrule
 \multicolumn{4}{l}{\texttt{gpt-4o-mini}} \\
 \midrule
@@ -870,7 +870,7 @@ No Problema B em zero-shot, a métrica estimada é \emph{significativamente infe
 euclidiana ($\Delta_{\text{métrica}-\text{euclid.}} = -0{,}087$;
 IC$_{95} = [-0{,}180;\,-0{,}040]$, exclui zero). O resultado é importante e merece leitura
 cuidadosa, pois \emph{não} é falha de estimação: o teste-oráculo
-(Tabela~\ref{tab:oracle}) mostra que, quando existe uma métrica anisotrópica real, os
+(Tabela~\ref{tab:oraculo}) mostra que, quando existe uma métrica anisotrópica real, os
 estimadores a recuperam. O que ocorre é que \emph{a direção codificada pelas decisões
 zero-shot do LLM no Problema A não generaliza geometricamente} para B: transferi-la deforma
 o espaço numa direção que não corresponde à nova disposição das classes, ficando atrás da
@@ -1007,7 +1007,7 @@ Vermelho/Azul     & 82,2 & 73,0 & 73,3 & 77,3 & 68,0 & 90,0 \\
 
 \begin{figure}[ht]
 \centering
-\includegraphics[width=0.9\textwidth]{bloco1_13_prompt_variants__gpt4mini.png}
+\includegraphics[width=0.9\textwidth]{bloco1_graphic_18_vies_variantes_prompt__gpt4mini_color.png}
 \caption{Bloco 1: efeito das variantes de \emph{prompt} sobre a direção de \West{} e a
 fidelidade. A variante \emph{tabular} desloca a medição, alertando que a forma de
 apresentar as coordenadas interfere no critério inferido.}
@@ -1019,14 +1019,14 @@ apresentar as coordenadas interfere no critério inferido.}
 \paragraph{Cegueira em zero-shot.}
 Sem exemplos, o LLM é praticamente incapaz de reproduzir o critério do especialista: a
 acurácia média, sobre os três peritos, é de $55{,}2\% \pm 5{,}6\%$, pouco acima do acaso. A
-Tabela~\ref{tab:fase_e} mostra a curva de aprendizado por estratégia (especialista
+Tabela~\ref{tab:e_passo3} mostra a curva de aprendizado por estratégia (especialista
 aniso.\ $x_2$).
 
 \begin{table}[ht]
 \centering
 \caption{Bloco 2: acurácia LLM $\times$ especialista por estratégia e $n$-shot
 (aniso.\ $x_2$). Melhor por linha em \textbf{negrito}.}
-\label{tab:fase_e}
+\label{tab:e_passo3}
 \begin{tabular}{lrrrr}
 \toprule
 \textbf{$n$-shot} & \textbf{Easy} & \textbf{Hard} & \textbf{Mixed} & \textbf{Random} \\
@@ -1042,7 +1042,7 @@ aniso.\ $x_2$).
 
 \begin{figure}[ht]
 \centering
-\includegraphics[width=0.9\textwidth]{bloco2_04_phase_e_learning_curve__gpt4mini.png}
+\includegraphics[width=0.9\textwidth]{bloco2_graphic_03_E1_passo3_curva__gpt4mini_color.png}
 \caption{Bloco 2: curva de aprendizado por estratégia de seleção de exemplos. \emph{Easy}
 e \emph{Random} dominam com poucos exemplos; \emph{Hard} só alcança as demais em alto
 volume ($40$-shot).}
@@ -1095,7 +1095,7 @@ aniso.\ $x_1$ & 92,4\% ($\kappa$0,850)         & 95,6\% ($\kappa$0,912)    &
 
 \begin{figure}[ht]
 \centering
-\includegraphics[width=0.88\textwidth]{bloco2_09_classical_baselines__gpt4mini.png}
+\includegraphics[width=0.88\textwidth]{bloco2_graphic_05_E1_passo6_baselines__gpt4mini_color.png}
 \caption{Bloco 2: LLM com aprendizado em contexto vs.\ \emph{baselines} clássicos (k-NN, Regressão
 Logística, SVM-RBF) nos mesmos exemplos few-shot. No regime linear, todos os métodos ficam
 numa faixa estreita, sem dominância clara.}
@@ -1121,7 +1121,7 @@ portanto, o caso real do Bloco 3.
 
 \begin{figure}[ht]
 \centering
-\includegraphics[width=0.95\textwidth]{bloco1_11_meialua_svm_vs_llm_seed42_gt__gpt4mini.png}
+\includegraphics[width=0.95\textwidth]{bloco1_graphic_14_D_passo6_svm_seed42__gpt4mini_color.png}
 \caption{Problema F (meia-lua, seed $42$, \texttt{gpt-4o-mini}): superfície de separação do
 SVM RBF treinado no \emph{ground truth} (esq.) vs.\ treinado nos rótulos zero-shot do LLM
 (dir.). Em ambos os painéis os pontos aparecem nas classes \emph{corretas}
@@ -1150,17 +1150,17 @@ $1{,}8$–$7{,}6$ pontos percentuais, sem uma ordenação consistentemente vence
 (\emph{shuffled} é marginalmente melhor com poucos exemplos). O critério do LLM, neste
 \emph{setup}, é
 relativamente robusto à ordem das demonstrações, em contraste com a forte sensibilidade a
-\emph{quais} exemplos são escolhidos (Tabela~\ref{tab:fase_e}).
+\emph{quais} exemplos são escolhidos (Tabela~\ref{tab:e_passo3}).
 
 \begin{figure}[ht]
 \centering
 \begin{minipage}[t]{0.49\textwidth}
 \centering
-\includegraphics[width=\textwidth]{bloco2_06_dilution__gpt4mini.png}
+\includegraphics[width=\textwidth]{bloco2_graphic_06_E1_passo4_diluicao__gpt4mini_color.png}
 \end{minipage}\hfill
 \begin{minipage}[t]{0.49\textwidth}
 \centering
-\includegraphics[width=\textwidth]{bloco2_07_example_order__gpt4mini.png}
+\includegraphics[width=\textwidth]{bloco2_graphic_07_E1_passo5_ordem__gpt4mini_color.png}
 \end{minipage}
 \caption{Esquerda: experimento de diluição (acrescentar exemplos fáceis a $4$ difíceis
 fixos melhora a acurácia monotonicamente). Direita: viés de ordem (as quatro ordenações
@@ -1173,11 +1173,11 @@ diferem por poucos pontos percentuais).}
 % REVISAO 25/08/2026: a convencao de rotulo do peso x altura foi corrigida no codigo
 % (classe 1 = Homem, conforme `male?` = +1 em Hghtwght_desired.txt; antes o codigo tratava
 % a classe 0 como "Homem"). Todas as metricas "vs rotulo real" desta secao foram
-% recalculadas offline (troca exata 1 - valor, ver src/corrigir_mapeamento_homem_mulher.py)
-% a partir de execucao_2026-07-05_12-34-52_completa/*corrigido_hm*.csv. Fidelidade,
-% kappa e W nao mudam. PENDENTE: (i) recoletar a Fase E do Bloco 3 (tab:real_e) com a
+% recalculadas offline (troca exata 1 - valor; a ferramenta offline que fez isso foi removida em 13/10/2026)
+% a partir de resultados/execucao_2026-07-05_12-34-52_completa/*corrigido_hm*.csv. Fidelidade,
+% kappa e W nao mudam. PENDENTE: (i) recoletar o Passo 6 do Problema G (tab:real_e) com a
 % convencao corrigida, pois os exemplos few-shot foram mostrados ao LLM com os nomes
-% trocados; (ii) regerar as figuras bloco23_external_* que exibem acuracia vs real;
+% trocados; (ii) regerar as figuras bloco23_graphic_* (nomes de 13/10/2026) que exibem acuracia vs real;
 % (iii) propagar os numeros novos para roteiro_apresentacao.txt e slides.
 
 O caso real expõe a \emph{dependência semântica} dos atributos
@@ -1362,7 +1362,7 @@ A/B          & $x_1/x_2$   & 0,186 & $\approx 57/70$ \\
 \end{table}
 
 No aprendizado em contexto (Tabela~\ref{tab:real_e}), os exemplos fornecidos ao LLM foram
-rotulados pela melhor métrica estimada na Fase A, que, como visto, carrega a nomeação
+rotulados pela melhor métrica estimada no Problema G (Passos 2 a 5), que, como visto, carrega a nomeação
 invertida; o resultado deve ser lido, portanto, como adoção da convenção dos exemplos. É o
 que ocorre: a concordância do LLM com a métrica-alvo sobe de $53$–$73\%$ (zero-shot) para
 $91$–$100\%$ com $4$ exemplos ou mais, e a acurácia contra o rótulo real cai de $40$–$47\%$
@@ -1374,7 +1374,7 @@ seja ela qual for.
 \centering
 \caption{Bloco 3: aprendizado em contexto no Problema G, acurácia real (\%) do LLM vs.\
 Perceptron (peso/altura); avaliação nos $30$ pontos de teste. Os exemplos foram rotulados
-pela métrica estimada na Fase A, cuja nomeação é invertida em relação ao rótulo real (ver
+pela métrica estimada no Problema G (Passos 2 a 5), cuja nomeação é invertida em relação ao rótulo real (ver
 texto).}
 \label{tab:real_e}
 \begin{tabular}{lrrrrr}
@@ -1394,7 +1394,7 @@ texto).}
 
 \begin{figure}[ht]
 \centering
-\includegraphics[width=0.82\textwidth]{bloco3_01_peso_altura_overview_fronteira.png}
+\includegraphics[width=0.82\textwidth]{bloco3_graphic_01_G1_passo1_dados_color.png}
 \caption{Bloco 3: base real peso $\times$ altura (rótulo homem/mulher) com a fronteira
 quadrática (aproximadamente elíptica) sobreposta — classificador logístico sobre os
 atributos $[\text{peso},\,\text{altura},\,\text{peso}^2,\,\text{altura}^2]$ ajustado aos
@@ -1442,7 +1442,7 @@ Há um critério estimável, mas a métrica diagonal o captura só em parte: o t
 \textbf{Confirmada com qualificações.} \West{} generaliza melhor para C do que para B, e a
 adição de exemplos eleva ambos a $\kappa \approx 0{,}67$–$0{,}92$ (Cohen's $d = 5{,}78$ na
 consistência em C), padrão que a réplica com o \texttt{gemini-2.5-flash-lite} reproduz
-(Tabela~\ref{tab:fase_bc}). Porém, em zero-shot \West{} é \emph{significativamente inferior} à
+(Tabela~\ref{tab:bc_passo3}). Porém, em zero-shot \West{} é \emph{significativamente inferior} à
 métrica euclidiana no Problema B ($\Delta = -0{,}087$, IC exclui zero): a deformação
 aprendida não tem valor intrínseco, e sim \emph{contextual}, dependente de exemplos.
 
@@ -1618,7 +1618,7 @@ contra o piso de ruído que o próprio protocolo quantifica.
 \appendix
 
 \section{Detalhamento do Protocolo Experimental}
-\label{ap:protocolo}
+\label{ap:coleta}
 
 Este apêndice reúne os detalhes operacionais da coleta de decisões, complementando a
 Seção~\ref{sec:metodologia}. Os resultados permanecem todos no corpo do artigo; aqui

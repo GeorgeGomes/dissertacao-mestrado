@@ -69,7 +69,7 @@ Adapte ao formato do venue, mas a espinha é esta:
 6. **Método/Proposta** — o coração. Apresente em ordem lógica (do geral ao detalhe),
    com justificativa para cada decisão de projeto. Algoritmos em pseudocódigo numerado;
    equações numeradas e referenciadas.
-7. **Configuração experimental** — datasets, baselines, métricas, protocolo,
+7. **Configuração experimental** — datasets, baselines, métricas, passos de cada problema,
    hiperparâmetros, sementes, hardware. Detalhe suficiente para **reprodução**.
 8. **Resultados** — tabelas/figuras com a leitura destacada. Texto interpreta o número,
    não o repete. Reporte variabilidade (desvio, IC) e testes estatísticos quando cabível.
@@ -126,10 +126,15 @@ do aprendizado inverso"*.
 Ao redigir, atente para:
 
 - **Terminologia fixada pelo projeto:** usar "$\hat W$ estimada/inferida" (não "W
-  aprendida") para a métrica da Fase A; "Problemas A–G" e "Blocos 1–3" conforme a
-  nomenclatura única do projeto (não misturar "fase" com "problema").
-- **Métricas que precisam de definição no texto** (pedido do orientador): **F1-score** e
-  **Cohen's Kappa** com fórmula — não pressuponha que o leitor conheça o $\kappa$.
+  aprendida") para a métrica estimada (Passo 4 de A, D e G); "Problemas A–G", "Blocos 1–3" e
+  "Problema X, Passo N" conforme a nomenclatura única do projeto (nunca "fase", nome usado antes de 13/10/2026; equivalência no CLAUDE.md).
+- **Cinco métricas, nomes obrigatórios (seção IV.3 do orientador, 09/10/2026):**
+  Fidelidade ("Fidelidade (métrica vs LLM)", Problemas A e D e a estimação em F e G), Acurácia
+  ("Acurácia (vs rótulo real)" no oráculo e como contexto nos Blocos 1 e 3; "Acurácia (LLM vs
+  especialista)" no Bloco 2), Consistência (B e C, centróides do novo problema), **Cohen's
+  $\kappa$** e **F1-Macro**, estes dois com fórmula no texto (pedido do orientador); não
+  pressuponha que o leitor conheça o $\kappa$. Nunca "F1-Score", "Kappa" solto,
+  "concordância", "taxa de erro", consistência euclidiana ou precision/recall.
 - **Conclusões a sustentar com dados:** dependência semântica/de contexto do in-context
   learning; estabilidade do critério decisório do LLM; "cegueira" no zero-shot (≈ loteria —
   confirme o valor na última execução); necessidade de poucos exemplos para o LLM
@@ -140,6 +145,6 @@ Ao redigir, atente para:
 - **Modele a seção de experimentos** pelos 8 artigos de referência do orientador
   (em `artigos_referenciados/`), em especial a forma como eles estruturam testes e
   ablação.
-- Reporte sempre **variabilidade** (3 seeds × repetições, bootstrap CI, Wilcoxon) e, em
+- Reporte sempre **variabilidade** (3 seeds × repetições, média e faixa mín–máx entre sementes; sem bootstrap nem Wilcoxon desde 13/10/2026) e, em
   problemas pequenos (peso × altura, 100 amostras), o **número absoluto de erros** além da
   porcentagem.

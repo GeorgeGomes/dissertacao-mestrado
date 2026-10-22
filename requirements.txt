@@ -8,3 +8,4 @@ seaborn==0.13.2
 scikit-learn==1.8.0
 scipy==1.17.1
 python-dotenv==1.2.2
+httpx==0.28.1   # usado em llm_client.consultar_saldo_openrouter (já vem com openai)

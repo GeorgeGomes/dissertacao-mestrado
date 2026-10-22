@@ -1,0 +1,16 @@
+\begin{table}[htbp]
+\centering
+\small
+\caption{Problema A, Passo 2, e B/C, Passo 3, com nomes de atributo (google/gemini-2.5-flash-lite): fidelidade, direção de $\hat{W}$ e consistência.}
+\label{tab:bloco1_vies_nomes_atributo_flashlite}
+\begin{tabular}{llrrrrrrr}
+\toprule
+Variante & Regime & Fid.\ A & Acur.\ LLM vs real A & $w_1/w_2$ & Consist.\ B & $\kappa$ B & Consist.\ C & $\kappa$ C \\
+\midrule
+altura / peso & zero-shot & 93,6 (92,7–94,0) & 9,3 & 0,85 & 70,7 & 0,363 & 94,7 & 0,893 \\
+feature\_1 / feature\_2 & zero-shot & 91,3 (90,0–92,7) & 16,2 & 0,19 & 70,3 & 0,382 & 95,3 & 0,907 \\
+\textbf{x1 / x2} & \textbf{zero-shot} & \textbf{88,2 (87,3–88,7)} & \textbf{17,6} & \textbf{0,26} & \textbf{72,3} & \textbf{0,258} & \textbf{92,7} & \textbf{0,852} \\
+\bottomrule
+\multicolumn{9}{p{0.95\linewidth}}{\footnotesize Problema A, Passo 2, e B/C, Passo 3, por nomes de atributo; os demais fatores ficam na configuração base. Médias das sementes (fidelidade com mín–máx). Fid.\ A = fidelidade (vs LLM) no A; Acur.\ LLM vs real A = acurácia (vs rótulo real) do LLM no A, contexto; $w_1/w_2$ = razão da métrica estimada (Perceptron). Fid.\ A, Acur.\ LLM vs real A e $w_1/w_2$ vêm do Problema A (Passo 4 sobre os rótulos do Passo 2), sempre zero-shot. $\kappa$ = Cohen's $\kappa$ (faixas de Landis e Koch, 1977). Em negrito: a configuração de referência. (n=…) no Regime = número de sementes sem colapso do A na linha, quando menor que o total; (n=…) numa célula de B ou C = sementes sem colapso do LLM naquele problema (collapsed\_b/c); as médias vêm só delas. Em zero-shot (e com nomes de classe neutros) a correspondência entre nome e classe é arbitrária: a acurácia (vs rótulo real) do LLM pode sair abaixo de 50\%; o valor invariante à permutação é max($a$, 1 $-$ $a$).} \\
+\end{tabular}
+\end{table}

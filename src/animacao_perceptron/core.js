@@ -49,111 +49,129 @@ function norm2(w) { let s = 0; for (let j = 0; j < w.length; j++) s += w[j] * w[
 const clip = (v, lo, hi) => (v < lo ? lo : (v > hi ? hi : v));
 
 // Valores usados pelo runner: PERCEPTRON_PARAMS (dissertacao_mestrado.py) + defaults da classe
-// + use_best_effort=True (todos os 8 pontos de chamada).
+// + use_best_effort=True (todos os pontos de chamada do runner). Porte de 16/10/2026 (Perceptron de 15/10/2026: B, C, D).
 const DEFAULT_PARAMS = { eta: 0.001, C: 1.0, gamma_init: 0.1, delta_gamma: 0.05, max_epochs: 50, tol: 1e-4, max_iterations: 50, use_best_effort: true, random_state: 42 };
 
 function* fitGen(X, y, centroids, params) {
   const p = Object.assign({}, DEFAULT_PARAMS, params);
   if (p.delta_gamma <= 0) throw new Error(`delta_gamma deve ser > 0 (recebido: ${p.delta_gamma})`);
   const m = X.length, d = X[0].length;
-  const lambda_ = 1.0 / p.C;                              // L159
-  let w = new Array(d).fill(1.0);                         // L162
-  let alpha = new Array(m).fill(0.0);                     // L166
-  let gamma = p.gamma_init;                               // L167
-  let gamma_lo = 0.0, gamma_hi = Infinity;                // L173-174
-  let w_star = w.slice(), alpha_star = alpha.slice();     // L177-178
-  let w_best_effort = w.slice();                          // L182
-  let min_global_violations = Infinity;                   // L183
-  let found_feasible_solution = false;                    // L184
-  let iteration = 0;                                      // L186
-  const gamma_history = [];                               // L188
-  const rng = new MT19937(p.random_state);                // L191
+  const lambda_ = 1.0 / p.C;                              // L162
+  let w = new Array(d).fill(1.0);                         // L165
+  let alpha = new Array(m).fill(0.0);                     // L169
+  let gamma = p.gamma_init;                               // L170
+  let gamma_lo = 0.0, gamma_hi = Infinity;                // L176-177
+  let w_star = w.slice(), alpha_star = alpha.slice();     // L180-181
+  let w_best_effort = w.slice();                          // L185
+  let min_global_erros = Infinity;                        // L186  (15/10/2026: pontos mal classificados)
+  let found_feasible_solution = false;                    // L187
+  let iteration = 0;                                      // L189
+  const gamma_history = [];                               // L191
+  const rng = new MT19937(p.random_state);                // L194
+  // nº de pontos mal classificados sob w (margem bruta < 0, sem a folga α): L304-308
+  const contaErros = (wv) => { let e = 0; for (let i = 0; i < m; i++) { const l = y[i] | 0; const dl = dW(X[i], centroids[l], wv);
+    let best = Infinity; for (let j = 0; j < centroids.length; j++) { if (j === l) continue; const dj = dW(X[i], centroids[j], wv); if (dj < best) best = dj; }
+    if (dl > best) e += 1; } return e; };
+  // margem bruta mínima/||w|| do w devolvido (15/10/2026, D): _registrar_margem_minima, L410-428
+  const margemMinima = (wv) => { const nw = norm2(wv); if (!(nw > 0) || centroids.length < 2) return NaN; let mn = Infinity;
+    for (let i = 0; i < m; i++) { const l = y[i] | 0; const dc = dW(X[i], centroids[l], wv); let dr = Infinity;
+      for (let j = 0; j < centroids.length; j++) { if (j === l) continue; const dj = dW(X[i], centroids[j], wv); if (dj < dr) dr = dj; }
+      const mg = (dr - dc) / nw; if (mg < mn) mn = mg; } return mn; };
   const S = () => ({ w: w.slice(), alpha, gamma, gamma_lo, gamma_hi, w_star: w_star.slice(), w_best_effort: w_best_effort.slice(),
-                     min_global_violations, found_feasible_solution, iteration, gamma_history, lambda_ });
+                     min_global_erros, found_feasible_solution, iteration, gamma_history, lambda_ });
 
-  while (iteration < p.max_iterations) {                  // L198
-    iteration += 1;                                       // L199
-    yield Object.assign({ type: 'iter_start', line: 199 }, S());
-    let final_violations = -1;                            // L205
+  while (iteration < p.max_iterations) {                  // L201
+    iteration += 1;                                       // L202
+    yield Object.assign({ type: 'iter_start', line: 202 }, S());
+    let final_violations = -1;                            // L208
     let epochs_run = 0;
-    for (let epoch = 0; epoch < p.max_epochs; epoch++) {  // L210
-      let violations = 0;                                 // L211
-      const indices = rng.permutation(m);                 // L214
+    for (let epoch = 0; epoch < p.max_epochs; epoch++) {  // L213
+      let violations = 0;                                 // L214
+      const indices = rng.permutation(m);                 // L217
       epochs_run = epoch + 1;
-      for (let t = 0; t < indices.length; t++) {          // L216
+      for (let t = 0; t < indices.length; t++) {          // L219
         const i = indices[t];
-        const xi = X[i], yi = y[i] | 0;                   // L217
-        const distances = centroids.map(c => dW(xi, c, w)); // L220
-        const l = yi;                                     // L225
-        let k = 0, best = Infinity;                       // L226-228  k = argmin_{j≠l}
+        const xi = X[i], yi = y[i] | 0;                   // L220
+        const distances = centroids.map(c => dW(xi, c, w)); // L223
+        const l = yi;                                     // L228
+        let k = 0, best = Infinity;                       // L229-231  k = argmin_{j≠l}
         for (let j = 0; j < centroids.length; j++) { if (j === l) continue; if (distances[j] < best) { best = distances[j]; k = j; } }
-        let norm_w = norm2(w); if (norm_w < 1e-9) norm_w = 1e-9;  // L231-233
-        const margin = dW(xi, centroids[k], w) - dW(xi, centroids[l], w) + lambda_ * alpha[i]; // L242-246
-        const violated = margin < gamma * norm_w;         // L248
+        let norm_w = norm2(w); if (norm_w < 1e-9) norm_w = 1e-9;  // L234-236
+        const margin = dW(xi, centroids[k], w) - dW(xi, centroids[l], w) + lambda_ * alpha[i]; // L245-249
+        const violated = margin < gamma * norm_w;         // L251
         let g = null, factor = null;
         if (violated) {
-          violations += 1;                                // L250
-          g = xi.map((v, j) => { const a = v - centroids[l][j], b = v - centroids[k][j]; return a * a - b * b; }); // L258
-          factor = 1 - p.eta * gamma / norm_w;            // L269
-          factor = clip(factor, 0.0, 2.0);                // L270
-          w = w.map((v, j) => v * factor - p.eta * g[j]); // L272
-          w = w.map(v => Math.max(0, v));                 // L275
-          alpha = alpha.map(a => a * factor);             // L280
-          alpha[i] = alpha[i] + p.eta;                    // L281
-          alpha = alpha.map(a => clip(a, 0, 1e6));        // L282
+          violations += 1;                                // L253
+          g = xi.map((v, j) => { const a = v - centroids[l][j], b = v - centroids[k][j]; return a * a - b * b; }); // L261
+          factor = 1 - p.eta * gamma / norm_w;            // L272
+          factor = clip(factor, 0.0, 1.0);                // L275
+          w = w.map((v, j) => v * factor - p.eta * g[j]); // L277
+          w = w.map(v => Math.max(0, v));                 // L280
+          alpha = alpha.map(a => a * factor);             // L285
+          alpha[i] = alpha[i] + p.eta;                    // L286
+          alpha = alpha.map(a => clip(a, 0, 1e6));        // L287
         }
-        yield Object.assign({ type: 'point', line: violated ? 272 : 248, i, k, l, epoch, t, d_k: distances[k], d_l: distances[l],
+        yield Object.assign({ type: 'point', line: violated ? 277 : 251, i, k, l, epoch, t, d_k: distances[k], d_l: distances[l],
           margin, threshold: gamma * norm_w, norm_w, violated, violations, g, factor, lambda_alpha_i: lambda_ * alpha[i] }, S());
       }
-      final_violations = violations;                      // L284
-      if (violations < min_global_violations) {           // L288
-        min_global_violations = violations; w_best_effort = w.slice(); // L289-290
+      final_violations = violations;                      // L289
+      // (B) escala fixa: w e α divididos por ||w|| ao fim da época (15/10/2026)
+      const norm_fim = norm2(w);                          // L297
+      if (norm_fim > 0) {                                 // L298
+        w = w.map(v => v / norm_fim);                     // L299
+        alpha = alpha.map(a => a / norm_fim);             // L300
       }
-      yield Object.assign({ type: 'epoch_end', line: violations === 0 ? 296 : 284, epoch, violations, converged: violations === 0 }, S());
-      if (violations === 0) break;                        // L293-296
+      // (C) melhor esforço = época com MENOS pontos mal classificados (15/10/2026)
+      const erros = contaErros(w);                        // L304-308
+      if (erros < min_global_erros) {                     // L309
+        min_global_erros = erros; w_best_effort = w.slice(); // L310-311
+      }
+      yield Object.assign({ type: 'epoch_end', line: violations === 0 ? 317 : 289, epoch, violations, erros, norm_fim, converged: violations === 0 }, S());
+      if (violations === 0) break;                        // L314-317
     }
-    const viable_now = (final_violations === 0);          // L299
+    const viable_now = (final_violations === 0);          // L320
     gamma_history.push({ iter: iteration, gamma, gamma_lo, gamma_hi: isFinite(gamma_hi) ? gamma_hi : null,
-                         violations: final_violations, viable: viable_now, epochs: epochs_run }); // L300-307
+                         violations: final_violations, viable: viable_now, epochs: epochs_run }); // L321-328
     let branch, line;
-    if (viable_now) {                                     // L310
-      found_feasible_solution = true;                     // L313
-      gamma_lo = gamma;                                   // L314
-      w_star = w.slice(); alpha_star = alpha.slice();     // L315-316
-      if (!isFinite(gamma_hi)) { gamma = gamma + p.delta_gamma; branch = 'viavel_incremento'; line = 323; }           // L322-323
-      else { gamma = Math.min(gamma + p.delta_gamma, (gamma_lo + gamma_hi) / 2); branch = 'viavel_min'; line = 325; } // L325
+    if (viable_now) {                                     // L331
+      found_feasible_solution = true;                     // L334
+      gamma_lo = gamma;                                   // L335
+      w_star = w.slice(); alpha_star = alpha.slice();     // L336-337
+      if (!isFinite(gamma_hi)) { gamma = gamma + p.delta_gamma; branch = 'viavel_incremento'; line = 344; }           // L343-344
+      else { gamma = Math.min(gamma + p.delta_gamma, (gamma_lo + gamma_hi) / 2); branch = 'viavel_min'; line = 346; } // L346
     } else {
-      gamma_hi = gamma;                                   // L328
-      if (isFinite(gamma_hi)) {                           // L330 (sempre verdadeiro: gamma é finito)
-        gamma = (gamma_lo + gamma_hi) / 2;                // L333
-        w = w_star.slice(); alpha = alpha_star.slice();   // L334-335
-        branch = 'inviavel_bissecao'; line = 333;
-      } else {                                            // L338 (inalcançável)
+      gamma_hi = gamma;                                   // L349
+      if (isFinite(gamma_hi)) {                           // L351 (sempre verdadeiro: gamma é finito)
+        gamma = (gamma_lo + gamma_hi) / 2;                // L353
+        w = w_star.slice(); alpha = alpha_star.slice();   // L354-355
+        branch = 'inviavel_bissecao'; line = 353;
+      } else {                                            // (inalcançável)
         branch = 'inviavel_break';
-        yield Object.assign({ type: 'iter_end', line: 338, branch, viable_now, final_violations, stop: true }, S());
+        yield Object.assign({ type: 'iter_end', line: 351, branch, viable_now, final_violations, stop: true }, S());
         break;
       }
     }
-    const stop = Math.abs(gamma_hi - gamma_lo) <= p.tol;  // L341
-    yield Object.assign({ type: 'iter_end', line: stop ? 342 : line, branch, viable_now, final_violations, stop }, S());
-    if (stop) break;                                      // L342
+    const stop = Math.abs(gamma_hi - gamma_lo) <= p.tol;  // L358
+    yield Object.assign({ type: 'iter_end', line: stop ? 359 : line, branch, viable_now, final_violations, stop }, S());
+    if (stop) break;                                      // L359
   }
-  // ---- retorno (L348-388) ----
+  // ---- retorno (L365-408) ----
   const bracket_open = Math.abs(gamma_hi - gamma_lo) > p.tol;
   const warnings = [];
   const hiStr = isFinite(gamma_hi) ? gamma_hi.toFixed(6) : '∞';
-  if (found_feasible_solution && bracket_open)            // L348
+  if (found_feasible_solution && bracket_open)            // L365
     warnings.push(`Perceptron: busca binária em γ parou por max_iterations=${p.max_iterations} sem convergir (γ_lo=${gamma_lo.toFixed(6)}, γ_hi=${hiStr}, tol=${p.tol}). Retornando melhor γ viável encontrado.`);
   let result, line;
-  if (found_feasible_solution) {                          // L361
-    result = { w: w_star.slice(), gamma: gamma_lo, caminho: 'viavel' }; line = 365;   // L365
-  } else if (p.use_best_effort) {                         // L368
-    warnings.push(`Perceptron: separação perfeita não encontrada. Retornando melhor esforço (violações: ${min_global_violations}). Métrica pode ser imprecisa.`);
-    result = { w: w_best_effort.slice(), gamma: 0.0, caminho: 'melhor_esforco' }; line = 378; // L378
+  if (found_feasible_solution) {                          // L378
+    result = { w: w_star.slice(), gamma: gamma_lo, caminho: 'viavel' }; line = 383;   // L383
+  } else if (p.use_best_effort) {                         // L386
+    warnings.push(`Perceptron: separação perfeita não encontrada. Retornando melhor esforço (pontos mal classificados: ${min_global_erros}). Métrica pode ser imprecisa.`);
+    result = { w: w_best_effort.slice(), gamma: 0.0, caminho: 'melhor_esforco' }; line = 397; // L397
   } else {
     warnings.push(`Perceptron: separação perfeita não encontrada. Retornando pesos iniciais (equivalente à distância Euclidiana). Verifique a separabilidade dos dados do LLM.`);
-    result = { w: w_star.slice(), gamma: 0.0, caminho: 'pesos_iniciais' }; line = 388;  // L388
+    result = { w: w_star.slice(), gamma: 0.0, caminho: 'pesos_iniciais' }; line = 408;  // L408
   }
+  result.margem_minima = margemMinima(result.w);          // (D) L382 / L396 / L407
   const termination = (iteration >= p.max_iterations && bracket_open) ? 'max_iterations' : 'tolerancia';
   yield Object.assign({ type: 'done', line, result, warnings, termination, bracket_open }, S());
   return result;

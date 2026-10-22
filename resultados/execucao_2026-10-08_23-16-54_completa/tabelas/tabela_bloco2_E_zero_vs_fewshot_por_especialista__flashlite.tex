@@ -1,0 +1,16 @@
+\begin{table}[htbp]
+\centering
+\small
+\caption{Bloco 2 (google/gemini-2.5-flash-lite): zero-shot versus few-shot por especialista.}
+\label{tab:bloco2_E_zero_vs_fewshot_por_especialista_flashlite}
+\begin{tabular}{llrrrrlrr}
+\toprule
+Especialista & W & zero-shot & média few-shot & $\Delta$ & melhor few-shot & (estratégia, n) & $\Delta$ & Especialista vs real \\
+\midrule
+E1 & [0,3; 1,5] & 54,4 & 89,2 & +34,7 & 97,6 & Mista, 40-shot & +43,1 & 86,4 \\
+E2 & [1,5; 0,3] & 41,1 & 92,6 & +51,5 & 100,0 & Difícil, 20-shot & +58,9 & 90,0 \\
+E3 & [1,0; 1,0] & 44,7 & 90,5 & +45,9 & 95,4 & Aleatória, 40-shot & +50,7 & 93,1 \\
+\bottomrule
+\multicolumn{9}{p{0.95\linewidth}}{\footnotesize Acurácia do LLM em relação ao especialista. Média few-shot = média sobre estratégias e n > 0. Melhor few-shot = maior média (estratégia, n). Última coluna: acurácia do próprio especialista contra o rótulo real das gaussianas do Problema E.} \\
+\end{tabular}
+\end{table}

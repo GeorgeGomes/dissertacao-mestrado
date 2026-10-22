@@ -1,0 +1,38 @@
+\begin{table}[htbp]
+\centering
+\footnotesize
+\caption{Problema G, Passo 6 (openai/gpt-4o-mini): aprendizado em contexto, acurácia do LLM contra o rótulo real por número de exemplos e atributos no prompt.}
+\label{tab:bloco3_G_passo6_k_gpt4mini}
+\begin{tabular}{llllrrrrrrrrrr}
+\toprule
+ &  &  &  & \multicolumn{5}{c}{Acur.\ LLM vs real (n erros)} & \multicolumn{5}{c}{Acur.\ vs real (inv.\ perm.)} \\ \cmidrule(lr){5-9} \cmidrule(lr){10-14}
+Subproblema & Classes & Atributos & Prompt & k = 0 & k = 4 & k = 10 & k = 20 & k = 40 & k = 0 & k = 4 & k = 10 & k = 20 & k = 40 \\
+\midrule
+G1 (normalizado) & Mulher / Homem & peso/altura & R$^2$ & 43,3 (17,0) & 79,6 (6,1) & 84,8 (4,6) & 86,7 (4,0) & 88,9 (3,3) & — & — & — & — & — \\
+G1 (normalizado) & Mulher / Homem & peso/altura & R$^3$ & 43,3 (17,0) & 70,7 (8,8) & 84,1 (4,8) & 89,3 (3,2) & 91,1 (2,7) & — & — & — & — & — \\
+G1 (normalizado) & Mulher / Homem & peso/altura & R$^4$ & 43,3 (17,0) & 73,0 (8,1) & 77,8 (6,7) & 80,0 (6,0) & 85,9 (4,2) & — & — & — & — & — \\
+G1 (normalizado) & Mulher / Homem & x1/x2 & R$^2$ & 43,3 (17,0) & 76,3 (7,1) & 84,1 (4,8) & 85,6 (4,3) & 88,9 (3,3) & — & — & — & — & — \\
+G1 (normalizado) & Mulher / Homem & x1/x2 & R$^3$ & 43,3 (17,0) & 73,7 (7,9) & 86,3 (4,1) & 90,0 (3,0) & 91,1 (2,7) & — & — & — & — & — \\
+G1 (normalizado) & Mulher / Homem & x1/x2 & R$^4$ & 43,3 (17,0) & 75,2 (7,4) & 79,6 (6,1) & 83,3 (5,0) & 89,3 (3,2) & — & — & — & — & — \\
+G1 (normalizado) & A / B & peso/altura & R$^2$ & 24,4 (22,7) & 81,1 (5,7) & 87,4 (3,8) & 87,8 (3,7) & 88,5 (3,4) & 75,6 & 81,1 & 87,4 & 87,8 & 88,5 \\
+G1 (normalizado) & A / B & peso/altura & R$^3$ & 24,4 (22,7) & 70,7 (8,8) & 86,7 (4,0) & 87,8 (3,7) & 88,5 (3,4) & 75,6 & 70,7 & 86,7 & 87,8 & 88,5 \\
+G1 (normalizado) & A / B & peso/altura & R$^4$ & 24,4 (22,7) & 74,8 (7,6) & 82,6 (5,2) & 84,4 (4,7) & 88,1 (3,6) & 75,6 & 74,8 & 82,6 & 84,4 & 88,1 \\
+G1 (normalizado) & A / B & x1/x2 & R$^2$ & 31,1 (20,7) & 80,4 (5,9) & 86,3 (4,1) & 87,4 (3,8) & 88,5 (3,4) & 68,9 & 80,4 & 86,3 & 87,4 & 88,5 \\
+G1 (normalizado) & A / B & x1/x2 & R$^3$ & 31,1 (20,7) & 73,3 (8,0) & 85,2 (4,4) & 88,5 (3,4) & 89,3 (3,2) & 68,9 & 73,3 & 85,2 & 88,5 & 89,3 \\
+G1 (normalizado) & A / B & x1/x2 & R$^4$ & 31,1 (20,7) & 76,3 (7,1) & 82,6 (5,2) & 85,2 (4,4) & 89,6 (3,1) & 68,9 & 76,3 & 82,6 & 85,2 & 89,6 \\
+\textbf{G2 (kg e m)} & \textbf{Mulher / Homem} & \textbf{peso\_kg/altura\_m} & \textbf{R$^2$} & \textbf{91,1 (2,7)} & \textbf{80,7 (5,8)} & \textbf{81,1 (5,7)} & \textbf{74,1 (7,8)} & \textbf{77,8 (6,7)} & \textbf{—} & \textbf{—} & \textbf{—} & \textbf{—} & \textbf{—} \\
+\textbf{G2 (kg e m)} & \textbf{Mulher / Homem} & \textbf{peso\_kg/altura\_m} & \textbf{R$^3$} & \textbf{91,1 (2,7)} & \textbf{74,1 (7,8)} & \textbf{75,2 (7,4)} & \textbf{74,1 (7,8)} & \textbf{75,2 (7,4)} & \textbf{—} & \textbf{—} & \textbf{—} & \textbf{—} & \textbf{—} \\
+\textbf{G2 (kg e m)} & \textbf{Mulher / Homem} & \textbf{peso\_kg/altura\_m} & \textbf{R$^4$} & \textbf{91,1 (2,7)} & \textbf{76,7 (7,0)} & \textbf{75,9 (7,2)} & \textbf{73,0 (8,1)} & \textbf{78,5 (6,4)} & \textbf{—} & \textbf{—} & \textbf{—} & \textbf{—} & \textbf{—} \\
+G2 (kg e m) & Mulher / Homem & x1/x2 & R$^2$ & 63,3 (11,0) & 73,3 (8,0) & 73,7 (7,9) & 70,7 (8,8) & 74,4 (7,7) & — & — & — & — & — \\
+G2 (kg e m) & Mulher / Homem & x1/x2 & R$^3$ & 63,3 (11,0) & 71,5 (8,6) & 73,7 (7,9) & 73,0 (8,1) & 74,4 (7,7) & — & — & — & — & — \\
+G2 (kg e m) & Mulher / Homem & x1/x2 & R$^4$ & 63,3 (11,0) & 72,2 (8,3) & 72,2 (8,3) & 77,8 (6,7) & 80,7 (5,8) & — & — & — & — & — \\
+G2 (kg e m) & A / B & peso\_kg/altura\_m & R$^2$ & 40,0 (18,0) & 74,8 (7,6) & 76,7 (7,0) & 74,1 (7,8) & 76,3 (7,1) & 60,0 & 74,8 & 76,7 & 74,1 & 76,3 \\
+G2 (kg e m) & A / B & peso\_kg/altura\_m & R$^3$ & 40,0 (18,0) & 72,6 (8,2) & 75,2 (7,4) & 76,3 (7,1) & 76,7 (7,0) & 60,0 & 72,6 & 75,2 & 76,3 & 76,7 \\
+G2 (kg e m) & A / B & peso\_kg/altura\_m & R$^4$ & 40,0 (18,0) & 74,1 (7,8) & 76,3 (7,1) & 79,3 (6,2) & 84,8 (4,6) & 60,0 & 74,1 & 76,3 & 79,3 & 84,8 \\
+G2 (kg e m) & A / B & x1/x2 & R$^2$ & 43,3 (17,0) & 70,7 (8,8) & 74,1 (7,8) & 75,6 (7,3) & 77,4 (6,8) & 56,7 & 70,7 & 74,1 & 75,6 & 77,4 \\
+G2 (kg e m) & A / B & x1/x2 & R$^3$ & 43,3 (17,0) & 70,4 (8,9) & 77,4 (6,8) & 77,4 (6,8) & 78,9 (6,3) & 56,7 & 70,4 & 77,4 & 77,4 & 78,9 \\
+G2 (kg e m) & A / B & x1/x2 & R$^4$ & 43,3 (17,0) & 70,7 (8,8) & 75,6 (7,3) & 83,0 (5,1) & 85,6 (4,3) & 56,7 & 70,7 & 75,6 & 83,0 & 85,6 \\
+\bottomrule
+\multicolumn{14}{p{0.95\linewidth}}{\footnotesize Problema G, Passo 6, nas 30 amostras de teste de cada semente; o especialista é a métrica eleita no Passo 5 (por acurácia vs rótulo real no treino). Acurácia (vs rótulo real) do LLM, n erros em 30 entre parênteses (contagem auxiliar); Acur.\ vs real (inv.\ perm.) = max($a$, 1 $-$ $a$) nas linhas com classes neutras A/B, onde a correspondência entre nome e classe é arbitrária e a acurácia literal pode sair invertida. Médias das sementes e sorteios. Prompt = atributos mostrados ao LLM (R$^2$ = x1, x2; R$^3$ = + x1·x2; R$^4$ = + x1², x2²), fator controlado e independente da métrica eleita; em k = 0 o prompt não tem exemplos nem extras, logo as linhas R$^2$, R$^3$ e R$^4$ repetem a mesma coleta. Em negrito: G2 com nomes semânticos.} \\
+\end{tabular}
+\end{table}

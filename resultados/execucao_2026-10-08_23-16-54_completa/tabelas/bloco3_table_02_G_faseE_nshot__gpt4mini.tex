@@ -1,0 +1,19 @@
+\begin{table}[htbp]
+\centering
+\footnotesize
+\caption{Problema G (openai/gpt-4o-mini): Fase E, acurácia do LLM contra o rótulo real por número de exemplos.}
+\label{tab:bloco3_G_faseE_nshot_gpt4mini}
+\begin{tabular}{lllrrrrrrrrrr}
+\toprule
+ &  &  & \multicolumn{5}{c}{Acur.\ LLM vs real (n erros)} & \multicolumn{5}{c}{Acur.\ vs real (inv.\ perm.)} \\ \cmidrule(lr){4-8} \cmidrule(lr){9-13}
+Subproblema & Classes & Atributos & n = 0 & n = 4 & n = 10 & n = 20 & n = 40 & n = 0 & n = 4 & n = 10 & n = 20 & n = 40 \\
+\midrule
+G1 (normalizado) & A / B & peso/altura & 25,6 (22,3) & 19,6 (24,1) & 16,7 (25,0) & 12,2 (26,3) & 13,3 (26,0) & 74,4 & 80,4 & 83,3 & 87,8 & 86,7 \\
+G1 (normalizado) & A / B & x1/x2 & 30,0 (21,0) & 20,7 (23,8) & 21,1 (23,7) & 16,3 (25,1) & 15,9 (25,2) & 70,0 & 79,3 & 78,9 & 83,7 & 84,1 \\
+\textbf{G2 (kg e m)} & \textbf{Mulher / Homem} & \textbf{peso\_kg/altura\_m} & \textbf{88,9 (3,3)} & \textbf{83,7 (4,9)} & \textbf{82,2 (5,3)} & \textbf{81,5 (5,6)} & \textbf{78,9 (6,3)} & \textbf{—} & \textbf{—} & \textbf{—} & \textbf{—} & \textbf{—} \\
+G2 (kg e m) & Mulher / Homem & x1/x2 & 62,2 (11,3) & 62,2 (11,3) & 69,3 (9,2) & 71,1 (8,7) & 68,5 (9,4) & — & — & — & — & — \\
+G2 (kg e m) & A / B & peso\_kg/altura\_m & 40,0 (18,0) & 51,5 (14,6) & 48,9 (15,3) & 43,7 (16,9) & 40,4 (17,9) & 60,0 & 64,8 & 62,2 & 62,2 & 61,9 \\
+\bottomrule
+\multicolumn{13}{p{0.95\linewidth}}{\footnotesize Fase E nas 30 amostras de teste de cada semente; o especialista é a melhor métrica da Fase A externa (eleita por acurácia vs rótulo real). Acurácia (vs rótulo real) do LLM, n erros em 30 entre parênteses (contagem auxiliar); Acur.\ vs real (inv.\ perm.) = max($a$, 1 $-$ $a$) nas linhas com classes neutras A/B, onde a correspondência entre nome e classe é arbitrária e a acurácia literal pode sair invertida. Médias das sementes e sorteios. Em negrito: G2 com nomes semânticos.} \\
+\end{tabular}
+\end{table}

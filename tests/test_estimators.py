@@ -7,8 +7,10 @@ histórico opcional) e uma sanidade de que reproduzem rótulos linearmente separ
 """
 import os
 import sys
-import unittest
+import io
 import warnings
+import unittest
+from contextlib import redirect_stdout
 
 import numpy as np
 
@@ -30,7 +32,7 @@ class TestTrainRelaxedPerceptron(unittest.TestCase):
         w, gamma = train_relaxed_perceptron(X, Y, CENTROIDS, verbose=False)
         self.assertEqual(np.asarray(w).shape, (2,))
         self.assertTrue((np.asarray(w) >= 0).all())   # projeção max(0, w)
-        self.assertIsInstance(float(gamma), float)
+        self.assertGreater(float(gamma), 0.0)   # dados separáveis: margem positiva
 
     def test_return_history_devolve_tripla_com_lista(self):
         out = train_relaxed_perceptron(X, Y, CENTROIDS, verbose=False, return_history=True)
@@ -100,25 +102,18 @@ class TestBuscaBinariaGamma(unittest.TestCase):
         # Regressão: sair por max_iterations sem fechar |γ_hi−γ_lo| ≤ tol era
         # silencioso — o γ retornado é a melhor margem viável testada, mas pode
         # ser artefato do orçamento (max_iterations × delta_gamma), não o máximo.
-        with warnings.catch_warnings(record=True) as caught:
-            warnings.simplefilter("always")
+        # 14/10/2026: o aviso é impresso (print), não warnings.warn (que ecoava caminho+linha no log).
+        with redirect_stdout(io.StringIO()) as buf:
             RelaxedPerceptron(max_iterations=1).fit(X, Y, CENTROIDS)
-        self.assertTrue(
-            any("max_iterations" in str(c.message) for c in caught),
-            "teto atingido sem convergência deve emitir warning",
-        )
+        self.assertIn("max_iterations", buf.getvalue(), "teto atingido sem convergência deve avisar no log")
 
     def test_convergencia_nao_emite_warning_de_teto(self):
         # Com delta_gamma na escala do γ* deste dataset (~12, em unidades de
         # distância ao quadrado), a busca forma o bracket e converge em ~30 iters.
-        with warnings.catch_warnings(record=True) as caught:
-            warnings.simplefilter("always")
+        with redirect_stdout(io.StringIO()) as buf:
             m = RelaxedPerceptron(delta_gamma=1.0)
             m.fit(X, Y, CENTROIDS)
-        self.assertFalse(
-            any("max_iterations" in str(c.message) for c in caught),
-            "busca convergida não deve emitir warning de teto",
-        )
+        self.assertNotIn("max_iterations", buf.getvalue(), "busca convergida não deve avisar de teto")
 
     def test_bracket_gamma_hi_nunca_afrouxa(self):
         # Regressão: o candidato γ_lo + delta podia ultrapassar um γ_hi já provado

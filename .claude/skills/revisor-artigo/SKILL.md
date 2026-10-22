@@ -55,7 +55,7 @@ como o de uma revisão por pares séria e construtiva.
    e legendas concordam? Notação é coerente do início ao fim?
    **Vazamento de fontes internas do projeto:** aponte como problema TODA menção a nome de
    arquivo do repositório (CSV, `log_execucao.txt`) ou ao nome da pasta de execução
-   (`execucao_2026-..._completa`) dentro do texto — o leitor não tem acesso aos fontes, então
+   (`resultados/execucao_2026-..._completa`) dentro do texto: o leitor não tem acesso aos fontes, então
    isso não o informa e vaza detalhe de implementação. Liste cada ocorrência (linha) e a
    reescrita: trocar por uma descrição neutra do procedimento ou remover a citação de fonte,
    mantendo apenas o número. Modelo, hiperparâmetros, sementes e contagens de amostra podem
@@ -135,12 +135,16 @@ especial a:
 - **Circularidade aparente vs real.** Vigie afirmações sobre "a métrica reproduz o LLM":
   confirme que o texto deixa claro que fidelidade (vs LLM) ≠ acurácia (vs ground truth) e
   que a coluna "acc vs métrica" do Problema F não é trivialmente 100% (não é circular).
-- **Definições obrigatórias.** O texto define **F1-score** e **Cohen's Kappa** com fórmula?
-  (O orientador pediu explicitamente — sua ausência é problema maior de completude.)
+- **Definições obrigatórias.** O texto define **F1-Macro** e **Cohen's $\kappa$** com fórmula?
+  (O orientador pediu explicitamente; sua ausência é problema maior de completude.) As
+  métricas são exatamente cinco, com nomes fixos (seção IV.3 do orientador): Fidelidade
+  (A e D), Acurácia (oráculo e Bloco 2; contexto "vs rótulo real" nos Blocos 1 e 3),
+  Consistência (B e C), Cohen's $\kappa$ e F1-Macro; "F1-Score", "concordância", "taxa de
+  erro", consistência euclidiana e precision/recall são erros de nomenclatura.
 - **Sustentação das conclusões-chave:** "cegueira no zero-shot", "estabilidade do critério",
   "dependência semântica/de contexto" precisam estar amarradas a tabelas/números, não
   afirmadas no ar. Verifique também o uso correto da nomenclatura única (Problemas A–G,
-  Blocos 1–3; nunca misturar "fase" e "problema").
+  Blocos 1–3; nunca "fase", nome usado antes de 13/10/2026).
 - **Reprodutibilidade do relato:** sementes (3), repetições, temperatura 0,0, tratamento de
   respostas malformadas (parser + fallback), e exclusão dos exemplos few-shot do conjunto
   de teste (sem *leakage*) — tudo isso deve estar descrito.

@@ -1,0 +1,16 @@
+\begin{table}[htbp]
+\centering
+\small
+\caption{Problema A, Passo 2, e B/C, Passo 3, com nomes de atributo (openai/gpt-4o-mini): fidelidade, direção de $\hat{W}$ e consistência.}
+\label{tab:bloco1_vies_nomes_atributo_gpt4mini}
+\begin{tabular}{llrrrrrrr}
+\toprule
+Variante & Regime & Fid.\ A & Acur.\ LLM vs real A & $w_1/w_2$ & Consist.\ B & $\kappa$ B & Consist.\ C & $\kappa$ C \\
+\midrule
+altura / peso & zero-shot & 90,2 (88,0–92,0) & 12,7 & 0,62 & 70,0 & 0,294 & 93,7 & 0,873 \\
+feature\_1 / feature\_2 & zero-shot & 81,6 (78,0–86,7) & 28,7 & 0,31 & 71,7 & 0,385 & 82,7 & 0,636 \\
+\textbf{x1 / x2} & \textbf{zero-shot} & \textbf{86,7 (85,3–88,0)} & \textbf{26,9} & \textbf{0,21} & \textbf{69,0} & \textbf{0,320} & \textbf{87,0} & \textbf{0,725} \\
+\bottomrule
+\multicolumn{9}{p{0.95\linewidth}}{\footnotesize Problema A, Passo 2, e B/C, Passo 3, por nomes de atributo; os demais fatores ficam na configuração base. Médias das sementes (fidelidade com mín–máx). Fid.\ A = fidelidade (vs LLM) no A; Acur.\ LLM vs real A = acurácia (vs rótulo real) do LLM no A, contexto; $w_1/w_2$ = razão da métrica estimada (Perceptron). Fid.\ A, Acur.\ LLM vs real A e $w_1/w_2$ vêm do Problema A (Passo 4 sobre os rótulos do Passo 2), sempre zero-shot. $\kappa$ = Cohen's $\kappa$ (faixas de Landis e Koch, 1977). Em negrito: a configuração de referência. (n=…) no Regime = número de sementes sem colapso do A na linha, quando menor que o total; (n=…) numa célula de B ou C = sementes sem colapso do LLM naquele problema (collapsed\_b/c); as médias vêm só delas. Em zero-shot (e com nomes de classe neutros) a correspondência entre nome e classe é arbitrária: a acurácia (vs rótulo real) do LLM pode sair abaixo de 50\%; o valor invariante à permutação é max($a$, 1 $-$ $a$).} \\
+\end{tabular}
+\end{table}

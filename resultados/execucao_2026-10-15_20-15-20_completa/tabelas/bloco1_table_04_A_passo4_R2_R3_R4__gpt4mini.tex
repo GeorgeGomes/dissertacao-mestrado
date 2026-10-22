@@ -1,0 +1,34 @@
+\begin{table}[htbp]
+\centering
+\small
+\caption{Problema A, Passos 2 a 5 (openai/gpt-4o-mini): métrica em R$^2$, R$^3$ e R$^4$ por regime.}
+\label{tab:bloco1_A_passo4_R2_R3_R4_gpt4mini}
+\begin{tabular}{llrrrrr}
+\toprule
+ &  & \multicolumn{2}{c}{Perceptron} & \multicolumn{2}{c}{NNLS} &  \\ \cmidrule(lr){3-4} \cmidrule(lr){5-6}
+Espaço & Regime & Fid.\ (vs LLM) & Acur.\ vs real & Fid.\ (vs LLM) & Acur.\ vs real & $\Delta$ fid.\ vs R$^2$ \\
+\midrule
+R$^2$ & zero-shot† & 86,7 (85,3–88,0) & 19,3 (14,7–23,3) & 85,3 (84,0–87,3) & 17,1 (13,3–20,7) & +0,0 \\
+R$^2$ & 4-shot† & 91,8 (80,8–100,0) & 90,3 (60,0–98,0) & 91,4 (80,1–100,0) & 90,4 (60,7–98,0) & +0,0 \\
+R$^2$ & 10-shot† & 96,0 (92,1–98,6) & 95,6 (91,3–98,0) & 95,5 (93,6–98,6) & 95,6 (90,7–98,0) & +0,0 \\
+R$^2$ & 20-shot† & 96,5 (92,3–99,2) & 95,0 (90,7–98,0) & 95,6 (91,5–98,5) & 96,2 (93,3–98,0) & +0,0 \\
+R$^2$ & 40-shot† & 96,8 (90,9–99,1) & 95,9 (90,7–98,0) & 95,6 (88,2–99,1) & 96,4 (94,0–98,0) & +0,0 \\
+R$^2$ & W ajustado ao rótulo real (teto)† & — & 97,3 (96,7–98,0) & — & 96,9 (96,7–97,3) & — \\
+\midrule
+R$^3$ & zero-shot† & 88,7 (87,3–89,3) & 23,6 (22,0–24,7) & 86,0 (84,7–88,0) & 18,7 (17,3–20,0) & +2,0 \\
+R$^3$ & 4-shot† & 92,3 (80,8–99,3) & 89,9 (69,3–97,3) & 91,7 (78,8–100,0) & 89,9 (60,7–98,0) & +0,5 \\
+R$^3$ & 10-shot† & 96,0 (91,4–99,3) & 95,6 (90,7–98,0) & 95,6 (93,6–98,6) & 95,3 (90,7–98,0) & +0,0 \\
+R$^3$ & 20-shot† & 96,8 (93,1–98,5) & 95,0 (90,7–98,0) & 96,1 (92,3–98,5) & 95,4 (90,7–98,0) & +0,3 \\
+R$^3$ & 40-shot† & 96,8 (95,5–99,1) & 95,3 (88,7–98,0) & 96,3 (92,7–99,1) & 95,7 (90,7–98,0) & +0,0 \\
+R$^3$ & W ajustado ao rótulo real (teto)† & — & 97,3 (96,7–98,0) & — & 96,9 (96,7–97,3) & — \\
+\midrule
+R$^4$ & zero-shot† & 88,9 (88,0–90,7) & 22,9 (21,3–25,3) & 86,2 (84,0–87,3) & 22,0 (20,7–23,3) & +2,2 \\
+R$^4$ & 4-shot† & 97,3 (88,4–100,0) & 86,5 (64,7–98,0) & 95,3 (82,2–100,0) & 87,2 (68,0–98,0) & +5,5 \\
+R$^4$ & 10-shot† & 97,0 (92,9–100,0) & 92,4 (88,0–96,0) & 95,6 (91,4–98,6) & 94,7 (90,0–98,0) & +1,0 \\
+R$^4$ & 20-shot† & 97,7 (96,2–99,2) & 92,7 (88,0–96,0) & 96,5 (93,8–98,5) & 94,4 (88,0–98,0) & +1,2 \\
+R$^4$ & 40-shot† & 98,1 (95,5–100,0) & 93,5 (88,0–97,3) & 97,0 (93,6–100,0) & 95,0 (89,3–98,0) & +1,3 \\
+R$^4$ & W ajustado ao rótulo real (teto)† & — & 97,3 (96,7–98,0) & — & 96,9 (96,7–97,3) & — \\
+\bottomrule
+\multicolumn{7}{p{0.95\linewidth}}{\footnotesize Problema A (linear). O LLM vê só x1, x2; R$^3$ acrescenta x1·x2 e R$^4$ acrescenta x1², x2² apenas na estimação. Em problema linear espera-se ganho ~nulo com a dimensão. Fid.\ (vs LLM) = fidelidade; Acur.\ vs real = acurácia (vs rótulo real) da métrica, contexto; o teto (W ajustado ao rótulo real) só tem acurácia. $\Delta$ = fidelidade Perceptron $-$ R$^2$. Passos do Problema A: zero-shot = Passo 2 (o LLM rotula sem exemplos); $k$-shot = Passo 3 (o LLM rotula com $k$ exemplos do rótulo real); a métrica de cada linha é estimada no Passo 4; teto = Passo 5 (W ajustado diretamente ao rótulo real). † = em pelo menos uma estimativa o Perceptron não encontrou $\hat{W}$ que separe os rótulos: melhor esforço ($\gamma = 0$) ou margem bruta mínima negativa (algum ponto do lado errado da fronteira).} \\
+\end{tabular}
+\end{table}

@@ -15,9 +15,9 @@ import unittest
 
 SRC_DIR = os.path.join(os.path.dirname(__file__), "..", "src")
 sys.path.insert(0, os.path.abspath(SRC_DIR))
-ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "resultados"))
 
-from audit_interactions import audit, find_latest_execution, load_interactions  # noqa: E402
+from audit_interactions import audit, find_latest_execution, format_report, load_interactions  # noqa: E402
 
 
 def _rec(point, resp, malformed=False, temp="0.0", retries="0"):
@@ -55,6 +55,21 @@ class TestAuditUnit(unittest.TestCase):
         s = audit(recs)
         self.assertEqual(s["queries_repetidas"], 1)
         self.assertEqual(s["taxa_flip_T0"], 0.0)
+
+    def test_por_regime_separa_passo2_de_passo3_pela_tag(self):
+        t0 = "bloco1|problema=A|passo=2|regime=passo2_zero_shot|k=0|rep=0|seed=42"
+        t4 = "bloco1|problema=A|passo=3|regime=passo3_exemplos_rotulo_real|k=4|rep=0|seed=42"
+        recs = [dict(_rec("x", "A"), tag=t0), dict(_rec("x", "B"), tag=t0),      # flip no zero-shot
+                dict(_rec("y", "A"), tag=t4), dict(_rec("y", "A"), tag=t4),      # estável no few-shot
+                _rec("z", "A")]                                                  # sem tag
+        s = audit(recs)
+        pr = s["por_regime"]
+        k0 = [k for k in pr if "|A|passo=2|passo2_zero_shot|k=0" in k][0]
+        k4 = [k for k in pr if "|A|passo=3|passo3_exemplos_rotulo_real|k=4" in k][0]
+        self.assertEqual(pr[k0]["taxa_flip_T0"], 1.0)
+        self.assertEqual(pr[k4]["taxa_flip_T0"], 0.0)
+        self.assertTrue(any(k.split("|")[3] == "sem_tag" for k in pr))
+        self.assertIn("[4] Breakdown por problema, passo e regime", format_report("execucao_x", s))
 
     def test_temperaturas_agregadas(self):
         s = audit([_rec("a", "A", temp="0.0"), _rec("b", "B", temp="0.0")])

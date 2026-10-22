@@ -1,0 +1,21 @@
+\begin{table}[htbp]
+\centering
+\small
+\caption{Problema F, meia-lua (openai/gpt-4o-mini): Fase A externa por semente e espaço.}
+\label{tab:bloco2_F_meialua_faseA_R2_R3_R4_gpt4mini}
+\begin{tabular}{llrrrrrr}
+\toprule
+Espaço & Semente & LLM vs real & Fid.\ Perc. & Fid.\ NNLS & Métr.\ Perc.\ vs real & Métr.\ NNLS vs real & Erros Perc. \\
+\midrule
+R$^2$ & 42 & 48,6 & 74,3 & 68,6 & 45,7 & 57,1 & 57/105 \\
+\textbf{R$^2$} & \textbf{média} & \textbf{48,6} & \textbf{74,3} & \textbf{68,6} & \textbf{45,7} & \textbf{57,1} & \textbf{57,0} \\
+\midrule
+R$^3$ & 42 & 48,6 & 74,3 & 82,9 & 45,7 & 54,3 & 57/105 \\
+\textbf{R$^3$} & \textbf{média} & \textbf{48,6} & \textbf{74,3} & \textbf{82,9} & \textbf{45,7} & \textbf{54,3} & \textbf{57,0} \\
+\midrule
+R$^4$ & 42 & 48,6 & 75,2 & 76,2 & 60,0 & 59,0 & 42/105 \\
+\textbf{R$^4$} & \textbf{média} & \textbf{48,6} & \textbf{75,2} & \textbf{76,2} & \textbf{60,0} & \textbf{59,0} & \textbf{42,0} \\
+\bottomrule
+\multicolumn{8}{p{0.95\linewidth}}{\footnotesize Problema F (meia-lua como aprendiz, divisão 105 treino / 45 teste): Fase A nas 105 amostras de treino, zero-shot. Sementes ausentes = o LLM colapsou em classe única (sem métrica).} \\
+\end{tabular}
+\end{table}

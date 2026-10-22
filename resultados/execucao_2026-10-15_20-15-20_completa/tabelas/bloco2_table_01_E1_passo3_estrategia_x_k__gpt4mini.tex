@@ -1,0 +1,19 @@
+\begin{table}[htbp]
+\centering
+\small
+\caption{Problema E1, Passos 2 e 3 (openai/gpt-4o-mini): aprendizado em contexto por estratégia de seleção e k.}
+\label{tab:bloco2_E1_passo3_estrategia_x_k_gpt4mini}
+\begin{tabular}{lrrrrrrrr}
+\toprule
+ & \multicolumn{2}{c}{Fácil} & \multicolumn{2}{c}{Difícil} & \multicolumn{2}{c}{Mista} & \multicolumn{2}{c}{Aleatória} \\ \cmidrule(lr){2-3} \cmidrule(lr){4-5} \cmidrule(lr){6-7} \cmidrule(lr){8-9}
+k & Acur.\ vs espec. & $\kappa$ & Acur.\ vs espec. & $\kappa$ & Acur.\ vs espec. & $\kappa$ & Acur.\ vs espec. & $\kappa$ \\
+\midrule
+zero-shot (único valor) & 61,3 (59,3–64,0) & 0,241 &  &  &  &  &  &  \\
+4-shot & 84,7 (79,5–91,1) & 0,698 & 62,6 (56,2–74,0) & 0,254 & 81,5 (79,5–85,6) & 0,631 & 85,0 (58,9–97,3) & 0,700 \\
+10-shot & 87,6 (80,7–92,9) & 0,754 & 66,7 (57,9–72,9) & 0,335 & 80,5 (75,0–87,9) & 0,609 & 88,3 (72,1–92,9) & 0,768 \\
+20-shot & 91,0 (88,5–93,1) & 0,821 & 84,1 (73,8–100,0) & 0,677 & 87,2 (82,3–90,0) & 0,742 & 91,9 (87,7–95,4) & 0,838 \\
+40-shot & 89,1 (84,5–91,8) & 0,783 & 97,6 (97,3–98,2) & 0,951 & 97,6 (95,5–100,0) & 0,951 & 94,3 (90,9–97,3) & 0,887 \\
+\bottomrule
+\multicolumn{9}{p{0.95\linewidth}}{\footnotesize Especialista E1, W = [0,3; 1,5]: rotula o Problema E pelo centróide mais próximo (Passo 1); o LLM classifica em zero-shot (Passo 2) e, no Passo 3, recebe k exemplos escolhidos pela estratégia e classifica os demais. Acur.\ vs espec.\ = acurácia (LLM vs especialista): fração dos pontos de teste em que o LLM reproduz o rótulo do especialista. Valores em \% (mín–máx); $\kappa$ = Cohen's $\kappa$ (faixas de Landis e Koch, 1977). Médias das sementes e sorteios. Em zero-shot não há exemplo a selecionar: valor único.} \\
+\end{tabular}
+\end{table}

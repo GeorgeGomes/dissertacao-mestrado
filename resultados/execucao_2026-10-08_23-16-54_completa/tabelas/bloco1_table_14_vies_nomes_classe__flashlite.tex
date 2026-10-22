@@ -1,0 +1,30 @@
+\begin{table}[htbp]
+\centering
+\small
+\caption{Viés de nomes de classe (google/gemini-2.5-flash-lite): fidelidade, direção de $\hat{W}$ e consistência.}
+\label{tab:bloco1_vies_nomes_classe_flashlite}
+\begin{tabular}{llrrrrrrrr}
+\toprule
+Variante & Regime & Fid.\ A & Acur.\ LLM vs real A & Acur.\ vs real (inv.\ perm.) & $w_1/w_2$ & Consist.\ B & $\kappa$ B & Consist.\ C & $\kappa$ C \\
+\midrule
+0 / 1 & zero-shot & 82,4 (71,3–89,3) & 58,9 & 58,9 & 0,42 & 87,0 & 0,739 & 92,7 & 0,853 \\
+1 / 0 & zero-shot & 86,7 (83,3–88,7) & 29,8 & 70,2 & 0,26 & 66,7 & 0,213 & 94,3 & 0,886 \\
+\textbf{A / B} & \textbf{zero-shot} & \textbf{81,3 (78,7–83,3)} & \textbf{25,1} & \textbf{74,9} & \textbf{0,29} & \textbf{72,7} & \textbf{0,263} & \textbf{92,3} & \textbf{0,846} \\
+Azul / Vermelho & zero-shot & 73,8 (64,0–80,7) & 48,2 & 53,1 & 0,88 & 75,7 & 0,508 & 69,3 & 0,375 \\
+B / A & zero-shot & 76,9 (68,7–82,7) & 77,6 & 77,6 & 0,12 & 64,7 & 0,215 & 86,0 & 0,715 \\
+Negativo / Positivo & zero-shot & 87,6 (81,3–92,7) & 70,9 & 70,9 & 0,29 & 70,3 & 0,335 & 96,3 & 0,926 \\
+Positivo / Negativo & zero-shot & 87,1 (80,7–92,0) & 27,6 & 72,4 & 0,20 & 68,0 & 0,195 & 95,3 & 0,906 \\
+Vermelho / Azul & zero-shot & 77,3 (59,3–91,3) & 48,9 & 51,1 & 0,29 & 68,0 & 0,000 & 67,3 & 0,129 \\
+\midrule
+0 / 1 & 10-shot & 82,4 (71,3–89,3) & 58,9 & 58,9 & 0,42 & 95,6 & 0,911 & 80,7 & 0,571 \\
+1 / 0 & 10-shot & 86,7 (83,3–88,7) & 29,8 & 70,2 & 0,26 & 95,2 & 0,904 & 91,9 & 0,837 \\
+\textbf{A / B} & \textbf{10-shot} & \textbf{81,3 (78,7–83,3)} & \textbf{25,1} & \textbf{74,9} & \textbf{0,29} & \textbf{78,5} & \textbf{0,559} & \textbf{95,6} & \textbf{0,911} \\
+Azul / Vermelho & 10-shot & 73,8 (64,0–80,7) & 48,2 & 53,1 & 0,88 & 94,1 & 0,881 & 85,9 & 0,711 \\
+B / A & 10-shot & 76,9 (68,7–82,7) & 77,6 & 77,6 & 0,12 & 97,0 & 0,941 & 89,3 & 0,751 \\
+Negativo / Positivo & 10-shot & 87,6 (81,3–92,7) & 70,9 & 70,9 & 0,29 & 95,2 & 0,904 & 87,4 & 0,746 \\
+Positivo / Negativo & 10-shot & 87,1 (80,7–92,0) & 27,6 & 72,4 & 0,20 & 93,3 & 0,866 & 93,7 & 0,874 \\
+Vermelho / Azul & 10-shot & 77,3 (59,3–91,3) & 48,9 & 51,1 & 0,29 & 90,0 & 0,792 & 91,5 & 0,829 \\
+\bottomrule
+\multicolumn{10}{p{0.95\linewidth}}{\footnotesize Problema A e transferência para B e C por nomes de classe; os demais fatores ficam na configuração base. Médias das sementes (fidelidade com mín–máx). Fid.\ A = fidelidade (vs LLM) no A; Acur.\ LLM vs real A = acurácia (vs rótulo real) do LLM no A, contexto; $w_1/w_2$ = razão da métrica estimada (Perceptron). Fid.\ A, Acur.\ LLM vs real A e $w_1/w_2$ vêm da Fase A, sempre zero-shot (iguais nas linhas zero e 10-shot). $\kappa$ = Cohen's $\kappa$ (faixas de Landis e Koch, 1977). Em negrito: a configuração de referência. Acur.\ vs real (inv.\ perm.) = max($a$, 1 $-$ $a$): nos pares invertidos (e em zero-shot) a correspondência entre nome e classe é arbitrária, e só o valor invariante à permutação compara as variantes. 10-shot: exemplos rotulados pela métrica zero-shot do A (H2). Os exemplos few-shot de B e C são rotulados por $\hat{W}$ do A com os centróides do A; a consistência usa os centróides locais, recalculados pelos rótulos do LLM no próprio problema.} \\
+\end{tabular}
+\end{table}

@@ -6,7 +6,7 @@ O que o script faz:
   1. Monta todos os conjuntos em R² que o LLM rotulou em zero-shot na execução completa
      mais recente, com o prompt padrão de cada experimento, nos dois modelos e nas três
      sementes: Problemas A, B, C (lineares, Bloco 1), Problema E (linear, Bloco 2),
-     meia-lua (não linear; conjunto de treino 70% da Fase A externa) e peso × altura (não
+     meia-lua (não linear; conjunto de treino 70% do Passo 2 do Problema F) e peso × altura (não
      linear, base real; treino 70%, quatro variantes de enunciado). Os rótulos vêm do lote
      de coleta daquele conjunto em `llm_interactions_parte*.json`. Só os rótulos do LLM
      entram na página; o ground truth não é usado. Conjuntos em que o LLM deu a mesma
@@ -14,7 +14,8 @@ O que o script faz:
   2. Roda `train_relaxed_perceptron` (PERCEPTRON_PARAMS + use_best_effort=True) em
      cada conjunto e guarda w, γ, gamma_history e o aviso emitido: é a referência
      que a página compara, bit a bit, com o porte em JavaScript (`core.js`).
-  3. Injeta dados, referência, o texto do método `fit` e o porte JS em `template.html`.
+  3. Injeta dados, referência, o texto do método `fit`, o porte JS e o pseudocódigo (`pseudocodigo.py`,
+     o mesmo do .docx gerado por `gerar_docx.py`) em `template.html`.
 
 Uso (raiz do projeto, .venv ativo):
     python src/animacao_perceptron/gerar.py [pasta_execucao_completa]
@@ -38,8 +39,10 @@ sys.path.insert(0, os.path.join(RAIZ, "src"))
 
 from relaxed_perceptron import train_relaxed_perceptron  # noqa: E402
 from metrics import compute_centroids  # noqa: E402
-from dissertacao_mestrado import PERCEPTRON_PARAMS  # noqa: E402
+from protocolo import PERCEPTRON_PARAMS  # noqa: E402
 from data_problems import create_problem_d_meialua, create_problem_homem_mulher  # noqa: E402
+sys.path.insert(0, AQUI)
+import pseudocodigo  # noqa: E402  (fonte única do pseudocódigo: página e .docx)
 
 # (modelo como gravado na coluna `model` dos CSVs, alias do asset). "gpt-4o-mini" é o id
 # legado (OpenAI direto); desde 01/10/2026 o protocolo usa "openai/gpt-4o-mini" via OpenRouter.
@@ -49,9 +52,9 @@ SEEDS = [42, 123, 7]
 
 
 def execucao_completa_mais_recente() -> str:
-    pastas = sorted(glob.glob(os.path.join(RAIZ, "execucao_*_completa")))
+    pastas = sorted(glob.glob(os.path.join(RAIZ, "resultados", "execucao_*_completa")))
     if not pastas:
-        raise SystemExit("Nenhuma pasta execucao_*_completa encontrada.")
+        raise SystemExit("Nenhuma pasta resultados/execucao_*_completa encontrada.")
     return pastas[-1]
 
 
@@ -86,7 +89,7 @@ def rotulos_do_lote(inter, X, modelo, c0, c1, f0, rot1):
 
 
 def treino_70(X, seed):
-    """Conjunto de treino da Fase A externa (run_external_problem_pipeline, n_train_ratio=0.7)."""
+    """Conjunto de treino do Passo 2 de F e G (fg_executar, n_train_ratio=0.7)."""
     idx = np.random.RandomState(seed).permutation(len(X))
     return [X[i] for i in idx[:int(0.7 * len(X))]]
 
@@ -99,56 +102,77 @@ def extrair_datasets(execucao: str):
         with open(f) as fh:
             interacoes.extend(json.load(fh))
     print(f"  {len(interacoes)} interações lidas de {os.path.basename(execucao)}")
-    ext = pd.read_csv(sorted(glob.glob(os.path.join(execucao, "bloco23_external_phase_a_*_corrigido_hm.csv"))
-                             or glob.glob(os.path.join(execucao, "bloco23_external_phase_a_*.csv")))[0])
+    modelos_presentes = {e.get("model") for e in interacoes}
+    ext_csv = (sorted(glob.glob(os.path.join(execucao, "bloco23_fg_passos_2_e_4_*_corrigido_hm.csv")))
+               or sorted(glob.glob(os.path.join(execucao, "bloco23_fg_passos_2_e_4_*.csv"))))
+    b1_csv = sorted(glob.glob(os.path.join(execucao, "bloco1_abc_passos_2_a_4_*.csv")))
+    if not ext_csv or not b1_csv:
+        raise SystemExit(f"execução anterior a 13/10/2026: rode `python src/renomear_assets_legado.py {execucao} --aplicar` antes")
+    ext = pd.read_csv(ext_csv[-1])
     ext = ext[ext.n_features == 2]
-    b1 = pd.read_csv(glob.glob(os.path.join(execucao, "bloco1_phases_abc_*.csv"))[0])
+    b1 = pd.read_csv(b1_csv[-1])
     b1 = b1[(b1.class_0 == "A") & (b1.class_1 == "B") & (b1.feature_0 == "x1") & (b1.prompt_variant == "default")]
+    if "k_passo4_bc" in b1.columns:
+        b1 = b1[b1.k_passo4_bc == 0]          # W do Problema A (Passo 4) é o mesmo em todo k; fixa o zero-shot (Passo 2)
+    if "collapsed" in b1.columns:
+        b1 = b1[b1.collapsed == 0]                # sem métrica quando o LLM colapsou (08/10/2026)
 
-    G = {"A": "Problema A (linear, Bloco 1: estimação da métrica)",
+    G = {"A": "Problema A (linear, Bloco 1: Passo 4, estimação da métrica sobre os rótulos do Passo 2)",
          "B": "Problema B (linear, Bloco 1: rotação horária)",
          "C": "Problema C (linear, Bloco 1: rotação anti-horária)",
-         "E": "Problema E (linear, Bloco 2: perito W = [0,3; 1,5])",
-         "D": "Meia-lua (não linear, Fase A externa)",
-         "HM": "Peso × altura (não linear, base real, Fase A externa)"}
+         "E": "Problema E (linear, Bloco 2: especialista W = [0,3; 1,5])",
+         "F": "Problema F (meia-lua, não linear, LLM como aprendiz: Passo 2, split 70/30)",
+         "HM": "Problema G1 (peso × altura, base real normalizada, Passo 2)"}
     cand = []   # (chave, grupo, nome, modelo, X, (c0, c1, f0, rot1), w_csv)
     Xh, _ = create_problem_homem_mulher()
     for seed in SEEDS:
         base = os.path.join(execucao, f"dados_sinteticos_seed{seed}")
         for p in "ABC":
-            X = ler_csv(os.path.join(base, f"problem_{p}.csv"))
+            X = ler_csv(os.path.join(base, f"problema_{p}.csv"))
             for modelo, alias in MODELOS:
                 w_csv = None
                 if p == "A":
                     r = b1[(b1.model == modelo) & (b1.random_seed == seed)]
                     w_csv = [float(r.w_0.iloc[0]), float(r.w_1.iloc[0])] if len(r) else None
                 cand.append((f"{p}_seed{seed}_{alias}", p, f"{G[p].split(' (')[0]}, seed {seed}, {modelo}", modelo, X, ("A", "B", "x1", "B"), w_csv))
-        # problem_E.csv = Problema E (perito linear do Bloco 2; create_problem_e_expert).
-        # Execuções anteriores a 01/10/2026 gravavam esse mesmo conteúdo como problem_D.csv.
-        csv_e = os.path.join(base, "problem_E.csv")
+        # problema_E.csv = Problema E (especialista linear do Bloco 2; create_problem_e_expert).
+        # Execuções anteriores a 01/10/2026 gravavam esse mesmo conteúdo como problema_D.csv.
+        csv_e = os.path.join(base, "problema_E.csv")
         if not os.path.exists(csv_e):
-            csv_e = os.path.join(base, "problem_D.csv")
+            csv_e = os.path.join(base, "problema_D.csv")
         X = ler_csv(csv_e)
         for modelo, alias in MODELOS:
             cand.append((f"E_seed{seed}_{alias}", "E", f"Problema E, seed {seed}, {modelo}", modelo, X, ("A", "B", "x1", "B"), None))
         Xd = treino_70(create_problem_d_meialua(n_samples=150, random_state=seed)[0].tolist(), seed)
         for modelo, alias in MODELOS:
-            r = ext[(ext.model == modelo) & (ext.problem_name == f"meia_lua_seed{seed}") & (ext.seed == seed)]
-            cand.append((f"D_seed{seed}_{alias}", "D", f"Meia-lua, seed {seed}, {modelo} (treino, 105 pontos)", modelo, Xd, ("A", "B", "x1", "B"),
+            r = ext[(ext.model == modelo) & (ext.problem_name.isin([f"F_meia_lua_seed{seed}", f"meia_lua_seed{seed}"])) & (ext.seed == seed)]
+            cand.append((f"F_seed{seed}_{alias}", "F", f"Meia-lua, seed {seed}, {modelo} (treino, 105 pontos)", modelo, Xd, ("A", "B", "x1", "B"),
                          [float(r.w_perc_0.iloc[0]), float(r.w_perc_1.iloc[0])] if len(r) else None))
         Xt = treino_70(Xh.tolist(), seed)
-        for c0, c1, rot1, pname, cl in [("Homem", "Mulher", "Homem", "homem_mulher", "Homem/Mulher"), ("A", "B", "B", "homem_mulher_classesAB", "A/B")]:
+        # Nomes atuais (G1_*, classes Mulher/Homem) e legados (homem_mulher*, ordem
+        # Homem/Mulher até 25/08/2026): a entrada que não casar com os prompts
+        # registrados é omitida por rotulos_do_lote.
+        for c0, c1, rot1, pnames, cl in [
+            ("Mulher", "Homem", "Homem", ("G1_homem_mulher", "homem_mulher"), "Mulher/Homem"),
+            ("Homem", "Mulher", "Homem", ("homem_mulher",), "Homem/Mulher (legado)"),
+            ("A", "B", "B", ("G1_homem_mulher_classesAB", "homem_mulher_classesAB"), "A/B"),
+        ]:
             for f0, fn in [("x1", "x1/x2"), ("peso", "peso/altura")]:
                 for modelo, alias in MODELOS:
-                    r = ext[(ext.model == modelo) & (ext.problem_name == pname) & (ext.seed == seed) & (ext.feature_names == fn)]
-                    cand.append((f"HM_seed{seed}_{'HM' if c0 == 'Homem' else 'AB'}_{f0}_{alias}", "HM",
+                    r = ext[(ext.model == modelo) & (ext.problem_name.isin(pnames)) & (ext.seed == seed) & (ext.feature_names == fn)]
+                    cand.append((f"HM_seed{seed}_{'AB' if c0 == 'A' else ('HM' if c0 == 'Mulher' else 'HMleg')}_{f0}_{alias}", "HM",
                                  f"Peso × altura, seed {seed}, {modelo}, classes {cl}, atributos {fn} (treino, 70 pontos)",
                                  modelo, Xt, (c0, c1, f0, rot1), [float(r.w_perc_0.iloc[0]), float(r.w_perc_1.iloc[0])] if len(r) else None))
 
-    ordem = ["A", "B", "C", "E", "D", "HM"]
+    ordem = ["A", "B", "C", "E", "F", "HM"]
     cand.sort(key=lambda c: ordem.index(c[1]))   # estável: mantém seed e modelo na ordem
     datasets, omitidos = {}, []
+    tem_g1_atual = bool(ext.problem_name.astype(str).str.startswith("G1_").any())
     for k, grupo, nome, modelo, X, (c0, c1, f0, rot1), w_csv in cand:
+        if modelo not in modelos_presentes:          # id legado do modelo (gpt-4o-mini direto): não existe nesta execução
+            continue
+        if "HMleg" in k and tem_g1_atual:            # ordem Homem/Mulher legada: só em execuções anteriores a 26/08/2026
+            continue
         y = rotulos_do_lote(interacoes, X, modelo, c0, c1, f0, rot1)
         if y is None:
             omitidos.append(f"{nome}: rótulos do LLM incompletos no registro"); continue
@@ -199,6 +223,13 @@ def fonte_fitgen(core: str, nome: str = "fitGen"):
     return "\n".join(linhas[ini:fim + 1]), ini + 1
 
 
+def _data_execucao(execucao: str) -> str:
+    """'execucao_2026-10-15_20-15-20_completa' → '15/10/2026'."""
+    b = os.path.basename(execucao.rstrip("/"))
+    d = b.split("_")[1] if "_" in b else ""
+    return f"{d[8:10]}/{d[5:7]}/{d[0:4]}" if len(d) == 10 else b
+
+
 def main():
     execucao = sys.argv[1] if len(sys.argv) > 1 else execucao_completa_mais_recente()
     print("Extraindo conjuntos de dados...")
@@ -222,6 +253,10 @@ def main():
                 .replace("__PY_FIRST_LINE__", str(primeira))
                 .replace("__JS_SOURCES__", esc(json.dumps(js_fontes, ensure_ascii=False)))
                 .replace("__CORE_JS__", esc(core))
+                .replace("__PSEUDO_CODIGO__", esc(json.dumps(pseudocodigo.TEXTO, ensure_ascii=False)))
+                .replace("__PSEUDO_CODIGO_IDS__", json.dumps(pseudocodigo.IDS))
+                .replace("__PY2PSEUDO__", json.dumps({str(k): v for k, v in pseudocodigo.PY2PSEUDO.items()}))
+                .replace("__EXECUCAO__", _data_execucao(execucao))
                 .replace("__DATA_GERACAO__", date.today().strftime("%d/%m/%Y")))
     saida = os.path.join(RAIZ, "algoritmo_perceptron_animado.html")
     with open(saida, "w", encoding="utf-8") as f:

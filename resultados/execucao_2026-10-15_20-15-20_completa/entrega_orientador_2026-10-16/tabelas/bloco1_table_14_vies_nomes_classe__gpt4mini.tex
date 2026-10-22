@@ -1,0 +1,32 @@
+\begin{table}[htbp]
+\centering
+\small
+\caption{Problema A, Passo 2, e B/C, Passos 3 e 4, com nomes de classe (openai/gpt-4o-mini): fidelidade, direção de $\hat{W}$ e consistência.}
+\label{tab:bloco1_vies_nomes_classe_gpt4mini}
+\begin{tabular}{llrrrrrrrr}
+\toprule
+Variante & Regime & Fid.\ A & Acur.\ LLM vs real A & Acur.\ vs real (inv.\ perm.) & $w_1/w_2$ & Consist.\ B & $\kappa$ B & Consist.\ C & $\kappa$ C \\
+\midrule
+0 / 1 & zero-shot (n=2) & 66,0 & 55,7 & 55,7 & 0,34 & — (n=0) & — (n=0) & 65,0 (n=1) & 0,155 (n=1) \\
+\midrule
+\textbf{A / B} & \textbf{zero-shot} & \textbf{86,7 (85,3–88,0)} & \textbf{26,9} & \textbf{73,1} & \textbf{0,21} & \textbf{69,0} & \textbf{0,320} & \textbf{87,0} & \textbf{0,725} \\
+Azul / Vermelho & zero-shot & 92,2 (91,3–94,0) & 14,4 & 85,6 & 0,42 & 78,0 & 0,555 & 95,0 & 0,899 \\
+B / A & zero-shot & 70,0 (65,3–74,0) & 50,4 & 50,9 & 1,13 & 78,3 & 0,562 & 65,0 & 0,269 \\
+Negativo / Positivo & zero-shot & 97,1 (96,0–98,0) & 89,8 & 89,8 & 0,42 & 72,3 & 0,434 & 98,0 & 0,960 \\
+Positivo / Negativo & zero-shot & 99,3 (98,7–100,0) & 7,1 & 92,9 & 0,39 & 80,7 & 0,612 & 97,7 & 0,953 \\
+Vermelho / Azul & zero-shot & 73,1 (70,7–74,7) & 68,4 & 68,4 & 0,44 & 57,7 & 0,060 & 70,7 & 0,368 \\
+\midrule
+0 / 1 & 10-shot (n=2) & 66,0 & 55,7 & 55,7 & 0,34 & 73,9 & 0,462 & 80,0 & 0,553 \\
+\midrule
+\textbf{A / B} & \textbf{10-shot} & \textbf{86,7 (85,3–88,0)} & \textbf{26,9} & \textbf{73,1} & \textbf{0,21} & \textbf{93,7} & \textbf{0,871} & \textbf{93,0} & \textbf{0,858} \\
+Azul / Vermelho & 10-shot & 92,2 (91,3–94,0) & 14,4 & 85,6 & 0,42 & 75,9 & 0,515 & 96,3 & 0,926 \\
+B / A & 10-shot & 70,0 (65,3–74,0) & 50,4 & 50,9 & 1,13 & 94,4 & 0,889 & 91,5 & 0,829 \\
+Negativo / Positivo & 10-shot & 97,1 (96,0–98,0) & 89,8 & 89,8 & 0,42 & 71,1 & 0,405 & 82,6 & 0,636 \\
+Positivo / Negativo & 10-shot & 99,3 (98,7–100,0) & 7,1 & 92,9 & 0,39 & 78,9 & 0,564 & 89,6 & 0,791 \\
+Vermelho / Azul & 10-shot & 73,1 (70,7–74,7) & 68,4 & 68,4 & 0,44 & 81,5 & 0,612 & 93,0 & 0,859 \\
+\midrule
+1 / 0 & zero-shot (colapso do A em 3/3 sementes) & — & — & — & — & — & — & — \\
+\bottomrule
+\multicolumn{10}{p{0.95\linewidth}}{\footnotesize Problema A, Passo 2, e B/C, Passos 3 e 4, por nomes de classe; os demais fatores ficam na configuração base. Médias das sementes (fidelidade com mín–máx). Fid.\ A = fidelidade (vs LLM) no A; Acur.\ LLM vs real A = acurácia (vs rótulo real) do LLM no A, contexto; $w_1/w_2$ = razão da métrica estimada (Perceptron). Fid.\ A, Acur.\ LLM vs real A e $w_1/w_2$ vêm do Problema A (Passo 4 sobre os rótulos do Passo 2), sempre zero-shot (iguais nas linhas zero e 10-shot). $\kappa$ = Cohen's $\kappa$ (faixas de Landis e Koch, 1977). Em negrito: a configuração de referência. (n=…) no Regime = número de sementes sem colapso do A na linha, quando menor que o total; (n=…) numa célula de B ou C = sementes sem colapso do LLM naquele problema (collapsed\_b/c); as médias vêm só delas. Acur.\ vs real (inv.\ perm.) = max($a$, 1 $-$ $a$): nos pares invertidos (e em zero-shot) a correspondência entre nome e classe é arbitrária, e só o valor invariante à permutação compara as variantes. 10-shot: B e C, Passo 4, exemplos rotulados pela métrica zero-shot do A (H2). Os exemplos few-shot de B e C são rotulados por $\hat{W}$ do A com os centróides do A; a consistência usa os centróides locais, recalculados pelos rótulos do LLM no próprio problema.} \\
+\end{tabular}
+\end{table}

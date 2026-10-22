@@ -1,0 +1,20 @@
+\begin{table}[htbp]
+\centering
+\small
+\caption{Problema E1, Passo 5 (openai/gpt-4o-mini): viés de ordem dos exemplos.}
+\label{tab:bloco2_E1_passo5_ordem_gpt4mini}
+\begin{tabular}{lrrrrrr}
+\toprule
+ & \multicolumn{3}{c}{Acur.\ vs espec.\ (\%)} & \multicolumn{3}{c}{$\kappa$} \\ \cmidrule(lr){2-4} \cmidrule(lr){5-7}
+Ordenação & k = 4 & k = 10 & k = 20 & k = 4 & k = 10 & k = 20 \\
+\midrule
+classe 0 primeiro & 81,5 & 80,0 & 87,7 & 0,631 & 0,600 & 0,752 \\
+classe 1 primeiro & 79,0 & 84,0 & 85,1 & 0,576 & 0,682 & 0,703 \\
+embaralhada & 81,7 & 86,9 & 85,6 & 0,637 & 0,738 & 0,716 \\
+alternada & 81,5 & 84,8 & 86,7 & 0,629 & 0,695 & 0,735 \\
+\midrule
+\textbf{amplitude (máx $-$ mín)} & \textbf{2,7} & \textbf{6,9} & \textbf{2,6} &  &  &  \\
+\bottomrule
+\multicolumn{7}{p{0.95\linewidth}}{\footnotesize Problema E1, Passo 5: mesmos exemplos (estratégia mista) em quatro ordenações. Acur.\ vs espec.\ = acurácia (LLM vs especialista): fração dos pontos de teste em que o LLM reproduz o rótulo do especialista. $\kappa$ = Cohen's $\kappa$ (faixas de Landis e Koch, 1977). Médias das sementes.} \\
+\end{tabular}
+\end{table}

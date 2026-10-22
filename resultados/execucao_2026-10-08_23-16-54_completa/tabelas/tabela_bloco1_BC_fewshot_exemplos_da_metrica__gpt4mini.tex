@@ -1,0 +1,19 @@
+\begin{table}[htbp]
+\centering
+\small
+\caption{Problemas B e C (openai/gpt-4o-mini): few-shot com exemplos rotulados pela métrica do A (H2).}
+\label{tab:bloco1_BC_fewshot_exemplos_da_metrica_gpt4mini}
+\begin{tabular}{lrrlrrrlr}
+\toprule
+ & \multicolumn{4}{c}{Problema B} & \multicolumn{4}{c}{Problema C} \\ \cmidrule(lr){2-5} \cmidrule(lr){6-9}
+Regime & Consist. & $\kappa$ & Faixa & $\Delta$ & Consist. & $\kappa$ & Faixa & $\Delta$ \\
+\midrule
+zero-shot & 70,7 (69,0–74,0) & 0,348 & razoável & +0,0 & 88,0 (85,0–90,0) & 0,745 & substancial & +0,0 \\
+4-shot & 83,0 (67,7–91,7) & 0,658 & substancial & +12,3 & 93,8 (91,7–97,9) & 0,875 & quase perfeita & +5,8 \\
+10-shot & 82,2 (64,4–93,3) & 0,624 & substancial & +11,6 & 91,9 (87,8–94,4) & 0,834 & quase perfeita & +3,9 \\
+20-shot & 85,0 (61,3–100,0) & 0,698 & substancial & +14,3 & 93,8 (91,2–96,2) & 0,874 & quase perfeita & +5,8 \\
+40-shot & 88,3 (70,0–98,3) & 0,767 & substancial & +17,7 & 95,6 (95,0–96,7) & 0,911 & quase perfeita & +7,6 \\
+\bottomrule
+\multicolumn{9}{p{0.95\linewidth}}{\footnotesize Hipótese H2: os n exemplos mostrados ao LLM em B e C são rotulados pela métrica zero-shot do A (seleção por margem, n/2 por classe) e o LLM classifica os demais pontos. Médias das sementes (mín–máx); $\Delta$ em relação ao zero-shot. Perceptron, configuração base.} \\
+\end{tabular}
+\end{table}

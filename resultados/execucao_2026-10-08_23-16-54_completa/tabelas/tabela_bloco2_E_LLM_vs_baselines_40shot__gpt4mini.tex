@@ -1,0 +1,16 @@
+\begin{table}[htbp]
+\centering
+\small
+\caption{Bloco 2 (openai/gpt-4o-mini): LLM com 40 exemplos versus classificadores clássicos.}
+\label{tab:bloco2_E_LLM_vs_baselines_40shot_gpt4mini}
+\begin{tabular}{lrlrrr}
+\toprule
+Especialista & LLM (mista) & LLM (melhor estratégia) & Logistic Regression & SVM (RBF) & k-NN (k=5) \\
+\midrule
+E1 & 97,3 & 97,6 (Difícil) & 100,0 & 95,2 & 91,2 \\
+E2 & 94,5 & 96,0 (Aleatória) & 100,0 & 95,8 & 93,3 \\
+E3 & 93,6 & 97,6 (Difícil) & 100,0 & 99,4 & 98,2 \\
+\bottomrule
+\multicolumn{6}{p{0.95\linewidth}}{\footnotesize Acurácia em relação ao especialista com 40 exemplos. Os classificadores clássicos são treinados nos mesmos exemplos da estratégia mista e avaliados nos mesmos pontos; não dependem do LLM.} \\
+\end{tabular}
+\end{table}

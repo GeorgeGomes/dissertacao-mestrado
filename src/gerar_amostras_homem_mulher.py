@@ -182,8 +182,9 @@ que é também a classe mais alta e mais pesada. Portanto `classe 1 = H` e `clas
 
 ## Conversão para kg e metro (arquivos X' e T')
 
-A base veio normalizada (arquivos `Hghtwght_input.txt` do NeuroSolutions), com peso e
-altura entre {ancoras[0, 0]:g} e {ancoras[1, 0]:g}. Seguiu-se o procedimento indicado pelo
+A base veio normalizada (arquivos `Hghtwght_input.txt` do NeuroSolutions), com peso entre
+{ancoras[0, 0]:g} e {ancoras[1, 0]:g} e altura entre {ancoras[0, 1]:g} e {ancoras[1, 1]:g}.
+Seguiu-se o procedimento indicado pelo
 orientador: o menor valor das 100 amostras é associado a um mínimo plausível, o maior a
 um máximo plausível, e todos os demais seguem por regra de três (mapa linear), o que
 preserva a proporcionalidade entre as amostras:

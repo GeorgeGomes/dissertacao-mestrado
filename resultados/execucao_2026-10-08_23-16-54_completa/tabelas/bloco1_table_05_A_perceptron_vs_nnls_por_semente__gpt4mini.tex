@@ -1,0 +1,19 @@
+\begin{table}[htbp]
+\centering
+\small
+\caption{Perceptron Estruturado versus NNLS (openai/gpt-4o-mini): fidelidade no A e consistência em B e C, por semente.}
+\label{tab:bloco1_A_perceptron_vs_nnls_por_semente_gpt4mini}
+\begin{tabular}{lrrrrrrrrr}
+\toprule
+ & \multicolumn{2}{c}{Fidelidade A (\%)} &  & \multicolumn{2}{c}{Consist.\ B (\%)} & \multicolumn{2}{c}{Consist.\ C (\%)} &  &  \\ \cmidrule(lr){2-3} \cmidrule(lr){5-6} \cmidrule(lr){7-8}
+Semente & Perc. & NNLS & cos & Perc. & NNLS & Perc. & NNLS & $\kappa$ B & $\kappa$ C \\
+\midrule
+7 & 80,7 & 84,0 & 0,989 & 74,0 & 76,0 & 85,0 & 86,0 & 0,421 & 0,681 \\
+42 & 85,3 & 83,3 & 0,998 & 69,0 & 67,0 & 90,0 & 89,0 & 0,288 & 0,789 \\
+123 & 78,0† & 86,0 & 0,954 & 69,0 & 67,0 & 89,0 & 87,0 & 0,334 & 0,764 \\
+\midrule
+\textbf{média} & \textbf{81,3†} & \textbf{84,4} & \textbf{0,980} & \textbf{70,7} & \textbf{70,0} & \textbf{88,0} & \textbf{87,3} & \textbf{0,348} & \textbf{0,745} \\
+\bottomrule
+\multicolumn{10}{p{0.95\linewidth}}{\footnotesize Zero-shot, configuração base (classes A/B, atributos x1/x2, prompt padrão). Fidelidade no A (vs LLM); consistência em B e C (só $\hat{W}$ transferido, centróides locais). Atenção: nesta execução (anterior a 10/10/2026) as colunas NNLS de B e C vêm de uma recoleta separada dos rótulos do LLM, e a diferença mistura estimador e flip a $T=0$. cos = cosseno entre os $\hat{W}$ dos dois estimadores. $\kappa$ = Cohen's $\kappa$ (faixas de Landis e Koch, 1977). $\kappa$ do Perceptron. † = em pelo menos uma estimativa o Perceptron devolveu $\hat{W}$ em melhor esforço ($\gamma = 0$, sem margem viável).} \\
+\end{tabular}
+\end{table}

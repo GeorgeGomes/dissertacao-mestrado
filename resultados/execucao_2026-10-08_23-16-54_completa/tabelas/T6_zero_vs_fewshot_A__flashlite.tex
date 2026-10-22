@@ -1,0 +1,23 @@
+\begin{table}[htbp]
+\centering
+\footnotesize
+\caption{Problema A (google/gemini-2.5-flash-lite): zero-shot versus few-shot, lado a lado.}
+\label{tab:T6_zero_few_A_flashlite}
+\begin{tabular}{llrrrrrrrrrrr}
+\toprule
+ &  & \multicolumn{3}{c}{Fidelidade vs LLM} & \multicolumn{3}{c}{Acurácia da métrica vs real} & \multicolumn{3}{c}{Acurácia do LLM vs real} & \multicolumn{2}{c}{cos(Perc., NNLS)} \\ \cmidrule(lr){3-5} \cmidrule(lr){6-8} \cmidrule(lr){9-11} \cmidrule(lr){12-13}
+Algoritmo & Few-shot & Fid.\ zero & Fid.\ few & $\Delta$ & Métr.\ vs real zero & Métr.\ vs real few & $\Delta$ & LLM vs real zero & LLM vs real few & $\Delta$ & cos zero & cos few \\
+\midrule
+perceptron & 4-shot & 81,3 (78,7–83,3) & 93,8 (63,0–99,3) & +12,4 & 17,6 (15,3–21,3) & 92,6 (83,3–98,0) & +75,0 & 25,1 (21,3–29,3) & 88,7 (57,5–98,6) & +63,6 & 0,998 & 0,926 \\
+perceptron & 10-shot & 81,3 (78,7–83,3) & 97,5 (87,1–100,0) & +16,1 & 17,6 (15,3–21,3) & 94,7 (88,7–98,0) & +77,2 & 25,1 (21,3–29,3) & 94,0 (87,1–97,9) & +68,9 & 0,998 & 0,837 \\
+perceptron & 20-shot & 81,3 (78,7–83,3) & 97,9 (95,4–100,0) & +16,6 & 17,6 (15,3–21,3) & 95,4 (92,7–98,0) & +77,9 & 25,1 (21,3–29,3) & 94,1 (88,5–97,7) & +69,0 & 0,998 & 0,815 \\
+perceptron & 40-shot & 81,3 (78,7–83,3) & 99,0 (95,5–100,0) & +17,7 & 17,6 (15,3–21,3) & 95,3 (92,7–98,0) & +77,8 & 25,1 (21,3–29,3) & 95,1 (90,9–98,2) & +69,9 & 0,998 & 0,858 \\
+\midrule
+nnls & 4-shot & 82,7 (80,7–84,0) & 93,3 (59,6–100,0) & +10,6 & 17,1 (14,7–19,3) & 92,1 (73,3–98,0) & +75,0 & 25,1 (21,3–29,3) & 88,7 (57,5–98,6) & +63,6 & 0,998 & 0,926 \\
+nnls & 10-shot & 82,7 (80,7–84,0) & 97,5 (88,6–100,0) & +14,9 & 17,1 (14,7–19,3) & 95,1 (92,7–98,0) & +78,0 & 25,1 (21,3–29,3) & 94,0 (87,1–97,9) & +68,9 & 0,998 & 0,837 \\
+nnls & 20-shot & 82,7 (80,7–84,0) & 98,1 (95,4–100,0) & +15,5 & 17,1 (14,7–19,3) & 95,6 (92,7–98,0) & +78,4 & 25,1 (21,3–29,3) & 94,1 (88,5–97,7) & +69,0 & 0,998 & 0,815 \\
+nnls & 40-shot & 82,7 (80,7–84,0) & 99,0 (95,5–100,0) & +16,3 & 17,1 (14,7–19,3) & 95,3 (92,7–98,0) & +78,1 & 25,1 (21,3–29,3) & 95,1 (90,9–98,2) & +69,9 & 0,998 & 0,858 \\
+\bottomrule
+\multicolumn{13}{p{0.95\linewidth}}{\footnotesize Problema A em R$^2$, médias das sementes e repetições (mín–máx entre parênteses), em \%. $\Delta$ = few-shot $-$ zero-shot, em pontos percentuais. Few-shot: k exemplos rotulados pelo rótulo real (k/2 por classe). cos = cosseno entre os $\hat{W}$ do Perceptron e do NNLS na mesma coleta.} \\
+\end{tabular}
+\end{table}

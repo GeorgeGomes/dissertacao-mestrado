@@ -1,0 +1,21 @@
+\begin{table}[htbp]
+\centering
+\small
+\caption{Problema A (google/gemini-2.5-flash-lite): métrica estimada em zero-shot, few-shot e pelo rótulo real.}
+\label{tab:T1_A_flashlite}
+\begin{tabular}{lrrrrlrrl}
+\toprule
+ &  &  & \multicolumn{3}{c}{Perceptron} & \multicolumn{3}{c}{NNLS} \\ \cmidrule(lr){4-6} \cmidrule(lr){7-9}
+Regime & LLM vs real & Partição LLM (n0/n1) & Fid.\ vs LLM & Métr.\ vs real & $\hat{W}$ unit. & Fid.\ vs LLM & Métr.\ vs real & $\hat{W}$ unit. \\
+\midrule
+zero-shot & 25,1 (21,3–29,3) & 46/104 & 81,3 (78,7–83,3) & 17,6 (15,3–21,3) & [0,27; 0,96] & 82,7 (80,7–84,0) & 17,1 (14,7–19,3) & [0,26; 0,96] \\
+4-shot & 88,7 (57,5–98,6) & 78/68 & 93,8 (63,0–99,3) & 92,6 (83,3–98,0) & [0,43; 0,86] & 93,3 (59,6–100,0) & 92,1 (73,3–98,0) & [0,45; 0,73] \\
+10-shot & 94,0 (87,1–97,9) & 71/69 & 97,5 (87,1–100,0) & 94,7 (88,7–98,0) & [0,61; 0,74] & 97,5 (88,6–100,0) & 95,1 (92,7–98,0) & [0,67; 0,50] \\
+20-shot & 94,1 (88,5–97,7) & 66/64 & 97,9 (95,4–100,0) & 95,4 (92,7–98,0) & [0,67; 0,70] & 98,1 (95,4–100,0) & 95,6 (92,7–98,0) & [0,69; 0,50] \\
+40-shot & 95,1 (90,9–98,2) & 55/55 & 99,0 (95,5–100,0) & 95,3 (92,7–98,0) & [0,70; 0,71] & 99,0 (95,5–100,0) & 95,3 (92,7–98,0) & [0,81; 0,39] \\
+\midrule
+W ajustado ao rótulo real (teto) & — & — & 96,2 (95,3–98,0) & 96,2 (95,3–98,0) & [0,37; 0,89] & 95,3 (93,3–98,0) & 95,3 (93,3–98,0) & [0,51; 0,86] \\
+\bottomrule
+\multicolumn{9}{p{0.95\linewidth}}{\footnotesize Médias das sementes e repetições, mín–máx entre parênteses, em \%. Few-shot: exemplos rotulados pelo rótulo real (k/2 por classe, sorteio aleatório), LLM classifica os $150-k$ restantes; fidelidade medida nesses pontos, acurácia da métrica aplicada aos 150. Teto: W ajustado diretamente ao rótulo real (não dá 100\% pela sobreposição das gaussianas do A). ``—'' = colapso em classe única.} \\
+\end{tabular}
+\end{table}

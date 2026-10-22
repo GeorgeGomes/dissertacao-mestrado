@@ -1,0 +1,18 @@
+\begin{table}[htbp]
+\centering
+\small
+\caption{Problema D, meia-lua, Passo 6 (google/gemini-2.5-flash-lite): SVM RBF treinado no rótulo real versus SVM RBF treinado nos rótulos zero-shot do LLM (Passo 2), nos 150 pontos; números da figura bloco1\_graphic\_14.}
+\label{tab:bloco1_D_passo6_svm_flashlite}
+\begin{tabular}{llrrrrrrcrr}
+\toprule
+ &  &  & \multicolumn{2}{c}{SVM RBF no rótulo real} & \multicolumn{3}{c}{SVM RBF nos rótulos do LLM} & \multicolumn{3}{c}{Métrica diagonal (Passo 4, maior fid.)} \\ \cmidrule(lr){4-5} \cmidrule(lr){6-8} \cmidrule(lr){9-11}
+Semente & Partição LLM (n0/n1) & Acur. LLM vs real & Acur. vs real & erros (de 150) & Fid. (vs LLM) & Acur. vs real & erros vs real & Espaço & Fid. (vs LLM) & Acur. vs real \\
+\midrule
+7 & 86/64 & 59,3 & 97,3 & 4 & 89,3 & 59,3 & 61 & R$^3$ & 86,0 & 61,3 \\
+42 & 88/62 & 54,0 & 99,3 & 1 & 94,0 & 48,0 & 78 & R$^3$ & 86,0 & 57,3 \\
+123 & 83/67 & 53,3 & 95,3 & 7 & 92,0 & 49,3 & 76 & R$^3$ & 84,0 & 62,7 \\
+\textbf{média} &  & \textbf{55,6} & \textbf{97,3} & \textbf{4,0} & \textbf{91,8} & \textbf{52,2} & \textbf{71,7} &  & \textbf{85,3} & \textbf{60,4} \\
+\bottomrule
+\multicolumn{11}{p{0.95\linewidth}}{\footnotesize SVM RBF com kernel gaussiano (gamma = `scale', C = 1), ajustado e avaliado nos mesmos 150 pontos: o treinado no rótulo real é a régua de fronteira não linear; o treinado nos rótulos do LLM é a fronteira efetiva do LLM. Fid. (vs LLM) = fração dos pontos em que o SVM reproduz o rótulo do LLM; Acur. vs real = fração de concordância com o rótulo real. A métrica diagonal é a de maior fidelidade entre R$^2$, R$^3$ e R$^4$ no zero-shot (Passo 4). Acurácias vs real são literais: em zero-shot a correspondência entre nome e classe é arbitrária (o valor invariante à permutação é max($a$, 1 $-$ $a$)); a fidelidade não depende disso. Não há conjunto de teste: a figura e a tabela descrevem a separação induzida nos 150 pontos, não generalização.} \\
+\end{tabular}
+\end{table}

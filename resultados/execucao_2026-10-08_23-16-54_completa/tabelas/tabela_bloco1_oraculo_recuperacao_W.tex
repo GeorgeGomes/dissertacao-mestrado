@@ -1,0 +1,30 @@
+\begin{table}[htbp]
+\centering
+\small
+\caption{Teste-oráculo: recuperação de uma métrica conhecida pelos dois estimadores.}
+\label{tab:bloco1_oraculo_recuperacao_W}
+\begin{tabular}{lllllrr}
+\toprule
+Problema & W verdadeiro & Pontos & Algoritmo & W recuperado (unit.) & Cosseno & Acurácia (\%) \\
+\midrule
+Problema 1 & [1,0; 1,0] (euclidiana) & B (100 pts) & perceptron & [0,46; 0,54] & 0,992 (0,975–1,000) & 98,3 (98,0–99,0) \\
+Problema 1 & [1,0; 1,0] (euclidiana) & B (100 pts) & nnls & [0,44; 0,56] & 0,989 (0,971–1,000) & 97,7 (97,0–98,0) \\
+\midrule
+Problema 2 & [0,3; 1,5] & E (150 pts) & perceptron & [0,18; 0,82] & 1,000 (1,000–1,000) & 100,0 \\
+Problema 2 & [0,3; 1,5] & E (150 pts) & nnls & [0,26; 0,74] & 0,991 (0,989–0,993) & 96,7 (95,3–98,7) \\
+\midrule
+Problema 3 & [1,5; 0,3] & E (150 pts) & perceptron & [0,80; 0,20] & 0,998 (0,997–1,000) & 100,0 \\
+Problema 3 & [1,5; 0,3] & E (150 pts) & nnls & [0,73; 0,27] & 0,989 (0,987–0,990) & 98,2 (96,7–99,3) \\
+\midrule
+anisotrópico forte\_aniso & [11,11; 0,44] & sintético & perceptron & [0,75; 0,25] & 0,958 (0,952–0,965) & 100,0 \\
+anisotrópico forte\_aniso & [11,11; 0,44] & sintético & nnls & [0,97; 0,03] & 1,000 (1,000–1,000) & 100,0 \\
+\midrule
+anisotrópico x1\_dom & [0,25; 4,00] & sintético & perceptron & [0,44; 0,56] & 0,824 (0,750–0,870) & 100,0 \\
+anisotrópico x1\_dom & [0,25; 4,00] & sintético & nnls & [0,05; 0,95] & 0,999 (0,998–1,000) & 100,0 \\
+\midrule
+anisotrópico x2\_dom & [4,00; 0,25] & sintético & perceptron & [0,56; 0,44] & 0,824 (0,750–0,871) & 100,0 \\
+anisotrópico x2\_dom & [4,00; 0,25] & sintético & nnls & [0,96; 0,04] & 0,999 (0,998–0,999) & 100,0 \\
+\bottomrule
+\multicolumn{7}{p{0.95\linewidth}}{\footnotesize Os rótulos vêm da regra do centróide mais próximo sob a métrica verdadeira (não há LLM). Problema 1: pontos do Problema B; Problemas 2 e 3: pontos do Problema E com as métricas dos especialistas E1 e E2. W recuperado normalizado (só a direção importa). Médias das sementes (mín–máx).} \\
+\end{tabular}
+\end{table}

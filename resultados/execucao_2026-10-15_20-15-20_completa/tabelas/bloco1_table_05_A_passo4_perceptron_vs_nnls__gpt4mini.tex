@@ -1,0 +1,19 @@
+\begin{table}[htbp]
+\centering
+\small
+\caption{Perceptron Estruturado versus NNLS (openai/gpt-4o-mini): fidelidade no A (Passo 4) e consistência em B e C (Passo 3), por semente.}
+\label{tab:bloco1_A_passo4_perceptron_vs_nnls_gpt4mini}
+\begin{tabular}{lrrrrrrrrr}
+\toprule
+ & \multicolumn{2}{c}{Fidelidade A (\%)} &  & \multicolumn{2}{c}{Consist.\ B (\%)} & \multicolumn{2}{c}{Consist.\ C (\%)} &  &  \\ \cmidrule(lr){2-3} \cmidrule(lr){5-6} \cmidrule(lr){7-8}
+Semente & Perc. & NNLS & cos & Perc. & NNLS & Perc. & NNLS & $\kappa$ B & $\kappa$ C \\
+\midrule
+7 & 86,7† & 84,7 & 0,981 & 73,0 & 75,0 & 83,0 & 84,0 & 0,414 & 0,636 \\
+42 & 85,3† & 84,0 & 0,995 & 67,0 & 69,0 & 90,0 & 90,0 & 0,255 & 0,789 \\
+123 & 88,0† & 87,3 & 0,999 & 67,0 & 67,0 & 88,0 & 89,0 & 0,291 & 0,752 \\
+\midrule
+\textbf{média} & \textbf{86,7†} & \textbf{85,3} & \textbf{0,992} & \textbf{69,0} & \textbf{70,3} & \textbf{87,0} & \textbf{87,7} & \textbf{0,320} & \textbf{0,725} \\
+\bottomrule
+\multicolumn{10}{p{0.95\linewidth}}{\footnotesize Zero-shot, configuração base (classes A/B, atributos x1/x2, prompt padrão). Fidelidade no A (Passo 4, sobre os rótulos zero-shot do Passo 2); consistência em B e C (Passo 3: só $\hat{W}$ transferido, centróides locais). As colunas NNLS de B e C são PAREADAS: mesmos rótulos zero-shot do LLM para os dois estimadores (só a métrica muda). cos = cosseno entre os $\hat{W}$ dos dois estimadores. $\kappa$ = Cohen's $\kappa$ (faixas de Landis e Koch, 1977). $\kappa$ do Perceptron. † = em pelo menos uma estimativa o Perceptron não encontrou $\hat{W}$ que separe os rótulos: melhor esforço ($\gamma = 0$) ou margem bruta mínima negativa (algum ponto do lado errado da fronteira).} \\
+\end{tabular}
+\end{table}

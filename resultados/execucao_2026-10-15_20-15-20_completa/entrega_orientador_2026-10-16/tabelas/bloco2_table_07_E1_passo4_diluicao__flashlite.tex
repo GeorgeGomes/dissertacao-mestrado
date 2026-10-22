@@ -1,0 +1,19 @@
+\begin{table}[htbp]
+\centering
+\small
+\caption{Problema E1, Passo 4 (google/gemini-2.5-flash-lite): experimento de diluição.}
+\label{tab:bloco2_E1_passo4_diluicao_flashlite}
+\begin{tabular}{rrrrrr}
+\toprule
+k & difíceis & fáceis & Acur.\ vs espec. & $\kappa$ & F1-Macro \\
+\midrule
+4 & 4 & 0 & 58,4 (38,4–81,5) & 0,167 & 55,4 \\
+6 & 4 & 2 & 89,8 (85,4–93,8) & 0,796 & 89,8 \\
+8 & 4 & 4 & 90,1 (86,6–92,3) & 0,803 & 90,1 \\
+14 & 4 & 10 & 89,2 (86,0–91,9) & 0,785 & 89,2 \\
+20 & 4 & 16 & 89,7 (86,2–93,8) & 0,795 & 89,7 \\
+24 & 4 & 20 & 89,4 (86,5–92,9) & 0,789 & 89,4 \\
+\bottomrule
+\multicolumn{6}{p{0.95\linewidth}}{\footnotesize Problema E1, Passo 4. Exemplos difíceis fixos (menor margem) e fáceis acrescentados progressivamente. Acur.\ vs espec.\ = acurácia (LLM vs especialista): fração dos pontos de teste em que o LLM reproduz o rótulo do especialista. $\kappa$ = Cohen's $\kappa$ (faixas de Landis e Koch, 1977). F1-Macro em \%. Médias das sementes (mín–máx).} \\
+\end{tabular}
+\end{table}

@@ -1,0 +1,22 @@
+\begin{table}[htbp]
+\centering
+\small
+\caption{Problema A, Passo 2, e B/C, Passos 3 e 4, com variantes de prompt (openai/gpt-4o-mini): fidelidade, direção de $\hat{W}$ e consistência.}
+\label{tab:bloco1_vies_variantes_prompt_gpt4mini}
+\begin{tabular}{llrrrrrrr}
+\toprule
+Variante & Regime & Fid.\ A & Acur.\ LLM vs real A & $w_1/w_2$ & Consist.\ B & $\kappa$ B & Consist.\ C & $\kappa$ C \\
+\midrule
+chain-of-thought & zero-shot & 78,2 (76,7–79,3) & 28,9 & 0,21 & 60,0 & 0,129 & 78,0 & 0,559 \\
+\textbf{padrão} & \textbf{zero-shot} & \textbf{86,7 (85,3–88,0)} & \textbf{26,9} & \textbf{0,21} & \textbf{69,0} & \textbf{0,320} & \textbf{87,0} & \textbf{0,725} \\
+geométrica & zero-shot & 79,6 (72,7–84,7) & 44,0 & 0,10 & 65,3 & 0,130 & 79,7 & 0,444 \\
+tabular & zero-shot & 72,2 (69,3–76,7) & 45,8 & 0,10 & 69,7 & 0,240 & 72,5 (n=2) & 0,212 (n=2) \\
+\midrule
+chain-of-thought & 10-shot & 78,2 (76,7–79,3) & 28,9 & 0,21 & 93,0 & 0,858 & 91,5 & 0,829 \\
+\textbf{padrão} & \textbf{10-shot} & \textbf{86,7 (85,3–88,0)} & \textbf{26,9} & \textbf{0,21} & \textbf{93,7} & \textbf{0,871} & \textbf{93,0} & \textbf{0,858} \\
+geométrica & 10-shot & 79,6 (72,7–84,7) & 44,0 & 0,10 & 91,1 & 0,799 & 94,8 & 0,896 \\
+tabular & 10-shot & 72,2 (69,3–76,7) & 45,8 & 0,10 & 96,3 & 0,926 & 85,6 & 0,679 \\
+\bottomrule
+\multicolumn{9}{p{0.95\linewidth}}{\footnotesize Problema A, Passo 2, e B/C, Passos 3 e 4, por variantes de prompt; os demais fatores ficam na configuração base. Médias das sementes (fidelidade com mín–máx). Fid.\ A = fidelidade (vs LLM) no A; Acur.\ LLM vs real A = acurácia (vs rótulo real) do LLM no A, contexto; $w_1/w_2$ = razão da métrica estimada (Perceptron). Fid.\ A, Acur.\ LLM vs real A e $w_1/w_2$ vêm do Problema A (Passo 4 sobre os rótulos do Passo 2), sempre zero-shot (iguais nas linhas zero e 10-shot). $\kappa$ = Cohen's $\kappa$ (faixas de Landis e Koch, 1977). Em negrito: a configuração de referência. (n=…) no Regime = número de sementes sem colapso do A na linha, quando menor que o total; (n=…) numa célula de B ou C = sementes sem colapso do LLM naquele problema (collapsed\_b/c); as médias vêm só delas. Em zero-shot (e com nomes de classe neutros) a correspondência entre nome e classe é arbitrária: a acurácia (vs rótulo real) do LLM pode sair abaixo de 50\%; o valor invariante à permutação é max($a$, 1 $-$ $a$). 10-shot: B e C, Passo 4, exemplos rotulados pela métrica zero-shot do A (H2). Os exemplos few-shot de B e C são rotulados por $\hat{W}$ do A com os centróides do A; a consistência usa os centróides locais, recalculados pelos rótulos do LLM no próprio problema.} \\
+\end{tabular}
+\end{table}

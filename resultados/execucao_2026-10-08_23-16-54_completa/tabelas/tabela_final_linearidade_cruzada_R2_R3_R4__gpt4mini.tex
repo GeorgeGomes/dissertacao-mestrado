@@ -1,0 +1,28 @@
+\begin{table}[htbp]
+\centering
+\small
+\caption{Linearidade cruzada (openai/gpt-4o-mini): fidelidade e acurácia em R$^2$, R$^3$ e R$^4$ nos problemas linear e não lineares.}
+\label{tab:final_linearidade_cruzada_R2_R3_R4_gpt4mini}
+\begin{tabular}{llrrrrrrrr}
+\toprule
+ &  & \multicolumn{4}{c}{Fidelidade vs LLM (\%)} & \multicolumn{4}{c}{Acurácia vs real (\%)} \\ \cmidrule(lr){3-6} \cmidrule(lr){7-10}
+Problema & Algoritmo & R$^2$ & R$^3$ & R$^4$ & $\Delta$ R$^4$$-$R$^2$ & R$^2$ & R$^3$ & R$^4$ & $\Delta$ \\
+\midrule
+A\_linear & perceptron & 81,3 & 82,4 & 86,0 & +4,7 & — & — & — & — \\
+A\_linear & nnls & 84,4 & 85,8 & 88,0 & +3,6 & — & — & — & — \\
+\midrule
+F\_meia\_lua & perceptron & 74,3 & 74,3 & 75,2 & +1,0 & 45,7 & 45,7 & 60,0 & +14,3 \\
+F\_meia\_lua & nnls & 68,6 & 82,9 & 76,2 & +7,6 & 57,1 & 54,3 & 59,0 & +1,9 \\
+\midrule
+G1\_homem\_mulher\_classesAB & perceptron & 72,6 & 72,9 & 73,8 & +1,2 & 15,7 & 15,5 & 16,4 & +0,7 \\
+G1\_homem\_mulher\_classesAB & nnls & 71,9 & 73,1 & 77,9 & +6,0 & 20,2 & 20,0 & 26,2 & +6,0 \\
+\midrule
+G2\_homem\_mulher & perceptron & 83,6 & 83,8 & 83,6 & +0,0 & 88,3 & 88,6 & 88,3 & +0,0 \\
+G2\_homem\_mulher & nnls & 85,7 & 84,3 & 84,8 & $-$1,0 & 87,6 & 88,6 & 87,6 & +0,0 \\
+\midrule
+G2\_homem\_mulher\_classesAB & perceptron & 81,0 & 83,3 & 84,8 & +3,8 & 44,3 & 45,7 & 43,3 & $-$1,0 \\
+G2\_homem\_mulher\_classesAB & nnls & 84,8 & 88,1 & 89,5 & +4,8 & 51,9 & 53,3 & 46,2 & $-$5,7 \\
+\bottomrule
+\multicolumn{10}{p{0.95\linewidth}}{\footnotesize Síntese cruzada: o ganho de R$^2$ para R$^4$ indica se o LLM adota um critério não linear. A linear = Problema A (rótulos zero-shot); F, G1, G2 = pipelines externos (Fase A zero-shot). Médias das sementes.} \\
+\end{tabular}
+\end{table}

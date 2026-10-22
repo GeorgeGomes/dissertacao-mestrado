@@ -1,0 +1,17 @@
+\begin{table}[htbp]
+\centering
+\small
+\caption{Problemas E1, E2 e E3, Passos 2 e 3 (openai/gpt-4o-mini): zero-shot versus few-shot por especialista.}
+\label{tab:bloco2_E_passo2_vs_passo3_gpt4mini}
+\begin{tabular}{llrrrrlrr}
+\toprule
+ &  & \multicolumn{4}{c}{Acur.\ vs espec.\ (\%)} &  &  &  \\ \cmidrule(lr){3-6}
+Especialista & W & zero-shot & média few-shot & $\Delta$ & melhor few-shot & (estratégia, k) & $\Delta$ & Acur.\ do especialista vs real \\
+\midrule
+E1 & [0,3; 1,5] & 61,3 & 85,6 & +24,3 & 97,6 & Difícil, k = 40 & +36,2 & 87,0 \\
+E2 & [1,5; 0,3] & 48,4 & 83,3 & +34,9 & 96,0 & Aleatória, k = 40 & +47,5 & 90,7 \\
+E3 & [1,0; 1,0] & 54,7 & 82,8 & +28,1 & 97,3 & Difícil, k = 40 & +42,6 & 93,7 \\
+\bottomrule
+\multicolumn{9}{p{0.95\linewidth}}{\footnotesize Problema E, Passos 2 (zero-shot) e 3 (few-shot). Acurácia (LLM vs especialista), em \%. Média few-shot = média das médias por (estratégia, k), k > 0, de modo que cada célula (estratégia, k) pesa o mesmo, independentemente do número de sorteios. Melhor few-shot = maior média (estratégia, k). Última coluna: acurácia (vs rótulo real) do próprio especialista nas gaussianas do Problema E, contexto.} \\
+\end{tabular}
+\end{table}

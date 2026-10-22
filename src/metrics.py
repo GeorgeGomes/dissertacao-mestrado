@@ -1,5 +1,7 @@
 """Funções numéricas centrais: distância métrica, centróides, augmentação de
-features, classificação por vizinho mais próximo e métricas de concordância.
+atributos, classificação por centróide mais próximo e métricas de avaliação
+(concordância entre dois vetores de rótulos: acurácia/fidelidade/consistência,
+Cohen's kappa e F1-Macro, conforme a seção IV.3 da metodologia do orientador).
 
 Extraído de ``dissertacao_mestrado.py`` para isolar a geometria/métrica do runner e
 permitir testes de unidade independentes (ver ``tests/test_metrics.py``). São funções
@@ -14,8 +16,7 @@ from typing import Optional, Tuple
 
 import numpy as np
 from sklearn.metrics import (
-    accuracy_score, confusion_matrix, cohen_kappa_score,
-    f1_score, precision_score, recall_score
+    accuracy_score, confusion_matrix, cohen_kappa_score, f1_score
 )
 
 
@@ -63,7 +64,7 @@ def augment_to_r3(X: np.ndarray) -> np.ndarray:
 def augment_to_r4(X: np.ndarray) -> np.ndarray:
     """Adiciona features quadráticas x1², x2² para projetar dados em R4.
 
-    Justificativa (e-mail orientador 19:15): para o estudo de caso peso×altura,
+    Justificativa (orientador): para o estudo de caso peso×altura,
     o classificador ótimo bayesiano é
         f(x1, x2) = x2² - x2 + x1² - x1 + cte
     — fronteira elíptica. Com 4 features (x1, x2, x1², x2²), a métrica diagonal
@@ -153,17 +154,26 @@ def compute_metric_confidence(
 
 
 # =============================================================================
-# MÉTRICAS DE CONCORDÂNCIA (LLM × métrica estimada)
+# MÉTRICAS DE AVALIAÇÃO (LLM × métrica estimada), seção IV.3 do orientador
 # =============================================================================
 
 @dataclass
 class ConsistencyMetrics:
-    """Armazena métricas detalhadas de consistência entre predições do LLM e da métrica estimada."""
+    """Métricas de avaliação entre dois vetores de rótulos (LLM e métrica estimada).
+
+    Campos de métrica (seção IV.3 da metodologia):
+        accuracy:    fração de concordância (1/n) Σ 1[y_metric_i = y_llm_i]. O chamador
+                     dá o nome: Fidelidade (Problemas A e D), Consistência (B e C) ou
+                     Acurácia (quando o segundo vetor é o ground truth ou o especialista).
+        cohen_kappa: Cohen's kappa, k = (P0 − Pe)/(1 − Pe).
+        f1_score:    F1-Macro (média das F1 por classe).
+
+    Campos auxiliares (contagens, não são métricas de avaliação):
+        confusion_matrix, n_agreements, n_disagreements, disagreement_indices.
+    """
     accuracy: float
     cohen_kappa: float
     f1_score: float
-    precision: float
-    recall: float
     confusion_matrix: np.ndarray
     n_agreements: int
     n_disagreements: int
@@ -174,36 +184,35 @@ def compute_consistency_metrics(
     y_llm: np.ndarray,
     y_metric: np.ndarray
 ) -> ConsistencyMetrics:
-    """Calcula métricas detalhadas de consistência entre predições do LLM e da métrica estimada.
+    """Calcula as métricas de avaliação da seção IV.3 entre os rótulos do LLM e os
+    rótulos da métrica estimada (ou de outra referência: ground truth, especialista).
 
-    Nota sobre concordância simétrica:
-    - accuracy e kappa são métricas SIMÉTRICAS — o resultado é idêntico independentemente
-      de qual vetor é tratado como "referência". Kappa é a métrica principal para H1.
-    - F1, precision e recall NÃO são simétricas por construção; para preservar a simetria,
-      calcula-se a média das duas direções (LLM→métrica e métrica→LLM), evitando que uma
-      das partes seja arbitrariamente elevada a "ground truth".
-    - confusion_matrix usa y_metric como referência (linhas = rótulos da métrica).
+    - ``accuracy``: concordância (1/n) Σ 1[y_metric_i = y_llm_i]. É a mesma fórmula
+      que o PDF chama de Fidelidade (Problemas A e D: a métrica reproduz o LLM),
+      Consistência (Problemas B e C: w transferido do A, centróides locais) ou
+      Acurácia (referência = ground truth ou especialista); quem decide o nome é o
+      chamador, conforme o que passou em ``y_metric``.
+    - ``cohen_kappa``: k = (P0 − Pe)/(1 − Pe), com P0 = accuracy e
+      Pe = Σ_k p_k p'_k, onde p_k é a marginal da métrica (``y_metric``) e p'_k a
+      marginal do LLM (``y_llm``). Faixas de Landis e Koch (1977). Simétrico.
+    - ``f1_score``: F1-Macro. Para cada classe k, P_k = VP/(VP+FP), R_k = VP/(VP+FN),
+      F1_k = 2 P_k R_k/(P_k + R_k); o valor é a média das F1_k entre as classes.
+      ``y_metric`` é tratado como referência e ``y_llm`` como predição. Como
+      F1_k = 2VP/(2VP + FP + FN) é simétrica em FP e FN, trocar os papéis dos dois
+      vetores não altera a F1-Macro: uma única chamada basta, sem simetrização.
+      ``zero_division=0`` cobre classe ausente em um dos vetores.
+    - ``confusion_matrix`` usa ``y_metric`` como referência (linhas = métrica).
     """
+    y_llm = np.asarray(y_llm)
+    y_metric = np.asarray(y_metric)
+
     accuracy = accuracy_score(y_metric, y_llm)
     kappa = cohen_kappa_score(y_metric, y_llm)
-
-    # F1/precision/recall simétricos: média das duas direções possíveis
-    f1 = (
-        f1_score(y_metric, y_llm, average='weighted', zero_division=0) +
-        f1_score(y_llm, y_metric, average='weighted', zero_division=0)
-    ) / 2
-    precision = (
-        precision_score(y_metric, y_llm, average='weighted', zero_division=0) +
-        precision_score(y_llm, y_metric, average='weighted', zero_division=0)
-    ) / 2
-    recall = (
-        recall_score(y_metric, y_llm, average='weighted', zero_division=0) +
-        recall_score(y_llm, y_metric, average='weighted', zero_division=0)
-    ) / 2
+    f1 = f1_score(y_metric, y_llm, average='macro', zero_division=0)
     cm = confusion_matrix(y_metric, y_llm)
 
     disagreements = y_llm != y_metric
-    n_disagreements = np.sum(disagreements)
+    n_disagreements = int(np.sum(disagreements))
     n_agreements = len(y_llm) - n_disagreements
     disagreement_indices = np.where(disagreements)[0]
 
@@ -211,8 +220,6 @@ def compute_consistency_metrics(
         accuracy=accuracy,
         cohen_kappa=kappa,
         f1_score=f1,
-        precision=precision,
-        recall=recall,
         confusion_matrix=cm,
         n_agreements=n_agreements,
         n_disagreements=n_disagreements,

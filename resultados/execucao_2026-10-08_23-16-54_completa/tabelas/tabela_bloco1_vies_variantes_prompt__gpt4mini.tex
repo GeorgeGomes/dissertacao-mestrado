@@ -1,0 +1,22 @@
+\begin{table}[htbp]
+\centering
+\small
+\caption{Viés de variantes de prompt (openai/gpt-4o-mini): fidelidade, direção de $\hat{W}$ e consistência.}
+\label{tab:bloco1_vies_variantes_prompt_gpt4mini}
+\begin{tabular}{llrrrrrrr}
+\toprule
+Variante & Regime & Fid.\ A & LLM vs real A & $w_1/w_2$ & Consist.\ B & $\kappa$ B & Consist.\ C & $\kappa$ C \\
+\midrule
+chain-of-thought & zero-shot & 71,1 (67,3–75,3) & 36,9 & 0,00 & 62,3 & 0,157 & 75,7 & 0,513 \\
+\textbf{padrão} & \textbf{zero-shot} & \textbf{81,3 (78,0–85,3)} & \textbf{32,4} & \textbf{0,09} & \textbf{70,7} & \textbf{0,348} & \textbf{88,0} & \textbf{0,745} \\
+geométrica & zero-shot & 78,0 (72,0–82,0) & 48,4 & 0,48 & 64,7 & 0,112 & 76,7 & 0,413 \\
+tabular & zero-shot & 65,8 (56,0–74,0) & 47,6 & 0,10 & 63,3 & 0,150 & 72,3 & 0,186 \\
+\midrule
+chain-of-thought & 10-shot & 71,1 (67,3–75,3) & 36,9 & 0,00 & 93,7 & 0,873 & 88,5 & 0,767 \\
+\textbf{padrão} & \textbf{10-shot} & \textbf{81,3 (78,0–85,3)} & \textbf{32,4} & \textbf{0,09} & \textbf{82,2} & \textbf{0,624} & \textbf{91,9} & \textbf{0,834} \\
+geométrica & 10-shot & 78,0 (72,0–82,0) & 48,4 & 0,48 & 85,6 & 0,707 & 93,0 & 0,859 \\
+tabular & 10-shot & 65,8 (56,0–74,0) & 47,6 & 0,10 & 95,9 & 0,919 & 85,6 & 0,684 \\
+\bottomrule
+\multicolumn{9}{p{0.95\linewidth}}{\footnotesize Problema A e transferência para B e C por variantes de prompt; os demais fatores ficam na configuração base. Médias das sementes (fidelidade com mín–máx). $w_1/w_2$ = razão da métrica estimada (Perceptron). Em negrito: a configuração de referência. 10-shot: exemplos rotulados pela métrica (H2).} \\
+\end{tabular}
+\end{table}

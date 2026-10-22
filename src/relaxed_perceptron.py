@@ -48,9 +48,12 @@ Referências:
 """
 
 import numpy as np
-import warnings
 from typing import Tuple
 
+
+# 15/10/2026 (D): margem bruta mínima (/||w||) da ÚLTIMA solução devolvida por `fit`; o runner lê
+# este valor logo após `train_relaxed_perceptron` para gravar a coluna `margem_minima`.
+ULTIMA_MARGEM_MINIMA = float("nan")
 
 class RelaxedPerceptron:
     """Aprende uma métrica de Mahalanobis diagonal via Perceptron Estruturado com busca binária em gamma.
@@ -113,7 +116,7 @@ class RelaxedPerceptron:
         # Resultados após fit()
         self.w_ = None
         self.gamma_ = None
-        # Histórico da busca binária em γ (item b da reunião 30/04/2026, ~520s):
+        # Histórico da busca binária em γ (diagnóstico de convergência, bloco1_graphic_09):
         # lista de dicts {iter, gamma, gamma_lo, gamma_hi, violations, viable}.
         # Preenchida em cada iteração do loop externo para diagnóstico de convergência.
         self.gamma_history = []
@@ -180,7 +183,7 @@ class RelaxedPerceptron:
         # best_effort: solução com menor número de violações (usada como fallback
         # quando separação perfeita é impossível, e.g., dados não linearmente separáveis)
         w_best_effort = w.copy()
-        min_global_violations = float("inf")
+        min_global_erros = float("inf")      # 15/10/2026: melhor esforço por pontos MAL CLASSIFICADOS
         found_feasible_solution = False
 
         iteration = 0
@@ -267,7 +270,9 @@ class RelaxedPerceptron:
                         # e favorece soluções com margem geométrica (γ/||w||) significativa.
                         # Análogo ao weight decay em SGD com regularização L2.
                         factor = 1 - self.eta * gamma / norm_w
-                        factor = np.clip(factor, 0.0, 2.0)
+                        # Salvaguarda numérica (não está no Algoritmo 1): o fator é
+                        # 1 − (positivo) ≤ 1; o clip em 0 só protege de ||w|| ≈ 0.
+                        factor = np.clip(factor, 0.0, 1.0)
 
                         w = w * factor - self.eta * g
                         # Projeção em w ≥ 0: garante semidefinida positiva da matriz diagonal
@@ -279,17 +284,33 @@ class RelaxedPerceptron:
                         # - αi é incrementado por η (acumula "custo" de violação do ponto i)
                         alpha = alpha * factor
                         alpha[i] = alpha[i] + self.eta
-                        alpha = np.clip(alpha, 0, 1e6)
+                        alpha = np.clip(alpha, 0, 1e6)   # salvaguarda numérica (fora do Algoritmo 1)
 
                 final_violations = violations
 
-                # Rastreia melhor solução parcial (menor número de violações)
-                # para uso como fallback em problemas não separáveis
-                if violations < min_global_violations:
-                    min_global_violations = violations
+                # --- 15/10/2026 (B): escala fixa de w ao fim da época ---
+                # A restrição d_W(ck) − d_W(cl) + λ·αi ≥ γ·||w|| é homogênea em w, salvo a folga:
+                # com w encolhendo (fator 1 − ηγ/||w|| a cada correção) a exigência γ·||w|| some e
+                # qualquer αi > 0 a satisfaz, mesmo com pontos do lado errado ("γ viável" degenerado,
+                # revisão de 15/10/2026). Só a direção de w define o centróide mais próximo (margem
+                # geométrica, como no texto do orientador), então w e α são divididos por ||w||.
+                norm_fim = np.linalg.norm(w)
+                if norm_fim > 0:
+                    w = w / norm_fim
+                    alpha = alpha / norm_fim
+
+                # --- 15/10/2026 (C): melhor esforço = época com MENOS pontos mal classificados ---
+                # (antes: menos violações relaxadas, que premiava as épocas em que w já tinha evaporado).
+                erros = int(sum(
+                    1 for i in range(m)
+                    if self.d_W(X[i], centroids[int(y[i])], w)
+                    > min(self.d_W(X[i], centroids[j], w) for j in range(len(centroids)) if j != int(y[i]))
+                ))
+                if erros < min_global_erros:
+                    min_global_erros = erros
                     w_best_effort = w.copy()
 
-                # Se zero violações: gamma atual é viável, podemos tentar margem maior
+                # Se zero violações (relaxadas, critério do texto): gamma atual é viável
                 if violations == 0:
                     if self.verbose:
                         print(f"      Convergiu na época {epoch + 1}")
@@ -327,15 +348,11 @@ class RelaxedPerceptron:
                 # Gamma inviável: marca como limite superior e faz bisseção
                 gamma_hi = gamma
 
-                if not np.isinf(gamma_hi):
-                    # Bisseção: γ = (γ_lo + γ_hi) / 2
-                    # Restaura w e α da última solução viável para reiniciar a busca
-                    gamma = (gamma_lo + gamma_hi) / 2
-                    w = w_star.copy()
-                    alpha = alpha_star.copy()
-                else:
-                    # Se gamma_hi = ∞ (primeira tentativa já falhou), não há como fazer bisseção
-                    break
+                # Bisseção: γ = (γ_lo + γ_hi) / 2 (se a 1ª tentativa já falhou, γ_lo = 0 e
+                # a bisseção parte de [0, γ_inicial]). Restaura w e α da última solução viável.
+                gamma = (gamma_lo + gamma_hi) / 2
+                w = w_star.copy()
+                alpha = alpha_star.copy()
 
             # Critério de parada da busca binária
             if abs(gamma_hi - gamma_lo) <= self.tol:
@@ -355,37 +372,60 @@ class RelaxedPerceptron:
             if self.verbose:
                 print(f"    ⚠️ {msg}")
             else:
-                warnings.warn(f"\n  ⚠️ {msg}")
+                print(f"  ⚠️ {msg}")   # 14/10/2026: print, não warnings.warn (ecoava caminho+linha no log)
 
         # --- Retorno dos resultados ---
         if found_feasible_solution:
             # Retorna solução ótima: w* com margem máxima gamma_lo
             self.w_ = w_star
             self.gamma_ = gamma_lo
+            self._registrar_margem_minima(X, y, centroids, w_star)
             return w_star, gamma_lo
 
         # Fallback para problemas não linearmente separáveis sob métrica diagonal
         if self.use_best_effort:
             # Retorna w com menor número de violações encontrado durante o treinamento.
             # gamma = 0.0 indica que nenhuma margem positiva foi garantida.
-            msg = f"Perceptron: separação perfeita não encontrada. Retornando melhor esforço (violações: {min_global_violations}). Métrica pode ser imprecisa."
+            msg = f"Perceptron: separação perfeita não encontrada. Retornando melhor esforço (pontos mal classificados: {min_global_erros}). Métrica pode ser imprecisa."
             if self.verbose:
                 print(f"    ⚠️ {msg}")
             else:
-                warnings.warn(f"\n  ⚠️ {msg}")
+                print(f"  ⚠️ {msg}")   # 14/10/2026: print, não warnings.warn (ecoava caminho+linha no log)
             self.w_ = w_best_effort
             self.gamma_ = 0.0
+            self._registrar_margem_minima(X, y, centroids, w_best_effort)
             return w_best_effort, 0.0
         else:
             # Retorna pesos iniciais (Euclidiana) — sinaliza falha total do aprendizado
-            msg = f"Perceptron: separação perfeita não encontrada. Retornando pesos iniciais (equivalente à distância Euclidiana). Verifique a separabilidade dos dados do LLM."
+            msg = "Perceptron: separação perfeita não encontrada. Retornando pesos iniciais (equivalente à distância Euclidiana). Verifique a separabilidade dos dados do LLM."
             if self.verbose:
                 print(f"    ❌ {msg}")
             else:
-                warnings.warn(f"\n  ❌ {msg}")
+                print(f"  ❌ {msg}")
             self.w_ = w_star
             self.gamma_ = 0.0
+            self._registrar_margem_minima(X, y, centroids, w_star)
             return w_star, 0.0
+
+    def _registrar_margem_minima(self, X, y, centroids, w) -> float:
+        """15/10/2026 (D): margem BRUTA mínima da solução devolvida, (d_W(rival) − d_W(correto))/||w||,
+        sem a folga α. Negativa = a métrica devolvida não separa os rótulos (algum ponto do lado
+        errado), qualquer que seja o γ. Fica em `self.margem_minima_` e no global de módulo
+        `ULTIMA_MARGEM_MINIMA` (lido pelo runner para a coluna `margem_minima` dos CSVs)."""
+        global ULTIMA_MARGEM_MINIMA
+        nw = float(np.linalg.norm(w))
+        if nw <= 0 or len(centroids) < 2:
+            self.margem_minima_ = float("nan")
+        else:
+            margens = []
+            for i in range(len(y)):
+                l = int(y[i])
+                d_cert = self.d_W(X[i], centroids[l], w)
+                d_riv = min(self.d_W(X[i], centroids[j], w) for j in range(len(centroids)) if j != l)
+                margens.append((d_riv - d_cert) / nw)
+            self.margem_minima_ = float(min(margens))
+        ULTIMA_MARGEM_MINIMA = self.margem_minima_
+        return self.margem_minima_
 
 
 def train_relaxed_perceptron(
@@ -415,7 +455,7 @@ def train_relaxed_perceptron(
     (X, y, centroids) produza sempre o mesmo W*, independente do estado global do NumPy.
 
     Se return_history=True, retorna (w, gamma, gamma_history) onde gamma_history é a
-    lista de dicts capturada durante a busca binária em γ (item b da reunião 30/04/2026).
+    lista de dicts capturada durante a busca binária em γ (diagnóstico bloco1_graphic_09).
     Caso contrário, retorna apenas (w, gamma) — compatível com as chamadas existentes.
     """
     model = RelaxedPerceptron(

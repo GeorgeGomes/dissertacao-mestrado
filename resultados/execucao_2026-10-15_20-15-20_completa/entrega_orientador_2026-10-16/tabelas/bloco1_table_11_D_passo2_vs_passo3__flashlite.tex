@@ -1,0 +1,28 @@
+\begin{table}[htbp]
+\centering
+\footnotesize
+\caption{Problema D, meia-lua, Passos 2 a 4 (google/gemini-2.5-flash-lite): zero-shot versus few-shot por espaço.}
+\label{tab:bloco1_D_passo2_vs_passo3_flashlite}
+\begin{tabular}{llrrrrrrrrr}
+\toprule
+ &  & \multicolumn{3}{c}{Fidelidade (vs LLM)} & \multicolumn{3}{c}{Acur.\ da métrica vs real} & \multicolumn{3}{c}{Acur.\ do LLM vs real} \\ \cmidrule(lr){3-5} \cmidrule(lr){6-8} \cmidrule(lr){9-11}
+Espaço & Few-shot & zero & few & $\Delta$ & zero & few & $\Delta$ & zero & few & $\Delta$ \\
+\midrule
+R$^2$ & 4-shot & 81,8 (80,0–84,0) & 88,3 (72,6–97,9) & +6,5 & 65,3 (64,7–66,0) & 77,9 (68,0–86,7) & +12,6 & 55,6 (53,3–59,3) & 77,9 (63,0–88,4) & +22,3 \\
+R$^2$ & 10-shot & 81,8 (80,0–84,0) & 95,2 (90,7–97,9) & +13,4 & 65,3 (64,7–66,0) & 83,9 (81,3–86,7) & +18,5 & 55,6 (53,3–59,3) & 86,3 (81,4–90,0) & +30,8 \\
+R$^2$ & 20-shot & 81,8 (80,0–84,0) & 95,7 (94,6–97,7) & +13,9 & 65,3 (64,7–66,0) & 85,7 (83,3–86,7) & +20,4 & 55,6 (53,3–59,3) & 88,5 (83,8–93,1) & +33,0 \\
+R$^2$ & 40-shot & 81,8 (80,0–84,0) & 94,7 (93,6–96,4) & +13,0 & 65,3 (64,7–66,0) & 86,1 (84,0–88,0) & +20,8 & 55,6 (53,3–59,3) & 90,5 (86,4–93,6) & +34,9 \\
+\midrule
+R$^3$ & 4-shot & 85,3 (84,0–86,0) & 91,2 (84,2–97,9) & +5,9 & 60,4 (57,3–62,7) & 78,0 (66,0–85,3) & +17,6 & 55,6 (53,3–59,3) & 77,9 (63,0–88,4) & +22,3 \\
+R$^3$ & 10-shot & 85,3 (84,0–86,0) & 95,8 (90,7–99,3) & +10,5 & 60,4 (57,3–62,7) & 84,0 (81,3–86,0) & +23,6 & 55,6 (53,3–59,3) & 86,3 (81,4–90,0) & +30,8 \\
+R$^3$ & 20-shot & 85,3 (84,0–86,0) & 95,7 (93,8–97,7) & +10,4 & 60,4 (57,3–62,7) & 85,0 (82,7–86,7) & +24,5 & 55,6 (53,3–59,3) & 88,5 (83,8–93,1) & +33,0 \\
+R$^3$ & 40-shot & 85,3 (84,0–86,0) & 95,2 (93,6–96,4) & +9,8 & 60,4 (57,3–62,7) & 86,4 (84,7–87,3) & +25,9 & 55,6 (53,3–59,3) & 90,5 (86,4–93,6) & +34,9 \\
+\midrule
+R$^4$ & 4-shot & 79,8 (78,7–80,7) & 93,4 (87,7–97,3) & +13,6 & 66,4 (64,7–68,7) & 78,4 (75,3–84,0) & +11,9 & 55,6 (53,3–59,3) & 77,9 (63,0–88,4) & +22,3 \\
+R$^4$ & 10-shot & 79,8 (78,7–80,7) & 96,2 (90,7–98,6) & +16,4 & 66,4 (64,7–68,7) & 84,2 (82,0–86,0) & +17,8 & 55,6 (53,3–59,3) & 86,3 (81,4–90,0) & +30,8 \\
+R$^4$ & 20-shot & 79,8 (78,7–80,7) & 95,6 (93,8–96,9) & +15,8 & 66,4 (64,7–68,7) & 85,7 (83,3–88,0) & +19,3 & 55,6 (53,3–59,3) & 88,5 (83,8–93,1) & +33,0 \\
+R$^4$ & 40-shot & 79,8 (78,7–80,7) & 95,5 (91,8–97,3) & +15,7 & 66,4 (64,7–68,7) & 86,8 (85,3–88,7) & +20,4 & 55,6 (53,3–59,3) & 90,5 (86,4–93,6) & +34,9 \\
+\bottomrule
+\multicolumn{11}{p{0.95\linewidth}}{\footnotesize Meia-lua, Perceptron. Fidelidade (vs LLM); acurácia (vs rótulo real) da métrica e do LLM como contexto. Colapsos (e quase-colapsos) do zero-shot não entram em nenhuma média, nem na acurácia do LLM (``—'' quando todas as sementes colapsaram; detalhe na bloco1\_table\_10). Em zero-shot (e com nomes de classe neutros) a correspondência entre nome e classe é arbitrária: a acurácia (vs rótulo real) do LLM pode sair abaixo de 50\%; o valor invariante à permutação é max($a$, 1 $-$ $a$). $\Delta$ = few-shot $-$ zero-shot. Passos do Problema D: zero-shot = Passo 2 (o LLM rotula sem exemplos); $k$-shot = Passo 3 (o LLM rotula com $k$ exemplos do rótulo real); a métrica de cada linha é estimada no Passo 4; teto = Passo 5 (W ajustado diretamente ao rótulo real).} \\
+\end{tabular}
+\end{table}

@@ -1,0 +1,21 @@
+\begin{table}[htbp]
+\centering
+\small
+\caption{Problema A (linear) versus Problema D (meia-lua), Passos 2 a 5 (openai/gpt-4o-mini), por regime.}
+\label{tab:bloco1_AD_por_passo_gpt4mini}
+\begin{tabular}{lrrrrrr}
+\toprule
+ & \multicolumn{2}{c}{Fidelidade (vs LLM)} & \multicolumn{2}{c}{Acur.\ da métrica vs real} & \multicolumn{2}{c}{Acur.\ do LLM vs real} \\ \cmidrule(lr){2-3} \cmidrule(lr){4-5} \cmidrule(lr){6-7}
+Regime & A & D & A & D & A & D \\
+\midrule
+zero-shot† & 86,7 (85,3–88,0) & — & 19,3 (14,7–23,3) & — & 26,9 (24,7–28,0) & — \\
+4-shot† & 91,8 (80,8–100,0) & 89,8 (76,7–97,3) & 90,3 (60,0–98,0) & 82,9 (76,7–86,7) & 85,5 (61,6–97,9) & 81,9 (68,5–92,5) \\
+10-shot† & 96,0 (92,1–98,6) & 92,3 (81,4–97,1) & 95,6 (91,3–98,0) & 85,1 (77,3–88,0) & 92,5 (87,1–96,4) & 89,2 (83,6–96,4) \\
+20-shot† & 96,5 (92,3–99,2) & 93,8 (92,3–96,2) & 95,0 (90,7–98,0) & 86,1 (83,3–88,0) & 92,6 (88,5–96,2) & 90,4 (86,9–95,4) \\
+40-shot† & 96,8 (90,9–99,1) & 92,1 (88,2–94,5) & 95,9 (90,7–98,0) & 86,1 (84,0–87,3) & 93,1 (84,5–98,2) & 91,6 (86,4–94,5) \\
+\midrule
+W ajustado ao rótulo real (teto)† & — & — & 97,3 (96,7–98,0) & 86,9 (86,7–87,3) & — & — \\
+\bottomrule
+\multicolumn{7}{p{0.95\linewidth}}{\footnotesize Perceptron, R$^2$. Mesmos Passos 2 a 5 nos dois problemas (150 pontos, exemplos do rótulo real, sem split). Fidelidade (vs LLM); acurácia (vs rótulo real) da métrica e do LLM como contexto; o teto (W ajustado ao rótulo real) só tem acurácia. Passos do Problema A: zero-shot = Passo 2 (o LLM rotula sem exemplos); $k$-shot = Passo 3 (o LLM rotula com $k$ exemplos do rótulo real); a métrica de cada linha é estimada no Passo 4; teto = Passo 5 (W ajustado diretamente ao rótulo real). Em zero-shot (e com nomes de classe neutros) a correspondência entre nome e classe é arbitrária: a acurácia (vs rótulo real) do LLM pode sair abaixo de 50\%; o valor invariante à permutação é max($a$, 1 $-$ $a$). † = em pelo menos uma estimativa o Perceptron não encontrou $\hat{W}$ que separe os rótulos: melhor esforço ($\gamma = 0$) ou margem bruta mínima negativa (algum ponto do lado errado da fronteira). ``—'' = colapso em classe única (ou quase-colapso: classe minoritária com menos de 5 pontos); na linha colapsada também a acurácia do LLM e a partição ficam como ``—''.} \\
+\end{tabular}
+\end{table}

@@ -1,0 +1,19 @@
+\begin{table}[htbp]
+\centering
+\small
+\caption{Problema G (openai/gpt-4o-mini): nomes de classe semânticos versus neutros.}
+\label{tab:bloco3_G_nomes_semanticos_vs_neutros_gpt4mini}
+\begin{tabular}{llrrrrrr}
+\toprule
+ &  & \multicolumn{3}{c}{LLM vs real (\%)} & \multicolumn{3}{c}{Métrica vs real (\%)} \\ \cmidrule(lr){3-5} \cmidrule(lr){6-8}
+Subproblema & Atributos & Mulher/Homem & A/B & $\Delta$ & Mulher/Homem & A/B & $\Delta$ \\
+\midrule
+G1 (normalizado) & peso/altura & — & 31,9 & — & — & 12,9 & — \\
+G1 (normalizado) & x1/x2 & — & 41,0 & — & — & 18,6 & — \\
+\midrule
+G2 (kg e m) & peso\_kg/altura\_m & 89,5 & 51,9 & +37,6 & 91,0 & 44,3 & +46,7 \\
+G2 (kg e m) & x1/x2 & 62,9 & — & — & 85,7 & — & — \\
+\bottomrule
+\multicolumn{8}{p{0.95\linewidth}}{\footnotesize Efeito do nome das classes (Mulher/Homem versus A/B) para cada par de nomes de atributo, zero-shot, R$^2$, Perceptron. $\Delta$ = semântico $-$ neutro. ``—'' = colapso em classe única.} \\
+\end{tabular}
+\end{table}

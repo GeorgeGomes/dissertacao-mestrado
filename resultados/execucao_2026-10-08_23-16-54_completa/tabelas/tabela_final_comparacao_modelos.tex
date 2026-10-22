@@ -1,0 +1,30 @@
+\begin{table}[htbp]
+\centering
+\small
+\caption{Comparação entre os modelos: resumo dos principais resultados.}
+\label{tab:final_comparacao_modelos}
+\begin{tabular}{lrr}
+\toprule
+Resultado & google/gemini-2.5-flash-lite & openai/gpt-4o-mini \\
+\midrule
+A: fidelidade zero-shot (Perceptron) & 81,3 & 81,3 \\
+A: acurácia do LLM vs real, zero-shot & 25,1 & 32,4 \\
+A: acurácia do LLM vs real, 10-shot & 94,0 & 89,4 \\
+A: melhor métrica few-shot (k) & 40-shot & 20-shot \\
+D: acurácia do LLM vs real, zero-shot & 55,6 & 50,4 \\
+D: fidelidade 10-shot, R$^2$ & 94,3 & 91,4 \\
+B: $\kappa$ zero-shot (métrica zero-shot do A) & 0,263 & 0,348 \\
+C: $\kappa$ zero-shot (métrica zero-shot do A) & 0,846 & 0,745 \\
+E1: acurácia vs especialista, zero-shot & 54,4 & 61,1 \\
+E1: média few-shot (todas as estratégias) & 89,2 & 87,1 \\
+E1: média few-shot, difícil & 72,4 & 78,0 \\
+G2 (kg/m, Mulher/Homem): LLM vs real, zero-shot & 84,3 & 89,5 \\
+G2: métrica vs real (Perceptron) & 91,4 & 91,0 \\
+G1 (normalizado, Mulher/Homem): LLM vs real & 35,2 & colapso \\
+Chamadas & 80.682 & 77.172 \\
+Malformadas (\%) & 0,001 & 0,000 \\
+Flip a T=0 (\%) & 0,00 & 1,60 \\
+\bottomrule
+\multicolumn{3}{p{0.95\linewidth}}{\footnotesize Resumo lado a lado dos modelos; valores em \% salvo indicação. Detalhes em cada tabela por modelo.} \\
+\end{tabular}
+\end{table}

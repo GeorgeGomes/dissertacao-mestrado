@@ -1,0 +1,40 @@
+\begin{table}[htbp]
+\centering
+\small
+\caption{Estabilidade da direção de $\hat{W}$ (openai/gpt-4o-mini) por regime e semente.}
+\label{tab:T4_W_gpt4mini}
+\begin{tabular}{lllrrrr}
+\toprule
+Prob. & Algoritmo & Regime & seed 7 & seed 42 & seed 123 & CV \\
+\midrule
+A & perceptron & zero-shot & 0,10 & 0,18 & 0,00 & 0,79 \\
+A & perceptron & 4-shot & 0,41 & 0,09 & 0,14 & 0,65 \\
+A & perceptron & 10-shot & 0,71 & 0,40 & 0,20 & 0,48 \\
+A & perceptron & 20-shot & 0,59 & 0,67 & 0,37 & 0,23 \\
+A & perceptron & 40-shot & 0,68 & 0,98 & 0,39 & 0,36 \\
+A & perceptron & W ajustado ao rótulo real (teto) & 0,15 & 0,98 & 0,26 & 0,79 \\
+\midrule
+A & nnls & zero-shot & 0,25 & 0,25 & 0,32 & 0,11 \\
+A & nnls & 4-shot & 0,55 & 0,19 & 0,34 & 0,42 \\
+A & nnls & 10-shot & 0,71 & 2,52 & 0,38 & 0,78 \\
+A & nnls & 20-shot & 0,50 & 0,34 & 0,30 & 0,23 \\
+A & nnls & 40-shot & 0,79 & 0,72 & 0,42 & 0,25 \\
+A & nnls & W ajustado ao rótulo real (teto) & 0,61 & 0,58 & 0,60 & 0,02 \\
+\midrule
+D & perceptron & zero-shot & 0,41 & 0,31 & — & 0,13 \\
+D & perceptron & 4-shot & 0,41 & 0,53 & 1,22 & 0,49 \\
+D & perceptron & 10-shot & 0,28 & 0,51 & 0,24 & 0,35 \\
+D & perceptron & 20-shot & 0,30 & 0,32 & 0,30 & 0,03 \\
+D & perceptron & 40-shot & 0,21 & 0,29 & 0,27 & 0,13 \\
+D & perceptron & W ajustado ao rótulo real (teto) & 0,22 & 0,23 & 0,11 & 0,30 \\
+\midrule
+D & nnls & zero-shot & 0,44 & 0,36 & — & 0,10 \\
+D & nnls & 4-shot & 0,17 & 0,32 & 0,19 & 0,28 \\
+D & nnls & 10-shot & 0,27 & 0,31 & 0,27 & 0,07 \\
+D & nnls & 20-shot & 0,26 & 0,26 & 0,28 & 0,04 \\
+D & nnls & 40-shot & 0,21 & 0,24 & 0,26 & 0,08 \\
+D & nnls & W ajustado ao rótulo real (teto) & 0,22 & 0,22 & 0,25 & 0,07 \\
+\bottomrule
+\multicolumn{7}{p{0.95\linewidth}}{\footnotesize Razão $w_1/w_2$ da métrica estimada (invariante de escala: só a direção importa) por semente; CV = desvio padrão / |média| entre sementes. ``—'' = colapso em classe única (ou quase-colapso: classe minoritária com menos de 5 pontos); na linha colapsada também a acurácia do LLM e a partição ficam como ``—''.} \\
+\end{tabular}
+\end{table}

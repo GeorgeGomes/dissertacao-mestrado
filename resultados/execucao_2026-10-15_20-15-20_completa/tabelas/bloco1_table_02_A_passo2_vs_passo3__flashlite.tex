@@ -1,0 +1,23 @@
+\begin{table}[htbp]
+\centering
+\footnotesize
+\caption{Problema A, Passos 2 a 4 (google/gemini-2.5-flash-lite): zero-shot versus few-shot, lado a lado (o teto, Passo 5, está na tabela 01).}
+\label{tab:A_passo2_vs_passo3_flashlite}
+\begin{tabular}{llrrrrrrrrrrr}
+\toprule
+ &  & \multicolumn{3}{c}{Fidelidade (vs LLM)} & \multicolumn{3}{c}{Acur.\ da métrica vs real} & \multicolumn{3}{c}{Acur.\ do LLM vs real} & \multicolumn{2}{c}{cos(Perc., NNLS)} \\ \cmidrule(lr){3-5} \cmidrule(lr){6-8} \cmidrule(lr){9-11} \cmidrule(lr){12-13}
+Algoritmo & Few-shot & zero & few & $\Delta$ & zero & few & $\Delta$ & zero & few & $\Delta$ & zero & few \\
+\midrule
+perceptron & 4-shot & 88,2 (87,3–88,7)† & 95,4 (85,6–100,0)† & +7,2 & 14,2 (7,3–20,0) & 93,2 (66,0–98,0) & +79,0 & 17,6 (16,0–18,7) & 90,6 (65,8–97,9) & +73,0 & 0,994 & 0,897 \\
+perceptron & 10-shot & 88,2 (87,3–88,7)† & 98,1 (94,3–100,0)† & +9,9 & 14,2 (7,3–20,0) & 96,0 (93,3–98,0) & +81,8 & 17,6 (16,0–18,7) & 95,1 (92,1–97,9) & +77,5 & 0,994 & 0,910 \\
+perceptron & 20-shot & 88,2 (87,3–88,7)† & 97,8 (94,6–100,0)† & +9,6 & 14,2 (7,3–20,0) & 96,8 (94,7–98,0) & +82,6 & 17,6 (16,0–18,7) & 95,6 (92,3–98,5) & +78,0 & 0,994 & 0,947 \\
+perceptron & 40-shot & 88,2 (87,3–88,7)† & 98,0 (94,5–100,0)† & +9,8 & 14,2 (7,3–20,0) & 96,9 (96,0–98,0) & +82,7 & 17,6 (16,0–18,7) & 96,1 (93,6–99,1) & +78,5 & 0,994 & 0,939 \\
+\midrule
+nnls & 4-shot & 87,3 (86,0–88,7) & 95,7 (82,9–100,0) & +8,4 & 10,7 (7,3–13,3) & 93,2 (70,0–98,0) & +82,5 & 17,6 (16,0–18,7) & 90,6 (65,8–97,9) & +73,0 & 0,994 & 0,897 \\
+nnls & 10-shot & 87,3 (86,0–88,7) & 98,3 (93,6–100,0) & +10,9 & 10,7 (7,3–13,3) & 95,7 (93,3–98,0) & +85,0 & 17,6 (16,0–18,7) & 95,1 (92,1–97,9) & +77,5 & 0,994 & 0,910 \\
+nnls & 20-shot & 87,3 (86,0–88,7) & 97,9 (93,8–100,0) & +10,6 & 10,7 (7,3–13,3) & 96,6 (94,0–98,0) & +85,9 & 17,6 (16,0–18,7) & 95,6 (92,3–98,5) & +78,0 & 0,994 & 0,947 \\
+nnls & 40-shot & 87,3 (86,0–88,7) & 98,0 (94,5–100,0) & +10,6 & 10,7 (7,3–13,3) & 96,9 (96,0–98,0) & +86,2 & 17,6 (16,0–18,7) & 96,1 (93,6–99,1) & +78,5 & 0,994 & 0,939 \\
+\bottomrule
+\multicolumn{13}{p{0.95\linewidth}}{\footnotesize Problema A em R$^2$, médias das sementes e repetições (mín–máx entre parênteses), em \%. $\Delta$ = few-shot $-$ zero-shot, em pontos percentuais. Few-shot: k exemplos rotulados pelo rótulo real (k/2 por classe). Acurácia (vs rótulo real) da métrica e do LLM como contexto. Em zero-shot (e com nomes de classe neutros) a correspondência entre nome e classe é arbitrária: a acurácia (vs rótulo real) do LLM pode sair abaixo de 50\%; o valor invariante à permutação é max($a$, 1 $-$ $a$). cos = cosseno entre os $\hat{W}$ do Perceptron e do NNLS na mesma coleta. Passos do Problema A: zero-shot = Passo 2 (o LLM rotula sem exemplos); $k$-shot = Passo 3 (o LLM rotula com $k$ exemplos do rótulo real); a métrica de cada linha é estimada no Passo 4; teto = Passo 5 (W ajustado diretamente ao rótulo real). † = em pelo menos uma estimativa o Perceptron não encontrou $\hat{W}$ que separe os rótulos: melhor esforço ($\gamma = 0$) ou margem bruta mínima negativa (algum ponto do lado errado da fronteira).} \\
+\end{tabular}
+\end{table}

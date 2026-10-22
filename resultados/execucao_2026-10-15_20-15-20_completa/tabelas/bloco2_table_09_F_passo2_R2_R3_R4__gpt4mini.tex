@@ -1,0 +1,14 @@
+\begin{table}[htbp]
+\centering
+\small
+\caption{Problema F, meia-lua, Passo 2 (openai/gpt-4o-mini): zero-shot no treino colapsado em todas as sementes.}
+\label{tab:bloco2_F_passo2_R2_R3_R4_gpt4mini}
+\begin{tabular}{llrrrrr}
+\toprule
+Espaço & Semente & Acur.\ LLM vs real & Fid.\ Perc. & Fid.\ NNLS & Acur.\ Perc.\ vs real & Acur.\ NNLS vs real \\
+\midrule
+R$^2$/R$^3$/R$^4$ & 7, 42, 123 & colapso & — & — & — & — \\
+\bottomrule
+\multicolumn{7}{p{0.95\linewidth}}{\footnotesize Problema F, Passo 2: nas sementes listadas o LLM colapsou no zero-shot dos 105 pontos de treino (classe única ou minoritária com menos de 5 pontos), logo não há métrica estimada nem fidelidade a reportar; o Passo 3 rodou normalmente com o especialista = rótulo real (ver a tabela seguinte).} \\
+\end{tabular}
+\end{table}

@@ -53,7 +53,7 @@ problema, uma recomendação acionável.
    significância estatística ou intervalos de confiança onde necessário? As
    conclusões são proporcionais à evidência ou exageram os resultados?
 7. **Reprodutibilidade.** Um terceiro conseguiria reproduzir os experimentos a partir
-   do que está descrito? Sementes, versões, hiperparâmetros e protocolo estão documentados?
+   do que está descrito? Sementes, versões, hiperparâmetros e os passos de cada problema estão documentados?
 8. **Ameaças à validade.** O autor reconhece limitações reais (validade interna,
    externa, de construção)? Há overclaiming?
 
@@ -112,20 +112,27 @@ inferir o critério implícito como uma **métrica de Mahalanobis diagonal** —
 A estimação usa **dois algoritmos congruentes**: Perceptron Estruturado com relaxação de
 margem (clip + projeção $\max(0,\mathbf{w})$, busca binária em $\gamma$) e NNLS — o LP
 Max-Margin foi removido por bug (módulo apagado; não há pasta `src/arquivado/`). Classificação por
-centróide mais próximo sob $d_W$. Avaliação por Kappa de Cohen, F1, consistência e
-fidelidade. Posicionamento em XAI via analogia com LIME/SHAP ($w_j$ como importância).
+centróide mais próximo sob $d_W$. Avaliação por **exatamente cinco métricas** (seção IV.3
+do orientador, nomes obrigatórios desde 09/10/2026): Fidelidade ("Fidelidade (métrica vs
+LLM)", Problemas A e D e a estimação em F e G), Acurácia ("Acurácia (vs rótulo real)" no oráculo e
+como contexto nos Blocos 1 e 3; "Acurácia (LLM vs especialista)" no Bloco 2), Consistência
+(B e C, centróides do novo problema, só o w transferido), Cohen's $\kappa$ (faixas de Landis
+e Koch 1977) e F1-Macro. "F1-Score", "Kappa" solto, "concordância", "taxa de erro",
+consistência euclidiana e precision/recall não existem mais no sistema: aponte como erro.
+Posicionamento em XAI via analogia com LIME/SHAP ($w_j$ como importância).
 
-**Organização e nomenclatura (obrigatória):** **Blocos 1–3** e **Problemas A–G** — nunca
-misturar "fase" com "problema". Bloco 1 = LLM como fonte (Fases A/B/C, Oracle Validation,
-vieses, R3/R4); Bloco 2 = LLM como aprendiz (Fase E); Bloco 3 = caso real peso × altura.
-Modelo: GPT-4o-mini, $T=0$. Protocolo atual: **3 sementes [42, 123, 7] × 3 repetições**,
-bootstrap CI (10k reamostragens), Wilcoxon, Cohen's d; parser de **8 camadas (0–7)** com
+**Organização e nomenclatura (obrigatória):** **Blocos 1–3**, **Problemas A–G** e passos numerados
+dentro de cada problema ("Problema A, Passo 3"; nunca "fase", nome usado antes de 13/10/2026; equivalência no
+CLAUDE.md). Bloco 1 = LLM como fonte (Problemas A a D, oráculo, vieses, R3/R4); Bloco 2 = LLM como aprendiz
+(Problemas E e F); Bloco 3 = caso real peso × altura (Problema G).
+Modelos: gpt-4o-mini e gemini-2.5-flash-lite (OpenRouter), $T=0$. Protocolo atual: **3 sementes [42, 123, 7], 3 repetições só onde há sorteio de exemplos**,
+média e faixa mín–máx entre sementes (sem bootstrap nem Wilcoxon desde 13/10/2026), Cohen's d; parser de **8 camadas (0–7)** com
 fallback por hash MD5; auditoria offline em `src/audit_interactions.py` (taxa de fallback
 e taxa de flip de $T=0$).
 
 **Regra de ouro:** os números (fidelidade, $\kappa$, taxas) vêm SEMPRE da **última
-execução completa** (`execucao_*_completa` de timestamp mais alto; nunca as
-`execucao_*_smoke`) — nunca de valores citados
+execução completa** (`resultados/execucao_*_completa` de timestamp mais alto; nunca as
+`resultados/execucao_*_smoke`), nunca de valores citados
 neste arquivo, em apresentações antigas ou de memória. E antes de criticar uma ausência
 (IC, teste estatístico, teste unitário, controle), **verifique no código/execução se ela
 já foi suprida** — criticar o que já existe destrói a credibilidade da revisão.
@@ -142,9 +149,9 @@ Vulnerabilidades conceituais que a banca vai explorar (invariantes deste desenho
    idêntica a $T=0$. Isso agora é **mensurável**: a auditoria reporta a taxa de flip
    entre repetições idênticas (tipicamente ~5%). Cobre que o texto reporte esse número
    em vez de afirmar determinismo — afirmar "saída determinística" é impreciso.
-3. **Proporcionalidade das alegações de (in)estabilidade.** Com 3 sementes × 3 repetições
+3. **Proporcionalidade das alegações de (in)estabilidade.** Com 3 sementes (e 3 repetições onde há sorteio de exemplos)
    há variabilidade reportável — verifique que cada alegação de estabilidade ou
-   instabilidade cita o IC bootstrap/Wilcoxon correspondente e que a linguagem é
+   instabilidade cita a faixa mín–máx entre sementes e que a linguagem é
    proporcional ao $n$ (3 sementes ainda é pouco para alegações fortes).
 4. **Confound dos centróides cross-problema.** Transferir Ŵ com centróides de A para B/C
    mistura efeito-geometria com efeito-LLM: parte da queda de $\kappa$ pode ser artefato
